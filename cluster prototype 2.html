@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OLOS - Sensemaking Board</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg-canvas: #f8fafc;
+      --bg-panel: #ffffff;
+      --border-color: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --tag-bg: #eff6ff;
+      --tag-text: #1e40af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Geologica', sans-serif; }
+    body { color: var(--text-main); background-color: var(--bg-canvas); height: 100vh; overflow: hidden; }
+
+    .hidden { display: none !important; }
+    .btn { padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+    .btn-outline:hover { background: #f1f5f9; }
+    
+    a { color: var(--primary); text-decoration: none; font-weight: 500; }
+    a:hover { text-decoration: underline; }
+
+    /* --- VIEW 1: SETUP SCREEN --- */
+    #setup-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f172a; color: white; overflow-y: auto; padding: 20px; }
+    .config-container { background: #1e293b; padding: 30px; border-radius: 16px; width: 100%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    .config-header h1 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 700; color: #38bdf8;}
+    .config-header p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 24px; }
+    .config-field { margin-bottom: 16px; }
+    .config-field label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 6px; color: #e2e8f0; }
+    .config-input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 0.875rem; outline: none; }
+    .config-input:focus { border-color: #38bdf8; }
+
+    .item-builder-list { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 12px; }
+    .config-item-row { background: #1e293b; border: 1px solid #334155; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .config-item-row h4 { font-size: 0.875rem; color: #f1f5f9; margin-bottom: 4px;}
+    .config-item-row p { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+    .config-item-del { background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem; padding: 0 5px;}
+    
+    .add-item-bar { display: flex; flex-direction: column; gap: 10px; }
+    @media(min-width: 600px) { .add-item-bar { flex-direction: row; } }
+
+    /* --- VIEW 2: BOARD WORKSPACE --- */
+    #board-workspace { display: flex; flex-direction: row; width: 100%; height: 100vh; }
+    .panel-left { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10; }
+    .panel-center { flex: 1; display: flex; flex-direction: column; background: #f1f5f9; position: relative; overflow: hidden; }
+    
+    @media (max-width: 768px) {
+      #board-workspace { flex-direction: column; }
+      .panel-left { width: 100%; height: 45vh; border-right: none; border-bottom: 2px solid var(--border-color); }
+      .panel-center { height: 55vh; }
+    }
+
+    .panel-header { padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: white; }
+    .panel-header h2 { font-size: 1rem; font-weight: 600; }
+    .scroll-area { flex: 1; overflow-y: auto; padding: 16px; }
+
+    /* Search Bar */
+    .search-container { padding: 10px 16px; border-bottom: 1px solid var(--border-color); background: #f8fafc; }
+    .search-input { width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.8rem; outline: none; transition: border-color 0.2s; }
+    .search-input:focus { border-color: var(--primary); }
+
+    /* Item Cards & Tap-to-Move States */
+    .item-card {
+      background: var(--card-bg); border: 2px solid var(--card-border); border-radius: 8px;
+      padding: 14px; margin-bottom: 12px; cursor: grab; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transition: all 0.2s; user-select: none;
+    }
+    .item-card:hover { border-color: #94a3b8; }
+    .item-card.dragging { opacity: 0.5; }
+    .item-card.selected-for-move { border-color: var(--primary); background: #eff6ff; box-shadow: 0 0 0 3px rgba(37,99,235,0.2); transform: scale(0.98); }
+    
+    .card-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; background: var(--tag-bg); color: var(--tag-text); padding: 3px 6px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; }
+    .item-card h3 { font-size: 0.85rem; font-weight: 600; line-height: 1.3; margin-bottom: 6px; pointer-events: none;}
+    
+    .summary-text { 
+      font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; pointer-events: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
+    }
+    .item-card.expanded .summary-text { display: block; -webkit-line-clamp: unset; }
+    
+    .expand-btn { background: transparent; border: none; color: var(--primary); font-size: 0.7rem; font-weight: 600; cursor: pointer; margin-top: 6px; padding: 2px 0; text-decoration: underline; }
+    .expand-btn:hover { color: var(--primary-hover); }
+
+    .ai-helper-bar { padding: 12px; border-top: 1px solid var(--border-color); background: white; }
+
+    /* Canvas Grid */
+    .canvas-infobar { padding: 8px 16px; background: #e2e8f0; display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+    .canvas-grid { padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; overflow-y: auto; flex: 1; align-items: flex-start; }
+    
+    /* Inline Editable Cluster Boxes */
+    .cluster-node {
+      background: white; border: 2px dashed #cbd5e1; border-radius: 12px; width: 100%; max-width: 360px; min-height: 250px;
+      display: flex; flex-direction: column; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .cluster-node:focus-within { border-color: var(--primary); border-style: solid; }
+    .cluster-header-edit { padding: 16px 16px 0 16px; display: flex; flex-direction: column; gap: 8px; }
+    
+    .inline-input-title { font-size: 1.1rem; font-weight: 700; border: none; outline: none; width: 100%; color: var(--text-main); font-family: inherit; }
+    .inline-input-title::placeholder { color: #94a3b8; font-weight: 500; }
+    .inline-input-desc { font-size: 0.85rem; border: none; outline: none; width: 100%; resize: none; color: var(--text-muted); font-family: inherit; line-height: 1.4; margin-bottom: 4px; }
+    
+    .cluster-dropzone { flex: 1; background: #f8fafc; border-radius: 0 0 10px 10px; padding: 12px; display: flex; flex-direction: column; min-height: 120px; border-top: 1px solid #e2e8f0; margin-top: 4px;}
+    .cluster-dropzone.drag-over { background: #dbeafe; border: 2px dashed #60a5fa; }
+    .cluster-dropzone.tap-target-active { background: #dbeafe; cursor: pointer; box-shadow: inset 0 0 0 2px #3b82f6; }
+    
+    .cluster-actions { padding: 8px 16px; background: white; border-radius: 0 0 10px 10px; display: flex; justify-content: flex-end; border-top: 1px solid #f1f5f9;}
+    .cluster-actions button { background: transparent; border: none; color: #ef4444; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+
+    .add-cluster-btn { width: 100%; max-width: 360px; height: 80px; border: 2px dashed #cbd5e1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted); cursor: pointer; background: transparent; }
+    .add-cluster-btn:hover { background: white; border-color: var(--primary); color: var(--primary); }
+
+    /* --- VIEW 3: ARTIFACT DOCUMENT SCREEN --- */
+    #artifact-screen { height: 100vh; overflow-y: auto; background: #f1f5f9; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+    
+    /* Top Action Bar in Artifact View */
+    .artifact-actions { width: 100%; max-width: 900px; display: flex; justify-content: space-between; margin-bottom: 20px; background: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border-color); align-items: center; }
+    .action-group { display: flex; gap: 10px; }
+
+    .document-paper { background: white; max-width: 900px; width: 100%; padding: 50px 60px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+    .doc-header { border-bottom: 3px solid var(--text-main); padding-bottom: 16px; margin-bottom: 30px; }
+    .doc-cluster { margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid #e2e8f0; }
+    .doc-cluster h2 { color: var(--primary); margin-bottom: 8px; font-size: 1.5rem; }
+    .doc-item-box { background: #f8fafc; border-left: 4px solid #cbd5e1; padding: 16px; margin-bottom: 12px; font-size: 0.85rem; border-radius: 0 8px 8px 0; }
+    
+    /* Next Steps / Prompts Section */
+    .next-steps-section { margin-top: 50px; background: #f8fafc; padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); }
+    .prompt-card { background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .prompt-card h4 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text-main); }
+    .prompt-card p.context { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+    .prompt-text { background: #0f172a; color: #f1f5f9; padding: 16px; border-radius: 6px; font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; margin-bottom: 12px; }
+
+    /* --- MODALS --- */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
+    .modal-content { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 650px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-header h3 { font-size: 1.25rem; font-weight: 700; }
+    .modal-close { background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
+    .modal-body p { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+    .modal-body textarea { width: 100%; height: 280px; font-family: monospace; font-size: 0.8rem; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: #f8fafc; resize: none; margin-bottom: 16px; }
+
+    /* Utility */
+    .tap-instruction { display: none; text-align: center; font-size: 0.75rem; color: var(--primary); font-weight: 700; padding: 8px; background: #eff6ff; margin-bottom: 10px; border-radius: 6px;}
+    @media (max-width: 768px) { .tap-instruction { display: block; } }
+    
+    /* Print Styles */
+    @media print {
+      body { background: white; }
+      .artifact-actions, .next-steps-section { display: none !important; }
+      #artifact-screen { padding: 0; height: auto; overflow: visible; display: block; }
+      .document-paper { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+      .doc-cluster { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="setup-screen">
+    <div class="config-container">
+      <div class="config-header">
+        <h1>OLOS Setup Engine</h1>
+        <p>Configure your workspace rules and signals pool.</p>
+      </div>
+      
+      <div class="config-field">
+        <label>Board Title</label>
+        <input type="text" id="config-title" class="config-input" value="Upskilling Labs: Comprehensive Problem Signals">
+      </div>
+
+      <div class="config-field">
+        <label>Incoming Data Pool (Friction Signals - 44 Pre-loaded)</label>
+        <div id="config-item-list" class="item-builder-list"></div>
+        <div class="add-item-bar">
+          <input type="text" id="new-item-title" class="config-input" placeholder="Title (e.g., Permit Delays)">
+          <input type="text" id="new-item-summary" class="config-input" placeholder="Description...">
+          <button class="btn btn-primary" onclick="addConfigItem()">Add</button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 24px;">
+        <button class="btn btn-primary" onclick="launchWorkspace()">Launch Board</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="board-workspace" class="hidden">
+    <aside class="panel-left">
+      <div class="panel-header" style="background: white;">
+        <h2>Signal Pool</h2>
+        <span id="pool-count" style="font-size: 0.75rem; background: #e2e8f0; padding: 3px 8px; border-radius: 12px;"></span>
+      </div>
+      <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Search signals or keywords..." oninput="filterItems()">
+      </div>
+      <div class="tap-instruction" id="tap-hint">Tap an item to move it</div>
+      <div class="scroll-area dropzone-pool" id="item-pool-zone"></div>
+      <div class="ai-helper-bar">
+        <button class="btn btn-outline" style="width: 100%; border-color: #93c5fd; color: #1e40af; background: #eff6ff;" onclick="openAIPromptModal()">
+          ✨ AI Learning & Thought Partner
+        </button>
+      </div>
+    </aside>
+
+    <main class="panel-center">
+      <div class="panel-header">
+        <h2 id="board-title-display">Clustering Board Layer</h2>
+        <button class="btn btn-primary" onclick="submitMapAndGenerateArtifact()">Finalize Map</button>
+      </div>
+      <div class="canvas-infobar">
+        <span id="validation-warning" style="color: #ef4444;"></span>
+      </div>
+      <div class="canvas-grid" id="canvas-grid-area">
+        <button class="add-cluster-btn" onclick="createNewCluster()">+ Add Cluster</button>
+      </div>
+    </main>
+  </div>
+
+  <div id="artifact-screen" class="hidden">
+    
+    <div class="artifact-actions">
+      <div>
+        <h3 style="font-size: 1.1rem; color: var(--text-main);">Final Review</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Export your clusters or move to the next phase.</p>
+      </div>
+      <div class="action-group">
+        <button class="btn btn-outline" onclick="location.reload()">Start Over</button>
+        <button class="btn btn-outline" onclick="window.print()">Print / Save PDF</button>
+        <button class="btn btn-primary" onclick="downloadMarkdown()">Download .md</button>
+      </div>
+    </div>
+
+    <div class="document-paper">
+      <div class="doc-header">
+        <h1 id="art-title" style="font-size: 1.75rem; font-weight: 800; margin-bottom: 4px;">Sensemaking Artifact</h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem;" id="art-date"></p>
+      </div>
+      
+      <div id="artifact-body-content"></div>
+
+      <div class="next-steps-section">
+        <h2 style="font-size: 1.3rem; margin-bottom: 8px;">Next Steps: AI Thought Partners</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px;">
+          Since you use a Google account for OLOS, you already have free access to <a href="https://gemini.google.com" target="_blank">Gemini</a> and <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a> (excellent for deeper research). You can also use <a href="https://chatgpt.com" target="_blank">ChatGPT</a>, <a href="https://claude.ai" target="_blank">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank">Perplexity</a> to deepen your understanding of the problem spaces you just mapped.
+        </p>
+
+        <div class="prompt-card">
+          <h4>1. Stakeholder Mapping</h4>
+          <p class="context">Identify the invisible actors in your problem space.</p>
+          <div class="prompt-text" id="prompt-stakeholder">Act as an expert UX researcher and systems thinker.
+
+I have created a problem space cluster called: [INSERT CLUSTER TITLE]
+It is defined by this shared barrier: [INSERT DESCRIPTION/SYNTHESIS]
+
+Help me build a robust Stakeholder Map for this space. Do not try to solve the problem. Instead, identify:
+1. The Primary Affected Stakeholder (Who feels the pain most directly?)
+2. Adjacent Stakeholders (Who else is impacted downstream?)
+3. Gatekeepers / Blockers (Who can constrain, slow, or prevent progress in this space?)
+4. Enablers / Intermediaries (Who has the access or trust to reach the affected stakeholders?)</div>
+          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-stakeholder')">Copy Prompt</button>
+        </div>
+
+        <div class="prompt-card">
+          <h4>2. Problematization</h4>
+          <p class="context">Challenge the assumptions baked into your clusters.</p>
+          <div class="prompt-text" id="prompt-problematize">Act as a critical theorist and problem-space analyst.
+
+I have created a problem space cluster called: [INSERT CLUSTER TITLE]
+It is defined by this shared barrier: [INSERT DESCRIPTION/SYNTHESIS]
+
+Help me problematize this space. Your goal is to complicate my understanding and look for systemic roots.
+1. What are the hidden assumptions baked into how I have defined this problem?
+2. If this problem persists, who currently benefits from the status quo? 
+3. Are there any structural biases (economic, racial, geographic) embedded in how this problem is framed?</div>
+          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-problematize')">Copy Prompt</button>
+        </div>
+
+        <div class="prompt-card">
+          <h4>3. Validation & Complicating Data</h4>
+          <p class="context">Find peer-reviewed literature, identify edge cases, and build a rapid research plan.</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;"><em>Tip: <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a> and <a href="https://www.perplexity.ai" target="_blank">Perplexity</a> are exceptionally good at this specific deep-research task.</em></p>
+          <div class="prompt-text" id="prompt-validate">Act as an expert research strategist and data validation expert.
+
+I have created a problem space cluster called: [INSERT CLUSTER TITLE]
+It is defined by this shared barrier: [INSERT DESCRIPTION/SYNTHESIS]
+
+I need to validate and complicate this problem space before moving forward. Help me design a rapid, rigorous investigation plan using primary methods (interviews, surveys) and secondary methods (peer-reviewed research, literature). 
+
+Please provide:
+1. Complicating Factors: What edge cases, missing voices, or contrarian data might prove my framing wrong or incomplete?
+2. Secondary Research: What specific academic fields, peer-reviewed topics, or existing literature should I quickly search to ground this in established evidence?
+3. Rapid Primary Research Plan: Give me 3 highly targeted interview questions or survey concepts I could deploy this week to test my core assumptions with real stakeholders.</div>
+          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-validate')">Copy Prompt</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="ai-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Learning & Thought Partnership Prompt</h3>
+        <button class="modal-close" onclick="closeAIPromptModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 8px;">Copy this prompt into your preferred LLM. It is designed to <strong>teach you about the dataset first</strong>, point out hidden throughlines, and guide you without solving the clustering for you.</p>
+        <p style="font-size: 0.8rem; margin-bottom: 16px;">
+          <em>Try it with: <a href="https://gemini.google.com" target="_blank">Gemini</a>, <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a>, <a href="https://chatgpt.com" target="_blank">ChatGPT</a>, <a href="https://claude.ai" target="_blank">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank">Perplexity</a>.</em>
+        </p>
+        <textarea id="ai-prompt-text" readonly></textarea>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-primary" style="flex: 1;" onclick="copyAIPrompt()">Copy Prompt</button>
+          <button class="btn btn-outline" onclick="closeAIPromptModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let appState = {
+      settings: { title: "" },
+      items: [
+        { id: "item_01", tag: "Friction Signal", title: "Lack of localized, person-focused care communities", summary: "Neighborhoods and communities lack structured environments that prioritize person-focused care and localized education." },
+        { id: "item_02", tag: "Friction Signal", title: "Diabetes management tools fail in real-world contexts", summary: "Adults with Type 2 diabetes struggle with real-time decisions about meals, activity, and medications in varied daily contexts, leading to frequent out-of-range glucose and frustration." },
+        { id: "item_03", tag: "Friction Signal", title: "Inaccessible generative AI model development", summary: "Making generative AI models remains difficult for average workers due to high technical barriers." },
+        { id: "item_04", tag: "Friction Signal", title: "Teachers lose planning time to redundant data entry", summary: "Educational systems do not communicate. Teachers lose valuable instructional time because they are forced to manually re-key student data across disconnected platforms." },
+        { id: "item_05", tag: "Friction Signal", title: "Siloed access to less invasive surgical innovations", summary: "Families of children with congenital heart defects cannot easily access relevant information on new clinical breakthroughs or less invasive surgical options, leaving them unable to advocate for better care." },
+        { id: "item_06", tag: "Friction Signal", title: "Missed 20-year window for proactive Alzheimer's intervention", summary: "Alzheimer's is typically diagnosed after symptoms start, missing the 20-year window of preliminary brain changes where personalized therapies could proactively halt progression." },
+        { id: "item_07", tag: "Friction Signal", title: "HIPAA compliance fears block accessibility tools", summary: "Clinicians face high administrative burden and legal risks when trying to use third-party speech-to-text tools for hearing-impaired patients, unintentionally limiting care options." },
+        { id: "item_08", tag: "Friction Signal", title: "Language barriers prevent proactive healthcare", summary: "Uninsured individuals and immigrants lack information about available medical or holistic services due to language barriers, leaving them unable to ask questions or proactively manage their health." },
+        { id: "item_09", tag: "Friction Signal", title: "Logistical friction prevents intentional connection", summary: "It is increasingly difficult to schedule meaningful 15-minute catch-ups with friends and mentors across different time zones, leading to social disconnection." },
+        { id: "item_11", tag: "Friction Signal", title: "Holistic health tracking requires living in spreadsheets", summary: "Generic health advice fails because capturing comprehensive personal data (meals, drinks, workouts, sleep) is tedious, fragmented across device ecosystems, and exhausting to maintain." },
+        { id: "item_12", tag: "Friction Signal", title: "Patients forced to act as medical couriers", summary: "Healthcare silos force patients to hand-carry their own ongoing health histories between disconnected providers, increasing the risk of potentially dangerous errors or omissions." },
+        { id: "item_13", tag: "Friction Signal", title: "Gap between medical clearance and wellness practice", summary: "Patients are told to 'exercise' post-rehab without specific guidance or shared context being passed to movement professionals, leading to confusion, fear of re-injury, and poor recovery outcomes." },
+        { id: "item_14", tag: "Friction Signal", title: "Algorithmic echo chambers distort medical trust", summary: "Without a trusted primary care relationship, people rely on algorithmically-driven, unvetted social media advice, preventing them from getting diverse perspectives or trustworthy health information." },
+        { id: "item_15", tag: "Friction Signal", title: "ERs rely on dangerous, outdated medication lists", summary: "When patients arrive at the ER unable to communicate, hospital intake systems pull medication lists that are often years out of date, risking dangerous clinical decisions." },
+        { id: "item_16", tag: "Friction Signal", title: "Information overload paralyzes local decision-making", summary: "Members of local communities are bombarded with so much information they cannot identify the most pressing challenges impacting their neighborhoods, delaying collective action." },
+        { id: "item_17", tag: "Friction Signal", title: "Cancer support resources are highly siloed and static", summary: "Cancer patients face fear and isolation because survival resources are siloed by hospital or jurisdiction, leaving them without an evolving guide as their needs change over a multi-year journey." },
+        { id: "item_18", tag: "Friction Signal", title: "Working class citizens alienated from systemic decisions", summary: "Everyday working-class folks are most affected by upper-echelon policy decisions, yet feel like bystanders unable to involve themselves in the process to improve their own situations." },
+        { id: "item_19", tag: "Friction Signal", title: "Fragmented medical imaging delays diagnosis", summary: "Critical medical history and imaging are frequently missing or incomplete on healthcare platforms during appointments, adversely impacting diagnostic efficiency and driving up costs." },
+        { id: "item_20", tag: "Friction Signal", title: "Providers use mutually exclusive patient portals", summary: "Patients cannot remember specific vaccine dates or medications at urgent care because not all providers use the same platform (e.g., MyChart vs. Privia), trapping their complete record." },
+        { id: "item_21", tag: "Friction Signal", title: "Redundant, un-synced patient intake paperwork", summary: "Patients waste significant time repeatedly filling out identical intake history forms across different specialists, often completing digital forms only to be handed paper versions upon arrival." },
+        { id: "item_22", tag: "Friction Signal", title: "Reactive prior authorization causes care delays", summary: "Administrative staff only discover what documentation is missing for a prior authorization *after* the request is submitted and rejected, forcing them to reopen charts and delaying patient procedures." },
+        { id: "item_23", tag: "Friction Signal", title: "Complex coding rules financially exclude providers", summary: "The prohibitive cost of dedicated coding personnel and complex commercial technical solutions excludes some providers from serving lower-income markets due to high denial rates and underpayments." },
+        { id: "item_24", tag: "Friction Signal", title: "Impossible eligibility hurdles for social safety nets", summary: "People struggling to barely pay for living expenses find that the bureaucratic rules of new assistance programs make achieving eligibility nearly impossible." },
+        { id: "item_25", tag: "Friction Signal", title: "Manual data cleanup bottlenecks sustainability tracking", summary: "Outdated software makes viewing and cleaning utility data incredibly time-consuming, wasting hours of manual labor before sustainability tracking can even begin." },
+        { id: "item_26", tag: "Friction Signal", title: "Lack of real-time personal financial prompts", summary: "Users lack automated tools to analyze daily stock portfolios in real-time to generate simple buy-sell-hold recommendations, missing quick decision-making opportunities." },
+        { id: "item_27", tag: "Friction Signal", title: "AI tools erase the relationship-capital of older workers", summary: "Older generations resist adopting AI tools not out of inability, but because the tools are designed to automate away the relationship-building and earned trust that forms their professional identity." },
+        { id: "item_28", tag: "Friction Signal", title: "Small trucking fleets forced to manage compliance via spreadsheets", summary: "Small and mid-sized trucking companies (5–150 trucks) rely on fragmented, manual spreadsheets to track complex FMCSA safety requirements, leading to poor audit readiness and increased accidents." },
+        { id: "item_29", tag: "Friction Signal", title: "Invisible environmental footprint of AI generation", summary: "The explosion of AI usage consumes massive, opaque amounts of energy, water, and other physical resources without end-user visibility." },
+        { id: "item_30", tag: "Friction Signal", title: "Layoffs immediately sever healthcare access", summary: "When individuals are laid off, the system terminates their employer medical insurance instantly, leaving them stranded with prohibitively expensive COBRA alternatives." },
+        { id: "item_31", tag: "Friction Signal", title: "Inconsistent regional water quality data", summary: "While the Anacostia River has clear pass/fail water quality data for recreation, this vital public information is entirely missing for the rest of the DMV waterways." },
+        { id: "item_32", tag: "Friction Signal", title: "Unsustainable storage of unused generative AI media", summary: "Data centers are filling up with massive, unused AI-generated images and videos (which are 200x larger than text), driving up energy costs for media that is essentially digital slop." },
+        { id: "item_33", tag: "Friction Signal", title: "Water infrastructure operators fly blind to future failures", summary: "Municipal water operators have millions of data points from SCADA systems, but lack predictive pattern recognition tools to warn them *before* a regulatory threshold is crossed." },
+        { id: "item_34", tag: "Friction Signal", title: "Clean-energy adoption requires navigating a bureaucratic maze", summary: "Households wanting to adopt clean energy are paralyzed by a fragmented system of overlapping rebates, financing, and local incentives, turning sustainable upgrades into a privilege for those with excess time." },
+        { id: "item_35", tag: "Friction Signal", title: "Fast fashion traps low-income consumers in replacement cycles", summary: "A 'poverty premium' forces budget-constrained consumers to constantly buy and discard cheap, low-quality garments, clogging landfills and exploiting international garment workers." },
+        { id: "item_36", tag: "Friction Signal", title: "Tourism ecosystem subsidizes high-impact travel", summary: "The travel industry prioritizes cheap flights and energy-intensive accommodations through pricing and rewards, making low-impact, sustainable choices harder to find and more expensive to justify." },
+        { id: "item_37", tag: "Friction Signal", title: "Digital carbon footprints are hidden in enterprise dashboards", summary: "Individuals and nonprofits have no plain-language way to measure the carbon cost of their digital lives (video calls, AI, scrolling), because existing data is locked in highly technical engineering dashboards." },
+        { id: "item_38", tag: "Friction Signal", title: "Harmful tap water contaminants hidden in complex data", summary: "DC residents drink tap water daily without knowing if it contains PFAS, because the government data proving contamination is published in formats ordinary people cannot decipher." },
+        { id: "item_39", tag: "Friction Signal", title: "Unverified corporate environmental claims", summary: "Companies self-report environmental claims without standardized formats or required verification, allowing them to project sustainability without actual consequence or accountability." },
+        { id: "item_40", tag: "Friction Signal", title: "Hidden diesel emissions near vulnerable communities", summary: "Thousands of data center backup diesel generators operate near schools and daycares, but disclosure regimes only track annual permits rather than real-time, localized health impacts." },
+        { id: "item_41", tag: "Friction Signal", title: "Prohibitive costs block sustainable physical businesses", summary: "While digital businesses scale easily, local entrepreneurs trying to build physical, sustainable businesses or makerspaces in the District are blocked by massive real estate and startup costs." },
+        { id: "item_42", tag: "Friction Signal", title: "Lack of truly small-scale residential wind power", summary: "Homeowners looking for micro-scale wind power capture and storage for garden or personal use cannot find viable options, as the market only caters to massive turbines." },
+        { id: "item_43", tag: "Friction Signal", title: "Pollution accountability data is deliberately scattered", summary: "The evidence needed to hold major polluters accountable exists in public data, but it is deliberately scattered across incompatible databases, preventing communities from identifying bad actors." },
+        { id: "item_44", tag: "Friction Signal", title: "Overwhelming and contradictory recycling rules", summary: "Consumers are paralyzed by recycling guides that cannot possibly list every item, leading to 'wish-cycling' that ultimately contaminates batches and sends everything to the landfill." },
+        { id: "item_45", tag: "Friction Signal", title: "HealthTech ignores broad mental health access", summary: "Despite a blossoming of HealthTech apps, they focus exclusively on narrow, profitable demographics, leaving the broader population without accessible mental health resources." }
+      ],
+      clusters: [],
+      selectedItemForMove: null
+    };
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = (el.scrollHeight) + 'px';
+    }
+
+    function renderConfigItems() {
+      const listDiv = document.getElementById('config-item-list');
+      listDiv.innerHTML = appState.items.map(item => `
+        <div class="config-item-row">
+          <div><h4>${item.title}</h4><p>${item.summary}</p></div>
+          <button class="config-item-del" onclick="removeConfigItem('${item.id}')">✕</button>
+        </div>
+      `).join('');
+    }
+    
+    function addConfigItem() {
+      const t = document.getElementById('new-item-title').value;
+      const s = document.getElementById('new-item-summary').value;
+      if(t && s) { 
+        appState.items.push({ id:`item_${Date.now()}`, tag:"Friction Signal", title:t, summary:s }); 
+        document.getElementById('new-item-title').value=''; 
+        document.getElementById('new-item-summary').value=''; 
+        renderConfigItems(); 
+      }
+    }
+    
+    function removeConfigItem(id) { appState.items = appState.items.filter(i=>i.id!==id); renderConfigItems(); }
+    renderConfigItems();
+
+    function launchWorkspace() {
+      appState.settings.title = document.getElementById('config-title').value || "Clustering Board";
+      document.getElementById('setup-screen').classList.add('hidden');
+      document.getElementById('board-workspace').classList.remove('hidden');
+      document.getElementById('board-title-display').innerText = appState.settings.title;
+      createNewCluster(); 
+      renderBoard();
+      setupGlobalDragAndDrop();
+    }
+
+    function renderBoard() {
+      renderItemPool();
+      renderCanvasGrid();
+    }
+
+    function filterItems() {
+      const query = document.getElementById('search-input').value.toLowerCase();
+      const pool = document.getElementById('item-pool-zone');
+      const cards = pool.querySelectorAll('.item-card');
+      
+      cards.forEach(card => {
+        const titleText = card.querySelector('h3').innerText.toLowerCase();
+        const summaryText = card.querySelector('.summary-text').innerText.toLowerCase();
+        if(titleText.includes(query) || summaryText.includes(query)) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function renderItemPool() {
+      const pool = document.getElementById('item-pool-zone');
+      pool.innerHTML = '';
+      let unused = 0;
+      appState.items.forEach(item => {
+        if(!appState.clusters.some(c => c.itemIds.includes(item.id))) {
+          unused++;
+          pool.appendChild(createItemCard(item));
+        }
+      });
+      document.getElementById('pool-count').innerText = `${unused} Unassigned`;
+      filterItems(); 
+    }
+
+    function renderCanvasGrid() {
+      const grid = document.getElementById('canvas-grid-area');
+      grid.querySelectorAll('.cluster-node').forEach(n => n.remove());
+      const addBtn = grid.querySelector('.add-cluster-btn');
+
+      appState.clusters.forEach(cluster => {
+        const node = document.createElement('div');
+        node.className = 'cluster-node';
+        node.id = cluster.id;
+        
+        const header = document.createElement('div');
+        header.className = 'cluster-header-edit';
+        header.innerHTML = `
+          <input type="text" class="inline-input-title" placeholder="Name this cluster..." value="${cluster.title}" onchange="updateClusterData('${cluster.id}', 'title', this.value)">
+          <textarea class="inline-input-desc" placeholder="What shared barrier connects these?..." oninput="autoResize(this)" onchange="updateClusterData('${cluster.id}', 'description', this.value)">${cluster.description}</textarea>
+        `;
+        
+        const dropzone = document.createElement('div');
+        dropzone.className = 'cluster-dropzone dropzone-target';
+        dropzone.setAttribute('data-cluster-id', cluster.id);
+        
+        dropzone.addEventListener('click', () => {
+          if(appState.selectedItemForMove) moveItemToCluster(appState.selectedItemForMove, cluster.id);
+        });
+
+        cluster.itemIds.forEach(itemId => {
+          const item = appState.items.find(i => i.id === itemId);
+          if(item) dropzone.appendChild(createItemCard(item, true));
+        });
+
+        const actions = document.createElement('div');
+        actions.className = 'cluster-actions';
+        actions.innerHTML = `<button onclick="deleteCluster('${cluster.id}')">Delete Node</button>`;
+
+        node.appendChild(header);
+        node.appendChild(dropzone);
+        node.appendChild(actions);
+        grid.insertBefore(node, addBtn);
+        
+        const ta = header.querySelector('textarea');
+        if(ta) autoResize(ta);
+      });
+      
+      updateTapToMoveUI();
+    }
+
+    function createItemCard(item, inCluster = false) {
+      const card = document.createElement('div');
+      card.className = `item-card ${appState.selectedItemForMove === item.id ? 'selected-for-move' : ''}`;
+      card.id = item.id;
+      card.draggable = true;
+      if(inCluster) card.style.marginBottom = '0';
+      
+      card.innerHTML = `
+        <span class="card-tag">${item.tag}</span>
+        <h3>${item.title}</h3>
+        <p class="summary-text">${item.summary}</p>
+        <button class="expand-btn">Read more</button>
+      `;
+      
+      card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', card.id); card.classList.add('dragging'); });
+      card.addEventListener('dragend', () => card.classList.remove('dragging'));
+      
+      card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if(e.target.classList.contains('expand-btn')) {
+          card.classList.toggle('expanded');
+          e.target.innerText = card.classList.contains('expanded') ? 'Show less' : 'Read more';
+          return;
+        }
+        if(appState.selectedItemForMove === item.id) {
+          appState.selectedItemForMove = null;
+        } else {
+          appState.selectedItemForMove = item.id; 
+        }
+        renderBoard(); 
+      });
+
+      return card;
+    }
+
+    function createNewCluster() { appState.clusters.push({ id:`cluster_${Date.now()}`, title:"", description:"", itemIds:[] }); renderCanvasGrid(); }
+    function updateClusterData(id, field, val) { const c = appState.clusters.find(x=>x.id===id); if(c) c[field] = val; }
+    function deleteCluster(id) { appState.clusters = appState.clusters.filter(c=>c.id!==id); renderBoard(); }
+
+    function moveItemToCluster(itemId, clusterId) {
+      appState.clusters.forEach(c => c.itemIds = c.itemIds.filter(i => i !== itemId)); 
+      if(clusterId) {
+        const target = appState.clusters.find(c => c.id === clusterId);
+        if(target) target.itemIds.push(itemId);
+      }
+      appState.selectedItemForMove = null;
+      renderBoard();
+    }
+
+    function setupGlobalDragAndDrop() {
+      const pool = document.getElementById('item-pool-zone');
+      pool.addEventListener('dragover', e => e.preventDefault());
+      pool.addEventListener('drop', e => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if(id) moveItemToCluster(id, null); });
+      pool.addEventListener('click', () => { if(appState.selectedItemForMove) moveItemToCluster(appState.selectedItemForMove, null); });
+
+      const grid = document.getElementById('canvas-grid-area');
+      grid.addEventListener('dragover', e => { const z = e.target.closest('.dropzone-target'); if(z) { e.preventDefault(); z.classList.add('drag-over'); } });
+      grid.addEventListener('dragleave', e => { const z = e.target.closest('.dropzone-target'); if(z) z.classList.remove('drag-over'); });
+      grid.addEventListener('drop', e => {
+        const z = e.target.closest('.dropzone-target');
+        if(z) { e.preventDefault(); z.classList.remove('drag-over'); const id = e.dataTransfer.getData('text/plain'); if(id) moveItemToCluster(id, z.getAttribute('data-cluster-id')); }
+      });
+    }
+
+    function updateTapToMoveUI() {
+      const dropzones = document.querySelectorAll('.dropzone-target, .dropzone-pool');
+      dropzones.forEach(z => {
+        if(appState.selectedItemForMove) z.classList.add('tap-target-active');
+        else z.classList.remove('tap-target-active');
+      });
+      const hint = document.getElementById('tap-hint');
+      if(appState.selectedItemForMove) { hint.innerText = "Tap a cluster zone to drop item."; hint.style.background = "#dbeafe"; }
+      else { hint.innerText = "Tap an item to move it"; hint.style.background = "#eff6ff"; }
+    }
+
+    function openAIPromptModal() {
+      const t = document.getElementById('ai-prompt-text');
+      let p = `Act as an expert UX researcher and sensemaking partner.\n\nI have collected a list of ${appState.items.length} observed friction signals. Before I start clustering these into problem spaces, I need to fully understand the landscape of this data.\n\nPlease read the items below and follow this 3-step process:\n\n1. UNDERSTAND THE LANDSCAPE: Provide a concise, high-level summary of the major themes and pain points represented here. What are the loudest and most urgent signals?\n2. NOTICE THROUGHLINES: Point out 1 or 2 unexpected structural connections or hidden patterns across seemingly different contexts (e.g., healthcare systems vs. environmental compliance).\n3. GUIDE CLUSTERING: Ask me 2 provocative, probing questions to help me start grouping these into meaningful problem spaces myself. DO NOT do the clustering for me.\n\nHere is the raw data pool:\n`;
+      appState.items.forEach(i => p += `\n- [${i.title}] ${i.summary}`);
+      t.value = p;
+      document.getElementById('ai-modal').classList.remove('hidden');
+    }
+    function closeAIPromptModal() { document.getElementById('ai-modal').classList.add('hidden'); }
+    
+    function copyAIPrompt() { 
+      const t = document.getElementById('ai-prompt-text'); 
+      t.select(); navigator.clipboard.writeText(t.value); alert("Prompt copied successfully!"); 
+    }
+
+    function copyText(elementId) {
+      const t = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(t);
+      alert("Prompt copied successfully!");
+    }
+
+    function submitMapAndGenerateArtifact() {
+      document.getElementById('board-workspace').classList.add('hidden');
+      document.getElementById('artifact-screen').classList.remove('hidden');
+      document.getElementById('art-date').innerText = new Date().toLocaleDateString();
+      
+      const body = document.getElementById('artifact-body-content');
+      body.innerHTML = '';
+      appState.clusters.forEach(c => {
+        if(c.itemIds.length === 0 && !c.title) return;
+        let html = `<div class="doc-cluster"><h2>${c.title || 'Untitled Cluster'}</h2>`;
+        html += `<p style="margin-bottom:12px; font-style:italic;">"${c.description || 'No synthesis provided.'}"</p>`;
+        c.itemIds.forEach(id => {
+          const item = appState.items.find(i=>i.id===id);
+          if(item) html += `<div class="doc-item-box"><strong>${item.title}</strong><br><span style="color:#64748b">${item.summary}</span></div>`;
+        });
+        html += `</div>`;
+        body.innerHTML += html;
+      });
+    }
+
+    function downloadMarkdown() {
+      let md = `# ${appState.settings.title || 'Sensemaking Artifact'}\n`;
+      md += `*Generated: ${new Date().toLocaleDateString()}*\n\n`;
+      md += `---\n\n`;
+
+      appState.clusters.forEach(c => {
+        if(c.itemIds.length === 0 && !c.title) return;
+        md += `## ${c.title || 'Untitled Cluster'}\n\n`;
+        md += `> **Synthesis:** ${c.description || 'No synthesis provided.'}\n\n`;
+        md += `### Grouped Signals:\n`;
+        
+        c.itemIds.forEach(id => {
+          const item = appState.items.find(i=>i.id===id);
+          if(item) {
+            md += `- **${item.title}**\n  *${item.summary}*\n\n`;
+          }
+        });
+        md += `---\n\n`;
+      });
+
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Sensemaking_Artifact.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
