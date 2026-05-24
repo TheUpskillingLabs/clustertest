@@ -3,162 +3,230 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OLOS - Sensemaking Board</title>
+  <title>OLOS - Sensemaking Dashboard</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
 
+    /* --- BRAND DESIGN SYSTEM TOKENS --- */
     :root {
-      --bg-canvas: #f8fafc;
-      --bg-panel: #ffffff;
-      --border-color: #cbd5e1;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --card-bg: #ffffff;
-      --card-border: #e2e8f0;
-      --tag-bg: #eff6ff;
-      --tag-text: #1e40af;
+      --primary-teal: #0094a0;
+      --action-red: #ee1c25;
+      --midnight: #101820;
+      --ghost-white: #ffffff;
+      --cloud: #e6e6e6;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Geologica', sans-serif; }
-    body { color: var(--text-main); background-color: var(--bg-canvas); height: 100vh; overflow: hidden; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Geologica', sans-serif; 
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body { 
+      color: var(--midnight); 
+      background-color: var(--cloud); 
+      height: 100vh; 
+      width: 100vw;
+      overflow: hidden; 
+      display: flex;
+      flex-direction: column;
+    }
 
     .hidden { display: none !important; }
-    .btn { padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; cursor: pointer; border: none; transition: all 0.2s; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:hover { background: var(--primary-hover); }
-    .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
-    .btn-outline:hover { background: #f1f5f9; }
+
+    /* --- LAYOUT & NAVIGATION UI --- */
+    .btn { 
+      padding: 12px 24px; 
+      border-radius: 8px; 
+      font-weight: 600; 
+      font-size: 0.875rem; 
+      cursor: pointer; 
+      border: none; 
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+    }
     
-    a { color: var(--primary); text-decoration: none; font-weight: 500; }
-    a:hover { text-decoration: underline; }
+    .btn-primary { 
+      background: var(--primary-teal); 
+      color: var(--ghost-white); 
+    }
+    .btn-primary:hover { 
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-outline { 
+      background: var(--ghost-white); 
+      border: 2px solid var(--cloud); 
+      color: var(--midnight); 
+    }
+    .btn-outline:hover { 
+      background: var(--cloud); 
+    }
+
+    .btn-action {
+      background: var(--action-red);
+      color: var(--ghost-white);
+    }
+    .btn-action:hover {
+      opacity: 0.9;
+    }
 
     /* --- VIEW 1: SETUP SCREEN --- */
-    #setup-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f172a; color: white; overflow-y: auto; padding: 20px; }
-    .config-container { background: #1e293b; padding: 30px; border-radius: 16px; width: 100%; max-width: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-    .config-header h1 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 700; color: #38bdf8;}
-    .config-header p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 24px; }
-    .config-field { margin-bottom: 16px; }
-    .config-field label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 6px; color: #e2e8f0; }
-    .config-input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 0.875rem; outline: none; }
-    .config-input:focus { border-color: #38bdf8; }
+    #setup-screen { 
+      height: 100vh; 
+      width: 100vw;
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      background: var(--midnight); 
+      overflow-y: auto; 
+      padding: 24px; 
+    }
+    .config-container { 
+      background: rgba(255, 255, 255, 0.05); 
+      padding: 40px; 
+      border-radius: 12px; 
+      width: 100%; 
+      max-width: 760px; 
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .config-header h1 { font-size: 1.75rem; margin-bottom: 8px; font-weight: 700; color: var(--primary-teal); }
+    .config-header p { color: var(--cloud); font-size: 0.9rem; margin-bottom: 32px; opacity: 0.8; }
+    .config-field { margin-bottom: 24px; }
+    .config-field label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 8px; color: var(--ghost-white); }
+    .config-input { width: 100%; padding: 14px; background: var(--midnight); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--ghost-white); font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
+    .config-input:focus { border-color: var(--primary-teal); }
 
-    .item-builder-list { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 12px; }
-    .config-item-row { background: #1e293b; border: 1px solid #334155; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .config-item-row h4 { font-size: 0.875rem; color: #f1f5f9; margin-bottom: 4px;}
-    .config-item-row p { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
-    .config-item-del { background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem; padding: 0 5px;}
+    .item-builder-list { background: var(--midnight); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; height: 220px; overflow-y: auto; margin-bottom: 16px; }
+    .config-item-row { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 14px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .config-item-row h4 { font-size: 0.875rem; color: var(--ghost-white); margin-bottom: 4px; }
+    .config-item-row p { font-size: 0.75rem; color: var(--cloud); opacity: 0.7; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
     
-    .add-item-bar { display: flex; flex-direction: column; gap: 10px; }
+    .add-item-bar { display: flex; gap: 12px; flex-direction: column; }
     @media(min-width: 600px) { .add-item-bar { flex-direction: row; } }
 
-    /* --- VIEW 2: BOARD WORKSPACE --- */
-    #board-workspace { display: flex; flex-direction: row; width: 100%; height: 100vh; }
-    .panel-left { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10; }
-    .panel-center { flex: 1; display: flex; flex-direction: column; background: #f1f5f9; position: relative; overflow: hidden; }
+    /* --- UPSKILLING INSIGHT BANNERS --- */
+    .upskill-banner { 
+      background: rgba(0, 148, 160, 0.1); 
+      color: var(--midnight); 
+      padding: 20px 24px; 
+      border-radius: 8px; 
+      margin-bottom: 32px; 
+      border-left: 4px solid var(--primary-teal); 
+    }
+    #setup-screen .upskill-banner {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--cloud);
+      border-left-color: var(--primary-teal);
+    }
+    .upskill-banner h3 { font-size: 0.95rem; margin-bottom: 6px; color: var(--primary-teal); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+    .upskill-banner p { font-size: 0.875rem; line-height: 1.5; }
+
+    /* --- VIEW 2: APPLICATION WORKSPACE --- */
+    #board-workspace { display: flex; flex-direction: row; width: 100vw; height: 100vh; flex: 1; min-height: 0; }
+    .panel-left { width: 360px; background: var(--ghost-white); border-right: 2px solid var(--cloud); display: flex; flex-direction: column; height: 100%; min-height: 0; }
+    .panel-center { flex: 1; display: flex; flex-direction: column; background: var(--cloud); position: relative; height: 100%; min-height: 0; }
     
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
       #board-workspace { flex-direction: column; }
-      .panel-left { width: 100%; height: 45vh; border-right: none; border-bottom: 2px solid var(--border-color); }
+      .panel-left { width: 100%; height: 45vh; border-right: none; border-bottom: 2px solid var(--cloud); }
       .panel-center { height: 55vh; }
     }
 
-    .panel-header { padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: white; }
-    .panel-header h2 { font-size: 1rem; font-weight: 600; }
-    .scroll-area { flex: 1; overflow-y: auto; padding: 16px; }
+    .panel-header { padding: 20px 24px; border-bottom: 2px solid var(--cloud); display: flex; justify-content: space-between; align-items: center; background: var(--ghost-white); height: 80px; flex-shrink: 0; }
+    .panel-header h2 { font-size: 1.1rem; font-weight: 700; }
+    .scroll-area { flex: 1; overflow-y: auto; padding: 20px; min-height: 0; }
 
-    /* Search Bar */
-    .search-container { padding: 10px 16px; border-bottom: 1px solid var(--border-color); background: #f8fafc; }
-    .search-input { width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.8rem; outline: none; transition: border-color 0.2s; }
-    .search-input:focus { border-color: var(--primary); }
+    .search-container { padding: 12px 24px; border-bottom: 2px solid var(--cloud); background: var(--ghost-white); flex-shrink: 0; }
+    .search-input { width: 100%; padding: 10px 16px; border: 2px solid var(--cloud); border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; background: var(--ghost-white); }
+    .search-input:focus { border-color: var(--primary-teal); }
 
-    /* Item Cards & Tap-to-Move States */
+    /* Drag Cards */
     .item-card {
-      background: var(--card-bg); border: 2px solid var(--card-border); border-radius: 8px;
-      padding: 14px; margin-bottom: 12px; cursor: grab; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-      transition: all 0.2s; user-select: none;
+      background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 8px;
+      padding: 16px; margin-bottom: 12px; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      transition: all 0.2s ease; user-select: none;
     }
-    .item-card:hover { border-color: #94a3b8; }
-    .item-card.dragging { opacity: 0.5; }
-    .item-card.selected-for-move { border-color: var(--primary); background: #eff6ff; box-shadow: 0 0 0 3px rgba(37,99,235,0.2); transform: scale(0.98); }
+    .item-card:hover { border-color: var(--primary-teal); }
+    .item-card.selected-for-move { border-color: var(--primary-teal); background: rgba(0, 148, 160, 0.04); }
     
-    .card-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; background: var(--tag-bg); color: var(--tag-text); padding: 3px 6px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; }
-    .item-card h3 { font-size: 0.85rem; font-weight: 600; line-height: 1.3; margin-bottom: 6px; pointer-events: none;}
+    .card-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; background: var(--cloud); color: var(--midnight); padding: 4px 8px; border-radius: 4px; margin-bottom: 10px; text-transform: uppercase; }
+    .item-card h3 { font-size: 0.9rem; font-weight: 600; line-height: 1.4; margin-bottom: 6px; color: var(--midnight); }
     
-    .summary-text { 
-      font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; pointer-events: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
-    }
+    .summary-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .item-card.expanded .summary-text { display: block; -webkit-line-clamp: unset; }
     
-    .expand-btn { background: transparent; border: none; color: var(--primary); font-size: 0.7rem; font-weight: 600; cursor: pointer; margin-top: 6px; padding: 2px 0; text-decoration: underline; }
-    .expand-btn:hover { color: var(--primary-hover); }
+    .expand-btn { background: transparent; border: none; color: var(--primary-teal); font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-top: 8px; display: block; text-decoration: underline; }
 
-    .ai-helper-bar { padding: 12px; border-top: 1px solid var(--border-color); background: white; }
+    .ai-helper-bar { padding: 16px 24px; border-top: 2px solid var(--cloud); background: var(--ghost-white); flex-shrink: 0; }
 
-    /* Canvas Grid */
-    .canvas-infobar { padding: 8px 16px; background: #e2e8f0; display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
-    .canvas-grid { padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; overflow-y: auto; flex: 1; align-items: flex-start; }
+    /* Canvas Architecture */
+    .canvas-infobar { padding: 10px 24px; background: var(--midnight); display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: var(--cloud); flex-shrink: 0; }
+    .canvas-grid { padding: 32px; display: flex; flex-wrap: wrap; gap: 24px; overflow-y: auto; flex: 1; align-items: flex-start; min-height: 0; }
     
-    /* Inline Editable Cluster Boxes */
+    /* Inline Workspace Nodes */
     .cluster-node {
-      background: white; border: 2px dashed #cbd5e1; border-radius: 12px; width: 100%; max-width: 360px; min-height: 250px;
-      display: flex; flex-direction: column; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      background: var(--ghost-white); border: 2px dashed var(--border-light); border-radius: 12px; width: 100%; max-width: 360px; min-height: 300px;
+      display: flex; flex-direction: column; transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(16,24,32,0.02); overflow: hidden;
     }
-    .cluster-node:focus-within { border-color: var(--primary); border-style: solid; }
-    .cluster-header-edit { padding: 16px 16px 0 16px; display: flex; flex-direction: column; gap: 8px; }
+    .cluster-node:focus-within { border-color: var(--primary-teal); border-style: solid; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+    .cluster-header-edit { padding: 20px 20px 0 20px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
     
-    .inline-input-title { font-size: 1.1rem; font-weight: 700; border: none; outline: none; width: 100%; color: var(--text-main); font-family: inherit; }
-    .inline-input-title::placeholder { color: #94a3b8; font-weight: 500; }
-    .inline-input-desc { font-size: 0.85rem; border: none; outline: none; width: 100%; resize: none; color: var(--text-muted); font-family: inherit; line-height: 1.4; margin-bottom: 4px; }
+    .inline-input-title { font-size: 1.15rem; font-weight: 700; border: none; outline: none; width: 100%; color: var(--midnight); background: transparent; border-bottom: 2px solid transparent; padding-bottom: 4px; }
+    .inline-input-title:focus { border-bottom-color: var(--cloud); }
+    .inline-input-title::placeholder { color: var(--border-light); }
     
-    .cluster-dropzone { flex: 1; background: #f8fafc; border-radius: 0 0 10px 10px; padding: 12px; display: flex; flex-direction: column; min-height: 120px; border-top: 1px solid #e2e8f0; margin-top: 4px;}
-    .cluster-dropzone.drag-over { background: #dbeafe; border: 2px dashed #60a5fa; }
-    .cluster-dropzone.tap-target-active { background: #dbeafe; cursor: pointer; box-shadow: inset 0 0 0 2px #3b82f6; }
+    .inline-input-desc { font-size: 0.875rem; border: none; outline: none; width: 100%; resize: none; color: var(--text-muted); background: transparent; line-height: 1.5; border-bottom: 2px solid transparent; padding-bottom: 4px; }
+    .inline-input-desc:focus { border-bottom-color: var(--cloud); }
     
-    .cluster-actions { padding: 8px 16px; background: white; border-radius: 0 0 10px 10px; display: flex; justify-content: flex-end; border-top: 1px solid #f1f5f9;}
-    .cluster-actions button { background: transparent; border: none; color: #ef4444; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+    .cluster-dropzone { flex: 1; background: var(--cloud); padding: 16px; display: flex; flex-direction: column; min-height: 140px; border-top: 2px solid var(--cloud); margin-top: 12px; gap: 12px; overflow-y: auto; }
+    .cluster-dropzone.drag-over { background: rgba(0, 148, 160, 0.05); border: 2px dashed var(--primary-teal) !important; }
+    .cluster-dropzone.tap-target-active { background: rgba(0, 148, 160, 0.02); cursor: pointer; border: 2px dashed var(--primary-teal); }
+    
+    .cluster-actions { padding: 12px 20px; background: var(--ghost-white); display: flex; justify-content: flex-end; border-top: 2px solid var(--cloud); flex-shrink: 0; }
+    .cluster-actions button { background: transparent; border: none; color: var(--action-red); font-size: 0.75rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    .add-cluster-btn { width: 100%; max-width: 360px; height: 80px; border: 2px dashed #cbd5e1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted); cursor: pointer; background: transparent; }
-    .add-cluster-btn:hover { background: white; border-color: var(--primary); color: var(--primary); }
+    .add-cluster-btn { width: 100%; max-width: 360px; height: 80px; border: 2px dashed var(--border-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted); cursor: pointer; background: transparent; transition: all 0.2s; flex-shrink: 0; }
+    .add-cluster-btn:hover { background: var(--ghost-white); border-color: var(--primary-teal); color: var(--primary-teal); }
 
-    /* --- VIEW 3: ARTIFACT DOCUMENT SCREEN --- */
-    #artifact-screen { height: 100vh; overflow-y: auto; background: #f1f5f9; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+    /* --- VIEW 3: ARTIFACT LAYOUT --- */
+    #artifact-screen { height: 100vh; width: 100vw; overflow-y: auto; background: var(--cloud); padding: 40px 24px; display: flex; flex-direction: column; align-items: center; }
+    .artifact-actions { width: 100%; max-width: 840px; display: flex; justify-content: space-between; margin-bottom: 24px; background: var(--ghost-white); padding: 20px 32px; border-radius: 12px; border: 2px solid var(--cloud); align-items: center; flex-shrink: 0; }
+    .action-group { display: flex; gap: 12px; }
+
+    .document-paper { background: var(--ghost-white); max-width: 840px; width: 100%; padding: 60px 80px; border-radius: 12px; border: 2px solid var(--cloud); box-shadow: 0 10px 30px rgba(16,24,32,0.03); }
+    .doc-header { border-bottom: 3px solid var(--midnight); padding-bottom: 20px; margin-bottom: 36px; }
+    .doc-cluster { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 2px solid var(--cloud); }
+    .doc-cluster h2 { color: var(--primary-teal); margin-bottom: 12px; font-size: 1.5rem; font-weight: 700; }
+    .doc-item-box { background: var(--cloud); border-left: 4px solid var(--primary-teal); padding: 16px; margin-bottom: 12px; font-size: 0.875rem; border-radius: 0 6px 6px 0; }
     
-    /* Top Action Bar in Artifact View */
-    .artifact-actions { width: 100%; max-width: 900px; display: flex; justify-content: space-between; margin-bottom: 20px; background: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border-color); align-items: center; }
-    .action-group { display: flex; gap: 10px; }
+    .next-steps-section { margin-top: 60px; background: var(--cloud); padding: 32px; border-radius: 12px; border: 2px solid var(--cloud); }
+    .prompt-card { background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+    .prompt-card h4 { font-size: 1.1rem; margin-bottom: 6px; color: var(--midnight); font-weight: 700; }
+    .prompt-card p.context { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px; }
+    .prompt-text { background: var(--midnight); color: var(--cloud); padding: 20px; border-radius: 6px; font-family: monospace; font-size: 0.825rem; white-space: pre-wrap; margin-bottom: 16px; line-height: 1.5; }
 
-    .document-paper { background: white; max-width: 900px; width: 100%; padding: 50px 60px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-    .doc-header { border-bottom: 3px solid var(--text-main); padding-bottom: 16px; margin-bottom: 30px; }
-    .doc-cluster { margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid #e2e8f0; }
-    .doc-cluster h2 { color: var(--primary); margin-bottom: 8px; font-size: 1.5rem; }
-    .doc-item-box { background: #f8fafc; border-left: 4px solid #cbd5e1; padding: 16px; margin-bottom: 12px; font-size: 0.85rem; border-radius: 0 8px 8px 0; }
+    /* --- COMMON DESIGN SYSTEM MODALS --- */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 24, 32, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; backdrop-filter: blur(4px); }
+    .modal-content { background: var(--ghost-white); padding: 40px; border-radius: 12px; width: 100%; max-width: 640px; box-shadow: 0 30px 60px rgba(0,0,0,0.25); border: 2px solid var(--cloud); }
+    .modal-header h3 { font-size: 1.4rem; font-weight: 700; color: var(--midnight); margin-bottom: 16px; }
+    .modal-body p { font-size: 0.95rem; color: var(--midnight); margin-bottom: 20px; line-height: 1.6; }
+    .modal-body textarea { width: 100%; height: 260px; font-family: monospace; font-size: 0.825rem; padding: 16px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--cloud); color: var(--midnight); resize: none; margin-bottom: 20px; outline: none; }
+    .modal-body textarea:focus { border-color: var(--primary-teal); }
+
+    .tap-instruction { display: none; text-align: center; font-size: 0.75rem; color: var(--primary-teal); font-weight: 700; padding: 10px; background: var(--cloud); margin-bottom: 12px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;}
+    @media (max-width: 1024px) { .tap-instruction { display: block; } }
     
-    /* Next Steps / Prompts Section */
-    .next-steps-section { margin-top: 50px; background: #f8fafc; padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); }
-    .prompt-card { background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-    .prompt-card h4 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text-main); }
-    .prompt-card p.context { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
-    .prompt-text { background: #0f172a; color: #f1f5f9; padding: 16px; border-radius: 6px; font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; margin-bottom: 12px; }
-
-    /* --- MODALS --- */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
-    .modal-content { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 650px; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .modal-header h3 { font-size: 1.25rem; font-weight: 700; }
-    .modal-close { background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
-    .modal-body p { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
-    .modal-body textarea { width: 100%; height: 280px; font-family: monospace; font-size: 0.8rem; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: #f8fafc; resize: none; margin-bottom: 16px; }
-
-    /* Utility */
-    .tap-instruction { display: none; text-align: center; font-size: 0.75rem; color: var(--primary); font-weight: 700; padding: 8px; background: #eff6ff; margin-bottom: 10px; border-radius: 6px;}
-    @media (max-width: 768px) { .tap-instruction { display: block; } }
-    
-    /* Print Styles */
     @media print {
-      body { background: white; }
-      .artifact-actions, .next-steps-section { display: none !important; }
+      body { background: var(--ghost-white); overflow: visible; height: auto; }
+      .artifact-actions, .next-steps-section, .upskill-banner { display: none !important; }
       #artifact-screen { padding: 0; height: auto; overflow: visible; display: block; }
       .document-paper { box-shadow: none; border: none; padding: 0; max-width: 100%; }
       .doc-cluster { page-break-inside: avoid; }
@@ -170,78 +238,100 @@
   <div id="setup-screen">
     <div class="config-container">
       <div class="config-header">
-        <h1>OLOS Setup Engine</h1>
-        <p>Configure your workspace rules and signals pool.</p>
+        <h1>OLOS Clustering Setup</h1>
+        <p>Give your workspace a name and verify your raw list of input signals.</p>
+      </div>
+
+      <div class="upskill-banner">
+        <h3>Sorting Through Noise is a Superpower</h3>
+        <p>AI tools can write essays and generate code in seconds, but they don't actually understand what matters to real humans. That’s your job. This board helps you practice a skill called <strong>sensemaking</strong>: looking at a big, messy pile of real-world human complaints and sorting out the underlying patterns before you try to build or fix anything.</p>
       </div>
       
       <div class="config-field">
-        <label>Board Title</label>
+        <label>Give Your Board a Name</label>
         <input type="text" id="config-title" class="config-input" value="Upskilling Labs: Comprehensive Problem Signals">
       </div>
 
       <div class="config-field">
-        <label>Incoming Data Pool (Friction Signals - 44 Pre-loaded)</label>
+        <label>Your Raw Data Pool (44 Frustrations Found)</label>
         <div id="config-item-list" class="item-builder-list"></div>
         <div class="add-item-bar">
-          <input type="text" id="new-item-title" class="config-input" placeholder="Title (e.g., Permit Delays)">
-          <input type="text" id="new-item-summary" class="config-input" placeholder="Description...">
-          <button class="btn btn-primary" onclick="addConfigItem()">Add</button>
+          <input type="text" id="new-item-title" class="config-input" placeholder="Short label for this card..." style="flex:1;">
+          <input type="text" id="new-item-summary" class="config-input" placeholder="What is the exact frustration data?..." style="flex:2;">
+          <button class="btn btn-primary" onclick="addConfigItem()">Add Custom Card</button>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; margin-top: 24px;">
-        <button class="btn btn-primary" onclick="launchWorkspace()">Launch Board</button>
+      <div style="display: flex; justify-content: flex-end; margin-top: 32px;">
+        <button class="btn btn-primary" onclick="launchWorkspace()" style="min-width: 160px;">Start Sorting!</button>
       </div>
     </div>
   </div>
 
   <div id="board-workspace" class="hidden">
     <aside class="panel-left">
-      <div class="panel-header" style="background: white;">
+      <div class="panel-header">
         <h2>Signal Pool</h2>
-        <span id="pool-count" style="font-size: 0.75rem; background: #e2e8f0; padding: 3px 8px; border-radius: 12px;"></span>
+        <span id="pool-count" style="font-size: 0.75rem; background: var(--cloud); color: var(--midnight); padding: 4px 10px; border-radius: 12px; font-weight: 700;"></span>
       </div>
       <div class="search-container">
         <input type="text" id="search-input" class="search-input" placeholder="Search signals or keywords..." oninput="filterItems()">
       </div>
-      <div class="tap-instruction" id="tap-hint">Tap an item to move it</div>
+      <div class="tap-instruction" id="tap-hint">Tap an item to select it, then tap a zone below to move it</div>
       <div class="scroll-area dropzone-pool" id="item-pool-zone"></div>
       <div class="ai-helper-bar">
-        <button class="btn btn-outline" style="width: 100%; border-color: #93c5fd; color: #1e40af; background: #eff6ff;" onclick="openAIPromptModal()">
-          ✨ AI Learning & Thought Partner
+        <button class="btn btn-outline" style="width: 100%; border-color: var(--primary-teal); color: var(--primary-teal);" onclick="openAIPromptModal()">
+          ✨ Get AI Brainstorming Prompt
         </button>
       </div>
     </aside>
 
     <main class="panel-center">
       <div class="panel-header">
-        <h2 id="board-title-display">Clustering Board Layer</h2>
-        <button class="btn btn-primary" onclick="submitMapAndGenerateArtifact()">Finalize Map</button>
+        <h2 id="board-title-display">Your Sorting Board</h2>
+        <button class="btn btn-primary" onclick="submitMapAndGenerateArtifact()">Finish & Generate Map</button>
       </div>
       <div class="canvas-infobar">
-        <span id="validation-warning" style="color: #ef4444;"></span>
+        <span id="validation-warning" style="color: var(--action-red);"></span>
       </div>
       <div class="canvas-grid" id="canvas-grid-area">
-        <button class="add-cluster-btn" onclick="createNewCluster()">+ Add Cluster</button>
+        <button class="add-cluster-btn" onclick="createNewCluster()">+ Create a New Cluster Group</button>
       </div>
     </main>
   </div>
 
+  <div id="welcome-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="border-top: 4px solid var(--primary-teal);">
+      <div class="modal-header">
+        <h3>Let's Uncover What's Broken</h3>
+      </div>
+      <div class="modal-body">
+        <p>Ready to sort through 44 real human frustration stories? Remember: <strong>AI can group words by running mathematical equations, but only you can see the real-world human connections.</strong></p>
+        <p>Your goal is to map out where the friction is and group them by <strong>shared barriers</strong>. Don't jump straight to building an app or inventing a solution just yet—focus purely on understanding the trouble first.</p>
+        <button class="btn btn-primary" style="width: 100%;" onclick="closeWelcomeModal()">Let's Do It</button>
+      </div>
+    </div>
+  </div>
+
   <div id="artifact-screen" class="hidden">
-    
     <div class="artifact-actions">
       <div>
-        <h3 style="font-size: 1.1rem; color: var(--text-main);">Final Review</h3>
-        <p style="font-size: 0.8rem; color: var(--text-muted);">Export your clusters or move to the next phase.</p>
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--midnight);">Your Finished Map</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Look over your architecture or download it for your portfolio project files.</p>
       </div>
       <div class="action-group">
         <button class="btn btn-outline" onclick="location.reload()">Start Over</button>
         <button class="btn btn-outline" onclick="window.print()">Print / Save PDF</button>
-        <button class="btn btn-primary" onclick="downloadMarkdown()">Download .md</button>
+        <button class="btn btn-primary" onclick="downloadMarkdown()">Download Markdown (.md)</button>
       </div>
     </div>
 
     <div class="document-paper">
+      <div class="upskill-banner" style="margin-top: 0; margin-bottom: 40px;">
+        <h3>Nice Work! You've Built a Future-Ready Map</h3>
+        <p>You just turned a chaotic pile of noise into an organized, structured database. In the future of work, the people who stand out aren't the ones who just write basic code or type simple prompts—it's the people who can look at a messy situation and pinpoint exactly what the real problem is. Use the AI partners below to test your thinking.</p>
+      </div>
+
       <div class="doc-header">
         <h1 id="art-title" style="font-size: 1.75rem; font-weight: 800; margin-bottom: 4px;">Sensemaking Artifact</h1>
         <p style="color: var(--text-muted); font-size: 0.85rem;" id="art-date"></p>
@@ -250,14 +340,14 @@
       <div id="artifact-body-content"></div>
 
       <div class="next-steps-section">
-        <h2 style="font-size: 1.3rem; margin-bottom: 8px;">Next Steps: AI Thought Partners</h2>
+        <h2 style="font-size: 1.3rem; margin-bottom: 12px; font-weight: 700; color: var(--midnight);">What to Do Next: AI Sparring Partners</h2>
         <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px;">
-          Since you use a Google account for OLOS, you already have free access to <a href="https://gemini.google.com" target="_blank">Gemini</a> and <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a> (excellent for deeper research). You can also use <a href="https://chatgpt.com" target="_blank">ChatGPT</a>, <a href="https://claude.ai" target="_blank">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank">Perplexity</a> to deepen your understanding of the problem spaces you just mapped.
+          Since you already use a Google account to log into OLOS, you can use these prompts completely free with <a href="https://gemini.google.com" target="_blank">Google Gemini</a> or <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a> (which is awesome for uploading notes and deep research). You can also paste them into <a href="https://chatgpt.com" target="_blank">ChatGPT</a>, <a href="https://claude.ai" target="_blank">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank">Perplexity</a>.
         </p>
 
         <div class="prompt-card">
-          <h4>1. Stakeholder Mapping</h4>
-          <p class="context">Identify the invisible actors in your problem space.</p>
+          <h4>1. Who is Involved? (Stakeholder Mapping)</h4>
+          <p class="context">Find the hidden players, helpers, and gatekeepers trapped in your problem space.</p>
           <div class="prompt-text" id="prompt-stakeholder">Act as an expert UX researcher and systems thinker.
 
 I have created a problem space cluster called: [INSERT CLUSTER TITLE]
@@ -268,12 +358,12 @@ Help me build a robust Stakeholder Map for this space. Do not try to solve the p
 2. Adjacent Stakeholders (Who else is impacted downstream?)
 3. Gatekeepers / Blockers (Who can constrain, slow, or prevent progress in this space?)
 4. Enablers / Intermediaries (Who has the access or trust to reach the affected stakeholders?)</div>
-          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-stakeholder')">Copy Prompt</button>
+          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-stakeholder')">Copy Stakeholder Prompt</button>
         </div>
 
         <div class="prompt-card">
-          <h4>2. Problematization</h4>
-          <p class="context">Challenge the assumptions baked into your clusters.</p>
+          <h4>2. Challenge Your Assumptions (Problematization)</h4>
+          <p class="context">Look beneath the surface to find why this problem stays broken.</p>
           <div class="prompt-text" id="prompt-problematize">Act as a critical theorist and problem-space analyst.
 
 I have created a problem space cluster called: [INSERT CLUSTER TITLE]
@@ -283,13 +373,13 @@ Help me problematize this space. Your goal is to complicate my understanding and
 1. What are the hidden assumptions baked into how I have defined this problem?
 2. If this problem persists, who currently benefits from the status quo? 
 3. Are there any structural biases (economic, racial, geographic) embedded in how this problem is framed?</div>
-          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-problematize')">Copy Prompt</button>
+          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-problematize')">Copy Assumption Prompt</button>
         </div>
 
         <div class="prompt-card">
-          <h4>3. Validation & Complicating Data</h4>
-          <p class="context">Find peer-reviewed literature, identify edge cases, and build a rapid research plan.</p>
-          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;"><em>Tip: <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a> and <a href="https://www.perplexity.ai" target="_blank">Perplexity</a> are exceptionally good at this specific deep-research task.</em></p>
+          <h4>3. Find Real Proof (Empirical Research & Literature Plans)</h4>
+          <p class="context">Build a rapid interview and citation lookup checklist to prove your theory stands up.</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;"><em>System Insight: Running this specific prompt inside <a href="https://notebooklm.google.com" target="_blank">Google NotebookLM</a> or <a href="https://www.perplexity.ai" target="_blank">Perplexity AI</a> works incredibly well for finding real scientific papers and news.</em></p>
           <div class="prompt-text" id="prompt-validate">Act as an expert research strategist and data validation expert.
 
 I have created a problem space cluster called: [INSERT CLUSTER TITLE]
@@ -301,9 +391,8 @@ Please provide:
 1. Complicating Factors: What edge cases, missing voices, or contrarian data might prove my framing wrong or incomplete?
 2. Secondary Research: What specific academic fields, peer-reviewed topics, or existing literature should I quickly search to ground this in established evidence?
 3. Rapid Primary Research Plan: Give me 3 highly targeted interview questions or survey concepts I could deploy this week to test my core assumptions with real stakeholders.</div>
-          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-validate')">Copy Prompt</button>
+          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-validate')">Copy Fact-Check Prompt</button>
         </div>
-
       </div>
     </div>
   </div>
@@ -311,18 +400,17 @@ Please provide:
   <div id="ai-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Learning & Thought Partnership Prompt</h3>
-        <button class="modal-close" onclick="closeAIPromptModal()">✕</button>
+        <h3>AI Assistant Sparring Partner</h3>
       </div>
       <div class="modal-body">
-        <p style="margin-bottom: 8px;">Copy this prompt into your preferred LLM. It is designed to <strong>teach you about the dataset first</strong>, point out hidden throughlines, and guide you without solving the clustering for you.</p>
+        <p style="margin-bottom: 12px;">Copy this text chunk and paste it into an AI tool to spot hidden patterns across the entire pool before you group them yourself.</p>
         <p style="font-size: 0.8rem; margin-bottom: 16px;">
-          <em>Try it with: <a href="https://gemini.google.com" target="_blank">Gemini</a>, <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a>, <a href="https://chatgpt.com" target="_blank">ChatGPT</a>, <a href="https://claude.ai" target="_blank">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank">Perplexity</a>.</em>
+          <em>Launch targets: <a href="https://gemini.google.com" target="_blank">Google Gemini</a>, <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a>, <a href="https://chatgpt.com" target="_blank">ChatGPT</a>, <a href="https://claude.ai" target="_blank">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank">Perplexity</a>.</em>
         </p>
         <textarea id="ai-prompt-text" readonly></textarea>
-        <div style="display: flex; gap: 10px;">
-          <button class="btn btn-primary" style="flex: 1;" onclick="copyAIPrompt()">Copy Prompt</button>
-          <button class="btn btn-outline" onclick="closeAIPromptModal()">Close</button>
+        <div style="display: flex; gap: 12px;">
+          <button class="btn btn-primary" style="flex: 1;" onclick="copyAIPrompt()">Copy Prompt Text</button>
+          <button class="btn btn-outline" onclick="closeAIPromptModal()">Dismiss</button>
         </div>
       </div>
     </div>
@@ -418,12 +506,12 @@ Please provide:
       createNewCluster(); 
       renderBoard();
       setupGlobalDragAndDrop();
+      document.getElementById('welcome-modal').classList.remove('hidden');
     }
+    
+    function closeWelcomeModal() { document.getElementById('welcome-modal').classList.add('hidden'); }
 
-    function renderBoard() {
-      renderItemPool();
-      renderCanvasGrid();
-    }
+    function renderBoard() { renderItemPool(); renderCanvasGrid(); }
 
     function filterItems() {
       const query = document.getElementById('search-input').value.toLowerCase();
@@ -468,8 +556,8 @@ Please provide:
         const header = document.createElement('div');
         header.className = 'cluster-header-edit';
         header.innerHTML = `
-          <input type="text" class="inline-input-title" placeholder="Name this cluster..." value="${cluster.title}" onchange="updateClusterData('${cluster.id}', 'title', this.value)">
-          <textarea class="inline-input-desc" placeholder="What shared barrier connects these?..." oninput="autoResize(this)" onchange="updateClusterData('${cluster.id}', 'description', this.value)">${cluster.description}</textarea>
+          <input type="text" class="inline-input-title" placeholder="Name this group..." value="${cluster.title}" onchange="updateClusterData('${cluster.id}', 'title', this.value)">
+          <textarea class="inline-input-desc" placeholder="What core problem or shared hurdle connects these?..." oninput="autoResize(this)" onchange="updateClusterData('${cluster.id}', 'description', this.value)">${cluster.description}</textarea>
         `;
         
         const dropzone = document.createElement('div');
@@ -487,7 +575,7 @@ Please provide:
 
         const actions = document.createElement('div');
         actions.className = 'cluster-actions';
-        actions.innerHTML = `<button onclick="deleteCluster('${cluster.id}')">Delete Node</button>`;
+        actions.innerHTML = `<button onclick="deleteCluster('${cluster.id}')">Delete This Cluster</button>`;
 
         node.appendChild(header);
         node.appendChild(dropzone);
@@ -572,8 +660,8 @@ Please provide:
         else z.classList.remove('tap-target-active');
       });
       const hint = document.getElementById('tap-hint');
-      if(appState.selectedItemForMove) { hint.innerText = "Tap a cluster zone to drop item."; hint.style.background = "#dbeafe"; }
-      else { hint.innerText = "Tap an item to move it"; hint.style.background = "#eff6ff"; }
+      if(appState.selectedItemForMove) { hint.innerText = "Item selected! Now tap any cluster zone to drop it in."; hint.style.background = "var(--primary-teal)"; hint.style.color = "var(--ghost-white)"; }
+      else { hint.innerText = "Tap an item to select it, then tap a zone below to move it"; hint.style.background = "var(--cloud)"; hint.style.color = "var(--midnight)"; }
     }
 
     function openAIPromptModal() {
@@ -584,17 +672,8 @@ Please provide:
       document.getElementById('ai-modal').classList.remove('hidden');
     }
     function closeAIPromptModal() { document.getElementById('ai-modal').classList.add('hidden'); }
-    
-    function copyAIPrompt() { 
-      const t = document.getElementById('ai-prompt-text'); 
-      t.select(); navigator.clipboard.writeText(t.value); alert("Prompt copied successfully!"); 
-    }
-
-    function copyText(elementId) {
-      const t = document.getElementById(elementId).innerText;
-      navigator.clipboard.writeText(t);
-      alert("Prompt copied successfully!");
-    }
+    function copyAIPrompt() { const t = document.getElementById('ai-prompt-text'); t.select(); navigator.clipboard.writeText(t.value); alert("Prompt copied to clipboard!"); }
+    function copyText(elementId) { const t = document.getElementById(elementId).innerText; navigator.clipboard.writeText(t); alert("Prompt copied!"); }
 
     function submitMapAndGenerateArtifact() {
       document.getElementById('board-workspace').classList.add('hidden');
@@ -605,11 +684,11 @@ Please provide:
       body.innerHTML = '';
       appState.clusters.forEach(c => {
         if(c.itemIds.length === 0 && !c.title) return;
-        let html = `<div class="doc-cluster"><h2>${c.title || 'Untitled Cluster'}</h2>`;
-        html += `<p style="margin-bottom:12px; font-style:italic;">"${c.description || 'No synthesis provided.'}"</p>`;
+        let html = `<div class="doc-cluster"><h2>${c.title || 'Untitled Group'}</h2>`;
+        html += `<p style="margin-bottom:16px; font-style:italic; color: var(--text-muted); line-height: 1.6;">"${c.description || 'No synthesis text written yet.'}"</p>`;
         c.itemIds.forEach(id => {
           const item = appState.items.find(i=>i.id===id);
-          if(item) html += `<div class="doc-item-box"><strong>${item.title}</strong><br><span style="color:#64748b">${item.summary}</span></div>`;
+          if(item) html += `<div class="doc-item-box"><strong>${item.title}</strong><br><span style="color: var(--text-muted); display:block; margin-top:4px; line-height:1.5;">${item.summary}</span></div>`;
         });
         html += `</div>`;
         body.innerHTML += html;
@@ -618,14 +697,14 @@ Please provide:
 
     function downloadMarkdown() {
       let md = `# ${appState.settings.title || 'Sensemaking Artifact'}\n`;
-      md += `*Generated: ${new Date().toLocaleDateString()}*\n\n`;
+      md += `*Generated via OLOS: ${new Date().toLocaleDateString()}*\n\n`;
       md += `---\n\n`;
 
       appState.clusters.forEach(c => {
         if(c.itemIds.length === 0 && !c.title) return;
-        md += `## ${c.title || 'Untitled Cluster'}\n\n`;
-        md += `> **Synthesis:** ${c.description || 'No synthesis provided.'}\n\n`;
-        md += `### Grouped Signals:\n`;
+        md += `## ${c.title || 'Untitled Group'}\n\n`;
+        md += `> **Synthesis Barrier:** ${c.description || 'No description provided.'}\n\n`;
+        md += `### Tied Signals:\n`;
         
         c.itemIds.forEach(id => {
           const item = appState.items.find(i=>i.id===id);
