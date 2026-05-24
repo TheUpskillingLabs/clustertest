@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OLOS - Sensemaking Dashboard</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
@@ -55,11 +55,20 @@
       background: var(--primary-teal); 
       color: var(--ghost-white); 
     }
-    .btn-primary:hover { 
-      opacity: 0.9;
+    .btn-primary:hover {
+      background: #007882;
       transform: translateY(-1px);
     }
     .btn-primary:active { transform: translateY(0); }
+    .btn:focus-visible, .config-input:focus-visible, .search-input:focus-visible,
+    .inline-input-title:focus-visible, .inline-input-desc:focus-visible {
+      outline: 3px solid var(--primary-teal);
+      outline-offset: 2px;
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
 
     .btn-outline { 
       background: var(--ghost-white); 
@@ -152,10 +161,26 @@
     .item-card {
       background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 8px;
       padding: 16px; margin-bottom: 12px; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-      transition: all 0.2s ease; user-select: none;
+      transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+      user-select: none; -webkit-user-select: none;
+      touch-action: manipulation; /* allow scroll, suppress double-tap zoom */
     }
     .item-card:hover { border-color: var(--primary-teal); }
+    .item-card:active { cursor: grabbing; }
     .item-card.selected-for-move { border-color: var(--primary-teal); background: rgba(0, 148, 160, 0.04); }
+    .item-card.dragging { opacity: 0.4; }
+    .item-card.pointer-pressing { box-shadow: 0 0 0 3px rgba(0,148,160,0.25); }
+    /* Floating ghost element used by pointer-based drag on touch */
+    .drag-ghost {
+      position: fixed; pointer-events: none; z-index: 9999; left: 0; top: 0;
+      width: 280px; max-width: 80vw;
+      background: var(--ghost-white); border: 2px solid var(--primary-teal);
+      border-radius: 8px; padding: 12px 16px;
+      box-shadow: 0 12px 28px rgba(16,24,32,0.25);
+      transform: translate(-50%, -50%) rotate(-1.5deg);
+      font-size: 0.85rem; font-weight: 600; color: var(--midnight);
+      transition: transform 0.05s linear;
+    }
     
     .card-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; background: var(--cloud); color: var(--midnight); padding: 4px 8px; border-radius: 4px; margin-bottom: 10px; text-transform: uppercase; }
     .item-card h3 { font-size: 0.9rem; font-weight: 600; line-height: 1.4; margin-bottom: 6px; color: var(--midnight); }
@@ -186,9 +211,18 @@
     .inline-input-desc { font-size: 0.875rem; border: none; outline: none; width: 100%; resize: none; color: var(--text-muted); background: transparent; line-height: 1.5; border-bottom: 2px solid transparent; padding-bottom: 4px; }
     .inline-input-desc:focus { border-bottom-color: var(--cloud); }
     
-    .cluster-dropzone { flex: 1; background: var(--cloud); padding: 16px; display: flex; flex-direction: column; min-height: 140px; border-top: 2px solid var(--cloud); margin-top: 12px; gap: 12px; overflow-y: auto; }
-    .cluster-dropzone.drag-over { background: rgba(0, 148, 160, 0.05); border: 2px dashed var(--primary-teal) !important; }
-    .cluster-dropzone.tap-target-active { background: rgba(0, 148, 160, 0.02); cursor: pointer; border: 2px dashed var(--primary-teal); }
+    .cluster-dropzone { flex: 1; background: var(--cloud); padding: 16px; display: flex; flex-direction: column; min-height: 140px; border-top: 2px solid var(--cloud); margin-top: 12px; gap: 12px; overflow-y: auto; position: relative; }
+    .cluster-dropzone.drag-over { background: rgba(0, 148, 160, 0.08); box-shadow: inset 0 0 0 2px var(--primary-teal); }
+    .cluster-dropzone.tap-target-active { background: rgba(0, 148, 160, 0.02); cursor: pointer; box-shadow: inset 0 0 0 2px var(--primary-teal); }
+    .cluster-dropzone:empty::before,
+    .cluster-dropzone.is-empty::before {
+      content: "Drop signals here";
+      display: block; text-align: center; color: var(--midnight);
+      opacity: 0.45; font-size: 0.8rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin: auto;
+    }
+    .cluster-dropzone.drag-over::before { opacity: 0.85; color: var(--primary-teal); }
     
     .cluster-actions { padding: 12px 20px; background: var(--ghost-white); display: flex; justify-content: flex-end; border-top: 2px solid var(--cloud); flex-shrink: 0; }
     .cluster-actions button { background: transparent; border: none; color: var(--action-red); font-size: 0.75rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -214,7 +248,54 @@
     .prompt-text { background: var(--midnight); color: var(--cloud); padding: 20px; border-radius: 6px; font-family: monospace; font-size: 0.825rem; white-space: pre-wrap; margin-bottom: 16px; line-height: 1.5; }
 
     /* --- COMMON DESIGN SYSTEM MODALS --- */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 24, 32, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; backdrop-filter: blur(4px); }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 24, 32, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; }
+    @supports (backdrop-filter: blur(4px)) {
+      .modal-overlay { background: rgba(16, 24, 32, 0.5); backdrop-filter: blur(4px); }
+    }
+
+    /* --- TOAST --- */
+    #toast-region {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      z-index: 2000; display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--midnight); color: var(--ghost-white);
+      padding: 12px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600;
+      box-shadow: 0 8px 24px rgba(16,24,32,0.3);
+      display: flex; align-items: center; gap: 12px;
+      animation: toast-in 0.2s ease-out;
+      pointer-events: auto;
+    }
+    .toast button {
+      background: transparent; border: 1px solid var(--primary-teal);
+      color: var(--primary-teal); padding: 4px 12px; border-radius: 4px;
+      font-weight: 700; font-size: 0.75rem; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .toast button:hover { background: var(--primary-teal); color: var(--ghost-white); }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- SEARCH CLEAR --- */
+    .search-wrap { position: relative; }
+    .search-wrap .search-input { padding-right: 36px; }
+    .search-clear {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: var(--cloud); border: none; width: 24px; height: 24px;
+      border-radius: 50%; cursor: pointer; font-size: 0.75rem; line-height: 1;
+      color: var(--midnight); display: none; align-items: center; justify-content: center;
+    }
+    .search-clear:hover { background: var(--primary-teal); color: var(--ghost-white); }
+    .search-wrap.has-value .search-clear { display: inline-flex; }
+
+    /* --- SAVED INDICATOR --- */
+    #save-status {
+      font-size: 0.7rem; font-weight: 600; color: var(--text-muted, #6b7378);
+      opacity: 0.7; margin-left: 12px;
+    }
     .modal-content { background: var(--ghost-white); padding: 40px; border-radius: 12px; width: 100%; max-width: 640px; box-shadow: 0 30px 60px rgba(0,0,0,0.25); border: 2px solid var(--cloud); }
     .modal-header h3 { font-size: 1.4rem; font-weight: 700; color: var(--midnight); margin-bottom: 16px; }
     .modal-body p { font-size: 0.95rem; color: var(--midnight); margin-bottom: 20px; line-height: 1.6; }
@@ -248,15 +329,17 @@
       </div>
       
       <div class="config-field">
-        <label>Give Your Board a Name</label>
+        <label for="config-title">Give Your Board a Name</label>
         <input type="text" id="config-title" class="config-input" value="Upskilling Labs: Comprehensive Problem Signals">
       </div>
 
       <div class="config-field">
-        <label>Your Raw Data Pool (44 Frustrations Found)</label>
-        <div id="config-item-list" class="item-builder-list"></div>
+        <label id="pool-label">Your Raw Data Pool (<span id="config-pool-count">44</span> Frustrations Found)</label>
+        <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
         <div class="add-item-bar">
+          <label class="sr-only" for="new-item-title">New signal short label</label>
           <input type="text" id="new-item-title" class="config-input" placeholder="Short label for this card..." style="flex:1;">
+          <label class="sr-only" for="new-item-summary">New signal description</label>
           <input type="text" id="new-item-summary" class="config-input" placeholder="What is the exact frustration data?..." style="flex:2;">
           <button class="btn btn-primary" onclick="addConfigItem()">Add Custom Card</button>
         </div>
@@ -269,18 +352,22 @@
   </div>
 
   <div id="board-workspace" class="hidden">
-    <aside class="panel-left">
+    <aside class="panel-left" aria-label="Unassigned signals">
       <div class="panel-header">
-        <h2>Signal Pool</h2>
-        <span id="pool-count" style="font-size: 0.75rem; background: var(--cloud); color: var(--midnight); padding: 4px 10px; border-radius: 12px; font-weight: 700;"></span>
+        <h2>Unassigned Signals</h2>
+        <span id="pool-count" style="font-size: 0.75rem; background: var(--cloud); color: var(--midnight); padding: 4px 10px; border-radius: 12px; font-weight: 700;" aria-live="polite"></span>
       </div>
       <div class="search-container">
-        <input type="text" id="search-input" class="search-input" placeholder="Search signals or keywords..." oninput="filterItems()">
+        <div class="search-wrap" id="search-wrap">
+          <label class="sr-only" for="search-input">Search signals</label>
+          <input type="text" id="search-input" class="search-input" placeholder="Search signals or keywords..." oninput="filterItems()">
+          <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
+        </div>
       </div>
-      <div class="tap-instruction" id="tap-hint">Tap an item to select it, then tap a zone below to move it</div>
-      <div class="scroll-area dropzone-pool" id="item-pool-zone"></div>
+      <div class="tap-instruction" id="tap-hint">Drag a card to a cluster — or tap to select, then tap a cluster.</div>
+      <div class="scroll-area dropzone-pool" id="item-pool-zone" role="list" aria-label="Unassigned signal cards"></div>
       <div class="ai-helper-bar">
-        <button class="btn btn-outline" style="width: 100%; border-color: var(--primary-teal); color: var(--primary-teal);" onclick="openAIPromptModal()">
+        <button class="btn btn-outline" style="width: 100%; border-color: var(--primary-teal); color: var(--primary-teal);" onclick="openAIPromptModal()" aria-label="Get AI brainstorming prompt for the full signal pool">
           ✨ Get AI Brainstorming Prompt
         </button>
       </div>
@@ -288,7 +375,7 @@
 
     <main class="panel-center">
       <div class="panel-header">
-        <h2 id="board-title-display">Your Sorting Board</h2>
+        <h2 id="board-title-display">Your Sorting Board <span id="save-status" aria-live="polite"></span></h2>
         <button class="btn btn-primary" onclick="submitMapAndGenerateArtifact()">Finish & Generate Map</button>
       </div>
       <div class="canvas-infobar">
@@ -300,15 +387,15 @@
     </main>
   </div>
 
-  <div id="welcome-modal" class="modal-overlay hidden">
+  <div id="welcome-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="welcome-modal-title">
     <div class="modal-content" style="border-top: 4px solid var(--primary-teal);">
       <div class="modal-header">
-        <h3>Let's Uncover What's Broken</h3>
+        <h3 id="welcome-modal-title">Let's Uncover What's Broken</h3>
       </div>
       <div class="modal-body">
-        <p>Ready to sort through 44 real human frustration stories? Remember: <strong>AI can group words by running mathematical equations, but only you can see the real-world human connections.</strong></p>
+        <p>Ready to sort through these real human frustration stories? Remember: <strong>AI can group words by running mathematical equations, but only you can see the real-world human connections.</strong></p>
         <p>Your goal is to map out where the friction is and group them by <strong>shared barriers</strong>. Don't jump straight to building an app or inventing a solution just yet—focus purely on understanding the trouble first.</p>
-        <button class="btn btn-primary" style="width: 100%;" onclick="closeWelcomeModal()">Let's Do It</button>
+        <button class="btn btn-primary" style="width: 100%;" onclick="closeWelcomeModal()" data-autofocus>Let's Do It</button>
       </div>
     </div>
   </div>
@@ -320,7 +407,7 @@
         <p style="font-size: 0.8rem; color: var(--text-muted);">Look over your architecture or download it for your portfolio project files.</p>
       </div>
       <div class="action-group">
-        <button class="btn btn-outline" onclick="location.reload()">Start Over</button>
+        <button class="btn btn-outline" onclick="startOver()">Start Over</button>
         <button class="btn btn-outline" onclick="window.print()">Print / Save PDF</button>
         <button class="btn btn-primary" onclick="downloadMarkdown()">Download Markdown (.md)</button>
       </div>
@@ -342,84 +429,38 @@
       <div class="next-steps-section">
         <h2 style="font-size: 1.3rem; margin-bottom: 12px; font-weight: 700; color: var(--midnight);">What to Do Next: AI Sparring Partners</h2>
         <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px;">
-          Since you already use a Google account to log into OLOS, you can use these prompts completely free with <a href="https://gemini.google.com" target="_blank">Google Gemini</a> or <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a> (which is awesome for uploading notes and deep research). You can also paste them into <a href="https://chatgpt.com" target="_blank">ChatGPT</a>, <a href="https://claude.ai" target="_blank">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank">Perplexity</a>.
+          Paste any of these into <a href="https://gemini.google.com" target="_blank" rel="noopener">Google Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>. Each prompt already includes your cluster's title, synthesis, and signals — no editing required.
         </p>
-
-        <div class="prompt-card">
-          <h4>1. Who is Involved? (Stakeholder Mapping)</h4>
-          <p class="context">Find the hidden players, helpers, and gatekeepers trapped in your problem space.</p>
-          <div class="prompt-text" id="prompt-stakeholder">Act as an expert UX researcher and systems thinker.
-
-I have created a problem space cluster called: [INSERT CLUSTER TITLE]
-It is defined by this shared barrier: [INSERT DESCRIPTION/SYNTHESIS]
-
-Help me build a robust Stakeholder Map for this space. Do not try to solve the problem. Instead, identify:
-1. The Primary Affected Stakeholder (Who feels the pain most directly?)
-2. Adjacent Stakeholders (Who else is impacted downstream?)
-3. Gatekeepers / Blockers (Who can constrain, slow, or prevent progress in this space?)
-4. Enablers / Intermediaries (Who has the access or trust to reach the affected stakeholders?)</div>
-          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-stakeholder')">Copy Stakeholder Prompt</button>
-        </div>
-
-        <div class="prompt-card">
-          <h4>2. Challenge Your Assumptions (Problematization)</h4>
-          <p class="context">Look beneath the surface to find why this problem stays broken.</p>
-          <div class="prompt-text" id="prompt-problematize">Act as a critical theorist and problem-space analyst.
-
-I have created a problem space cluster called: [INSERT CLUSTER TITLE]
-It is defined by this shared barrier: [INSERT DESCRIPTION/SYNTHESIS]
-
-Help me problematize this space. Your goal is to complicate my understanding and look for systemic roots.
-1. What are the hidden assumptions baked into how I have defined this problem?
-2. If this problem persists, who currently benefits from the status quo? 
-3. Are there any structural biases (economic, racial, geographic) embedded in how this problem is framed?</div>
-          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-problematize')">Copy Assumption Prompt</button>
-        </div>
-
-        <div class="prompt-card">
-          <h4>3. Find Real Proof (Empirical Research & Literature Plans)</h4>
-          <p class="context">Build a rapid interview and citation lookup checklist to prove your theory stands up.</p>
-          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;"><em>System Insight: Running this specific prompt inside <a href="https://notebooklm.google.com" target="_blank">Google NotebookLM</a> or <a href="https://www.perplexity.ai" target="_blank">Perplexity AI</a> works incredibly well for finding real scientific papers and news.</em></p>
-          <div class="prompt-text" id="prompt-validate">Act as an expert research strategist and data validation expert.
-
-I have created a problem space cluster called: [INSERT CLUSTER TITLE]
-It is defined by this shared barrier: [INSERT DESCRIPTION/SYNTHESIS]
-
-I need to validate and complicate this problem space before moving forward. Help me design a rapid, rigorous investigation plan using primary methods (interviews, surveys) and secondary methods (peer-reviewed research, literature). 
-
-Please provide:
-1. Complicating Factors: What edge cases, missing voices, or contrarian data might prove my framing wrong or incomplete?
-2. Secondary Research: What specific academic fields, peer-reviewed topics, or existing literature should I quickly search to ground this in established evidence?
-3. Rapid Primary Research Plan: Give me 3 highly targeted interview questions or survey concepts I could deploy this week to test my core assumptions with real stakeholders.</div>
-          <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('prompt-validate')">Copy Fact-Check Prompt</button>
-        </div>
+        <div id="next-steps-prompts"></div>
       </div>
     </div>
   </div>
 
-  <div id="ai-modal" class="modal-overlay hidden">
+  <div id="ai-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>AI Assistant Sparring Partner</h3>
+        <h3 id="ai-modal-title">AI Assistant Sparring Partner</h3>
       </div>
       <div class="modal-body">
         <p style="margin-bottom: 12px;">Copy this text chunk and paste it into an AI tool to spot hidden patterns across the entire pool before you group them yourself.</p>
         <p style="font-size: 0.8rem; margin-bottom: 16px;">
-          <em>Launch targets: <a href="https://gemini.google.com" target="_blank">Google Gemini</a>, <a href="https://notebooklm.google.com" target="_blank">NotebookLM</a>, <a href="https://chatgpt.com" target="_blank">ChatGPT</a>, <a href="https://claude.ai" target="_blank">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank">Perplexity</a>.</em>
+          <em>Launch targets: <a href="https://gemini.google.com" target="_blank" rel="noopener">Google Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>.</em>
         </p>
+        <label class="sr-only" for="ai-prompt-text">Generated AI prompt</label>
         <textarea id="ai-prompt-text" readonly></textarea>
         <div style="display: flex; gap: 12px;">
-          <button class="btn btn-primary" style="flex: 1;" onclick="copyAIPrompt()">Copy Prompt Text</button>
+          <button class="btn btn-primary" style="flex: 1;" onclick="copyAIPrompt()" data-autofocus>Copy Prompt Text</button>
           <button class="btn btn-outline" onclick="closeAIPromptModal()">Dismiss</button>
         </div>
       </div>
     </div>
   </div>
 
+  <div id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
   <script>
-    let appState = {
-      settings: { title: "" },
-      items: [
+    const STORAGE_KEY = 'olos.sensemaking.v1';
+    const DEFAULT_ITEMS = [
         { id: "item_01", tag: "Friction Signal", title: "Lack of localized, person-focused care communities", summary: "Neighborhoods and communities lack structured environments that prioritize person-focused care and localized education." },
         { id: "item_02", tag: "Friction Signal", title: "Diabetes management tools fail in real-world contexts", summary: "Adults with Type 2 diabetes struggle with real-time decisions about meals, activity, and medications in varied daily contexts, leading to frequent out-of-range glucose and frustration." },
         { id: "item_03", tag: "Friction Signal", title: "Inaccessible generative AI model development", summary: "Making generative AI models remains difficult for average workers due to high technical barriers." },
@@ -464,69 +505,169 @@ Please provide:
         { id: "item_43", tag: "Friction Signal", title: "Pollution accountability data is deliberately scattered", summary: "The evidence needed to hold major polluters accountable exists in public data, but it is deliberately scattered across incompatible databases, preventing communities from identifying bad actors." },
         { id: "item_44", tag: "Friction Signal", title: "Overwhelming and contradictory recycling rules", summary: "Consumers are paralyzed by recycling guides that cannot possibly list every item, leading to 'wish-cycling' that ultimately contaminates batches and sends everything to the landfill." },
         { id: "item_45", tag: "Friction Signal", title: "HealthTech ignores broad mental health access", summary: "Despite a blossoming of HealthTech apps, they focus exclusively on narrow, profitable demographics, leaving the broader population without accessible mental health resources." }
-      ],
-      clusters: [],
-      selectedItemForMove: null
-    };
+    ];
+
+    function uid(prefix) {
+      if (window.crypto && crypto.randomUUID) return prefix + '_' + crypto.randomUUID();
+      return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    }
+
+    function defaultState() {
+      return {
+        settings: { title: "" },
+        items: DEFAULT_ITEMS.map(i => ({ ...i })),
+        clusters: [],
+        selectedItemForMove: null
+      };
+    }
+
+    let appState = loadState() || defaultState();
+
+    // --- Persistence ---
+    let saveTimer = null;
+    function save() {
+      try {
+        const { selectedItemForMove, ...persistable } = appState;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
+        showSaveStatus('Saved');
+      } catch (e) {
+        showSaveStatus('Save failed');
+      }
+    }
+    function scheduleSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(save, 300);
+    }
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.clusters)) return null;
+        parsed.selectedItemForMove = null;
+        return parsed;
+      } catch (e) { return null; }
+    }
+    function clearSavedState() {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    }
+    function showSaveStatus(msg) {
+      const el = document.getElementById('save-status');
+      if (el) el.textContent = msg;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
 
     function autoResize(el) {
       el.style.height = 'auto';
       el.style.height = (el.scrollHeight) + 'px';
     }
 
+    // --- Toasts ---
+    function toast(message, opts = {}) {
+      const region = document.getElementById('toast-region');
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.setAttribute('role', 'status');
+      el.appendChild(document.createTextNode(message));
+      if (opts.actionLabel && typeof opts.onAction === 'function') {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = opts.actionLabel;
+        btn.addEventListener('click', () => { opts.onAction(); el.remove(); });
+        el.appendChild(btn);
+      }
+      region.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .25s'; }, (opts.duration || 3500) - 250);
+      setTimeout(() => el.remove(), opts.duration || 3500);
+    }
+
+    // --- Config (setup screen) ---
     function renderConfigItems() {
       const listDiv = document.getElementById('config-item-list');
       listDiv.innerHTML = appState.items.map(item => `
-        <div class="config-item-row">
-          <div><h4>${item.title}</h4><p>${item.summary}</p></div>
-          <button class="config-item-del" onclick="removeConfigItem('${item.id}')">✕</button>
+        <div class="config-item-row" role="listitem">
+          <div><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.summary)}</p></div>
+          <button class="config-item-del" aria-label="Remove ${escapeHtml(item.title)}" onclick="removeConfigItem('${item.id}')">✕</button>
         </div>
       `).join('');
+      const countEl = document.getElementById('config-pool-count');
+      if (countEl) countEl.textContent = appState.items.length;
     }
-    
+
     function addConfigItem() {
-      const t = document.getElementById('new-item-title').value;
-      const s = document.getElementById('new-item-summary').value;
-      if(t && s) { 
-        appState.items.push({ id:`item_${Date.now()}`, tag:"Friction Signal", title:t, summary:s }); 
-        document.getElementById('new-item-title').value=''; 
-        document.getElementById('new-item-summary').value=''; 
-        renderConfigItems(); 
+      const tEl = document.getElementById('new-item-title');
+      const sEl = document.getElementById('new-item-summary');
+      const t = tEl.value.trim();
+      const s = sEl.value.trim();
+      if (!t || !s) {
+        toast('Add a label and a description first.');
+        (t ? sEl : tEl).focus();
+        return;
+      }
+      appState.items.push({ id: uid('item'), tag: 'Friction Signal', title: t, summary: s });
+      tEl.value = '';
+      sEl.value = '';
+      renderConfigItems();
+      scheduleSave();
+      toast('Signal added.');
+      tEl.focus();
+    }
+
+    function removeConfigItem(id) {
+      const removed = appState.items.find(i => i.id === id);
+      appState.items = appState.items.filter(i => i.id !== id);
+      // Also remove from any clusters
+      appState.clusters.forEach(c => { c.itemIds = c.itemIds.filter(x => x !== id); });
+      renderConfigItems();
+      scheduleSave();
+      if (removed) {
+        toast(`Removed "${removed.title}".`, {
+          actionLabel: 'Undo',
+          onAction: () => {
+            appState.items.push(removed);
+            renderConfigItems();
+            scheduleSave();
+          }
+        });
       }
     }
-    
-    function removeConfigItem(id) { appState.items = appState.items.filter(i=>i.id!==id); renderConfigItems(); }
-    renderConfigItems();
 
     function launchWorkspace() {
-      appState.settings.title = document.getElementById('config-title').value || "Clustering Board";
+      appState.settings.title = document.getElementById('config-title').value || 'Clustering Board';
       document.getElementById('setup-screen').classList.add('hidden');
       document.getElementById('board-workspace').classList.remove('hidden');
-      document.getElementById('board-title-display').innerText = appState.settings.title;
-      createNewCluster(); 
+      document.getElementById('board-title-display').firstChild.textContent = appState.settings.title + ' ';
+      if (appState.clusters.length === 0) createNewCluster();
       renderBoard();
       setupGlobalDragAndDrop();
-      document.getElementById('welcome-modal').classList.remove('hidden');
+      openModal('welcome-modal');
+      scheduleSave();
     }
-    
-    function closeWelcomeModal() { document.getElementById('welcome-modal').classList.add('hidden'); }
 
     function renderBoard() { renderItemPool(); renderCanvasGrid(); }
 
+    // --- Search ---
     function filterItems() {
-      const query = document.getElementById('search-input').value.toLowerCase();
+      const input = document.getElementById('search-input');
+      const wrap = document.getElementById('search-wrap');
+      const query = input.value.toLowerCase().trim();
+      wrap.classList.toggle('has-value', !!query);
       const pool = document.getElementById('item-pool-zone');
       const cards = pool.querySelectorAll('.item-card');
-      
       cards.forEach(card => {
         const titleText = card.querySelector('h3').innerText.toLowerCase();
         const summaryText = card.querySelector('.summary-text').innerText.toLowerCase();
-        if(titleText.includes(query) || summaryText.includes(query)) {
-          card.style.display = '';
-        } else {
-          card.style.display = 'none';
-        }
+        card.style.display = (!query || titleText.includes(query) || summaryText.includes(query)) ? '' : 'none';
       });
+    }
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      input.value = '';
+      filterItems();
+      input.focus();
     }
 
     function renderItemPool() {
@@ -534,13 +675,13 @@ Please provide:
       pool.innerHTML = '';
       let unused = 0;
       appState.items.forEach(item => {
-        if(!appState.clusters.some(c => c.itemIds.includes(item.id))) {
+        if (!appState.clusters.some(c => c.itemIds.includes(item.id))) {
           unused++;
           pool.appendChild(createItemCard(item));
         }
       });
       document.getElementById('pool-count').innerText = `${unused} Unassigned`;
-      filterItems(); 
+      filterItems();
     }
 
     function renderCanvasGrid() {
@@ -552,26 +693,36 @@ Please provide:
         const node = document.createElement('div');
         node.className = 'cluster-node';
         node.id = cluster.id;
-        
+        node.setAttribute('role', 'group');
+        node.setAttribute('aria-label', cluster.title || 'Unnamed cluster');
+
         const header = document.createElement('div');
         header.className = 'cluster-header-edit';
+        const titleId = `lbl-title-${cluster.id}`;
+        const descId = `lbl-desc-${cluster.id}`;
         header.innerHTML = `
-          <input type="text" class="inline-input-title" placeholder="Name this group..." value="${cluster.title}" onchange="updateClusterData('${cluster.id}', 'title', this.value)">
-          <textarea class="inline-input-desc" placeholder="What core problem or shared hurdle connects these?..." oninput="autoResize(this)" onchange="updateClusterData('${cluster.id}', 'description', this.value)">${cluster.description}</textarea>
+          <label class="sr-only" id="${titleId}" for="title-${cluster.id}">Cluster name</label>
+          <input id="title-${cluster.id}" type="text" class="inline-input-title" placeholder="Name this group..." value="${escapeHtml(cluster.title)}" aria-labelledby="${titleId}" onchange="updateClusterData('${cluster.id}', 'title', this.value)">
+          <label class="sr-only" id="${descId}" for="desc-${cluster.id}">Cluster shared barrier or synthesis</label>
+          <textarea id="desc-${cluster.id}" class="inline-input-desc" placeholder="What core problem or shared hurdle connects these?..." aria-labelledby="${descId}" oninput="autoResize(this)" onchange="updateClusterData('${cluster.id}', 'description', this.value)">${escapeHtml(cluster.description)}</textarea>
         `;
-        
+
         const dropzone = document.createElement('div');
         dropzone.className = 'cluster-dropzone dropzone-target';
         dropzone.setAttribute('data-cluster-id', cluster.id);
-        
+        dropzone.setAttribute('role', 'list');
+        dropzone.setAttribute('aria-label', `Signals in ${cluster.title || 'this cluster'}`);
+
         dropzone.addEventListener('click', () => {
-          if(appState.selectedItemForMove) moveItemToCluster(appState.selectedItemForMove, cluster.id);
+          if (appState.selectedItemForMove) moveItemToCluster(appState.selectedItemForMove, cluster.id);
         });
 
         cluster.itemIds.forEach(itemId => {
           const item = appState.items.find(i => i.id === itemId);
-          if(item) dropzone.appendChild(createItemCard(item, true));
+          if (item) dropzone.appendChild(createItemCard(item, true));
         });
+
+        if (cluster.itemIds.length === 0) dropzone.classList.add('is-empty');
 
         const actions = document.createElement('div');
         actions.className = 'cluster-actions';
@@ -581,11 +732,11 @@ Please provide:
         node.appendChild(dropzone);
         node.appendChild(actions);
         grid.insertBefore(node, addBtn);
-        
+
         const ta = header.querySelector('textarea');
-        if(ta) autoResize(ta);
+        if (ta) autoResize(ta);
       });
-      
+
       updateTapToMoveUI();
     }
 
@@ -594,104 +745,522 @@ Please provide:
       card.className = `item-card ${appState.selectedItemForMove === item.id ? 'selected-for-move' : ''}`;
       card.id = item.id;
       card.draggable = true;
-      if(inCluster) card.style.marginBottom = '0';
-      
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-grabbed', 'false');
+      card.setAttribute('aria-label', `${item.title}. ${item.summary}. Press Enter or Space to pick up.`);
+      if (inCluster) card.style.marginBottom = '0';
+
       card.innerHTML = `
-        <span class="card-tag">${item.tag}</span>
-        <h3>${item.title}</h3>
-        <p class="summary-text">${item.summary}</p>
-        <button class="expand-btn">Read more</button>
+        <span class="card-tag">${escapeHtml(item.tag)}</span>
+        <h3>${escapeHtml(item.title)}</h3>
+        <p class="summary-text">${escapeHtml(item.summary)}</p>
+        <button class="expand-btn" aria-expanded="false">Read more</button>
       `;
-      
-      card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', card.id); card.classList.add('dragging'); });
+
+      // Native HTML5 drag (desktop / mouse)
+      card.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', card.id);
+        e.dataTransfer.effectAllowed = 'move';
+        card.classList.add('dragging');
+      });
       card.addEventListener('dragend', () => card.classList.remove('dragging'));
-      
+
+      // Click / keyboard: toggle selection
       card.addEventListener('click', (e) => {
         e.stopPropagation();
-        if(e.target.classList.contains('expand-btn')) {
-          card.classList.toggle('expanded');
-          e.target.innerText = card.classList.contains('expanded') ? 'Show less' : 'Read more';
+        if (e.target.classList.contains('expand-btn')) {
+          const expanded = card.classList.toggle('expanded');
+          e.target.innerText = expanded ? 'Show less' : 'Read more';
+          e.target.setAttribute('aria-expanded', expanded ? 'true' : 'false');
           return;
         }
-        if(appState.selectedItemForMove === item.id) {
-          appState.selectedItemForMove = null;
-        } else {
-          appState.selectedItemForMove = item.id; 
-        }
-        renderBoard(); 
+        toggleSelectItem(item.id);
       });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (document.activeElement === card) {
+            e.preventDefault();
+            toggleSelectItem(item.id);
+          }
+        } else if (e.key === 'Escape' && appState.selectedItemForMove === item.id) {
+          appState.selectedItemForMove = null;
+          renderBoard();
+        }
+      });
+
+      // Pointer-based drag (touch / pen) — best-practice mobile DnD
+      attachPointerDrag(card, item.id);
 
       return card;
     }
 
-    function createNewCluster() { appState.clusters.push({ id:`cluster_${Date.now()}`, title:"", description:"", itemIds:[] }); renderCanvasGrid(); }
-    function updateClusterData(id, field, val) { const c = appState.clusters.find(x=>x.id===id); if(c) c[field] = val; }
-    function deleteCluster(id) { appState.clusters = appState.clusters.filter(c=>c.id!==id); renderBoard(); }
-
-    function moveItemToCluster(itemId, clusterId) {
-      appState.clusters.forEach(c => c.itemIds = c.itemIds.filter(i => i !== itemId)); 
-      if(clusterId) {
-        const target = appState.clusters.find(c => c.id === clusterId);
-        if(target) target.itemIds.push(itemId);
-      }
-      appState.selectedItemForMove = null;
+    function toggleSelectItem(itemId) {
+      appState.selectedItemForMove = (appState.selectedItemForMove === itemId) ? null : itemId;
       renderBoard();
     }
 
+    function createNewCluster() {
+      const c = { id: uid('cluster'), title: '', description: '', itemIds: [] };
+      appState.clusters.push(c);
+      renderCanvasGrid();
+      scheduleSave();
+      // Focus the new cluster's title input
+      setTimeout(() => {
+        const el = document.getElementById('title-' + c.id);
+        if (el) el.focus();
+      }, 0);
+    }
+    function updateClusterData(id, field, val) {
+      const c = appState.clusters.find(x => x.id === id);
+      if (c) { c[field] = val; scheduleSave(); }
+    }
+    function deleteCluster(id) {
+      const idx = appState.clusters.findIndex(c => c.id === id);
+      if (idx < 0) return;
+      const removed = appState.clusters[idx];
+      appState.clusters.splice(idx, 1);
+      renderBoard();
+      scheduleSave();
+      toast(removed.title ? `Deleted "${removed.title}".` : 'Cluster deleted.', {
+        actionLabel: 'Undo',
+        duration: 5000,
+        onAction: () => {
+          appState.clusters.splice(idx, 0, removed);
+          renderBoard();
+          scheduleSave();
+        }
+      });
+    }
+
+    function moveItemToCluster(itemId, clusterId) {
+      let changed = false;
+      appState.clusters.forEach(c => {
+        const before = c.itemIds.length;
+        c.itemIds = c.itemIds.filter(i => i !== itemId);
+        if (c.itemIds.length !== before) changed = true;
+      });
+      if (clusterId) {
+        const target = appState.clusters.find(c => c.id === clusterId);
+        if (target && !target.itemIds.includes(itemId)) { target.itemIds.push(itemId); changed = true; }
+      }
+      appState.selectedItemForMove = null;
+      renderBoard();
+      if (changed) scheduleSave();
+    }
+
+    // --- Native HTML5 drag wiring for pool + cluster dropzones ---
     function setupGlobalDragAndDrop() {
       const pool = document.getElementById('item-pool-zone');
-      pool.addEventListener('dragover', e => e.preventDefault());
-      pool.addEventListener('drop', e => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if(id) moveItemToCluster(id, null); });
-      pool.addEventListener('click', () => { if(appState.selectedItemForMove) moveItemToCluster(appState.selectedItemForMove, null); });
+      pool.addEventListener('dragover', e => { e.preventDefault(); pool.classList.add('drag-over'); });
+      pool.addEventListener('dragleave', e => { if (e.target === pool) pool.classList.remove('drag-over'); });
+      pool.addEventListener('drop', e => {
+        e.preventDefault();
+        pool.classList.remove('drag-over');
+        const id = e.dataTransfer.getData('text/plain');
+        if (id) moveItemToCluster(id, null);
+      });
+      pool.addEventListener('click', () => {
+        if (appState.selectedItemForMove) moveItemToCluster(appState.selectedItemForMove, null);
+      });
 
       const grid = document.getElementById('canvas-grid-area');
-      grid.addEventListener('dragover', e => { const z = e.target.closest('.dropzone-target'); if(z) { e.preventDefault(); z.classList.add('drag-over'); } });
-      grid.addEventListener('dragleave', e => { const z = e.target.closest('.dropzone-target'); if(z) z.classList.remove('drag-over'); });
+      grid.addEventListener('dragover', e => {
+        const z = e.target.closest('.dropzone-target');
+        if (z) { e.preventDefault(); z.classList.add('drag-over'); }
+      });
+      grid.addEventListener('dragleave', e => {
+        const z = e.target.closest('.dropzone-target');
+        if (z && !z.contains(e.relatedTarget)) z.classList.remove('drag-over');
+      });
       grid.addEventListener('drop', e => {
         const z = e.target.closest('.dropzone-target');
-        if(z) { e.preventDefault(); z.classList.remove('drag-over'); const id = e.dataTransfer.getData('text/plain'); if(id) moveItemToCluster(id, z.getAttribute('data-cluster-id')); }
+        if (z) {
+          e.preventDefault();
+          z.classList.remove('drag-over');
+          const id = e.dataTransfer.getData('text/plain');
+          if (id) moveItemToCluster(id, z.getAttribute('data-cluster-id'));
+        }
       });
+    }
+
+    // --- Pointer-based drag (touch + pen, also works for mouse) ---
+    // Best-practice mobile DnD using Pointer Events:
+    // - long-press to pick up (avoids hijacking scroll)
+    // - floating ghost follows the finger
+    // - drop targets highlight on hover
+    // - edge auto-scroll
+    // - haptic feedback when available
+    function attachPointerDrag(card, itemId) {
+      let pressTimer = null;
+      let ghost = null;
+      let dragging = false;
+      let startX = 0, startY = 0;
+      let lastX = 0, lastY = 0;
+      let currentTarget = null;
+      let scrollRAF = null;
+
+      const LONG_PRESS_MS = 200;
+      const MOVE_THRESHOLD = 8;
+
+      const onPointerDown = (e) => {
+        // Only handle touch / pen here; mouse uses native HTML5 drag.
+        if (e.pointerType === 'mouse') return;
+        if (e.target.closest('.expand-btn')) return;
+        startX = lastX = e.clientX;
+        startY = lastY = e.clientY;
+        card.classList.add('pointer-pressing');
+        pressTimer = setTimeout(() => {
+          beginDrag(e);
+        }, LONG_PRESS_MS);
+        window.addEventListener('pointermove', onPointerMovePre, { passive: true });
+        window.addEventListener('pointerup', onPointerUpPre, { once: true });
+        window.addEventListener('pointercancel', onPointerCancel, { once: true });
+      };
+
+      const onPointerMovePre = (e) => {
+        const dx = Math.abs(e.clientX - startX);
+        const dy = Math.abs(e.clientY - startY);
+        if (!dragging && (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD)) {
+          // User is scrolling; cancel pickup.
+          cancelPress();
+        }
+      };
+
+      const onPointerUpPre = () => {
+        if (!dragging) cancelPress();
+      };
+
+      const onPointerCancel = () => cancelPress();
+
+      const cancelPress = () => {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        card.classList.remove('pointer-pressing');
+        window.removeEventListener('pointermove', onPointerMovePre);
+      };
+
+      const beginDrag = (e) => {
+        dragging = true;
+        card.classList.remove('pointer-pressing');
+        card.classList.add('dragging');
+        card.setAttribute('aria-grabbed', 'true');
+        // Haptic
+        if (navigator.vibrate) { try { navigator.vibrate(10); } catch (_) {} }
+        // Build ghost
+        ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        const item = appState.items.find(i => i.id === itemId);
+        ghost.textContent = item ? item.title : 'Signal';
+        document.body.appendChild(ghost);
+        positionGhost(e.clientX, e.clientY);
+        // Lock to active drag
+        window.addEventListener('pointermove', onPointerMoveDrag, { passive: false });
+        window.addEventListener('pointerup', onPointerUpDrag, { once: true });
+        window.addEventListener('pointercancel', onPointerCancelDrag, { once: true });
+        // Stop scrolling underneath while we drag
+        document.body.style.overflow = 'hidden';
+      };
+
+      const positionGhost = (x, y) => {
+        if (!ghost) return;
+        ghost.style.left = x + 'px';
+        ghost.style.top = y + 'px';
+      };
+
+      const onPointerMoveDrag = (e) => {
+        e.preventDefault();
+        lastX = e.clientX; lastY = e.clientY;
+        positionGhost(e.clientX, e.clientY);
+        updateHoverTarget(e.clientX, e.clientY);
+        scheduleEdgeScroll();
+      };
+
+      const updateHoverTarget = (x, y) => {
+        // Temporarily hide the ghost so elementFromPoint reads through it.
+        const prev = ghost.style.display;
+        ghost.style.display = 'none';
+        const under = document.elementFromPoint(x, y);
+        ghost.style.display = prev;
+        const target = under && (under.closest('.dropzone-target') || under.closest('.dropzone-pool'));
+        if (target !== currentTarget) {
+          if (currentTarget) currentTarget.classList.remove('drag-over');
+          currentTarget = target;
+          if (currentTarget) currentTarget.classList.add('drag-over');
+        }
+      };
+
+      const scheduleEdgeScroll = () => {
+        if (scrollRAF) return;
+        scrollRAF = requestAnimationFrame(() => {
+          scrollRAF = null;
+          edgeScrollStep();
+        });
+      };
+
+      const edgeScrollStep = () => {
+        if (!dragging) return;
+        // Try to scroll any scrollable ancestor near the pointer (pool, canvas-grid, dropzone).
+        const candidates = [
+          document.getElementById('item-pool-zone'),
+          document.getElementById('canvas-grid-area'),
+          currentTarget
+        ].filter(Boolean);
+        const EDGE = 60;
+        const SPEED = 14;
+        candidates.forEach(el => {
+          const r = el.getBoundingClientRect();
+          if (lastX < r.left || lastX > r.right) return;
+          if (lastY < r.top || lastY > r.bottom) return;
+          if (lastY - r.top < EDGE) el.scrollTop -= SPEED;
+          else if (r.bottom - lastY < EDGE) el.scrollTop += SPEED;
+        });
+        if (dragging) scheduleEdgeScroll();
+      };
+
+      const onPointerUpDrag = (e) => {
+        finishDrag(true, e);
+      };
+      const onPointerCancelDrag = () => finishDrag(false);
+
+      const finishDrag = (commit, e) => {
+        window.removeEventListener('pointermove', onPointerMoveDrag);
+        document.body.style.overflow = '';
+        card.classList.remove('dragging');
+        card.setAttribute('aria-grabbed', 'false');
+        if (ghost) { ghost.remove(); ghost = null; }
+        if (currentTarget) currentTarget.classList.remove('drag-over');
+        if (commit && currentTarget) {
+          if (currentTarget.classList.contains('dropzone-target')) {
+            moveItemToCluster(itemId, currentTarget.getAttribute('data-cluster-id'));
+          } else if (currentTarget.classList.contains('dropzone-pool')) {
+            moveItemToCluster(itemId, null);
+          }
+        }
+        currentTarget = null;
+        dragging = false;
+      };
+
+      card.addEventListener('pointerdown', onPointerDown);
     }
 
     function updateTapToMoveUI() {
       const dropzones = document.querySelectorAll('.dropzone-target, .dropzone-pool');
       dropzones.forEach(z => {
-        if(appState.selectedItemForMove) z.classList.add('tap-target-active');
+        if (appState.selectedItemForMove) z.classList.add('tap-target-active');
         else z.classList.remove('tap-target-active');
       });
       const hint = document.getElementById('tap-hint');
-      if(appState.selectedItemForMove) { hint.innerText = "Item selected! Now tap any cluster zone to drop it in."; hint.style.background = "var(--primary-teal)"; hint.style.color = "var(--ghost-white)"; }
-      else { hint.innerText = "Tap an item to select it, then tap a zone below to move it"; hint.style.background = "var(--cloud)"; hint.style.color = "var(--midnight)"; }
+      if (appState.selectedItemForMove) {
+        hint.innerText = 'Item selected — tap a cluster to drop it in, or tap the pool to put it back.';
+        hint.style.background = 'var(--primary-teal)';
+        hint.style.color = 'var(--ghost-white)';
+      } else {
+        hint.innerText = 'Drag a card to a cluster — or tap to select, then tap a cluster.';
+        hint.style.background = 'var(--cloud)';
+        hint.style.color = 'var(--midnight)';
+      }
     }
+
+    // --- Modals: focus management + Esc ---
+    let lastFocusBeforeModal = null;
+    function openModal(id) {
+      lastFocusBeforeModal = document.activeElement;
+      const modal = document.getElementById(id);
+      modal.classList.remove('hidden');
+      const auto = modal.querySelector('[data-autofocus]') || modal.querySelector('button, [href], input, textarea, [tabindex]:not([tabindex="-1"])');
+      if (auto) setTimeout(() => auto.focus(), 0);
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      if (lastFocusBeforeModal && typeof lastFocusBeforeModal.focus === 'function') {
+        lastFocusBeforeModal.focus();
+      }
+    }
+    function closeWelcomeModal() { closeModal('welcome-modal'); }
+    function closeAIPromptModal() { closeModal('ai-modal'); }
+
+    // Trap Tab within an open modal, and close on Escape.
+    document.addEventListener('keydown', (e) => {
+      const open = Array.from(document.querySelectorAll('.modal-overlay'))
+        .find(m => !m.classList.contains('hidden'));
+      if (!open) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal(open.id);
+        return;
+      }
+      if (e.key === 'Tab') {
+        const focusable = open.querySelectorAll('button, [href], input, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault(); first.focus();
+        }
+      }
+    });
+    // Click outside modal-content closes (overlay click).
+    document.addEventListener('click', (e) => {
+      if (e.target.classList && e.target.classList.contains('modal-overlay') && !e.target.classList.contains('hidden')) {
+        closeModal(e.target.id);
+      }
+    });
 
     function openAIPromptModal() {
       const t = document.getElementById('ai-prompt-text');
       let p = `Act as an expert UX researcher and sensemaking partner.\n\nI have collected a list of ${appState.items.length} observed friction signals. Before I start clustering these into problem spaces, I need to fully understand the landscape of this data.\n\nPlease read the items below and follow this 3-step process:\n\n1. UNDERSTAND THE LANDSCAPE: Provide a concise, high-level summary of the major themes and pain points represented here. What are the loudest and most urgent signals?\n2. NOTICE THROUGHLINES: Point out 1 or 2 unexpected structural connections or hidden patterns across seemingly different contexts (e.g., healthcare systems vs. environmental compliance).\n3. GUIDE CLUSTERING: Ask me 2 provocative, probing questions to help me start grouping these into meaningful problem spaces myself. DO NOT do the clustering for me.\n\nHere is the raw data pool:\n`;
       appState.items.forEach(i => p += `\n- [${i.title}] ${i.summary}`);
       t.value = p;
-      document.getElementById('ai-modal').classList.remove('hidden');
+      openModal('ai-modal');
     }
-    function closeAIPromptModal() { document.getElementById('ai-modal').classList.add('hidden'); }
-    function copyAIPrompt() { const t = document.getElementById('ai-prompt-text'); t.select(); navigator.clipboard.writeText(t.value); alert("Prompt copied to clipboard!"); }
-    function copyText(elementId) { const t = document.getElementById(elementId).innerText; navigator.clipboard.writeText(t); alert("Prompt copied!"); }
+
+    async function clipboardCopy(text) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch (e) {}
+      // Fallback
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch (e) { return false; }
+    }
+    async function copyAIPrompt() {
+      const t = document.getElementById('ai-prompt-text');
+      const ok = await clipboardCopy(t.value);
+      toast(ok ? 'Prompt copied to clipboard.' : 'Copy failed — select and copy manually.');
+    }
+    async function copyText(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      const ok = await clipboardCopy(text);
+      toast(ok ? 'Prompt copied.' : 'Copy failed — select and copy manually.');
+    }
+
+    // --- Validation + artifact generation ---
+    function validateBoard() {
+      const titledClusters = appState.clusters.filter(c => c.title.trim().length > 0);
+      const populatedClusters = appState.clusters.filter(c => c.itemIds.length > 0);
+      const usable = appState.clusters.filter(c => c.title.trim() && c.itemIds.length > 0);
+      const unassigned = appState.items.filter(item => !appState.clusters.some(c => c.itemIds.includes(item.id))).length;
+      const warnings = [];
+      if (usable.length === 0) warnings.push('Add at least one titled cluster with at least one signal in it.');
+      const untitledWithItems = appState.clusters.filter(c => !c.title.trim() && c.itemIds.length > 0);
+      if (untitledWithItems.length) warnings.push(`${untitledWithItems.length} cluster(s) have signals but no title.`);
+      const titledWithoutItems = appState.clusters.filter(c => c.title.trim() && c.itemIds.length === 0);
+      if (titledWithoutItems.length) warnings.push(`${titledWithoutItems.length} titled cluster(s) are still empty.`);
+      return { warnings, unassigned, usable: usable.length, titledClusters: titledClusters.length, populatedClusters: populatedClusters.length };
+    }
 
     function submitMapAndGenerateArtifact() {
+      const v = validateBoard();
+      const warningEl = document.getElementById('validation-warning');
+      if (v.usable === 0) {
+        warningEl.textContent = v.warnings[0];
+        toast('Cannot generate map: ' + v.warnings[0]);
+        return;
+      }
+      // Soft warnings -- confirm before proceeding
+      if (v.warnings.length || v.unassigned > 0) {
+        const parts = [...v.warnings];
+        if (v.unassigned > 0) parts.push(`${v.unassigned} signal(s) are still unassigned.`);
+        if (!window.confirm(parts.join('\n') + '\n\nGenerate the map anyway?')) {
+          warningEl.textContent = parts.join(' ');
+          return;
+        }
+      }
+      warningEl.textContent = '';
+
       document.getElementById('board-workspace').classList.add('hidden');
       document.getElementById('artifact-screen').classList.remove('hidden');
+      document.getElementById('art-title').textContent = appState.settings.title || 'Sensemaking Artifact';
       document.getElementById('art-date').innerText = new Date().toLocaleDateString();
-      
+
       const body = document.getElementById('artifact-body-content');
       body.innerHTML = '';
       appState.clusters.forEach(c => {
-        if(c.itemIds.length === 0 && !c.title) return;
-        let html = `<div class="doc-cluster"><h2>${c.title || 'Untitled Group'}</h2>`;
-        html += `<p style="margin-bottom:16px; font-style:italic; color: var(--text-muted); line-height: 1.6;">"${c.description || 'No synthesis text written yet.'}"</p>`;
+        if (c.itemIds.length === 0 && !c.title) return;
+        const cluster = document.createElement('div');
+        cluster.className = 'doc-cluster';
+        cluster.innerHTML = `
+          <h2>${escapeHtml(c.title || 'Untitled Group')}</h2>
+          <p style="margin-bottom:16px; font-style:italic; color: var(--text-muted); line-height: 1.6;">${escapeHtml(c.description || 'No synthesis text written yet.')}</p>
+        `;
         c.itemIds.forEach(id => {
-          const item = appState.items.find(i=>i.id===id);
-          if(item) html += `<div class="doc-item-box"><strong>${item.title}</strong><br><span style="color: var(--text-muted); display:block; margin-top:4px; line-height:1.5;">${item.summary}</span></div>`;
+          const item = appState.items.find(i => i.id === id);
+          if (!item) return;
+          const box = document.createElement('div');
+          box.className = 'doc-item-box';
+          box.innerHTML = `<strong>${escapeHtml(item.title)}</strong><br><span style="color: var(--text-muted); display:block; margin-top:4px; line-height:1.5;">${escapeHtml(item.summary)}</span>`;
+          cluster.appendChild(box);
         });
-        html += `</div>`;
-        body.innerHTML += html;
+        body.appendChild(cluster);
+      });
+
+      // Render customized prompts per cluster (replaces the generic templates).
+      renderArtifactPrompts();
+      scheduleSave();
+    }
+
+    function buildPromptFor(cluster, kind) {
+      const title = cluster.title || 'Untitled Cluster';
+      const desc = cluster.description || '(no shared barrier described yet)';
+      const signals = cluster.itemIds
+        .map(id => appState.items.find(i => i.id === id))
+        .filter(Boolean)
+        .map(i => `- ${i.title}: ${i.summary}`)
+        .join('\n');
+      const intro = `I have created a problem space cluster called: ${title}\nIt is defined by this shared barrier: ${desc}\n\nThe signals grouped under it are:\n${signals || '(none yet)'}\n\n`;
+      if (kind === 'stakeholder') {
+        return `Act as an expert UX researcher and systems thinker.\n\n${intro}Help me build a robust Stakeholder Map for this space. Do not try to solve the problem. Instead, identify:\n1. The Primary Affected Stakeholder (Who feels the pain most directly?)\n2. Adjacent Stakeholders (Who else is impacted downstream?)\n3. Gatekeepers / Blockers (Who can constrain, slow, or prevent progress in this space?)\n4. Enablers / Intermediaries (Who has the access or trust to reach the affected stakeholders?)`;
+      }
+      if (kind === 'problematize') {
+        return `Act as a critical theorist and problem-space analyst.\n\n${intro}Help me problematize this space. Your goal is to complicate my understanding and look for systemic roots.\n1. What are the hidden assumptions baked into how I have defined this problem?\n2. If this problem persists, who currently benefits from the status quo?\n3. Are there any structural biases (economic, racial, geographic) embedded in how this problem is framed?`;
+      }
+      return `Act as an expert research strategist and data validation expert.\n\n${intro}I need to validate and complicate this problem space before moving forward. Help me design a rapid, rigorous investigation plan using primary methods (interviews, surveys) and secondary methods (peer-reviewed research, literature).\n\nPlease provide:\n1. Complicating Factors: What edge cases, missing voices, or contrarian data might prove my framing wrong or incomplete?\n2. Secondary Research: What specific academic fields, peer-reviewed topics, or existing literature should I quickly search to ground this in established evidence?\n3. Rapid Primary Research Plan: Give me 3 highly targeted interview questions or survey concepts I could deploy this week to test my core assumptions with real stakeholders.`;
+    }
+
+    function renderArtifactPrompts() {
+      const section = document.getElementById('next-steps-prompts');
+      if (!section) return;
+      section.innerHTML = '';
+      const usable = appState.clusters.filter(c => c.title.trim() && c.itemIds.length > 0);
+      if (usable.length === 0) return;
+      usable.forEach((cluster, idx) => {
+        const card = document.createElement('div');
+        card.className = 'prompt-card';
+        const stakeholderId = `prompt-stake-${idx}`;
+        const problematizeId = `prompt-prob-${idx}`;
+        const validateId = `prompt-valid-${idx}`;
+        card.innerHTML = `
+          <h4>Sparring partners for: ${escapeHtml(cluster.title)}</h4>
+          <p class="context">Three angles to pressure-test this cluster. Each prompt already includes the cluster's title, synthesis, and signals — just copy and paste.</p>
+          <details open>
+            <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">1. Stakeholder Map</summary>
+            <div class="prompt-text" id="${stakeholderId}">${escapeHtml(buildPromptFor(cluster, 'stakeholder'))}</div>
+            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${stakeholderId}')">Copy Stakeholder Prompt</button>
+          </details>
+          <details style="margin-top:12px;">
+            <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">2. Challenge assumptions</summary>
+            <div class="prompt-text" id="${problematizeId}">${escapeHtml(buildPromptFor(cluster, 'problematize'))}</div>
+            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${problematizeId}')">Copy Assumption Prompt</button>
+          </details>
+          <details style="margin-top:12px;">
+            <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">3. Find real proof</summary>
+            <div class="prompt-text" id="${validateId}">${escapeHtml(buildPromptFor(cluster, 'validate'))}</div>
+            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${validateId}')">Copy Fact-Check Prompt</button>
+          </details>
+        `;
+        section.appendChild(card);
       });
     }
 
@@ -723,6 +1292,50 @@ Please provide:
       a.click();
       URL.revokeObjectURL(url);
     }
+
+    function startOver() {
+      if (!window.confirm('Start over? This will clear your saved board and reload all the default signals.')) return;
+      clearSavedState();
+      location.reload();
+    }
+
+    // --- Bootstrap ---
+    renderConfigItems();
+    // If a saved session exists and already has a title or clusters, offer to resume.
+    (function maybeResume() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      let parsed; try { parsed = JSON.parse(raw); } catch { return; }
+      const hasWork = parsed && parsed.settings && (parsed.settings.title || (parsed.clusters && parsed.clusters.length));
+      if (!hasWork) return;
+      // Pre-fill setup title.
+      const titleEl = document.getElementById('config-title');
+      if (titleEl && parsed.settings.title) titleEl.value = parsed.settings.title;
+      setTimeout(() => {
+        toast('Resumed your previous session.', {
+          actionLabel: 'Start fresh',
+          duration: 6000,
+          onAction: () => {
+            clearSavedState();
+            appState = defaultState();
+            if (titleEl) titleEl.value = 'Upskilling Labs: Comprehensive Problem Signals';
+            renderConfigItems();
+            toast('Saved session cleared.');
+          }
+        });
+      }, 200);
+    })();
+
+    // Warn before unload if there's unsaved or unfinished work.
+    window.addEventListener('beforeunload', (e) => {
+      const board = document.getElementById('board-workspace');
+      if (board && !board.classList.contains('hidden') && appState.clusters.some(c => c.itemIds.length > 0)) {
+        // We do save to localStorage on every change, but the browser context could still be reset; warn anyway.
+        // Note: modern browsers ignore custom messages.
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
   </script>
 </body>
 </html>
