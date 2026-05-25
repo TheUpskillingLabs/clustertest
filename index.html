@@ -316,9 +316,10 @@
     .workspace-title-row h2 { font-size: 1.2rem; font-weight: 700; color: var(--midnight); flex: 1; min-width: 240px; }
     .workspace-intro { font-size: 0.875rem; color: var(--midnight); opacity: 0.85; line-height: 1.55; margin-bottom: 16px; }
     .workspace-intro strong { color: var(--midnight); opacity: 1; }
-    .interview-helper { background: rgba(0,148,160,0.06); border: 1px solid rgba(0,148,160,0.2); border-radius: 8px; padding: 14px 18px; }
-    .interview-helper summary { cursor: pointer; font-weight: 700; color: var(--primary-teal); font-size: 0.9rem; }
-    .interview-helper .prompt-text { margin-top: 12px; }
+    .interview-helper { background: rgba(0,148,160,0.06); border: 2px solid var(--primary-teal); border-radius: 8px; padding: 18px 20px; }
+    .interview-helper .step-label { font-size: 0.75rem; font-weight: 700; color: var(--primary-teal); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .interview-helper h3 { font-size: 1.05rem; font-weight: 700; color: var(--midnight); margin-bottom: 4px; }
+    .interview-helper .helper-desc { font-size: 0.85rem; color: var(--midnight); opacity: 0.8; line-height: 1.5; margin-bottom: 14px; }
     .workspace-cards { width: 100%; max-width: 880px; display: flex; flex-direction: column; gap: 24px; }
     .workspace-cluster-card { background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px; padding: 28px 32px; box-shadow: 0 4px 6px rgba(16,24,32,0.02); }
     .workspace-cluster-card > header { border-bottom: 2px solid var(--cloud); padding-bottom: 16px; margin-bottom: 20px; }
@@ -326,16 +327,20 @@
     .workspace-cluster-card .cluster-desc { font-size: 0.875rem; color: var(--midnight); opacity: 0.8; font-style: italic; margin-bottom: 12px; line-height: 1.5; }
     .signal-chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
     .signal-chips li { font-size: 0.75rem; background: var(--cloud); color: var(--midnight); padding: 4px 10px; border-radius: 12px; font-weight: 600; }
-    .workspace-section { margin-bottom: 20px; }
+    .workspace-section { margin-bottom: 28px; }
     .workspace-section:last-child { margin-bottom: 0; }
-    .workspace-section > label { display: block; font-size: 0.95rem; font-weight: 700; color: var(--midnight); margin-bottom: 4px; }
-    .workspace-section .field-hint { font-size: 0.8rem; color: var(--midnight); opacity: 0.7; margin-bottom: 10px; line-height: 1.4; }
+    .workspace-section > label { display: block; font-size: 1rem; font-weight: 700; color: var(--midnight); margin-bottom: 4px; }
+    .workspace-section .field-hint { font-size: 0.825rem; color: var(--midnight); opacity: 0.7; margin-bottom: 14px; line-height: 1.5; }
     .workspace-section textarea { width: 100%; min-height: 120px; padding: 14px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--ghost-white); color: var(--midnight); font-size: 0.875rem; line-height: 1.6; resize: vertical; outline: none; font-family: 'Geologica', sans-serif; transition: border-color 0.2s; }
     .workspace-section textarea:focus { border-color: var(--primary-teal); }
-    .workspace-section details { margin-top: 10px; background: var(--cloud); border-radius: 6px; padding: 10px 14px; }
-    .workspace-section details summary { cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--midnight); }
-    .workspace-section details .prompt-text { margin-top: 10px; }
-    .workspace-section details button { margin-top: 8px; }
+
+    /* --- Prompt CTA: prominent, always-visible "copy this prompt" block --- */
+    .prompt-cta { background: rgba(0,148,160,0.06); border: 2px solid var(--primary-teal); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+    .prompt-cta-header { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+    .prompt-cta-label { font-size: 0.9rem; font-weight: 700; color: var(--primary-teal); text-transform: uppercase; letter-spacing: 0.06em; flex: 1; min-width: 200px; }
+    .prompt-cta .copy-btn { flex-shrink: 0; }
+    .prompt-cta .prompt-text { background: var(--midnight); color: var(--cloud); padding: 14px 16px; border-radius: 6px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.78rem; line-height: 1.55; white-space: pre-wrap; max-height: 220px; overflow-y: auto; margin: 0; }
+    .prompt-cta .copy-hint { font-size: 0.72rem; color: var(--midnight); opacity: 0.65; margin-top: 10px; line-height: 1.4; }
     .workspace-footer { width: 100%; max-width: 880px; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px; padding: 20px 32px; background: var(--ghost-white); border-radius: 12px; border: 2px solid var(--cloud); flex-wrap: wrap; }
     .workspace-footer .submit-status { font-size: 0.8rem; color: var(--midnight); opacity: 0.7; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
@@ -469,14 +474,17 @@
         <button class="btn btn-outline" onclick="backToBoard()">← Back to Board</button>
         <h2 id="workspace-title">Deepen your committed clusters</h2>
       </div>
-      <p class="workspace-intro">For each cluster below, write your <strong>problematization</strong> and <strong>stakeholder map</strong>. Before you start typing, reach out to interview the contributors of each cluster — that conversation is what fills these in well.</p>
+      <p class="workspace-intro">For each cluster below, write your <strong>problematization</strong> and <strong>stakeholder map</strong>. The AI prompts inside each card are sparring partners — copy them into your favorite AI tool to think out loud before you write your own answer.</p>
       <div class="interview-helper">
-        <details>
-          <summary>Interview &amp; Validate prompt (copy this first)</summary>
-          <p style="font-size: 0.8rem; margin: 10px 0; line-height: 1.5;">Paste this into an AI tool to plan your interview with the contributors of these signals.</p>
-          <div class="prompt-text" id="workspace-interview-prompt"></div>
-          <button class="btn btn-outline" style="margin-top: 10px;" onclick="copyText('workspace-interview-prompt')">Copy interview prompt</button>
-        </details>
+        <div class="step-label">Step 1 — Before you write anything</div>
+        <h3>Interview the contributors of each cluster</h3>
+        <p class="helper-desc">Reach out to the people who reported these signals. Use the prompt below to plan a 30-minute conversation per cluster.</p>
+        <div class="prompt-cta-header">
+          <div class="prompt-cta-label">✨ Interview &amp; Validate prompt</div>
+          <button class="btn btn-primary copy-btn" onclick="copyText('workspace-interview-prompt')">Copy this prompt</button>
+        </div>
+        <div class="prompt-text" id="workspace-interview-prompt"></div>
+        <p class="copy-hint">Paste into Gemini, ChatGPT, Claude, NotebookLM, or Perplexity. The prompt already includes your committed clusters' signals.</p>
       </div>
     </div>
     <div class="workspace-cards" id="workspace-cards-container"></div>
@@ -1491,23 +1499,29 @@
         </header>
         <section class="workspace-section">
           <label for="${problemId}">Problematize this space</label>
-          <p class="field-hint">Complicate your framing: hidden assumptions, who benefits from the status quo, structural biases. Use the AI prompt below if you want a sparring partner.</p>
-          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Write your problematization here..."></textarea>
-          <details>
-            <summary>Show AI prompt for problematization</summary>
+          <p class="field-hint">Complicate your framing: hidden assumptions, who benefits from the status quo, structural biases.</p>
+          <div class="prompt-cta">
+            <div class="prompt-cta-header">
+              <div class="prompt-cta-label">✨ Step 2 — Problematization prompt</div>
+              <button class="btn btn-primary copy-btn" onclick="copyText('${problemPromptId}')">Copy this prompt</button>
+            </div>
             <div class="prompt-text" id="${problemPromptId}"></div>
-            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${problemPromptId}')">Copy problematization prompt</button>
-          </details>
+            <p class="copy-hint">Paste into your favorite AI tool, spar with it, then write your own conclusion below.</p>
+          </div>
+          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your problematization — write your own conclusion here after sparring with the AI."></textarea>
         </section>
         <section class="workspace-section">
           <label for="${stakeholderId}">Stakeholder Map</label>
-          <p class="field-hint">Primary affected, adjacent, gatekeepers, enablers. Use what you learned from the interviews and the prompt below.</p>
-          <textarea id="${stakeholderId}" oninput="updateStakeholderMap('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Write your stakeholder map here..."></textarea>
-          <details>
-            <summary>Show AI prompt for stakeholder mapping</summary>
+          <p class="field-hint">Primary affected, adjacent, gatekeepers, enablers — informed by the interviews you ran in Step 1.</p>
+          <div class="prompt-cta">
+            <div class="prompt-cta-header">
+              <div class="prompt-cta-label">✨ Step 3 — Stakeholder mapping prompt</div>
+              <button class="btn btn-primary copy-btn" onclick="copyText('${stakeholderPromptId}')">Copy this prompt</button>
+            </div>
             <div class="prompt-text" id="${stakeholderPromptId}"></div>
-            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${stakeholderPromptId}')">Copy stakeholder prompt</button>
-          </details>
+            <p class="copy-hint">Paste into your favorite AI tool, spar with it, then write your own map below.</p>
+          </div>
+          <textarea id="${stakeholderId}" oninput="updateStakeholderMap('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your stakeholder map — write your own answer here after sparring with the AI."></textarea>
         </section>
       `;
 
