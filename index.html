@@ -474,7 +474,7 @@
         <button class="btn btn-outline" onclick="backToBoard()">← Back to Board</button>
         <h2 id="workspace-title">Deepen your committed clusters</h2>
       </div>
-      <p class="workspace-intro">For each cluster below, write your <strong>problematization</strong> and <strong>stakeholder map</strong>. The AI prompts inside each card are sparring partners — copy them into your favorite AI tool to think out loud before you write your own answer.</p>
+      <p class="workspace-intro">For each cluster below, write your <strong>stakeholder map</strong> and <strong>problematization</strong>. The AI prompts inside each card are sparring partners — copy them into your favorite AI tool to think out loud before you write your own answer.</p>
       <div class="interview-helper">
         <div class="step-label">Step 1 — Before you write anything</div>
         <h3>Interview the contributors of each cluster</h3>
@@ -1498,30 +1498,30 @@
           </ul>
         </header>
         <section class="workspace-section">
-          <label for="${problemId}">Problematize this space</label>
-          <p class="field-hint">Complicate your framing: hidden assumptions, who benefits from the status quo, structural biases.</p>
-          <div class="prompt-cta">
-            <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Step 2 — Problematization prompt</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('${problemPromptId}')">Copy this prompt</button>
-            </div>
-            <div class="prompt-text" id="${problemPromptId}"></div>
-            <p class="copy-hint">Paste into your favorite AI tool, spar with it, then write your own conclusion below.</p>
-          </div>
-          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your problematization — write your own conclusion here after sparring with the AI."></textarea>
-        </section>
-        <section class="workspace-section">
           <label for="${stakeholderId}">Stakeholder Map</label>
           <p class="field-hint">Primary affected, adjacent, gatekeepers, enablers — informed by the interviews you ran in Step 1.</p>
           <div class="prompt-cta">
             <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Step 3 — Stakeholder mapping prompt</div>
+              <div class="prompt-cta-label">✨ Step 2 — Stakeholder mapping prompt</div>
               <button class="btn btn-primary copy-btn" onclick="copyText('${stakeholderPromptId}')">Copy this prompt</button>
             </div>
             <div class="prompt-text" id="${stakeholderPromptId}"></div>
             <p class="copy-hint">Paste into your favorite AI tool, spar with it, then write your own map below.</p>
           </div>
           <textarea id="${stakeholderId}" oninput="updateStakeholderMap('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your stakeholder map — write your own answer here after sparring with the AI."></textarea>
+        </section>
+        <section class="workspace-section">
+          <label for="${problemId}">Problematize this space</label>
+          <p class="field-hint">Complicate your framing: hidden assumptions, who benefits from the status quo, structural biases.</p>
+          <div class="prompt-cta">
+            <div class="prompt-cta-header">
+              <div class="prompt-cta-label">✨ Step 3 — Problematization prompt</div>
+              <button class="btn btn-primary copy-btn" onclick="copyText('${problemPromptId}')">Copy this prompt</button>
+            </div>
+            <div class="prompt-text" id="${problemPromptId}"></div>
+            <p class="copy-hint">Paste into your favorite AI tool, spar with it, then write your own conclusion below.</p>
+          </div>
+          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your problematization — write your own conclusion here after sparring with the AI."></textarea>
         </section>
       `;
 
@@ -1648,12 +1648,12 @@
             ${signals.map(s => `<li>${escapeHtml(s.title)}</li>`).join('')}
           </ul>
           <div class="submission-answer">
-            <h4>Problematization</h4>
-            <div class="answer-body">${escapeHtml(probAns)}</div>
-          </div>
-          <div class="submission-answer">
             <h4>Stakeholder Map</h4>
             <div class="answer-body">${escapeHtml(stakeAns)}</div>
+          </div>
+          <div class="submission-answer">
+            <h4>Problematization</h4>
+            <div class="answer-body">${escapeHtml(probAns)}</div>
           </div>
         `;
         wrap.appendChild(article);
@@ -1678,8 +1678,8 @@
           const item = appState.items.find(i => i.id === id);
           if (item) md += `- **${item.title}** — ${item.summary}\n`;
         });
-        md += `\n### Problematization\n${(appState.problematizations[c.id] || '(empty)').trim()}\n\n`;
-        md += `### Stakeholder Map\n${(appState.stakeholderMaps[c.id] || '(empty)').trim()}\n\n`;
+        md += `\n### Stakeholder Map\n${(appState.stakeholderMaps[c.id] || '(empty)').trim()}\n\n`;
+        md += `### Problematization\n${(appState.problematizations[c.id] || '(empty)').trim()}\n\n`;
         md += `---\n\n`;
       });
 
