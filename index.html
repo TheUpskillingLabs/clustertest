@@ -88,22 +88,21 @@
     }
 
     /* --- VIEW 1: SETUP SCREEN --- */
-    #setup-screen { 
-      height: 100vh; 
+    #setup-screen {
+      height: 100vh;
       width: 100vw;
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      background: var(--midnight); 
-      overflow-y: auto; 
-      padding: 24px; 
+      display: block;
+      background: var(--midnight);
+      overflow-y: auto;
+      padding: 24px;
     }
-    .config-container { 
-      background: rgba(255, 255, 255, 0.05); 
-      padding: 40px; 
-      border-radius: 12px; 
-      width: 100%; 
-      max-width: 760px; 
+    .config-container {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 40px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .config-header h1 { font-size: 1.75rem; margin-bottom: 8px; font-weight: 700; color: var(--primary-teal); }
@@ -113,7 +112,7 @@
     .config-input { width: 100%; padding: 14px; background: var(--midnight); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--ghost-white); font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
     .config-input:focus { border-color: var(--primary-teal); }
 
-    .item-builder-list { background: var(--midnight); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; height: 220px; overflow-y: auto; margin-bottom: 16px; }
+    .item-builder-list { background: var(--midnight); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; max-height: 220px; overflow-y: auto; margin-bottom: 16px; }
     .config-item-row { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 14px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; }
     .config-item-row h4 { font-size: 0.875rem; color: var(--ghost-white); margin-bottom: 4px; }
     .config-item-row p { font-size: 0.75rem; color: var(--cloud); opacity: 0.7; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
@@ -304,13 +303,76 @@
 
     .tap-instruction { display: none; text-align: center; font-size: 0.75rem; color: var(--primary-teal); font-weight: 700; padding: 10px; background: var(--cloud); margin-bottom: 12px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;}
     @media (max-width: 1024px) { .tap-instruction { display: block; } }
-    
+
+    /* --- Cluster progress chip on board infobar --- */
+    #cluster-progress { font-weight: 600; }
+    #cluster-progress.meets-target { color: var(--primary-teal); }
+    #cluster-progress.below-target { color: var(--cloud); opacity: 0.8; }
+
+    /* --- VIEW 2b: DEEPENING WORKSPACE --- */
+    #workspace-screen { height: 100vh; width: 100vw; overflow-y: auto; background: var(--cloud); padding: 32px 24px; display: flex; flex-direction: column; align-items: center; }
+    .workspace-header { width: 100%; max-width: 880px; background: var(--ghost-white); padding: 24px 32px; border-radius: 12px; border: 2px solid var(--cloud); margin-bottom: 24px; }
+    .workspace-title-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .workspace-title-row h2 { font-size: 1.2rem; font-weight: 700; color: var(--midnight); flex: 1; min-width: 240px; }
+    .workspace-intro { font-size: 0.875rem; color: var(--midnight); opacity: 0.85; line-height: 1.55; margin-bottom: 16px; }
+    .workspace-intro strong { color: var(--midnight); opacity: 1; }
+    .interview-helper { background: rgba(0,148,160,0.06); border: 1px solid rgba(0,148,160,0.2); border-radius: 8px; padding: 14px 18px; }
+    .interview-helper summary { cursor: pointer; font-weight: 700; color: var(--primary-teal); font-size: 0.9rem; }
+    .interview-helper .prompt-text { margin-top: 12px; }
+    .workspace-cards { width: 100%; max-width: 880px; display: flex; flex-direction: column; gap: 24px; }
+    .workspace-cluster-card { background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px; padding: 28px 32px; box-shadow: 0 4px 6px rgba(16,24,32,0.02); }
+    .workspace-cluster-card > header { border-bottom: 2px solid var(--cloud); padding-bottom: 16px; margin-bottom: 20px; }
+    .workspace-cluster-card h3 { color: var(--primary-teal); font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; }
+    .workspace-cluster-card .cluster-desc { font-size: 0.875rem; color: var(--midnight); opacity: 0.8; font-style: italic; margin-bottom: 12px; line-height: 1.5; }
+    .signal-chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+    .signal-chips li { font-size: 0.75rem; background: var(--cloud); color: var(--midnight); padding: 4px 10px; border-radius: 12px; font-weight: 600; }
+    .workspace-section { margin-bottom: 20px; }
+    .workspace-section:last-child { margin-bottom: 0; }
+    .workspace-section > label { display: block; font-size: 0.95rem; font-weight: 700; color: var(--midnight); margin-bottom: 4px; }
+    .workspace-section .field-hint { font-size: 0.8rem; color: var(--midnight); opacity: 0.7; margin-bottom: 10px; line-height: 1.4; }
+    .workspace-section textarea { width: 100%; min-height: 120px; padding: 14px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--ghost-white); color: var(--midnight); font-size: 0.875rem; line-height: 1.6; resize: vertical; outline: none; font-family: 'Geologica', sans-serif; transition: border-color 0.2s; }
+    .workspace-section textarea:focus { border-color: var(--primary-teal); }
+    .workspace-section details { margin-top: 10px; background: var(--cloud); border-radius: 6px; padding: 10px 14px; }
+    .workspace-section details summary { cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--midnight); }
+    .workspace-section details .prompt-text { margin-top: 10px; }
+    .workspace-section details button { margin-top: 8px; }
+    .workspace-footer { width: 100%; max-width: 880px; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px; padding: 20px 32px; background: var(--ghost-white); border-radius: 12px; border: 2px solid var(--cloud); flex-wrap: wrap; }
+    .workspace-footer .submit-status { font-size: 0.8rem; color: var(--midnight); opacity: 0.7; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    /* --- Commit modal cluster picker --- */
+    .commit-cluster-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; margin: 16px 0; }
+    .commit-cluster-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--cloud); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s; }
+    .commit-cluster-row:hover { border-color: var(--primary-teal); }
+    .commit-cluster-row.checked { background: rgba(0,148,160,0.08); border-color: var(--primary-teal); }
+    .commit-cluster-row input[type="checkbox"] { margin-top: 2px; cursor: pointer; width: 18px; height: 18px; accent-color: var(--primary-teal); }
+    .commit-cluster-row .cluster-meta { flex: 1; }
+    .commit-cluster-row .cluster-meta h4 { font-size: 0.95rem; font-weight: 700; color: var(--midnight); margin-bottom: 2px; }
+    .commit-cluster-row .cluster-meta p { font-size: 0.75rem; color: var(--midnight); opacity: 0.7; }
+    .commit-warning { background: rgba(238,28,37,0.08); color: var(--action-red); padding: 10px 14px; border-radius: 6px; font-size: 0.825rem; line-height: 1.5; margin-bottom: 12px; border-left: 4px solid var(--action-red); }
+
+    /* --- Re-purposed artifact (submission) view --- */
+    .submission-header { width: 100%; max-width: 840px; background: var(--ghost-white); padding: 24px 32px; border-radius: 12px; border: 2px solid var(--cloud); margin-bottom: 24px; }
+    .submission-header h2 { font-size: 1.3rem; font-weight: 700; color: var(--midnight); margin-bottom: 4px; }
+    .submission-header .submission-timestamp { font-size: 0.85rem; color: var(--midnight); opacity: 0.7; margin-bottom: 16px; }
+    .submission-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .submission-cluster { background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; }
+    .submission-cluster h3 { color: var(--primary-teal); font-size: 1.35rem; font-weight: 700; margin-bottom: 8px; }
+    .submission-cluster .cluster-desc { font-size: 0.9rem; color: var(--midnight); opacity: 0.85; font-style: italic; margin-bottom: 14px; line-height: 1.55; }
+    .submission-cluster .signal-chips { margin-bottom: 20px; }
+    .submission-answer { margin-bottom: 18px; }
+    .submission-answer:last-child { margin-bottom: 0; }
+    .submission-answer h4 { font-size: 0.95rem; font-weight: 700; color: var(--midnight); margin-bottom: 6px; }
+    .submission-answer .answer-body { background: var(--cloud); border-left: 4px solid var(--primary-teal); padding: 14px 16px; border-radius: 0 6px 6px 0; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; color: var(--midnight); }
+
     @media print {
       body { background: var(--ghost-white); overflow: visible; height: auto; }
-      .artifact-actions, .next-steps-section, .upskill-banner { display: none !important; }
+      .artifact-actions, .next-steps-section, .upskill-banner, .submission-actions { display: none !important; }
       #artifact-screen { padding: 0; height: auto; overflow: visible; display: block; }
       .document-paper { box-shadow: none; border: none; padding: 0; max-width: 100%; }
-      .doc-cluster { page-break-inside: avoid; }
+      .doc-cluster, .submission-cluster { page-break-inside: avoid; }
+      .submission-header { border: none; padding: 0 0 16px 0; }
+      .submission-cluster { border: none; padding: 0; margin-bottom: 32px; }
     }
   </style>
 </head>
@@ -376,10 +438,11 @@
     <main class="panel-center">
       <div class="panel-header">
         <h2 id="board-title-display">Your Sorting Board <span id="save-status" aria-live="polite"></span></h2>
-        <button class="btn btn-primary" onclick="submitMapAndGenerateArtifact()">Finish & Generate Map</button>
+        <button class="btn btn-primary" onclick="openCommitModal()">Commit to Clusters</button>
       </div>
       <div class="canvas-infobar">
         <span id="validation-warning" style="color: var(--action-red);"></span>
+        <span id="cluster-progress" aria-live="polite"></span>
       </div>
       <div class="canvas-grid" id="canvas-grid-area">
         <button class="add-cluster-btn" onclick="createNewCluster()">+ Create a New Cluster Group</button>
@@ -400,38 +463,74 @@
     </div>
   </div>
 
-  <div id="artifact-screen" class="hidden">
-    <div class="artifact-actions">
-      <div>
-        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--midnight);">Your Finished Map</h3>
-        <p style="font-size: 0.8rem; color: var(--text-muted);">Look over your architecture or download it for your portfolio project files.</p>
+  <div id="workspace-screen" class="hidden">
+    <div class="workspace-header">
+      <div class="workspace-title-row">
+        <button class="btn btn-outline" onclick="backToBoard()">← Back to Board</button>
+        <h2 id="workspace-title">Deepen your committed clusters</h2>
       </div>
-      <div class="action-group">
-        <button class="btn btn-outline" onclick="startOver()">Start Over</button>
-        <button class="btn btn-outline" onclick="window.print()">Print / Save PDF</button>
-        <button class="btn btn-primary" onclick="downloadMarkdown()">Download Markdown (.md)</button>
+      <p class="workspace-intro">For each cluster below, write your <strong>problematization</strong> and <strong>stakeholder map</strong>. Before you start typing, reach out to interview the contributors of each cluster — that conversation is what fills these in well.</p>
+      <div class="interview-helper">
+        <details>
+          <summary>Interview &amp; Validate prompt (copy this first)</summary>
+          <p style="font-size: 0.8rem; margin: 10px 0; line-height: 1.5;">Paste this into an AI tool to plan your interview with the contributors of these signals.</p>
+          <div class="prompt-text" id="workspace-interview-prompt"></div>
+          <button class="btn btn-outline" style="margin-top: 10px;" onclick="copyText('workspace-interview-prompt')">Copy interview prompt</button>
+        </details>
       </div>
     </div>
+    <div class="workspace-cards" id="workspace-cards-container"></div>
+    <div class="workspace-footer">
+      <span class="submit-status" id="submit-status-hint">Fill in both fields on every cluster to enable Submit for Voting.</span>
+      <button class="btn btn-primary" id="submit-for-voting-btn" onclick="submitForVoting()" disabled>Submit for Voting</button>
+    </div>
+  </div>
 
-    <div class="document-paper">
-      <div class="upskill-banner" style="margin-top: 0; margin-bottom: 40px;">
-        <h3>Nice Work! You've Built a Future-Ready Map</h3>
-        <p>You just turned a chaotic pile of noise into an organized, structured database. In the future of work, the people who stand out aren't the ones who just write basic code or type simple prompts—it's the people who can look at a messy situation and pinpoint exactly what the real problem is. Use the AI partners below to test your thinking.</p>
+  <div id="artifact-screen" class="hidden">
+    <div class="submission-header">
+      <h2 id="submission-heading">Submission</h2>
+      <p class="submission-timestamp" id="submission-timestamp"></p>
+      <div class="submission-actions">
+        <button class="btn btn-outline" onclick="backToWorkspaceFromArtifact()">← Back to Workspace</button>
+        <button class="btn btn-outline" onclick="window.print()">Print / Save PDF</button>
+        <button class="btn btn-outline" onclick="downloadMarkdown()">Download Markdown (.md)</button>
+        <button class="btn btn-primary" onclick="openSubmitModal()">Re-submit</button>
+        <button class="btn btn-outline" onclick="startOver()" style="margin-left:auto;">Start Over</button>
       </div>
+    </div>
+    <div id="submission-body"></div>
+  </div>
 
-      <div class="doc-header">
-        <h1 id="art-title" style="font-size: 1.75rem; font-weight: 800; margin-bottom: 4px;">Sensemaking Artifact</h1>
-        <p style="color: var(--text-muted); font-size: 0.85rem;" id="art-date"></p>
+  <div id="commit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="commit-modal-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="commit-modal-title">Commit to 2–3 clusters</h3>
       </div>
-      
-      <div id="artifact-body-content"></div>
+      <div class="modal-body">
+        <p>Pick the 2–3 clusters you'll deepen with a problematization and stakeholder map. These are the clusters you'll submit for voting.</p>
+        <div id="commit-warning" class="commit-warning hidden"></div>
+        <div id="commit-cluster-list" class="commit-cluster-list" role="group" aria-label="Clusters available to commit"></div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
+          <button class="btn btn-outline" onclick="closeModal('commit-modal')">Cancel</button>
+          <button class="btn btn-primary" id="commit-continue-btn" onclick="confirmCommit()" disabled data-autofocus>Continue to Workspace</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      <div class="next-steps-section">
-        <h2 style="font-size: 1.3rem; margin-bottom: 12px; font-weight: 700; color: var(--midnight);">What to Do Next: AI Sparring Partners</h2>
-        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px;">
-          Paste any of these into <a href="https://gemini.google.com" target="_blank" rel="noopener">Google Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>. Each prompt already includes your cluster's title, synthesis, and signals — no editing required.
-        </p>
-        <div id="next-steps-prompts"></div>
+  <div id="submit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="submit-modal-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="submit-modal-title">Submit your map for voting?</h3>
+      </div>
+      <div class="modal-body">
+        <p id="submit-modal-summary"></p>
+        <p id="submit-modal-prior" class="hidden" style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;"></p>
+        <p style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;">In a real deployment this would queue your map for cohort review. For this prototype, submitting records a timestamp and locks in the read-only artifact view.</p>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button class="btn btn-outline" onclick="closeModal('submit-modal')">Cancel</button>
+          <button class="btn btn-primary" id="submit-modal-confirm-btn" onclick="confirmSubmit()" data-autofocus>Submit</button>
+        </div>
       </div>
     </div>
   </div>
@@ -517,7 +616,12 @@
         settings: { title: "" },
         items: DEFAULT_ITEMS.map(i => ({ ...i })),
         clusters: [],
-        selectedItemForMove: null
+        selectedItemForMove: null,
+        committedClusterIds: [],
+        problematizations: {},
+        stakeholderMaps: {},
+        submittedAt: null,
+        currentScreen: 'setup'
       };
     }
 
@@ -545,6 +649,11 @@
         const parsed = JSON.parse(raw);
         if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.clusters)) return null;
         parsed.selectedItemForMove = null;
+        if (!Array.isArray(parsed.committedClusterIds)) parsed.committedClusterIds = [];
+        if (!parsed.problematizations || typeof parsed.problematizations !== 'object') parsed.problematizations = {};
+        if (!parsed.stakeholderMaps || typeof parsed.stakeholderMaps !== 'object') parsed.stakeholderMaps = {};
+        if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
+        if (!parsed.currentScreen) parsed.currentScreen = 'setup';
         return parsed;
       } catch (e) { return null; }
     }
@@ -637,15 +746,44 @@
 
     function launchWorkspace() {
       appState.settings.title = document.getElementById('config-title').value || 'Clustering Board';
-      document.getElementById('setup-screen').classList.add('hidden');
-      document.getElementById('board-workspace').classList.remove('hidden');
-      document.getElementById('board-title-display').firstChild.textContent = appState.settings.title + ' ';
+      setBoardTitleDisplay();
       if (appState.clusters.length === 0) createNewCluster();
-      renderBoard();
-      setupGlobalDragAndDrop();
+      ensureGlobalDragAndDrop();
+      goToScreen('board');
       openModal('welcome-modal');
+    }
+
+    function setBoardTitleDisplay() {
+      const display = document.getElementById('board-title-display');
+      if (display && display.firstChild) display.firstChild.textContent = (appState.settings.title || 'Your Sorting Board') + ' ';
+    }
+
+    let dragAndDropInitialized = false;
+    function ensureGlobalDragAndDrop() {
+      if (dragAndDropInitialized) return;
+      setupGlobalDragAndDrop();
+      dragAndDropInitialized = true;
+    }
+
+    function goToScreen(name) {
+      appState.currentScreen = name;
+      document.getElementById('setup-screen').classList.toggle('hidden', name !== 'setup');
+      document.getElementById('board-workspace').classList.toggle('hidden', name !== 'board');
+      document.getElementById('workspace-screen').classList.toggle('hidden', name !== 'workspace');
+      document.getElementById('artifact-screen').classList.toggle('hidden', name !== 'artifact');
+      if (name === 'board') {
+        renderBoard();
+        updateClusterProgressChip();
+      } else if (name === 'workspace') {
+        renderWorkspace();
+      } else if (name === 'artifact') {
+        renderSubmittedArtifact();
+      }
       scheduleSave();
     }
+
+    function backToBoard() { goToScreen('board'); }
+    function backToWorkspaceFromArtifact() { goToScreen('workspace'); }
 
     function renderBoard() { renderItemPool(); renderCanvasGrid(); }
 
@@ -738,6 +876,7 @@
       });
 
       updateTapToMoveUI();
+      updateClusterProgressChip();
     }
 
     function createItemCard(item, inCluster = false) {
@@ -819,7 +958,15 @@
       const idx = appState.clusters.findIndex(c => c.id === id);
       if (idx < 0) return;
       const removed = appState.clusters[idx];
+      const wasCommitted = appState.committedClusterIds.includes(id);
+      const removedProblematization = appState.problematizations[id];
+      const removedStakeholder = appState.stakeholderMaps[id];
       appState.clusters.splice(idx, 1);
+      if (wasCommitted) {
+        appState.committedClusterIds = appState.committedClusterIds.filter(x => x !== id);
+        delete appState.problematizations[id];
+        delete appState.stakeholderMaps[id];
+      }
       renderBoard();
       scheduleSave();
       toast(removed.title ? `Deleted "${removed.title}".` : 'Cluster deleted.', {
@@ -827,6 +974,11 @@
         duration: 5000,
         onAction: () => {
           appState.clusters.splice(idx, 0, removed);
+          if (wasCommitted) {
+            appState.committedClusterIds.push(id);
+            if (removedProblematization !== undefined) appState.problematizations[id] = removedProblematization;
+            if (removedStakeholder !== undefined) appState.stakeholderMaps[id] = removedStakeholder;
+          }
           renderBoard();
           scheduleSave();
         }
@@ -1068,8 +1220,14 @@
       lastFocusBeforeModal = document.activeElement;
       const modal = document.getElementById(id);
       modal.classList.remove('hidden');
-      const auto = modal.querySelector('[data-autofocus]') || modal.querySelector('button, [href], input, textarea, [tabindex]:not([tabindex="-1"])');
-      if (auto) setTimeout(() => auto.focus(), 0);
+      const autoCandidate = modal.querySelector('[data-autofocus]');
+      const isUsable = el => el && !el.disabled;
+      let target = isUsable(autoCandidate) ? autoCandidate : null;
+      if (!target) {
+        const all = modal.querySelectorAll('button, [href], input, textarea, [tabindex]:not([tabindex="-1"])');
+        for (const el of all) { if (!el.disabled) { target = el; break; } }
+      }
+      if (target) setTimeout(() => target.focus(), 0);
     }
     function closeModal(id) {
       document.getElementById(id).classList.add('hidden');
@@ -1146,71 +1304,38 @@
       toast(ok ? 'Prompt copied.' : 'Copy failed — select and copy manually.');
     }
 
-    // --- Validation + artifact generation ---
+    // --- Validation + cluster progress ---
     function validateBoard() {
       const titledClusters = appState.clusters.filter(c => c.title.trim().length > 0);
       const populatedClusters = appState.clusters.filter(c => c.itemIds.length > 0);
       const usable = appState.clusters.filter(c => c.title.trim() && c.itemIds.length > 0);
       const unassigned = appState.items.filter(item => !appState.clusters.some(c => c.itemIds.includes(item.id))).length;
+      const clustersWith3Plus = appState.clusters.filter(c => c.title.trim() && c.itemIds.length >= 3).length;
       const warnings = [];
       if (usable.length === 0) warnings.push('Add at least one titled cluster with at least one signal in it.');
       const untitledWithItems = appState.clusters.filter(c => !c.title.trim() && c.itemIds.length > 0);
       if (untitledWithItems.length) warnings.push(`${untitledWithItems.length} cluster(s) have signals but no title.`);
       const titledWithoutItems = appState.clusters.filter(c => c.title.trim() && c.itemIds.length === 0);
       if (titledWithoutItems.length) warnings.push(`${titledWithoutItems.length} titled cluster(s) are still empty.`);
-      return { warnings, unassigned, usable: usable.length, titledClusters: titledClusters.length, populatedClusters: populatedClusters.length };
+      return { warnings, unassigned, usable: usable.length, titledClusters: titledClusters.length, populatedClusters: populatedClusters.length, clustersWith3Plus };
     }
 
-    function submitMapAndGenerateArtifact() {
+    function getClusterProgress() {
       const v = validateBoard();
-      const warningEl = document.getElementById('validation-warning');
-      if (v.usable === 0) {
-        warningEl.textContent = v.warnings[0];
-        toast('Cannot generate map: ' + v.warnings[0]);
-        return;
-      }
-      // Soft warnings -- confirm before proceeding
-      if (v.warnings.length || v.unassigned > 0) {
-        const parts = [...v.warnings];
-        if (v.unassigned > 0) parts.push(`${v.unassigned} signal(s) are still unassigned.`);
-        if (!window.confirm(parts.join('\n') + '\n\nGenerate the map anyway?')) {
-          warningEl.textContent = parts.join(' ');
-          return;
-        }
-      }
-      warningEl.textContent = '';
-
-      document.getElementById('board-workspace').classList.add('hidden');
-      document.getElementById('artifact-screen').classList.remove('hidden');
-      document.getElementById('art-title').textContent = appState.settings.title || 'Sensemaking Artifact';
-      document.getElementById('art-date').innerText = new Date().toLocaleDateString();
-
-      const body = document.getElementById('artifact-body-content');
-      body.innerHTML = '';
-      appState.clusters.forEach(c => {
-        if (c.itemIds.length === 0 && !c.title) return;
-        const cluster = document.createElement('div');
-        cluster.className = 'doc-cluster';
-        cluster.innerHTML = `
-          <h2>${escapeHtml(c.title || 'Untitled Group')}</h2>
-          <p style="margin-bottom:16px; font-style:italic; color: var(--text-muted); line-height: 1.6;">${escapeHtml(c.description || 'No synthesis text written yet.')}</p>
-        `;
-        c.itemIds.forEach(id => {
-          const item = appState.items.find(i => i.id === id);
-          if (!item) return;
-          const box = document.createElement('div');
-          box.className = 'doc-item-box';
-          box.innerHTML = `<strong>${escapeHtml(item.title)}</strong><br><span style="color: var(--text-muted); display:block; margin-top:4px; line-height:1.5;">${escapeHtml(item.summary)}</span>`;
-          cluster.appendChild(box);
-        });
-        body.appendChild(cluster);
-      });
-
-      // Render customized prompts per cluster (replaces the generic templates).
-      renderArtifactPrompts();
-      scheduleSave();
+      const meets = v.clustersWith3Plus >= 2 && v.clustersWith3Plus <= 3;
+      return { count: v.clustersWith3Plus, meets };
     }
 
+    function updateClusterProgressChip() {
+      const el = document.getElementById('cluster-progress');
+      if (!el) return;
+      const { count, meets } = getClusterProgress();
+      el.textContent = `Clusters with 3+ pain points: ${count} / target 2–3`;
+      el.classList.toggle('meets-target', meets);
+      el.classList.toggle('below-target', !meets);
+    }
+
+    // --- AI prompt templates (reused by the workspace) ---
     function buildPromptFor(cluster, kind) {
       const title = cluster.title || 'Untitled Cluster';
       const desc = cluster.description || '(no shared barrier described yet)';
@@ -1226,61 +1351,321 @@
       if (kind === 'problematize') {
         return `Act as a critical theorist and problem-space analyst.\n\n${intro}Help me problematize this space. Your goal is to complicate my understanding and look for systemic roots.\n1. What are the hidden assumptions baked into how I have defined this problem?\n2. If this problem persists, who currently benefits from the status quo?\n3. Are there any structural biases (economic, racial, geographic) embedded in how this problem is framed?`;
       }
-      return `Act as an expert research strategist and data validation expert.\n\n${intro}I need to validate and complicate this problem space before moving forward. Help me design a rapid, rigorous investigation plan using primary methods (interviews, surveys) and secondary methods (peer-reviewed research, literature).\n\nPlease provide:\n1. Complicating Factors: What edge cases, missing voices, or contrarian data might prove my framing wrong or incomplete?\n2. Secondary Research: What specific academic fields, peer-reviewed topics, or existing literature should I quickly search to ground this in established evidence?\n3. Rapid Primary Research Plan: Give me 3 highly targeted interview questions or survey concepts I could deploy this week to test my core assumptions with real stakeholders.`;
+      return `Act as a research strategist helping me prepare for primary and secondary research on this problem space.\n\n${intro}My FIRST and most important step is to interview the people who reported these friction signals — they have ground truth I cannot guess at. Help me with:\n1. Interview Plan: For each signal above, suggest one open-ended question I should ask the contributor to surface what they actually meant, the stakeholders involved, and any workaround they're already using. Phrase questions for a 30-minute conversation.\n2. Complicating Factors: What edge cases, missing voices, or contrarian data might prove my framing wrong or incomplete?\n3. Secondary Research: What specific academic fields, peer-reviewed topics, or existing literature should I quickly search to ground this in established evidence — to triangulate what the interviews surface?`;
     }
 
-    function renderArtifactPrompts() {
-      const section = document.getElementById('next-steps-prompts');
-      if (!section) return;
-      section.innerHTML = '';
-      const usable = appState.clusters.filter(c => c.title.trim() && c.itemIds.length > 0);
-      if (usable.length === 0) return;
-      usable.forEach((cluster, idx) => {
-        const card = document.createElement('div');
-        card.className = 'prompt-card';
-        const stakeholderId = `prompt-stake-${idx}`;
-        const problematizeId = `prompt-prob-${idx}`;
-        const validateId = `prompt-valid-${idx}`;
-        card.innerHTML = `
-          <h4>Sparring partners for: ${escapeHtml(cluster.title)}</h4>
-          <p class="context">Three angles to pressure-test this cluster. Each prompt already includes the cluster's title, synthesis, and signals — just copy and paste.</p>
-          <details open>
-            <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">1. Stakeholder Map</summary>
-            <div class="prompt-text" id="${stakeholderId}">${escapeHtml(buildPromptFor(cluster, 'stakeholder'))}</div>
-            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${stakeholderId}')">Copy Stakeholder Prompt</button>
-          </details>
-          <details style="margin-top:12px;">
-            <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">2. Challenge assumptions</summary>
-            <div class="prompt-text" id="${problematizeId}">${escapeHtml(buildPromptFor(cluster, 'problematize'))}</div>
-            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${problematizeId}')">Copy Assumption Prompt</button>
-          </details>
-          <details style="margin-top:12px;">
-            <summary style="cursor:pointer; font-weight:600; margin-bottom:8px;">3. Find real proof</summary>
-            <div class="prompt-text" id="${validateId}">${escapeHtml(buildPromptFor(cluster, 'validate'))}</div>
-            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${validateId}')">Copy Fact-Check Prompt</button>
-          </details>
+    function buildInterviewPromptForCommitted(committed) {
+      if (!committed.length) return '';
+      const blocks = committed.map(c => {
+        const signals = c.itemIds.map(id => appState.items.find(i => i.id === id)).filter(Boolean);
+        const signalList = signals.map(i => `  - ${i.title}: ${i.summary}`).join('\n');
+        return `Cluster: ${c.title || 'Untitled'}\nShared barrier: ${c.description || '(no synthesis yet)'}\nSignals:\n${signalList || '  (none yet)'}`;
+      }).join('\n\n');
+      return `Act as a research strategist helping me plan interviews with the people who originally reported these friction signals.\n\nI have committed to ${committed.length} problem-space cluster${committed.length === 1 ? '' : 's'}. Before I deepen them with a problematization and stakeholder map, I want to interview the contributors of each cluster to make sure I understand what they meant.\n\nFor each cluster below:\n1. Suggest a primary interview question that gets the contributor to describe the most recent time they hit this barrier.\n2. Suggest 2 follow-up probes to surface stakeholders, workarounds, and emotional stakes.\n3. Suggest one secondary-research direction (peer-reviewed or grey literature) to check that what they tell me isn't an isolated story.\n\nDo NOT propose solutions. Help me prepare a 30-minute conversation per cluster.\n\nClusters:\n\n${blocks}`;
+    }
+
+    // --- Commit step ---
+    function openCommitModal() {
+      const v = validateBoard();
+      const warningEl = document.getElementById('validation-warning');
+      if (v.usable === 0) {
+        const msg = v.warnings[0] || 'Add a titled cluster with at least one signal.';
+        warningEl.textContent = msg;
+        toast('Cannot commit: ' + msg);
+        return;
+      }
+      warningEl.textContent = '';
+
+      const eligible = appState.clusters.filter(c => c.title.trim());
+      const list = document.getElementById('commit-cluster-list');
+      list.innerHTML = '';
+      eligible.forEach(c => {
+        const id = `commit-row-${c.id}`;
+        const checked = appState.committedClusterIds.includes(c.id);
+        const row = document.createElement('label');
+        row.className = 'commit-cluster-row' + (checked ? ' checked' : '');
+        row.setAttribute('for', id);
+        const under3 = c.itemIds.length < 3;
+        row.innerHTML = `
+          <input type="checkbox" id="${id}" data-cluster-id="${escapeHtml(c.id)}" ${checked ? 'checked' : ''} onchange="onCommitRowChange(this)">
+          <div class="cluster-meta">
+            <h4>${escapeHtml(c.title)}</h4>
+            <p>${c.itemIds.length} signal${c.itemIds.length === 1 ? '' : 's'}${under3 ? ' — under the 3+ target' : ''}</p>
+          </div>
         `;
-        section.appendChild(card);
+        list.appendChild(row);
+      });
+
+      const warn = document.getElementById('commit-warning');
+      const { count } = getClusterProgress();
+      if (count < 2) {
+        warn.textContent = `You have ${count} cluster${count === 1 ? '' : 's'} with 3+ pain points. The workflow asks for 2–3 such clusters — you can still commit, but consider going back to add more signals.`;
+        warn.classList.remove('hidden');
+      } else {
+        warn.classList.add('hidden');
+      }
+
+      updateCommitContinueButton();
+      openModal('commit-modal');
+    }
+
+    function onCommitRowChange(checkbox) {
+      const row = checkbox.closest('.commit-cluster-row');
+      if (row) row.classList.toggle('checked', checkbox.checked);
+      updateCommitContinueButton();
+    }
+
+    function getCheckedCommitIds() {
+      return Array.from(document.querySelectorAll('#commit-cluster-list input[type="checkbox"]:checked'))
+        .map(cb => cb.getAttribute('data-cluster-id'));
+    }
+
+    function updateCommitContinueButton() {
+      const btn = document.getElementById('commit-continue-btn');
+      if (!btn) return;
+      const checked = getCheckedCommitIds();
+      btn.disabled = !(checked.length >= 2 && checked.length <= 3);
+    }
+
+    function confirmCommit() {
+      const checked = getCheckedCommitIds();
+      if (!(checked.length >= 2 && checked.length <= 3)) return;
+      appState.committedClusterIds = checked;
+      closeModal('commit-modal');
+      scheduleSave();
+      goToScreen('workspace');
+    }
+
+    // --- Workspace (per-committed-cluster deepening) ---
+    function renderWorkspace() {
+      const titleEl = document.getElementById('workspace-title');
+      if (titleEl) titleEl.textContent = appState.settings.title
+        ? `Deepen: ${appState.settings.title}`
+        : 'Deepen your committed clusters';
+
+      // Clean any committed ids that no longer point to a real cluster.
+      appState.committedClusterIds = appState.committedClusterIds.filter(id => appState.clusters.some(c => c.id === id));
+
+      const committed = appState.committedClusterIds
+        .map(id => appState.clusters.find(c => c.id === id))
+        .filter(Boolean);
+
+      const interviewEl = document.getElementById('workspace-interview-prompt');
+      if (interviewEl) interviewEl.textContent = buildInterviewPromptForCommitted(committed);
+
+      const container = document.getElementById('workspace-cards-container');
+      container.innerHTML = '';
+      if (!committed.length) {
+        const empty = document.createElement('p');
+        empty.style.cssText = 'background: var(--ghost-white); padding: 24px; border-radius: 12px; border: 2px solid var(--cloud); color: var(--midnight);';
+        empty.textContent = 'No clusters committed yet. Go back to the board to commit 2–3 clusters first.';
+        container.appendChild(empty);
+      } else {
+        committed.forEach(cluster => container.appendChild(renderCommittedClusterCard(cluster)));
+      }
+
+      recomputeSubmitButton();
+    }
+
+    function renderCommittedClusterCard(cluster) {
+      const card = document.createElement('article');
+      card.className = 'workspace-cluster-card';
+      card.setAttribute('data-cluster-id', cluster.id);
+
+      const signals = cluster.itemIds
+        .map(id => appState.items.find(i => i.id === id))
+        .filter(Boolean);
+
+      const problemId = `problematize-${cluster.id}`;
+      const stakeholderId = `stakeholder-${cluster.id}`;
+      const problemPromptId = `problematize-prompt-${cluster.id}`;
+      const stakeholderPromptId = `stakeholder-prompt-${cluster.id}`;
+
+      card.innerHTML = `
+        <header>
+          <h3>${escapeHtml(cluster.title || 'Untitled Cluster')}</h3>
+          ${cluster.description ? `<p class="cluster-desc">${escapeHtml(cluster.description)}</p>` : ''}
+          <ul class="signal-chips">
+            ${signals.map(s => `<li>${escapeHtml(s.title)}</li>`).join('')}
+          </ul>
+        </header>
+        <section class="workspace-section">
+          <label for="${problemId}">Problematize this space</label>
+          <p class="field-hint">Complicate your framing: hidden assumptions, who benefits from the status quo, structural biases. Use the AI prompt below if you want a sparring partner.</p>
+          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Write your problematization here..."></textarea>
+          <details>
+            <summary>Show AI prompt for problematization</summary>
+            <div class="prompt-text" id="${problemPromptId}"></div>
+            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${problemPromptId}')">Copy problematization prompt</button>
+          </details>
+        </section>
+        <section class="workspace-section">
+          <label for="${stakeholderId}">Stakeholder Map</label>
+          <p class="field-hint">Primary affected, adjacent, gatekeepers, enablers. Use what you learned from the interviews and the prompt below.</p>
+          <textarea id="${stakeholderId}" oninput="updateStakeholderMap('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Write your stakeholder map here..."></textarea>
+          <details>
+            <summary>Show AI prompt for stakeholder mapping</summary>
+            <div class="prompt-text" id="${stakeholderPromptId}"></div>
+            <button class="btn btn-outline" style="font-size: 0.75rem; padding: 6px 12px;" onclick="copyText('${stakeholderPromptId}')">Copy stakeholder prompt</button>
+          </details>
+        </section>
+      `;
+
+      const pTa = card.querySelector(`#${problemId}`);
+      pTa.value = appState.problematizations[cluster.id] || '';
+      const sTa = card.querySelector(`#${stakeholderId}`);
+      sTa.value = appState.stakeholderMaps[cluster.id] || '';
+      card.querySelector(`#${problemPromptId}`).textContent = buildPromptFor(cluster, 'problematize');
+      card.querySelector(`#${stakeholderPromptId}`).textContent = buildPromptFor(cluster, 'stakeholder');
+      requestAnimationFrame(() => { autoResize(pTa); autoResize(sTa); });
+
+      return card;
+    }
+
+    function updateProblematization(clusterId, value) {
+      appState.problematizations[clusterId] = value;
+      scheduleSave();
+    }
+    function updateStakeholderMap(clusterId, value) {
+      appState.stakeholderMaps[clusterId] = value;
+      scheduleSave();
+    }
+
+    function workspaceIsComplete() {
+      if (!appState.committedClusterIds.length) return false;
+      return appState.committedClusterIds.every(id => {
+        const p = (appState.problematizations[id] || '').trim();
+        const s = (appState.stakeholderMaps[id] || '').trim();
+        return p && s;
       });
     }
 
-    function downloadMarkdown() {
-      let md = `# ${appState.settings.title || 'Sensemaking Artifact'}\n`;
-      md += `*Generated via OLOS: ${new Date().toLocaleDateString()}*\n\n`;
-      md += `---\n\n`;
+    function recomputeSubmitButton() {
+      const btn = document.getElementById('submit-for-voting-btn');
+      if (!btn) return;
+      const ok = workspaceIsComplete();
+      btn.disabled = !ok;
+      btn.textContent = appState.submittedAt ? 'Re-submit' : 'Submit for Voting';
+      const hint = document.getElementById('submit-status-hint');
+      if (hint) {
+        if (ok) {
+          hint.textContent = appState.submittedAt
+            ? `Last submitted ${new Date(appState.submittedAt).toLocaleString()}. Re-submit to update.`
+            : 'Ready to submit.';
+        } else {
+          hint.textContent = 'Fill in both fields on every cluster to enable Submit for Voting.';
+        }
+      }
+    }
 
-      appState.clusters.forEach(c => {
-        if(c.itemIds.length === 0 && !c.title) return;
+    // --- Submit for Voting ---
+    function submitForVoting() {
+      if (!workspaceIsComplete()) return;
+      openSubmitModal();
+    }
+
+    function openSubmitModal() {
+      if (!workspaceIsComplete()) {
+        toast('Fill in both fields on every cluster first.');
+        return;
+      }
+      const committed = appState.committedClusterIds
+        .map(id => appState.clusters.find(c => c.id === id))
+        .filter(Boolean);
+      const signalCount = committed.reduce((sum, c) => sum + c.itemIds.length, 0);
+      const charCount = appState.committedClusterIds.reduce((sum, id) =>
+        sum + (appState.problematizations[id] || '').trim().length + (appState.stakeholderMaps[id] || '').trim().length, 0);
+      const summary = document.getElementById('submit-modal-summary');
+      summary.textContent = `You're submitting ${committed.length} cluster${committed.length === 1 ? '' : 's'} covering ${signalCount} signal${signalCount === 1 ? '' : 's'}, with ${charCount} characters of problematization and stakeholder analysis.`;
+      const prior = document.getElementById('submit-modal-prior');
+      if (appState.submittedAt) {
+        prior.textContent = `Previously submitted on ${new Date(appState.submittedAt).toLocaleString()}. Re-submitting will replace that timestamp.`;
+        prior.classList.remove('hidden');
+        document.getElementById('submit-modal-title').textContent = 'Re-submit this map?';
+        document.getElementById('submit-modal-confirm-btn').textContent = 'Re-submit';
+      } else {
+        prior.classList.add('hidden');
+        document.getElementById('submit-modal-title').textContent = 'Submit your map for voting?';
+        document.getElementById('submit-modal-confirm-btn').textContent = 'Submit';
+      }
+      openModal('submit-modal');
+    }
+
+    function confirmSubmit() {
+      if (!workspaceIsComplete()) return;
+      appState.submittedAt = new Date().toISOString();
+      closeModal('submit-modal');
+      scheduleSave();
+      goToScreen('artifact');
+      toast('Submitted ✓');
+    }
+
+    // --- Submitted artifact (read-only) ---
+    function renderSubmittedArtifact() {
+      const tsEl = document.getElementById('submission-timestamp');
+      if (tsEl) {
+        tsEl.textContent = appState.submittedAt
+          ? `Submitted on ${new Date(appState.submittedAt).toLocaleString()}`
+          : 'Draft — not yet submitted.';
+      }
+      const heading = document.getElementById('submission-heading');
+      if (heading) heading.textContent = appState.settings.title
+        ? `Submission: ${appState.settings.title}`
+        : 'Submission';
+
+      const body = document.getElementById('submission-body');
+      body.innerHTML = '';
+      const wrap = document.createElement('div');
+      wrap.style.width = '100%';
+      wrap.style.maxWidth = '840px';
+      const committed = appState.committedClusterIds
+        .map(id => appState.clusters.find(c => c.id === id))
+        .filter(Boolean);
+      committed.forEach(cluster => {
+        const signals = cluster.itemIds.map(id => appState.items.find(i => i.id === id)).filter(Boolean);
+        const article = document.createElement('article');
+        article.className = 'submission-cluster';
+        const probAns = (appState.problematizations[cluster.id] || '').trim() || '(empty)';
+        const stakeAns = (appState.stakeholderMaps[cluster.id] || '').trim() || '(empty)';
+        article.innerHTML = `
+          <h3>${escapeHtml(cluster.title || 'Untitled Cluster')}</h3>
+          ${cluster.description ? `<p class="cluster-desc">${escapeHtml(cluster.description)}</p>` : ''}
+          <ul class="signal-chips">
+            ${signals.map(s => `<li>${escapeHtml(s.title)}</li>`).join('')}
+          </ul>
+          <div class="submission-answer">
+            <h4>Problematization</h4>
+            <div class="answer-body">${escapeHtml(probAns)}</div>
+          </div>
+          <div class="submission-answer">
+            <h4>Stakeholder Map</h4>
+            <div class="answer-body">${escapeHtml(stakeAns)}</div>
+          </div>
+        `;
+        wrap.appendChild(article);
+      });
+      body.appendChild(wrap);
+    }
+
+    function downloadMarkdown() {
+      const committed = appState.committedClusterIds
+        .map(id => appState.clusters.find(c => c.id === id))
+        .filter(Boolean);
+      let md = `# ${appState.settings.title || 'Sensemaking Submission'}\n`;
+      md += appState.submittedAt
+        ? `*Submitted on ${new Date(appState.submittedAt).toLocaleString()}*\n\n`
+        : `*Draft — not yet submitted*\n\n`;
+      md += `---\n\n`;
+      committed.forEach(c => {
         md += `## ${c.title || 'Untitled Group'}\n\n`;
-        md += `> **Synthesis Barrier:** ${c.description || 'No description provided.'}\n\n`;
-        md += `### Tied Signals:\n`;
-        
+        if (c.description) md += `> **Shared Barrier:** ${c.description}\n\n`;
+        md += `### Signals\n`;
         c.itemIds.forEach(id => {
-          const item = appState.items.find(i=>i.id===id);
-          if(item) {
-            md += `- **${item.title}**\n  *${item.summary}*\n\n`;
-          }
+          const item = appState.items.find(i => i.id === id);
+          if (item) md += `- **${item.title}** — ${item.summary}\n`;
         });
+        md += `\n### Problematization\n${(appState.problematizations[c.id] || '(empty)').trim()}\n\n`;
+        md += `### Stakeholder Map\n${(appState.stakeholderMaps[c.id] || '(empty)').trim()}\n\n`;
         md += `---\n\n`;
       });
 
@@ -1288,7 +1673,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Sensemaking_Artifact.md';
+      a.download = 'Sensemaking_Submission.md';
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -1301,37 +1686,54 @@
 
     // --- Bootstrap ---
     renderConfigItems();
-    // If a saved session exists and already has a title or clusters, offer to resume.
-    (function maybeResume() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      let parsed; try { parsed = JSON.parse(raw); } catch { return; }
-      const hasWork = parsed && parsed.settings && (parsed.settings.title || (parsed.clusters && parsed.clusters.length));
-      if (!hasWork) return;
-      // Pre-fill setup title.
+
+    function pickInitialScreen() {
+      // Clean any dangling committed ids before deciding.
+      if (Array.isArray(appState.committedClusterIds)) {
+        appState.committedClusterIds = appState.committedClusterIds.filter(id => appState.clusters.some(c => c.id === id));
+      }
+      if (appState.submittedAt && appState.committedClusterIds.length) return 'artifact';
+      if (appState.committedClusterIds.length) return 'workspace';
+      if (appState.clusters.some(c => c.itemIds.length > 0 || c.title.trim())) return 'board';
+      return 'setup';
+    }
+
+    (function bootstrapResume() {
+      const target = pickInitialScreen();
       const titleEl = document.getElementById('config-title');
-      if (titleEl && parsed.settings.title) titleEl.value = parsed.settings.title;
-      setTimeout(() => {
-        toast('Resumed your previous session.', {
-          actionLabel: 'Start fresh',
-          duration: 6000,
-          onAction: () => {
-            clearSavedState();
-            appState = defaultState();
-            if (titleEl) titleEl.value = 'Upskilling Labs: Comprehensive Problem Signals';
-            renderConfigItems();
-            toast('Saved session cleared.');
-          }
-        });
-      }, 200);
+      if (titleEl && appState.settings.title) titleEl.value = appState.settings.title;
+
+      if (target === 'setup') {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        setTimeout(() => {
+          toast('Resumed your previous session.', {
+            actionLabel: 'Start fresh',
+            duration: 6000,
+            onAction: () => {
+              clearSavedState();
+              appState = defaultState();
+              if (titleEl) titleEl.value = 'Upskilling Labs: Comprehensive Problem Signals';
+              renderConfigItems();
+              toast('Saved session cleared.');
+            }
+          });
+        }, 200);
+        return;
+      }
+
+      // For board / workspace / artifact: scaffold the board (so Back navigation works) and jump.
+      if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Clustering Board';
+      setBoardTitleDisplay();
+      ensureGlobalDragAndDrop();
+      goToScreen(target);
+      setTimeout(() => toast('Resumed your previous session.', { duration: 4000 }), 200);
     })();
 
-    // Warn before unload if there's unsaved or unfinished work.
+    // Warn before unload if there's in-progress, unsubmitted work.
     window.addEventListener('beforeunload', (e) => {
-      const board = document.getElementById('board-workspace');
-      if (board && !board.classList.contains('hidden') && appState.clusters.some(c => c.itemIds.length > 0)) {
-        // We do save to localStorage on every change, but the browser context could still be reset; warn anyway.
-        // Note: modern browsers ignore custom messages.
+      const onActiveScreen = appState.currentScreen === 'board' || appState.currentScreen === 'workspace';
+      if (onActiveScreen && appState.clusters.some(c => c.itemIds.length > 0)) {
         e.preventDefault();
         e.returnValue = '';
       }
