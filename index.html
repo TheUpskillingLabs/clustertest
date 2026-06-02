@@ -370,6 +370,82 @@
     .submission-answer h4 { font-size: 0.95rem; font-weight: 700; color: var(--midnight); margin-bottom: 6px; }
     .submission-answer .answer-body { background: var(--cloud); border-left: 4px solid var(--primary-teal); padding: 14px 16px; border-radius: 0 6px 6px 0; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; color: var(--midnight); }
 
+    /* --- PROFILE BUTTON + POPOVER --- */
+    .profile-anchor {
+      position: fixed; top: 16px; right: 20px; z-index: 1500;
+    }
+    .profile-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--primary-teal); color: var(--ghost-white);
+      border: 2px solid rgba(255,255,255,0.85);
+      box-shadow: 0 4px 12px rgba(16,24,32,0.18);
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      letter-spacing: 0.02em;
+    }
+    .profile-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,24,32,0.25); }
+    .profile-btn:focus-visible { outline: 3px solid var(--primary-teal); outline-offset: 2px; }
+    .profile-btn[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(0,148,160,0.35), 0 6px 16px rgba(16,24,32,0.25); }
+    /* On the dark setup screen, lift the ring against the midnight background */
+    #setup-screen ~ .profile-anchor .profile-btn { border-color: rgba(255,255,255,0.95); }
+
+    .profile-popover {
+      position: absolute; top: calc(100% + 10px); right: 0;
+      width: 280px; background: var(--ghost-white);
+      border: 1px solid var(--cloud); border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(16,24,32,0.18), 0 4px 12px rgba(16,24,32,0.08);
+      padding: 18px; transform-origin: top right;
+      animation: pop-in 0.14s ease-out;
+    }
+    @keyframes pop-in {
+      from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .profile-popover::before {
+      content: ""; position: absolute; top: -7px; right: 16px;
+      width: 12px; height: 12px; background: var(--ghost-white);
+      border-top: 1px solid var(--cloud); border-left: 1px solid var(--cloud);
+      transform: rotate(45deg);
+    }
+    .profile-popover .profile-id {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    }
+    .profile-popover .profile-id .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--primary-teal); color: var(--ghost-white);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.95rem; flex-shrink: 0;
+    }
+    .profile-popover .profile-id .meta { min-width: 0; }
+    .profile-popover .profile-id .label {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--midnight); opacity: 0.55; font-weight: 700; margin-bottom: 2px;
+    }
+    .profile-popover .profile-id .email {
+      font-size: 0.875rem; font-weight: 600; color: var(--midnight);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .profile-popover .divider {
+      height: 1px; background: var(--cloud); margin: 14px -18px;
+    }
+    .profile-popover .reset-desc {
+      font-size: 0.75rem; color: var(--midnight); opacity: 0.7;
+      line-height: 1.45; margin-bottom: 10px;
+    }
+    .profile-popover .btn-reset {
+      width: 100%; padding: 10px 14px; border-radius: 8px;
+      background: var(--ghost-white); color: var(--action-red);
+      border: 2px solid var(--action-red); font-weight: 700;
+      font-size: 0.8rem; cursor: pointer; text-transform: uppercase;
+      letter-spacing: 0.05em; transition: all 0.15s ease;
+      font-family: 'Geologica', sans-serif;
+    }
+    .profile-popover .btn-reset:hover { background: var(--action-red); color: var(--ghost-white); }
+    .profile-popover .btn-reset:focus-visible { outline: 3px solid var(--action-red); outline-offset: 2px; }
+
+    @media print { .profile-anchor { display: none !important; } }
+
     @media print {
       body { background: var(--ghost-white); overflow: visible; height: auto; }
       .artifact-actions, .next-steps-section, .upskill-banner, .submission-actions { display: none !important; }
@@ -560,6 +636,26 @@
           <button class="btn btn-outline" onclick="closeAIPromptModal()">Dismiss</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="profile-anchor">
+    <button id="profile-btn" type="button" class="profile-btn"
+            aria-haspopup="dialog" aria-expanded="false" aria-controls="profile-popover"
+            aria-label="Profile menu" onclick="toggleProfilePopover()">
+      <span id="profile-initial" aria-hidden="true">?</span>
+    </button>
+    <div id="profile-popover" class="profile-popover hidden" role="dialog" aria-label="Profile">
+      <div class="profile-id">
+        <div class="avatar" id="profile-avatar" aria-hidden="true">?</div>
+        <div class="meta">
+          <div class="label">Signed in as</div>
+          <div class="email" id="profile-email">—</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <p class="reset-desc">Clear all saved clusters, answers, and signals on this device. This cannot be undone.</p>
+      <button type="button" class="btn-reset" onclick="resetFromProfile()">Reset workspace</button>
     </div>
   </div>
 
@@ -1697,6 +1793,44 @@
       clearSavedState();
       location.reload();
     }
+
+    // --- Profile button + popover ---
+    const PROFILE_EMAIL = 'brendan@withlevy.com';
+    function initProfile() {
+      const initial = (PROFILE_EMAIL[0] || '?').toUpperCase();
+      document.getElementById('profile-initial').textContent = initial;
+      document.getElementById('profile-avatar').textContent = initial;
+      document.getElementById('profile-email').textContent = PROFILE_EMAIL;
+    }
+    function toggleProfilePopover() {
+      const pop = document.getElementById('profile-popover');
+      const btn = document.getElementById('profile-btn');
+      const isOpen = !pop.classList.contains('hidden');
+      if (isOpen) closeProfilePopover();
+      else {
+        pop.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+    function closeProfilePopover() {
+      const pop = document.getElementById('profile-popover');
+      const btn = document.getElementById('profile-btn');
+      if (pop.classList.contains('hidden')) return;
+      pop.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    document.addEventListener('click', (e) => {
+      const anchor = document.querySelector('.profile-anchor');
+      if (anchor && !anchor.contains(e.target)) closeProfilePopover();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeProfilePopover();
+    });
+    function resetFromProfile() {
+      closeProfilePopover();
+      startOver();
+    }
+    initProfile();
 
     // --- Bootstrap ---
     renderConfigItems();
