@@ -2040,12 +2040,54 @@
         const REPEL_K = 5200;     // Coulomb constant
         const SPRING_K = 0.06;    // hub→signal spring stiffness
         const HUB_ANCHOR_K = 0.012; // hub→its centroid pull
+        const GRAVITY_K = 0.004;    // gentle pull toward global centroid
+        const HUB_COHESION_K = 0.010; // extra pull between top-level hubs
         const MAX_FORCE = 40;
         const DAMP = 0.82;
 
         // Reset frame forces.
         const fx = {}, fy = {};
         nodeIds.forEach(id => { fx[id] = 0; fy[id] = 0; });
+
+        // Global centroid (of every node) — used as a weak gravity well.
+        let gcx = 0, gcy = 0;
+        nodeIds.forEach(id => {
+          const dd = dims[id];
+          gcx += pos[id].x + dd.w / 2;
+          gcy += pos[id].y + dd.h / 2;
+        });
+        gcx /= Math.max(1, nodeIds.length);
+        gcy /= Math.max(1, nodeIds.length);
+
+        // Apply gentle gravity to every node.
+        nodeIds.forEach(id => {
+          const dd = dims[id];
+          const ncx = pos[id].x + dd.w / 2;
+          const ncy = pos[id].y + dd.h / 2;
+          fx[id] += (gcx - ncx) * GRAVITY_K;
+          fy[id] += (gcy - ncy) * GRAVITY_K;
+        });
+
+        // Additional pull between top-level hubs (and top-level signals) so the
+        // composition stays cohesive as more clusters are created. This is the
+        // counterforce that prevents "the first cluster floats away" drift.
+        const topLevelIds = nodeIds.filter(id => !parentHubId(id));
+        if (topLevelIds.length >= 2) {
+          let tcx = 0, tcy = 0;
+          topLevelIds.forEach(id => {
+            const dd = dims[id];
+            tcx += pos[id].x + dd.w / 2;
+            tcy += pos[id].y + dd.h / 2;
+          });
+          tcx /= topLevelIds.length; tcy /= topLevelIds.length;
+          topLevelIds.forEach(id => {
+            const dd = dims[id];
+            const ncx = pos[id].x + dd.w / 2;
+            const ncy = pos[id].y + dd.h / 2;
+            fx[id] += (tcx - ncx) * HUB_COHESION_K;
+            fy[id] += (tcy - ncy) * HUB_COHESION_K;
+          });
+        }
 
         // Pairwise repulsion.
         for (let i = 0; i < nodeIds.length; i++) {
