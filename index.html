@@ -672,6 +672,50 @@
       padding: 4px 6px;
     }
     .hub-node .hub-delete:hover { text-decoration: underline; }
+    .hub-node .hub-suggest {
+      background: transparent;
+      border: 1px solid var(--primary-teal);
+      color: var(--primary-teal);
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-right: auto;
+      letter-spacing: 0.02em;
+      transition: background 0.15s ease, color 0.15s ease;
+      font-family: 'Geologica', sans-serif;
+    }
+    .hub-node .hub-suggest:hover { background: var(--primary-teal); color: var(--midnight); }
+    .hub-node .hub-actions { gap: 8px; }
+
+    /* Tier styling: accent color and width step up as hubs get more abstract. */
+    .hub-node.tier-1 { border-color: var(--primary-teal); }
+    .hub-node.tier-2 { width: 320px; border-color: var(--action-red); }
+    .hub-node.tier-2 .hub-tag { color: var(--action-red); }
+    .hub-node.tier-2 input.hub-title:focus,
+    .hub-node.tier-2 textarea.hub-desc:focus { border-bottom-color: var(--action-red); }
+    .hub-node.tier-2 .hub-count { background: var(--action-red); color: var(--ghost-white); }
+    .hub-node.tier-2 .connect-handle { background: var(--action-red); box-shadow: 0 2px 6px rgba(238,28,37,0.55); }
+
+    .hub-node.tier-3 { width: 360px; border-color: #f4b400; }
+    .hub-node.tier-3 .hub-tag { color: #f4b400; }
+    .hub-node.tier-3 input.hub-title:focus,
+    .hub-node.tier-3 textarea.hub-desc:focus { border-bottom-color: #f4b400; }
+    .hub-node.tier-3 .hub-count { background: #f4b400; color: var(--midnight); }
+    .hub-node.tier-3 .connect-handle { background: #f4b400; box-shadow: 0 2px 6px rgba(244,180,0,0.55); }
+
+    .hub-node.tier-4, .hub-node.tier-5, .hub-node.tier-6 {
+      width: 400px; border-color: #8a4fff;
+    }
+    .hub-node.tier-4 .hub-tag, .hub-node.tier-5 .hub-tag, .hub-node.tier-6 .hub-tag { color: #b18dff; }
+    .hub-node.tier-4 input.hub-title:focus, .hub-node.tier-4 textarea.hub-desc:focus,
+    .hub-node.tier-5 input.hub-title:focus, .hub-node.tier-5 textarea.hub-desc:focus,
+    .hub-node.tier-6 input.hub-title:focus, .hub-node.tier-6 textarea.hub-desc:focus { border-bottom-color: #b18dff; }
+    .hub-node.tier-4 .hub-count, .hub-node.tier-5 .hub-count, .hub-node.tier-6 .hub-count { background: #8a4fff; color: var(--ghost-white); }
+    .hub-node.tier-4 .connect-handle, .hub-node.tier-5 .connect-handle, .hub-node.tier-6 .connect-handle {
+      background: #b18dff; box-shadow: 0 2px 6px rgba(138,79,255,0.55);
+    }
 
     /* Connection handles — one on each side */
     .connect-handle {
@@ -1111,6 +1155,11 @@
         }
         const parsed = JSON.parse(raw);
         if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.clusters)) return null;
+        // Ensure every cluster has a hubIds[] field for nested-cluster support.
+        parsed.clusters.forEach(c => {
+          if (!Array.isArray(c.itemIds)) c.itemIds = [];
+          if (!Array.isArray(c.hubIds)) c.hubIds = [];
+        });
         if (!Array.isArray(parsed.committedClusterIds)) parsed.committedClusterIds = [];
         if (!parsed.problematizations || typeof parsed.problematizations !== 'object') parsed.problematizations = {};
         if (!parsed.stakeholderMaps || typeof parsed.stakeholderMaps !== 'object') parsed.stakeholderMaps = {};
@@ -1352,16 +1401,66 @@
     function backToWorkspaceFromArtifact() { goToScreen('workspace'); }
 
     // ======================== WEB-MAP CANVAS ========================
-    function nodeSize(kind) {
-      return kind === 'hub'
-        ? { w: NODE_HUB_W, h: NODE_HUB_H }
-        : { w: NODE_SIGNAL_W, h: NODE_SIGNAL_H };
+    function nodeSize(kind, nodeId) {
+      if (kind !== 'hub') return { w: NODE_SIGNAL_W, h: NODE_SIGNAL_H };
+      // Tier-aware width to match CSS .tier-N rules so layout + edges align.
+      const t = nodeId ? hubTier(nodeId) : 1;
+      if (t >= 4) return { w: 400, h: NODE_HUB_H };
+      if (t === 3) return { w: 360, h: NODE_HUB_H };
+      if (t === 2) return { w: 320, h: NODE_HUB_H };
+      return { w: NODE_HUB_W, h: NODE_HUB_H };
     }
 
     function isHubId(id) { return appState.clusters.some(c => c.id === id); }
     function signalHubId(itemId) {
       const c = appState.clusters.find(c => c.itemIds.includes(itemId));
       return c ? c.id : null;
+    }
+    // Find the parent hub (if any) of a node (signal or hub).
+    function parentHubId(nodeId) {
+      const c = appState.clusters.find(c => c.itemIds.includes(nodeId) || (c.hubIds || []).includes(nodeId));
+      return c ? c.id : null;
+    }
+    function hubMembers(hubId) {
+      const c = appState.clusters.find(c => c.id === hubId);
+      if (!c) return [];
+      return [...c.itemIds, ...(c.hubIds || [])];
+    }
+    // Tier: 0 = signal, 1 = cluster of signals (or empty hub), 2 = supercluster, 3 = mega, ...
+    function hubTier(hubId) {
+      const c = appState.clusters.find(c => c.id === hubId);
+      if (!c) return 0;
+      let maxChildTier = 0;
+      if (c.itemIds.length) maxChildTier = Math.max(maxChildTier, 0); // signals are tier 0
+      (c.hubIds || []).forEach(childId => {
+        const t = hubTier(childId);
+        if (t > maxChildTier) maxChildTier = t;
+      });
+      return 1 + maxChildTier;
+    }
+    const TIER_LABELS = ["Signal", "Cluster", "Supercluster", "Mega Cluster", "Giga Cluster", "Ultra Cluster"];
+    function tierLabel(t) { return TIER_LABELS[t] || "Hyper Cluster"; }
+    // All leaf signals under a hub (transitive, deduped).
+    function allSignalsUnderHub(hubId) {
+      const seen = new Set();
+      const out = [];
+      const walk = (id) => {
+        const c = appState.clusters.find(c => c.id === id);
+        if (!c) return;
+        c.itemIds.forEach(sid => { if (!seen.has(sid)) { seen.add(sid); out.push(sid); } });
+        (c.hubIds || []).forEach(walk);
+      };
+      walk(hubId);
+      return out;
+    }
+    // Is targetId an ancestor of nodeId (or equal)?
+    function isAncestor(targetId, nodeId) {
+      let cur = nodeId;
+      while (cur) {
+        if (cur === targetId) return true;
+        cur = parentHubId(cur);
+      }
+      return false;
     }
     function getNodePos(id) {
       const n = appState.nodes[id];
@@ -1372,7 +1471,7 @@
     }
     function nodeCenter(id) {
       const kind = isHubId(id) ? 'hub' : 'signal';
-      const { w, h } = nodeSize(kind);
+      const { w, h } = nodeSize(kind, id);
       const p = getNodePos(id);
       return { x: p.x + w / 2, y: p.y + h / 2 };
     }
@@ -1452,7 +1551,7 @@
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       ids.forEach(id => {
         const p = appState.nodes[id];
-        const { w, h } = nodeSize(isHubId(id) ? 'hub' : 'signal');
+        const { w, h } = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
         if (p.x < minX) minX = p.x;
         if (p.y < minY) minY = p.y;
         if (p.x + w > maxX) maxX = p.x + w;
@@ -1524,22 +1623,31 @@
 
     function buildHubNode(cluster) {
       const el = document.createElement('div');
-      el.className = 'canvas-node hub-node';
+      const tier = hubTier(cluster.id);
+      const tierClass = 'tier-' + Math.min(tier, 6);
+      el.className = 'canvas-node hub-node ' + tierClass;
       el.id = 'node-' + cluster.id;
       el.setAttribute('data-node-id', cluster.id);
       el.setAttribute('data-kind', 'hub');
+      el.setAttribute('data-tier', String(tier));
       const pos = getNodePos(cluster.id);
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
+      const memberCount = cluster.itemIds.length + (cluster.hubIds || []).length;
+      const leafCount = allSignalsUnderHub(cluster.id).length;
+      const countText = tier >= 2
+        ? `${memberCount} item${memberCount === 1 ? '' : 's'} · ${leafCount} signal${leafCount === 1 ? '' : 's'}`
+        : `${memberCount} signal${memberCount === 1 ? '' : 's'}`;
       el.innerHTML = `
         <div class="hub-tag">
-          <span>Cluster Hub</span>
-          <span class="hub-count">${cluster.itemIds.length} signals</span>
+          <span>${escapeHtml(tierLabel(tier))}</span>
+          <span class="hub-count">${countText}</span>
         </div>
-        <input type="text" class="hub-title" placeholder="Name this hub..." value="${escapeHtml(cluster.title || '')}" />
-        <textarea class="hub-desc" placeholder="What shared barrier connects these signals?" rows="2">${escapeHtml(cluster.description || '')}</textarea>
+        <input type="text" class="hub-title" placeholder="Name this ${escapeHtml(tierLabel(tier).toLowerCase())}..." value="${escapeHtml(cluster.title || '')}" />
+        <textarea class="hub-desc" placeholder="What shared barrier connects these?" rows="2">${escapeHtml(cluster.description || '')}</textarea>
         <div class="hub-actions">
-          <button type="button" class="hub-delete">Delete Hub</button>
+          <button type="button" class="hub-suggest">✨ Suggest name</button>
+          <button type="button" class="hub-delete">Delete</button>
         </div>
         <div class="connect-handle side-top"    data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
         <div class="connect-handle side-right"  data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
@@ -1560,6 +1668,11 @@
       const del = el.querySelector('.hub-delete');
       del.addEventListener('pointerdown', (e) => e.stopPropagation());
       del.addEventListener('click', (e) => { e.stopPropagation(); deleteCluster(cluster.id); });
+      const suggest = el.querySelector('.hub-suggest');
+      if (suggest) {
+        suggest.addEventListener('pointerdown', (e) => e.stopPropagation());
+        suggest.addEventListener('click', (e) => { e.stopPropagation(); openHubNamePromptModal(cluster.id); });
+      }
       attachNodeDrag(el, cluster.id);
       return el;
     }
@@ -1568,6 +1681,7 @@
       const out = [];
       appState.clusters.forEach(c => {
         c.itemIds.forEach(iid => out.push({ id: c.id + '__' + iid, from: c.id, to: iid }));
+        (c.hubIds || []).forEach(hid => out.push({ id: c.id + '__' + hid, from: c.id, to: hid }));
       });
       return out;
     }
@@ -1797,65 +1911,75 @@
       });
     }
 
-    // ----- Connection rules / auto-hub creation -----
+    // ----- Connection rules / auto-hub creation (uniform across tiers) -----
+    function addChildToHub(parentId, childId) {
+      const parent = appState.clusters.find(c => c.id === parentId);
+      if (!parent) return false;
+      // Cycle guard: child must not be an ancestor of parent.
+      if (isHubId(childId) && isAncestor(childId, parentId)) {
+        toast('That would create a loop.');
+        return false;
+      }
+      if (isHubId(childId)) {
+        if (!parent.hubIds) parent.hubIds = [];
+        if (parent.hubIds.includes(childId)) return false;
+        parent.hubIds.push(childId);
+      } else {
+        if (parent.itemIds.includes(childId)) return false;
+        parent.itemIds.push(childId);
+      }
+      return true;
+    }
+
+    function addUnderExistingParent(parentId, childId, source) {
+      if (!addChildToHub(parentId, childId)) return;
+      renderAllNodes();
+      renderAllEdges();
+      animateNewEdge(parentId + '__' + childId);
+      relaxLayoutAround(parentId);
+      scheduleSave();
+      updateClusterProgressChip();
+      const parent = appState.clusters.find(c => c.id === parentId);
+      toast(`Added to "${parent.title || tierLabel(hubTier(parentId))}".`);
+    }
+
     function connectNodes(sourceId, targetId) {
+      if (sourceId === targetId) return;
+      const pa = parentHubId(sourceId);
+      const pb = parentHubId(targetId);
+      // Both already in parents.
+      if (pa && pb) {
+        if (pa === pb) return; // already siblings, no-op
+        toast('Disconnect from current parent first.');
+        return;
+      }
+      // One side has a parent: add the other under it.
+      if (pa || pb) {
+        const parentId = pa || pb;
+        const childId  = pa ? targetId : sourceId;
+        addUnderExistingParent(parentId, childId);
+        return;
+      }
+      // Both top-level. If exactly one is a hub, add the other to it directly.
       const sourceIsHub = isHubId(sourceId);
       const targetIsHub = isHubId(targetId);
-      if (sourceIsHub && targetIsHub) {
-        toast('Cannot connect two hubs directly.');
-        return;
-      }
-      // Case: hub ↔ signal
-      if (sourceIsHub || targetIsHub) {
-        const hubId = sourceIsHub ? sourceId : targetId;
-        const signalId = sourceIsHub ? targetId : sourceId;
-        const existingHub = signalHubId(signalId);
-        if (existingHub && existingHub !== hubId) {
-          toast('A signal can only belong to one hub. Disconnect it first.');
-          return;
-        }
-        if (existingHub === hubId) return; // already connected
-        const hub = appState.clusters.find(c => c.id === hubId);
-        hub.itemIds.push(signalId);
-        renderAllNodes();
-        renderAllEdges();
-        const edgeId = hubId + '__' + signalId;
-        animateNewEdge(edgeId);
-        relaxLayoutAround(hubId);
-        scheduleSave();
-        updateClusterProgressChip();
-        toast(`Added to "${hub.title || 'Untitled Hub'}".`);
-        return;
-      }
-      // Case: signal ↔ signal
-      const sourceHubId = signalHubId(sourceId);
-      const targetHubId = signalHubId(targetId);
-      if (sourceHubId && targetHubId && sourceHubId !== targetHubId) {
-        toast('Those signals are in different hubs. Disconnect one first.');
-        return;
-      }
-      if (sourceHubId || targetHubId) {
-        // Add the free one to the existing hub.
-        const hubId = sourceHubId || targetHubId;
-        const freeSignal = sourceHubId ? targetId : sourceId;
-        const hub = appState.clusters.find(c => c.id === hubId);
-        if (hub.itemIds.includes(freeSignal)) return;
-        hub.itemIds.push(freeSignal);
-        renderAllNodes();
-        renderAllEdges();
-        animateNewEdge(hubId + '__' + freeSignal);
-        relaxLayoutAround(hubId);
-        scheduleSave();
-        updateClusterProgressChip();
-        toast(`Added to "${hub.title || 'Untitled Hub'}".`);
-        return;
-      }
-      // Neither signal is in a hub — create a new hub between them.
+      if (sourceIsHub && !targetIsHub) { addUnderExistingParent(sourceId, targetId); return; }
+      if (targetIsHub && !sourceIsHub) { addUnderExistingParent(targetId, sourceId); return; }
+
+      // Both top-level signals → new cluster.
+      // Both top-level hubs → new super-hub above them.
+      if (sourceIsHub && isAncestor(sourceId, targetId)) { toast('That would create a loop.'); return; }
+      if (targetIsHub && isAncestor(targetId, sourceId)) { toast('That would create a loop.'); return; }
+
       const a = nodeCenter(sourceId);
       const b = nodeCenter(targetId);
       const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
       const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
-      const newHub = { id: uid('cluster'), title: '', description: '', itemIds: [sourceId, targetId] };
+      const newHub = { id: uid('cluster'), title: '', description: '', itemIds: [], hubIds: [] };
+      [sourceId, targetId].forEach(id => {
+        if (isHubId(id)) newHub.hubIds.push(id);
+        else newHub.itemIds.push(id);
+      });
       appState.clusters.push(newHub);
       setNodePos(newHub.id, midX, midY);
       renderAllNodes();
@@ -1894,7 +2018,7 @@
         nodeIds.push(c.id);
         pos[c.id] = { ...getNodePos(c.id) };
         vel[c.id] = { x: 0, y: 0 };
-        dims[c.id] = nodeSize('hub');
+        dims[c.id] = nodeSize('hub', c.id);
       });
 
       const isPinned = (id) => {
@@ -1947,19 +2071,21 @@
           }
         }
 
-        // Hub springs.
+        // Hub springs (signals + sub-hubs).
         appState.clusters.forEach(cluster => {
           if (!pos[cluster.id]) return;
           const hub = cluster.id;
-          const n = cluster.itemIds.length;
-          const R = Math.max(220, 150 + n * 22);
+          const members = [...cluster.itemIds, ...(cluster.hubIds || [])];
+          const n = members.length;
+          const tier = hubTier(hub);
+          const R = Math.max(220, 150 + n * 22 + (tier - 1) * 60);
           // Hub anchor: gentle pull toward centroid of members.
           if (n > 0) {
             let cx = 0, cy = 0, count = 0;
-            cluster.itemIds.forEach(iid => {
-              if (!pos[iid]) return;
-              const dd = dims[iid];
-              cx += pos[iid].x + dd.w / 2; cy += pos[iid].y + dd.h / 2; count++;
+            members.forEach(mid => {
+              if (!pos[mid]) return;
+              const dd = dims[mid];
+              cx += pos[mid].x + dd.w / 2; cy += pos[mid].y + dd.h / 2; count++;
             });
             if (count > 0) {
               cx /= count; cy /= count;
@@ -1972,16 +2098,16 @@
           // Member spring at radius R from hub.
           const hd = dims[hub];
           const hcx = pos[hub].x + hd.w / 2, hcy = pos[hub].y + hd.h / 2;
-          cluster.itemIds.forEach(iid => {
-            if (!pos[iid]) return;
-            const dd = dims[iid];
-            const sx = pos[iid].x + dd.w / 2, sy = pos[iid].y + dd.h / 2;
+          members.forEach(mid => {
+            if (!pos[mid]) return;
+            const dd = dims[mid];
+            const sx = pos[mid].x + dd.w / 2, sy = pos[mid].y + dd.h / 2;
             const dx = sx - hcx, dy = sy - hcy;
             const dist = Math.hypot(dx, dy) || 0.01;
             const delta = dist - R;
             const ux = dx / dist, uy = dy / dist;
             const f = -delta * SPRING_K;
-            fx[iid] += ux * f; fy[iid] += uy * f;
+            fx[mid] += ux * f; fy[mid] += uy * f;
             fx[hub] -= ux * f * 0.4; fy[hub] -= uy * f * 0.4;
           });
         });
@@ -2090,6 +2216,14 @@
       const wasCommitted = appState.committedClusterIds.includes(id);
       const removedProblematization = appState.problematizations[id];
       const removedStakeholder = appState.stakeholderMaps[id];
+      // Detach this hub from any parent so children orphan to top-level.
+      const parentSnapshots = [];
+      appState.clusters.forEach(c => {
+        if ((c.hubIds || []).includes(id)) {
+          parentSnapshots.push({ parentId: c.id, idx: c.hubIds.indexOf(id) });
+          c.hubIds = c.hubIds.filter(x => x !== id);
+        }
+      });
       appState.clusters.splice(idx, 1);
       delete appState.nodes[id];
       if (wasCommitted) {
@@ -2101,12 +2235,20 @@
       renderAllEdges();
       updateClusterProgressChip();
       scheduleSave();
-      toast(removed.title ? `Deleted hub "${removed.title}".` : 'Hub deleted.', {
+      const label = tierLabel(hubTier(id)); // hubTier returns 0 now (deleted); fallback ok
+      toast(removed.title ? `Deleted "${removed.title}".` : 'Hub deleted.', {
         actionLabel: 'Undo',
         duration: 5000,
         onAction: () => {
           appState.clusters.splice(idx, 0, removed);
           if (removedPos) appState.nodes[id] = removedPos;
+          parentSnapshots.forEach(ps => {
+            const p = appState.clusters.find(c => c.id === ps.parentId);
+            if (p) {
+              if (!p.hubIds) p.hubIds = [];
+              p.hubIds.splice(ps.idx, 0, id);
+            }
+          });
           if (wasCommitted) {
             appState.committedClusterIds.push(id);
             if (removedProblematization !== undefined) appState.problematizations[id] = removedProblematization;
@@ -2146,18 +2288,20 @@
     function deleteEdge(edgeId) {
       const parts = edgeId.split('__');
       if (parts.length !== 2) return;
-      const [hubId, itemId] = parts;
-      const cluster = appState.clusters.find(c => c.id === hubId);
+      const [parentId, childId] = parts;
+      const cluster = appState.clusters.find(c => c.id === parentId);
       if (!cluster) return;
-      cluster.itemIds = cluster.itemIds.filter(x => x !== itemId);
+      cluster.itemIds = cluster.itemIds.filter(x => x !== childId);
+      cluster.hubIds  = (cluster.hubIds || []).filter(x => x !== childId);
       selectedEdgeId = null;
-      const orphaned = cluster.itemIds.length < 2;
+      const directMembers = cluster.itemIds.length + (cluster.hubIds || []).length;
+      const orphaned = directMembers < 2;
       renderAllNodes();
       renderAllEdges();
       updateClusterProgressChip();
       scheduleSave();
       if (orphaned) {
-        toast(`Hub "${cluster.title || 'Untitled'}" now has fewer than 2 signals.`, {
+        toast(`${tierLabel(hubTier(cluster.id))} "${cluster.title || 'Untitled'}" now has fewer than 2 members.`, {
           actionLabel: 'Delete hub',
           duration: 6000,
           onAction: () => deleteCluster(cluster.id)
@@ -2433,7 +2577,58 @@
       }
     });
 
+    function formatHubForPrompt(hubId, depth, maxDepth) {
+      const c = appState.clusters.find(c => c.id === hubId);
+      if (!c) return '';
+      const indent = '  '.repeat(depth);
+      const lines = [];
+      c.itemIds.forEach(iid => {
+        const it = appState.items.find(i => i.id === iid);
+        if (it) lines.push(`${indent}• Signal "${it.title}" — ${it.summary}`);
+      });
+      (c.hubIds || []).forEach(hid => {
+        const child = appState.clusters.find(c => c.id === hid);
+        if (!child) return;
+        const childTier = hubTier(hid);
+        const desc = child.description ? ` — ${child.description}` : '';
+        lines.push(`${indent}• ${tierLabel(childTier)} "${child.title || 'Untitled'}"${desc}`);
+        if (depth < maxDepth) {
+          const sub = formatHubForPrompt(hid, depth + 1, maxDepth);
+          if (sub) lines.push(sub);
+        } else {
+          const leaves = allSignalsUnderHub(hid).length;
+          lines.push(`${indent}  (… ${leaves} signal${leaves === 1 ? '' : 's'} deeper)`);
+        }
+      });
+      return lines.join('\n');
+    }
+
+    function openHubNamePromptModal(hubId) {
+      const c = appState.clusters.find(c => c.id === hubId);
+      if (!c) return;
+      const tier = hubTier(hubId);
+      const label = tierLabel(tier);
+      const titleEl = document.getElementById('ai-modal-title');
+      const ta = document.getElementById('ai-prompt-text');
+      if (titleEl) titleEl.textContent = `Suggest a name & description for this ${label}`;
+      const contents = formatHubForPrompt(hubId, 0, 2);
+      const leafCount = allSignalsUnderHub(hubId).length;
+      const prompt = `Act as a critical theorist and sensemaking partner.\n\n` +
+        `I have a ${label} on my problem-space map (${leafCount} leaf signal${leafCount === 1 ? '' : 's'} underneath). Help me name it and write a 1–2 sentence shared-barrier description that captures what genuinely connects everything underneath it — not just the surface topic.\n\n` +
+        `Propose:\n` +
+        `1. Three candidate titles, ranked, each ≤ 6 words and concrete.\n` +
+        `2. One 1–2 sentence description per title.\n` +
+        `3. The deepest framing question I should ask before locking in a name.\n\n` +
+        `— Current working title: ${c.title || '(none yet)'}\n` +
+        `— Current working description: ${c.description || '(none yet)'}\n\n` +
+        `Direct members${tier >= 2 ? ' (sub-hubs expanded one level)' : ''}:\n${contents || '(none yet)'}`;
+      ta.value = prompt;
+      openModal('ai-modal');
+    }
+
     function openAIPromptModal() {
+      const titleEl = document.getElementById('ai-modal-title');
+      if (titleEl) titleEl.textContent = 'AI Assistant Sparring Partner';
       const t = document.getElementById('ai-prompt-text');
       let p = `Act as an expert UX researcher and sensemaking partner.\n\nI have collected a list of ${appState.items.length} observed friction signals. Before I start clustering these into problem spaces, I need to fully understand the landscape of this data.\n\nPlease read the items below and follow this 3-step process:\n\n1. UNDERSTAND THE LANDSCAPE: Provide a concise, high-level summary of the major themes and pain points represented here. What are the loudest and most urgent signals?\n2. NOTICE THROUGHLINES: Point out 1 or 2 unexpected structural connections or hidden patterns across seemingly different contexts (e.g., healthcare systems vs. environmental compliance).\n3. GUIDE CLUSTERING: Ask me 2 provocative, probing questions to help me start grouping these into meaningful problem spaces myself. DO NOT do the clustering for me.\n\nHere is the raw data pool:\n`;
       appState.items.forEach(i => p += `\n- [${i.title}] ${i.summary}`);
@@ -2472,16 +2667,18 @@
 
     // --- Validation + cluster progress ---
     function validateBoard() {
+      const leafCounts = new Map();
+      appState.clusters.forEach(c => leafCounts.set(c.id, allSignalsUnderHub(c.id).length));
       const titledClusters = appState.clusters.filter(c => c.title.trim().length > 0);
-      const populatedClusters = appState.clusters.filter(c => c.itemIds.length > 0);
-      const usable = appState.clusters.filter(c => c.title.trim() && c.itemIds.length > 0);
+      const populatedClusters = appState.clusters.filter(c => leafCounts.get(c.id) > 0);
+      const usable = appState.clusters.filter(c => c.title.trim() && leafCounts.get(c.id) > 0);
       const unassigned = appState.items.filter(item => !appState.clusters.some(c => c.itemIds.includes(item.id))).length;
-      const clustersWith3Plus = appState.clusters.filter(c => c.title.trim() && c.itemIds.length >= 3).length;
+      const clustersWith3Plus = appState.clusters.filter(c => c.title.trim() && leafCounts.get(c.id) >= 3).length;
       const warnings = [];
       if (usable.length === 0) warnings.push('Add at least one titled cluster with at least one signal in it.');
-      const untitledWithItems = appState.clusters.filter(c => !c.title.trim() && c.itemIds.length > 0);
+      const untitledWithItems = appState.clusters.filter(c => !c.title.trim() && leafCounts.get(c.id) > 0);
       if (untitledWithItems.length) warnings.push(`${untitledWithItems.length} cluster(s) have signals but no title.`);
-      const titledWithoutItems = appState.clusters.filter(c => c.title.trim() && c.itemIds.length === 0);
+      const titledWithoutItems = appState.clusters.filter(c => c.title.trim() && leafCounts.get(c.id) === 0);
       if (titledWithoutItems.length) warnings.push(`${titledWithoutItems.length} titled cluster(s) are still empty.`);
       return { warnings, unassigned, usable: usable.length, titledClusters: titledClusters.length, populatedClusters: populatedClusters.length, clustersWith3Plus };
     }
@@ -2505,7 +2702,7 @@
     function buildPromptFor(cluster, kind) {
       const title = cluster.title || 'Untitled Cluster';
       const desc = cluster.description || '(no shared barrier described yet)';
-      const signals = cluster.itemIds
+      const signals = allSignalsUnderHub(cluster.id)
         .map(id => appState.items.find(i => i.id === id))
         .filter(Boolean)
         .map(i => `- ${i.title}: ${i.summary}`)
@@ -2523,9 +2720,9 @@
     function buildInterviewPromptForCommitted(committed) {
       if (!committed.length) return '';
       const blocks = committed.map(c => {
-        const signals = c.itemIds.map(id => appState.items.find(i => i.id === id)).filter(Boolean);
+        const signals = allSignalsUnderHub(c.id).map(id => appState.items.find(i => i.id === id)).filter(Boolean);
         const signalList = signals.map(i => `  - ${i.title}: ${i.summary}`).join('\n');
-        return `Cluster: ${c.title || 'Untitled'}\nShared barrier: ${c.description || '(no synthesis yet)'}\nSignals:\n${signalList || '  (none yet)'}`;
+        return `${tierLabel(hubTier(c.id))}: ${c.title || 'Untitled'}\nShared barrier: ${c.description || '(no synthesis yet)'}\nSignals:\n${signalList || '  (none yet)'}`;
       }).join('\n\n');
       return `Act as a research strategist helping me plan interviews with the people who originally reported these friction signals.\n\nI have committed to ${committed.length} problem-space cluster${committed.length === 1 ? '' : 's'}. Before I deepen them with a problematization and stakeholder map, I want to interview the contributors of each cluster to make sure I understand what they meant.\n\nFor each cluster below:\n1. Suggest a primary interview question that gets the contributor to describe the most recent time they hit this barrier.\n2. Suggest 2 follow-up probes to surface stakeholders, workarounds, and emotional stakes.\n3. Suggest one secondary-research direction (peer-reviewed or grey literature) to check that what they tell me isn't an isolated story.\n\nDo NOT propose solutions. Help me prepare a 30-minute conversation per cluster.\n\nClusters:\n\n${blocks}`;
     }
@@ -2551,12 +2748,14 @@
         const row = document.createElement('label');
         row.className = 'commit-cluster-row' + (checked ? ' checked' : '');
         row.setAttribute('for', id);
-        const under3 = c.itemIds.length < 3;
+        const leafCount = allSignalsUnderHub(c.id).length;
+        const under3 = leafCount < 3;
+        const tier = hubTier(c.id);
         row.innerHTML = `
           <input type="checkbox" id="${id}" data-cluster-id="${escapeHtml(c.id)}" ${checked ? 'checked' : ''} onchange="onCommitRowChange(this)">
           <div class="cluster-meta">
-            <h4>${escapeHtml(c.title)}</h4>
-            <p>${c.itemIds.length} signal${c.itemIds.length === 1 ? '' : 's'}${under3 ? ' — under the 3+ target' : ''}</p>
+            <h4>${escapeHtml(c.title)} <span style="font-size:0.7rem; color:var(--primary-teal); font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">${escapeHtml(tierLabel(tier))}</span></h4>
+            <p>${leafCount} signal${leafCount === 1 ? '' : 's'}${under3 ? ' — under the 3+ target' : ''}</p>
           </div>
         `;
         list.appendChild(row);
@@ -2638,7 +2837,7 @@
       card.className = 'workspace-cluster-card';
       card.setAttribute('data-cluster-id', cluster.id);
 
-      const signals = cluster.itemIds
+      const signals = allSignalsUnderHub(cluster.id)
         .map(id => appState.items.find(i => i.id === id))
         .filter(Boolean);
 
@@ -2647,9 +2846,10 @@
       const problemPromptId = `problematize-prompt-${cluster.id}`;
       const stakeholderPromptId = `stakeholder-prompt-${cluster.id}`;
 
+      const tier = hubTier(cluster.id);
       card.innerHTML = `
         <header>
-          <h3>${escapeHtml(cluster.title || 'Untitled Cluster')}</h3>
+          <h3>${escapeHtml(cluster.title || 'Untitled')} <span style="font-size:0.7rem; color:var(--primary-teal); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:6px;">${escapeHtml(tierLabel(tier))}</span></h3>
           ${cluster.description ? `<p class="cluster-desc">${escapeHtml(cluster.description)}</p>` : ''}
           <ul class="signal-chips">
             ${signals.map(s => `<li>${escapeHtml(s.title)}</li>`).join('')}
@@ -2794,13 +2994,14 @@
         .map(id => appState.clusters.find(c => c.id === id))
         .filter(Boolean);
       committed.forEach(cluster => {
-        const signals = cluster.itemIds.map(id => appState.items.find(i => i.id === id)).filter(Boolean);
+        const signals = allSignalsUnderHub(cluster.id).map(id => appState.items.find(i => i.id === id)).filter(Boolean);
         const article = document.createElement('article');
         article.className = 'submission-cluster';
         const probAns = (appState.problematizations[cluster.id] || '').trim() || '(empty)';
         const stakeAns = (appState.stakeholderMaps[cluster.id] || '').trim() || '(empty)';
+        const tier = hubTier(cluster.id);
         article.innerHTML = `
-          <h3>${escapeHtml(cluster.title || 'Untitled Cluster')}</h3>
+          <h3>${escapeHtml(cluster.title || 'Untitled')} <span style="font-size:0.7rem; color:var(--primary-teal); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:6px;">${escapeHtml(tierLabel(tier))}</span></h3>
           ${cluster.description ? `<p class="cluster-desc">${escapeHtml(cluster.description)}</p>` : ''}
           <ul class="signal-chips">
             ${signals.map(s => `<li>${escapeHtml(s.title)}</li>`).join('')}
@@ -2829,10 +3030,11 @@
         : `*Draft — not yet submitted*\n\n`;
       md += `---\n\n`;
       committed.forEach(c => {
-        md += `## ${c.title || 'Untitled Group'}\n\n`;
+        const tier = hubTier(c.id);
+        md += `## ${c.title || 'Untitled Group'} *(${tierLabel(tier)})*\n\n`;
         if (c.description) md += `> **Shared Barrier:** ${c.description}\n\n`;
         md += `### Signals\n`;
-        c.itemIds.forEach(id => {
+        allSignalsUnderHub(c.id).forEach(id => {
           const item = appState.items.find(i => i.id === id);
           if (item) md += `- **${item.title}** — ${item.summary}\n`;
         });
