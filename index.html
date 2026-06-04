@@ -467,6 +467,10 @@
     }
     .canvas-viewport.is-panning { cursor: grabbing; }
     .canvas-viewport.is-connecting { cursor: crosshair; }
+    .canvas-viewport.space-pan-ready,
+    .canvas-viewport.space-pan-ready * { cursor: grab !important; }
+    .canvas-viewport.space-pan-ready.is-panning,
+    .canvas-viewport.space-pan-ready.is-panning * { cursor: grabbing !important; }
 
     .canvas-world {
       position: absolute;
@@ -696,10 +700,18 @@
     .connect-handle.side-left   { left:  -8px;  top: 50%;   transform: translate(0, -50%); }
     .connect-handle.side-top    { top:   -8px;  left: 50%;  transform: translate(-50%, 0); }
     .connect-handle.side-bottom { bottom:-8px;  left: 50%;  transform: translate(-50%, 0); }
+    .connect-handle.side-tl     { top: -8px;    left:  -8px; }
+    .connect-handle.side-tr     { top: -8px;    right: -8px; }
+    .connect-handle.side-bl     { bottom: -8px; left:  -8px; }
+    .connect-handle.side-br     { bottom: -8px; right: -8px; }
     .connect-handle.side-right:hover  { transform: translate(0, -50%) scale(1.3); box-shadow: 0 4px 12px rgba(0,148,160,0.75); }
     .connect-handle.side-left:hover   { transform: translate(0, -50%) scale(1.3); box-shadow: 0 4px 12px rgba(0,148,160,0.75); }
     .connect-handle.side-top:hover    { transform: translate(-50%, 0) scale(1.3); box-shadow: 0 4px 12px rgba(0,148,160,0.75); }
     .connect-handle.side-bottom:hover { transform: translate(-50%, 0) scale(1.3); box-shadow: 0 4px 12px rgba(0,148,160,0.75); }
+    .connect-handle.side-tl:hover,
+    .connect-handle.side-tr:hover,
+    .connect-handle.side-bl:hover,
+    .connect-handle.side-br:hover     { transform: scale(1.3); box-shadow: 0 4px 12px rgba(0,148,160,0.75); }
     .hub-node .connect-handle { background: var(--ghost-white); box-shadow: 0 2px 6px rgba(255,255,255,0.4); }
 
     .canvas-node.drag-source { opacity: 0.55; }
@@ -862,7 +874,7 @@
           <button type="button" class="zoom-btn" onclick="zoomBy(1)" aria-label="Zoom in">+</button>
           <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes">⤢</button>
         </div>
-        <div class="canvas-hint" id="canvas-hint">Drag signals to move • Drag from the teal dot to connect two signals into a cluster</div>
+        <div class="canvas-hint" id="canvas-hint">Drag signals to move • Pull from any edge or corner to connect • 2-finger scroll to pan • Cmd/Ctrl-scroll or pinch to zoom • Space + drag to pan</div>
       </div>
     </main>
   </div>
@@ -1497,10 +1509,14 @@
         <span class="card-tag">${escapeHtml(item.tag || 'Friction Signal')}</span>
         <h3>${escapeHtml(item.title)}</h3>
         <p class="summary-text">${escapeHtml(item.summary)}</p>
-        <div class="connect-handle side-top"    data-connect-from="${escapeHtml(item.id)}" aria-label="Drag from top to connect"></div>
-        <div class="connect-handle side-right"  data-connect-from="${escapeHtml(item.id)}" aria-label="Drag from right to connect"></div>
-        <div class="connect-handle side-bottom" data-connect-from="${escapeHtml(item.id)}" aria-label="Drag from bottom to connect"></div>
-        <div class="connect-handle side-left"   data-connect-from="${escapeHtml(item.id)}" aria-label="Drag from left to connect"></div>
+        <div class="connect-handle side-top"    data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-right"  data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-bottom" data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-left"   data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-tl"     data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-tr"     data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-bl"     data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-br"     data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
       `;
       attachNodeDrag(el, item.id);
       return el;
@@ -1525,10 +1541,14 @@
         <div class="hub-actions">
           <button type="button" class="hub-delete">Delete Hub</button>
         </div>
-        <div class="connect-handle side-top"    data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag from top to connect"></div>
-        <div class="connect-handle side-right"  data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag from right to connect"></div>
-        <div class="connect-handle side-bottom" data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag from bottom to connect"></div>
-        <div class="connect-handle side-left"   data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag from left to connect"></div>
+        <div class="connect-handle side-top"    data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-right"  data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-bottom" data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-left"   data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-tl"     data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-tr"     data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-bl"     data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
+        <div class="connect-handle side-br"     data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
       `;
       const titleInput = el.querySelector('.hub-title');
       titleInput.addEventListener('input', () => { cluster.title = titleInput.value; scheduleSave(); updateClusterProgressChip(); });
@@ -1552,44 +1572,22 @@
       return out;
     }
 
-    // Find where the line from a node's center toward (tx, ty) exits the node's bounding box.
-    function nodeAnchor(nodeId, towardX, towardY) {
-      const kind = isHubId(nodeId) ? 'hub' : 'signal';
-      const { w, h } = nodeSize(kind);
-      const p = getNodePos(nodeId);
-      const cx = p.x + w / 2, cy = p.y + h / 2;
-      const dx = towardX - cx, dy = towardY - cy;
-      if (dx === 0 && dy === 0) return { x: cx, y: cy };
-      const sx = Math.abs(dx) > 0.0001 ? (w / 2) / Math.abs(dx) : Infinity;
-      const sy = Math.abs(dy) > 0.0001 ? (h / 2) / Math.abs(dy) : Infinity;
-      const t = Math.min(sx, sy);
-      return { x: cx + dx * t, y: cy + dy * t };
-    }
-
-    // Smooth bezier whose control points pull outward in the direction each endpoint exits its node.
-    function bezierBetween(a, b, dirA, dirB) {
+    // Center-to-center bezier. Control points bias along the dominant axis so two cards
+    // bow gently rather than going straight through their interiors.
+    function bezierBetween(a, b) {
       const dx = b.x - a.x, dy = b.y - a.y;
-      const dist = Math.hypot(dx, dy);
-      const pull = Math.max(40, Math.min(180, dist * 0.45));
-      const da = dirA || { x: dx / (dist || 1), y: dy / (dist || 1) };
-      const db = dirB || { x: -dx / (dist || 1), y: -dy / (dist || 1) };
-      const c1x = a.x + da.x * pull, c1y = a.y + da.y * pull;
-      const c2x = b.x + db.x * pull, c2y = b.y + db.y * pull;
-      return `M ${a.x} ${a.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${b.x} ${b.y}`;
-    }
-
-    function edgePathBetweenNodes(fromId, toId) {
-      const fc = nodeCenter(fromId), tc = nodeCenter(toId);
-      const a = nodeAnchor(fromId, tc.x, tc.y);
-      const b = nodeAnchor(toId, fc.x, fc.y);
-      const da = unitVec(a.x - fc.x, a.y - fc.y);
-      const db = unitVec(b.x - tc.x, b.y - tc.y);
-      return bezierBetween(a, b, da, db);
-    }
-
-    function unitVec(x, y) {
-      const m = Math.hypot(x, y) || 1;
-      return { x: x / m, y: y / m };
+      const horizontal = Math.abs(dx) >= Math.abs(dy);
+      let cx1, cy1, cx2, cy2;
+      if (horizontal) {
+        const k = Math.max(60, Math.abs(dx) * 0.45);
+        cx1 = a.x + Math.sign(dx || 1) * k; cy1 = a.y;
+        cx2 = b.x - Math.sign(dx || 1) * k; cy2 = b.y;
+      } else {
+        const k = Math.max(60, Math.abs(dy) * 0.45);
+        cx1 = a.x; cy1 = a.y + Math.sign(dy || 1) * k;
+        cx2 = b.x; cy2 = b.y - Math.sign(dy || 1) * k;
+      }
+      return `M ${a.x} ${a.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${b.x} ${b.y}`;
     }
 
     let selectedEdgeId = null;
@@ -1604,7 +1602,7 @@
         path.setAttribute('data-edge-id', edge.id);
         path.setAttribute('data-from', edge.from);
         path.setAttribute('data-to', edge.to);
-        path.setAttribute('d', edgePathBetweenNodes(edge.from, edge.to));
+        path.setAttribute('d', bezierBetween(nodeCenter(edge.from), nodeCenter(edge.to)));
         if (selectedEdgeId === edge.id) path.classList.add('selected');
         svg.insertBefore(path, drawing);
       });
@@ -1614,7 +1612,7 @@
       const svg = document.getElementById('edge-layer');
       const paths = svg.querySelectorAll(`path.edge[data-from="${nodeId}"], path.edge[data-to="${nodeId}"]`);
       paths.forEach(p => {
-        p.setAttribute('d', edgePathBetweenNodes(p.getAttribute('data-from'), p.getAttribute('data-to')));
+        p.setAttribute('d', bezierBetween(nodeCenter(p.getAttribute('data-from')), nodeCenter(p.getAttribute('data-to'))));
       });
     }
 
@@ -1677,6 +1675,8 @@
         if (e.target.closest('.connect-handle')) return;
         // Don't start node drag from editable controls.
         if (e.target.closest('input, textarea, button')) return;
+        // Let space-pan and middle-mouse take over panning instead.
+        if (spaceHeld || e.button === 1) return;
         e.stopPropagation();
         pointerId = e.pointerId;
         startClientX = e.clientX;
@@ -1773,11 +1773,7 @@
         const onMove = (ev) => {
           if (ev.pointerId !== pointerId) return;
           const wp = clientToWorld(ev.clientX, ev.clientY);
-          const a = nodeAnchor(sourceId, wp.x, wp.y);
-          const sc = nodeCenter(sourceId);
-          const da = unitVec(a.x - sc.x, a.y - sc.y);
-          const db = unitVec(a.x - wp.x, a.y - wp.y);
-          drawing.setAttribute('d', bezierBetween(a, wp, da, db));
+          drawing.setAttribute('d', bezierBetween(nodeCenter(sourceId), wp));
           updateHover(ev.clientX, ev.clientY);
         };
         const onUp = (ev) => {
@@ -1825,7 +1821,7 @@
         renderAllEdges();
         const edgeId = hubId + '__' + signalId;
         animateNewEdge(edgeId);
-        tidyHubLayout(hubId);
+        relaxLayoutAround(hubId);
         scheduleSave();
         updateClusterProgressChip();
         toast(`Added to "${hub.title || 'Untitled Hub'}".`);
@@ -1848,7 +1844,7 @@
         renderAllNodes();
         renderAllEdges();
         animateNewEdge(hubId + '__' + freeSignal);
-        tidyHubLayout(hubId);
+        relaxLayoutAround(hubId);
         scheduleSave();
         updateClusterProgressChip();
         toast(`Added to "${hub.title || 'Untitled Hub'}".`);
@@ -1867,7 +1863,7 @@
       animateNodeSpawn(newHub.id);
       animateNewEdge(newHub.id + '__' + sourceId, 0);
       animateNewEdge(newHub.id + '__' + targetId, 60);
-      tidyHubLayout(newHub.id);
+      relaxLayoutAround(newHub.id);
       scheduleSave();
       updateClusterProgressChip();
       // Focus the new hub's title for naming.
@@ -1877,89 +1873,187 @@
       }, 280);
     }
 
-    // ----- Auto-respace: tidy a hub + its connected signals into a clean ring -----
-    function tidyHubLayout(hubId, opts) {
-      const cluster = appState.clusters.find(c => c.id === hubId);
-      if (!cluster) return;
-      const ids = cluster.itemIds.slice();
-      const n = ids.length;
-      if (n === 0) return;
-      const animMs = (opts && opts.animMs) || 360;
-      const skipIds = new Set((opts && opts.skipMove) || []);
+    // ----- Force-directed auto-spacing -----
+    let relaxAnim = null;
+    function relaxLayoutAround(focusHubId) {
+      if (relaxAnim) cancelAnimationFrame(relaxAnim);
 
-      // Anchor: weighted centroid of hub + its members (keeps the new shape close to where the user worked).
-      const hubNow = nodeCenter(hubId);
-      let cx = hubNow.x, cy = hubNow.y, wsum = 1;
-      ids.forEach(iid => {
-        const p = nodeCenter(iid);
-        cx += p.x; cy += p.y; wsum++;
+      // Collect all nodes + initial velocities.
+      const nodeIds = [];
+      const pos = {}, vel = {};
+      const dims = {};
+      appState.items.forEach(it => {
+        if (!appState.nodes[it.id]) return;
+        nodeIds.push(it.id);
+        pos[it.id] = { ...getNodePos(it.id) };
+        vel[it.id] = { x: 0, y: 0 };
+        dims[it.id] = nodeSize('signal');
       });
-      cx /= wsum; cy /= wsum;
+      appState.clusters.forEach(c => {
+        if (!appState.nodes[c.id]) return;
+        nodeIds.push(c.id);
+        pos[c.id] = { ...getNodePos(c.id) };
+        vel[c.id] = { x: 0, y: 0 };
+        dims[c.id] = nodeSize('hub');
+      });
 
-      // Radius scales with the number of signals so cards don't overlap.
-      const radius = Math.max(220, 150 + n * 28);
-
-      // Preserve angular order of existing signals around the centroid so motion is minimal.
-      const angles = ids.map(iid => {
-        const p = nodeCenter(iid);
-        return { iid, ang: Math.atan2(p.y - cy, p.x - cx) };
-      }).sort((a, b) => a.ang - b.ang);
-
-      // Pick a phase offset that aligns the first slot to the first signal's existing angle.
-      const phase = angles[0].ang;
-
-      const targets = {};
-      // Hub target: centered.
-      targets[hubId] = {
-        x: cx - NODE_HUB_W / 2,
-        y: cy - NODE_HUB_H / 2,
+      const isPinned = (id) => {
+        const el = document.getElementById('node-' + id);
+        return !!(el && el.classList.contains('dragging'));
       };
-      angles.forEach((a, i) => {
-        const ang = phase + (2 * Math.PI * i) / n;
-        const tx = cx + radius * Math.cos(ang) - NODE_SIGNAL_W / 2;
-        const ty = cy + radius * Math.sin(ang) - NODE_SIGNAL_H / 2;
-        targets[a.iid] = { x: tx, y: ty };
-      });
 
-      animateNodesTo(targets, animMs, skipIds);
+      const maxFrames = 90;
+      let frame = 0;
+      let calmFrames = 0;
+      const startTs = performance.now();
+      const minHubViewTs = startTs + 700;
+      const finishedHubViewCheck = { done: false };
+
+      const tick = () => {
+        frame++;
+        // For each pair, apply repulsion if too close to comfortable spacing.
+        const PAD = 60;
+        const REPEL_K = 5200;     // Coulomb constant
+        const SPRING_K = 0.06;    // hub→signal spring stiffness
+        const HUB_ANCHOR_K = 0.012; // hub→its centroid pull
+        const MAX_FORCE = 40;
+        const DAMP = 0.82;
+
+        // Reset frame forces.
+        const fx = {}, fy = {};
+        nodeIds.forEach(id => { fx[id] = 0; fy[id] = 0; });
+
+        // Pairwise repulsion.
+        for (let i = 0; i < nodeIds.length; i++) {
+          for (let j = i + 1; j < nodeIds.length; j++) {
+            const a = nodeIds[i], b = nodeIds[j];
+            const pa = pos[a], pb = pos[b];
+            const da = dims[a], db = dims[b];
+            const cax = pa.x + da.w / 2, cay = pa.y + da.h / 2;
+            const cbx = pb.x + db.w / 2, cby = pb.y + db.h / 2;
+            let dx = cax - cbx, dy = cay - cby;
+            let dist = Math.hypot(dx, dy);
+            if (dist < 0.01) { dx = (Math.random() - 0.5); dy = (Math.random() - 0.5); dist = Math.hypot(dx, dy); }
+            const minDist = (Math.hypot(da.w, da.h) + Math.hypot(db.w, db.h)) / 2 + PAD;
+            if (dist >= minDist * 1.6) continue; // far enough, skip
+            const overlap = Math.max(0, minDist - dist);
+            // Force grows steeply when overlapping, gentle when near.
+            let force = REPEL_K / (dist * dist);
+            if (overlap > 0) force += overlap * 0.6;
+            force = Math.min(MAX_FORCE, force);
+            const ux = dx / dist, uy = dy / dist;
+            fx[a] += ux * force; fy[a] += uy * force;
+            fx[b] -= ux * force; fy[b] -= uy * force;
+          }
+        }
+
+        // Hub springs.
+        appState.clusters.forEach(cluster => {
+          if (!pos[cluster.id]) return;
+          const hub = cluster.id;
+          const n = cluster.itemIds.length;
+          const R = Math.max(220, 150 + n * 22);
+          // Hub anchor: gentle pull toward centroid of members.
+          if (n > 0) {
+            let cx = 0, cy = 0, count = 0;
+            cluster.itemIds.forEach(iid => {
+              if (!pos[iid]) return;
+              const dd = dims[iid];
+              cx += pos[iid].x + dd.w / 2; cy += pos[iid].y + dd.h / 2; count++;
+            });
+            if (count > 0) {
+              cx /= count; cy /= count;
+              const hd = dims[hub];
+              const hcx = pos[hub].x + hd.w / 2, hcy = pos[hub].y + hd.h / 2;
+              fx[hub] += (cx - hcx) * HUB_ANCHOR_K;
+              fy[hub] += (cy - hcy) * HUB_ANCHOR_K;
+            }
+          }
+          // Member spring at radius R from hub.
+          const hd = dims[hub];
+          const hcx = pos[hub].x + hd.w / 2, hcy = pos[hub].y + hd.h / 2;
+          cluster.itemIds.forEach(iid => {
+            if (!pos[iid]) return;
+            const dd = dims[iid];
+            const sx = pos[iid].x + dd.w / 2, sy = pos[iid].y + dd.h / 2;
+            const dx = sx - hcx, dy = sy - hcy;
+            const dist = Math.hypot(dx, dy) || 0.01;
+            const delta = dist - R;
+            const ux = dx / dist, uy = dy / dist;
+            const f = -delta * SPRING_K;
+            fx[iid] += ux * f; fy[iid] += uy * f;
+            fx[hub] -= ux * f * 0.4; fy[hub] -= uy * f * 0.4;
+          });
+        });
+
+        // Integrate.
+        let kinetic = 0;
+        nodeIds.forEach(id => {
+          if (isPinned(id)) {
+            vel[id].x = 0; vel[id].y = 0;
+            return;
+          }
+          vel[id].x = (vel[id].x + fx[id]) * DAMP;
+          vel[id].y = (vel[id].y + fy[id]) * DAMP;
+          // Cap velocity per frame to avoid jitter.
+          const vmag = Math.hypot(vel[id].x, vel[id].y);
+          if (vmag > 30) { vel[id].x = vel[id].x / vmag * 30; vel[id].y = vel[id].y / vmag * 30; }
+          pos[id].x += vel[id].x;
+          pos[id].y += vel[id].y;
+          kinetic += vmag * vmag;
+          // Write through to state + DOM.
+          setNodePos(id, pos[id].x, pos[id].y);
+          const el = document.getElementById('node-' + id);
+          if (el) { el.style.left = pos[id].x + 'px'; el.style.top = pos[id].y + 'px'; }
+        });
+        // Update edges for everything (small graph).
+        nodeIds.forEach(id => updateEdgesForNode(id));
+
+        // Calm detection.
+        if (kinetic < 0.6) calmFrames++; else calmFrames = 0;
+        const done = frame >= maxFrames || calmFrames >= 4;
+        if (!done) {
+          relaxAnim = requestAnimationFrame(tick);
+        } else {
+          relaxAnim = null;
+          scheduleSave();
+          // Pan to keep the focused hub in view, once.
+          if (focusHubId && !finishedHubViewCheck.done) {
+            finishedHubViewCheck.done = true;
+            ensureHubInView(focusHubId);
+          }
+        }
+      };
+      relaxAnim = requestAnimationFrame(tick);
     }
 
-    // Easing-aware tween from current node positions to target positions, updating edges each frame.
-    function animateNodesTo(targets, durationMs, skipIds) {
-      const ids = Object.keys(targets).filter(id => !skipIds || !skipIds.has(id));
-      if (!ids.length) return;
+    function ensureHubInView(hubId) {
+      const viewport = document.getElementById('canvas-viewport');
+      if (!viewport) return;
+      const c = nodeCenter(hubId);
+      const screenX = c.x * appState.view.zoom + appState.view.panX;
+      const screenY = c.y * appState.view.zoom + appState.view.panY;
+      const rect = viewport.getBoundingClientRect();
+      const margin = 80;
+      const off = screenX < margin || screenX > rect.width - margin
+               || screenY < margin || screenY > rect.height - margin;
+      if (!off) return;
+      const targetPanX = rect.width / 2 - c.x * appState.view.zoom;
+      const targetPanY = rect.height / 2 - c.y * appState.view.zoom;
+      tweenPan(targetPanX, targetPanY, 360);
+    }
+
+    function tweenPan(toX, toY, durationMs) {
       const startTs = performance.now();
-      const startPositions = {};
-      ids.forEach(id => { startPositions[id] = { ...getNodePos(id) }; });
-
-      // ease-out-quint
+      const fromX = appState.view.panX, fromY = appState.view.panY;
       const ease = t => 1 - Math.pow(1 - t, 5);
-
-      const allEdgeNodeIds = new Set(ids);
-      // Also include any node connected to a moving node so edges update.
-      appState.clusters.forEach(c => {
-        if (allEdgeNodeIds.has(c.id)) c.itemIds.forEach(i => allEdgeNodeIds.add(i));
-        c.itemIds.forEach(iid => { if (allEdgeNodeIds.has(iid)) allEdgeNodeIds.add(c.id); });
-      });
-
       const step = (now) => {
         const t = Math.min(1, (now - startTs) / durationMs);
         const k = ease(t);
-        ids.forEach(id => {
-          const s = startPositions[id];
-          const e = targets[id];
-          const nx = s.x + (e.x - s.x) * k;
-          const ny = s.y + (e.y - s.y) * k;
-          setNodePos(id, nx, ny);
-          const el = document.getElementById('node-' + id);
-          if (el) { el.style.left = nx + 'px'; el.style.top = ny + 'px'; }
-        });
-        allEdgeNodeIds.forEach(id => updateEdgesForNode(id));
-        if (t < 1) {
-          requestAnimationFrame(step);
-        } else {
-          scheduleSave();
-        }
+        appState.view.panX = fromX + (toX - fromX) * k;
+        appState.view.panY = fromY + (toY - fromY) * k;
+        applyViewTransform();
+        if (t < 1) requestAnimationFrame(step); else scheduleSave();
       };
       requestAnimationFrame(step);
     }
@@ -2071,19 +2165,41 @@
       }
     }
 
-    // ----- Viewport pan + wheel zoom -----
+    // ----- Viewport pan + wheel zoom (FigJam-style) -----
+    let spaceHeld = false;
     function setupCanvasInteractions() {
       const viewport = document.getElementById('canvas-viewport');
 
-      // Wheel zoom (anchored to pointer)
+      // FigJam-style wheel: trackpad scroll pans, ctrl/cmd or pinch zooms.
       viewport.addEventListener('wheel', (e) => {
-        if (e.ctrlKey || e.metaKey || Math.abs(e.deltaY) > 0) {
-          e.preventDefault();
-          zoomBy(e.deltaY < 0 ? 1 : -1, e.clientX, e.clientY);
+        e.preventDefault();
+        // Browsers report ctrlKey:true for trackpad pinch even without ctrl pressed.
+        if (e.ctrlKey || e.metaKey) {
+          // Smooth pointer-anchored zoom (continuous, not stepped).
+          const factor = Math.exp(-e.deltaY * 0.0025);
+          const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, appState.view.zoom * factor));
+          if (newZoom === appState.view.zoom) return;
+          const rect = viewport.getBoundingClientRect();
+          const ax = e.clientX - rect.left, ay = e.clientY - rect.top;
+          const oldZoom = appState.view.zoom;
+          const worldX = (ax - appState.view.panX) / oldZoom;
+          const worldY = (ay - appState.view.panY) / oldZoom;
+          appState.view.panX = ax - worldX * newZoom;
+          appState.view.panY = ay - worldY * newZoom;
+          appState.view.zoom = newZoom;
+          applyViewTransform();
+          scheduleSave();
+          return;
         }
+        // Otherwise pan.
+        const lineMul = (e.deltaMode === 1) ? 16 : 1;
+        appState.view.panX -= e.deltaX * lineMul;
+        appState.view.panY -= e.deltaY * lineMul;
+        applyViewTransform();
+        scheduleSave();
       }, { passive: false });
 
-      // Pan: pointerdown on the background (not on a node).
+      // Pan: pointerdown on the background (not on a node), OR space-held, OR middle-mouse.
       let panning = false;
       let panPointerId = null;
       let startClientX = 0, startClientY = 0;
@@ -2093,8 +2209,12 @@
       let momentumRaf = null;
 
       viewport.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('.canvas-node')) return;
         if (e.target.closest('.zoom-toolbar')) return;
+        const onNode = !!e.target.closest('.canvas-node');
+        const isMiddle = e.button === 1;
+        const forcePan = spaceHeld || isMiddle;
+        if (onNode && !forcePan) return;
+        e.preventDefault();
         panning = true;
         panPointerId = e.pointerId;
         startClientX = e.clientX; startClientY = e.clientY;
@@ -2196,6 +2316,68 @@
 
       setupEdgeInteractions();
       applyViewTransform();
+      setupKeyboardNavigation();
+    }
+
+    function setupKeyboardNavigation() {
+      const isTyping = () => {
+        const a = document.activeElement;
+        return !!(a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable));
+      };
+      const onBoard = () => appState.currentScreen === 'board';
+
+      document.addEventListener('keydown', (e) => {
+        if (!onBoard()) return;
+        if (e.code === 'Space' && !isTyping() && !e.repeat) {
+          e.preventDefault();
+          if (!spaceHeld) {
+            spaceHeld = true;
+            const vp = document.getElementById('canvas-viewport');
+            if (vp) vp.classList.add('space-pan-ready');
+          }
+          return;
+        }
+        if (isTyping()) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        switch (e.key) {
+          case '+': case '=':
+            e.preventDefault(); zoomBy(1); break;
+          case '-': case '_':
+            e.preventDefault(); zoomBy(-1); break;
+          case '0':
+            e.preventDefault(); resetView(); break;
+          case '1': {
+            // Reset zoom to 100% anchored on viewport center.
+            const viewport = document.getElementById('canvas-viewport');
+            const rect = viewport.getBoundingClientRect();
+            const ax = rect.width / 2, ay = rect.height / 2;
+            const oldZoom = appState.view.zoom;
+            const newZoom = 1;
+            if (newZoom === oldZoom) break;
+            const worldX = (ax - appState.view.panX) / oldZoom;
+            const worldY = (ay - appState.view.panY) / oldZoom;
+            appState.view.panX = ax - worldX * newZoom;
+            appState.view.panY = ay - worldY * newZoom;
+            appState.view.zoom = newZoom;
+            applyViewTransform();
+            scheduleSave();
+            e.preventDefault();
+            break;
+          }
+        }
+      });
+      document.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+          spaceHeld = false;
+          const vp = document.getElementById('canvas-viewport');
+          if (vp) vp.classList.remove('space-pan-ready');
+        }
+      });
+      window.addEventListener('blur', () => {
+        spaceHeld = false;
+        const vp = document.getElementById('canvas-viewport');
+        if (vp) vp.classList.remove('space-pan-ready');
+      });
     }
 
     // --- Modals: focus management + Esc ---
