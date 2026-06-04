@@ -608,6 +608,30 @@
       padding: 14px 16px 12px;
       box-shadow: 0 8px 24px rgba(16,24,32,0.18);
       user-select: none;
+      transition: width 240ms cubic-bezier(0.22, 1, 0.36, 1),
+                  border-color 240ms ease,
+                  box-shadow 180ms ease;
+    }
+    .hub-node.tier-up { animation: tier-up-pulse 380ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes tier-up-pulse {
+      0%   { box-shadow: 0 8px 24px rgba(16,24,32,0.18); }
+      40%  { box-shadow: 0 0 0 6px rgba(0,148,160,0.45), 0 12px 32px rgba(16,24,32,0.25); }
+      100% { box-shadow: 0 8px 24px rgba(16,24,32,0.18); }
+    }
+    .hub-node.tier-up.tier-2 { animation-name: tier-up-pulse-red; }
+    .hub-node.tier-up.tier-3 { animation-name: tier-up-pulse-amber; }
+    .hub-node.tier-up.tier-4, .hub-node.tier-up.tier-5, .hub-node.tier-up.tier-6 { animation-name: tier-up-pulse-purple; }
+    @keyframes tier-up-pulse-red {
+      0%, 100% { box-shadow: 0 8px 24px rgba(16,24,32,0.18); }
+      40% { box-shadow: 0 0 0 6px rgba(238,28,37,0.45), 0 12px 32px rgba(16,24,32,0.25); }
+    }
+    @keyframes tier-up-pulse-amber {
+      0%, 100% { box-shadow: 0 8px 24px rgba(16,24,32,0.18); }
+      40% { box-shadow: 0 0 0 6px rgba(244,180,0,0.50), 0 12px 32px rgba(16,24,32,0.25); }
+    }
+    @keyframes tier-up-pulse-purple {
+      0%, 100% { box-shadow: 0 8px 24px rgba(16,24,32,0.18); }
+      40% { box-shadow: 0 0 0 6px rgba(138,79,255,0.50), 0 12px 32px rgba(16,24,32,0.25); }
     }
     .hub-node .hub-tag {
       font-size: 0.6rem;
@@ -806,8 +830,8 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .canvas-node, .edge-layer .edge { transition-duration: 60ms !important; animation-duration: 60ms !important; }
-      .canvas-node.spawn, .edge-layer .edge.spawning, .canvas-node.match-ring::before { animation: none !important; }
+      .canvas-node, .edge-layer .edge, .hub-node { transition-duration: 60ms !important; animation-duration: 60ms !important; }
+      .canvas-node.spawn, .edge-layer .edge.spawning, .canvas-node.match-ring::before, .hub-node.tier-up { animation: none !important; }
     }
 
 
@@ -1453,6 +1477,54 @@
       walk(hubId);
       return out;
     }
+    // Mass scales with tier: signal=1, cluster=4, super=16, mega=64, ...
+    function nodeMass(nodeId) {
+      const tier = isHubId(nodeId) ? hubTier(nodeId) : 0;
+      return Math.pow(4, tier);
+    }
+    // Ideal radius a parent wants its children to orbit at.
+    function idealRadiusFor(parentId, n) {
+      const c = appState.clusters.find(c => c.id === parentId);
+      if (!c) return 220;
+      const hasHubChildren = (c.hubIds || []).length > 0;
+      const parentTier = hubTier(parentId);
+      const base = hasHubChildren ? 260 + Math.max(0, parentTier - 2) * 60 : 200;
+      const step = hasHubChildren ? 36 : 22;
+      return base + Math.max(0, n - 2) * step;
+    }
+    // Find the largest empty angular gap around a parent and return that angle.
+    function bestAngularSlot(parentId) {
+      const c = appState.clusters.find(c => c.id === parentId);
+      if (!c) return { angle: -Math.PI / 2, radius: 220 };
+      const members = [...c.itemIds, ...(c.hubIds || [])];
+      const radius = idealRadiusFor(parentId, members.length + 1);
+      if (members.length === 0) return { angle: -Math.PI / 2, radius };
+      const center = nodeCenter(parentId);
+      const angles = members
+        .filter(mid => appState.nodes[mid])
+        .map(mid => {
+          const p = nodeCenter(mid);
+          return Math.atan2(p.y - center.y, p.x - center.x);
+        })
+        .sort((a, b) => a - b);
+      if (angles.length === 0) return { angle: -Math.PI / 2, radius };
+      if (angles.length === 1) return { angle: angles[0] + Math.PI, radius };
+      // Largest gap (wrap around).
+      let bestGap = -Infinity;
+      let bestMid = angles[0] + Math.PI;
+      for (let i = 0; i < angles.length; i++) {
+        const a = angles[i];
+        const b = angles[(i + 1) % angles.length];
+        let gap = (b - a + Math.PI * 2) % (Math.PI * 2);
+        if (gap === 0) gap = Math.PI * 2; // shouldn't happen with sorted distinct
+        if (gap > bestGap) {
+          bestGap = gap;
+          bestMid = a + gap / 2;
+        }
+      }
+      return { angle: bestMid, radius };
+    }
+
     // Is targetId an ancestor of nodeId (or equal)?
     function isAncestor(targetId, nodeId) {
       let cur = nodeId;
@@ -1629,7 +1701,16 @@
       el.id = 'node-' + cluster.id;
       el.setAttribute('data-node-id', cluster.id);
       el.setAttribute('data-kind', 'hub');
+      // Compare to last-rendered tier; if it grew, schedule a one-shot pulse class.
+      const prevTier = parseInt(hubLastTier.get(cluster.id) || '0', 10);
       el.setAttribute('data-tier', String(tier));
+      hubLastTier.set(cluster.id, String(tier));
+      if (tier > prevTier && prevTier > 0) {
+        requestAnimationFrame(() => {
+          el.classList.add('tier-up');
+          el.addEventListener('animationend', () => el.classList.remove('tier-up'), { once: true });
+        });
+      }
       const pos = getNodePos(cluster.id);
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
@@ -1705,6 +1786,8 @@
     }
 
     let selectedEdgeId = null;
+    // Track each hub's last-rendered tier so we can pulse on tier-up.
+    const hubLastTier = new Map();
     function renderAllEdges() {
       const svg = document.getElementById('edge-layer');
       // Clear existing real edges, keep <defs> and #edge-drawing.
@@ -1726,7 +1809,14 @@
       const svg = document.getElementById('edge-layer');
       const paths = svg.querySelectorAll(`path.edge[data-from="${nodeId}"], path.edge[data-to="${nodeId}"]`);
       paths.forEach(p => {
-        p.setAttribute('d', bezierBetween(nodeCenter(p.getAttribute('data-from')), nodeCenter(p.getAttribute('data-to'))));
+        const a = nodeCenter(p.getAttribute('data-from'));
+        const b = nodeCenter(p.getAttribute('data-to'));
+        // Skip ~sub-pixel updates to reduce jitter at low velocity.
+        const last = p._lastEndpoints;
+        if (last && Math.abs(last.ax - a.x) < 0.3 && Math.abs(last.ay - a.y) < 0.3
+                 && Math.abs(last.bx - b.x) < 0.3 && Math.abs(last.by - b.y) < 0.3) return;
+        p._lastEndpoints = { ax: a.x, ay: a.y, bx: b.x, by: b.y };
+        p.setAttribute('d', bezierBetween(a, b));
       });
     }
 
@@ -1931,12 +2021,55 @@
       return true;
     }
 
+    // Ease a single node from its current position to (toX, toY).
+    function tweenNodeTo(nodeId, toX, toY, durationMs) {
+      const startTs = performance.now();
+      const from = { ...getNodePos(nodeId) };
+      // Overshoot ease for delight (cubic-bezier(0.34, 1.56, 0.64, 1) approximated).
+      const ease = t => {
+        const c1 = 1.70158, c3 = c1 + 1;
+        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+      };
+      const step = (now) => {
+        const t = Math.min(1, (now - startTs) / durationMs);
+        const k = ease(t);
+        const nx = from.x + (toX - from.x) * k;
+        const ny = from.y + (toY - from.y) * k;
+        setNodePos(nodeId, nx, ny);
+        const el = document.getElementById('node-' + nodeId);
+        if (el) { el.style.left = nx + 'px'; el.style.top = ny + 'px'; }
+        updateEdgesForNode(nodeId);
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
     function addUnderExistingParent(parentId, childId, source) {
+      // Compute pre-placement target BEFORE we mutate state (so existing siblings drive the slot search).
+      const slot = bestAngularSlot(parentId);
+      const parentCenter = nodeCenter(parentId);
+      const childKind = isHubId(childId) ? 'hub' : 'signal';
+      const cdims = nodeSize(childKind, childId);
+      const targetX = parentCenter.x + Math.cos(slot.angle) * slot.radius - cdims.w / 2;
+      const targetY = parentCenter.y + Math.sin(slot.angle) * slot.radius - cdims.h / 2;
+
       if (!addChildToHub(parentId, childId)) return;
       renderAllNodes();
       renderAllEdges();
+      // Re-target the child element to its new position with an overshoot ease.
+      // The relax then refines around this good starting layout.
+      const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reducedMotion) {
+        setNodePos(childId, targetX, targetY);
+        const el = document.getElementById('node-' + childId);
+        if (el) { el.style.left = targetX + 'px'; el.style.top = targetY + 'px'; }
+        updateEdgesForNode(childId);
+      } else {
+        tweenNodeTo(childId, targetX, targetY, 280);
+      }
       animateNewEdge(parentId + '__' + childId);
-      relaxLayoutAround(parentId);
+      // Run the relax slightly after pre-placement so it eases the final position.
+      setTimeout(() => relaxLayoutAround(parentId), reducedMotion ? 0 : 120);
       scheduleSave();
       updateClusterProgressChip();
       const parent = appState.clusters.find(c => c.id === parentId);
@@ -2006,12 +2139,14 @@
       const nodeIds = [];
       const pos = {}, vel = {};
       const dims = {};
+      const mass = {};
       appState.items.forEach(it => {
         if (!appState.nodes[it.id]) return;
         nodeIds.push(it.id);
         pos[it.id] = { ...getNodePos(it.id) };
         vel[it.id] = { x: 0, y: 0 };
         dims[it.id] = nodeSize('signal');
+        mass[it.id] = nodeMass(it.id); // 1
       });
       appState.clusters.forEach(c => {
         if (!appState.nodes[c.id]) return;
@@ -2019,6 +2154,7 @@
         pos[c.id] = { ...getNodePos(c.id) };
         vel[c.id] = { x: 0, y: 0 };
         dims[c.id] = nodeSize('hub', c.id);
+        mass[c.id] = nodeMass(c.id);
       });
 
       const isPinned = (id) => {
@@ -2049,15 +2185,17 @@
         const fx = {}, fy = {};
         nodeIds.forEach(id => { fx[id] = 0; fy[id] = 0; });
 
-        // Global centroid (of every node) — used as a weak gravity well.
-        let gcx = 0, gcy = 0;
+        // Mass-weighted global centroid: heavier (higher-tier) hubs dominate,
+        // so signals orbit clusters and clusters orbit superclusters.
+        let gcx = 0, gcy = 0, totalMass = 0;
         nodeIds.forEach(id => {
           const dd = dims[id];
-          gcx += pos[id].x + dd.w / 2;
-          gcy += pos[id].y + dd.h / 2;
+          const m = mass[id];
+          gcx += (pos[id].x + dd.w / 2) * m;
+          gcy += (pos[id].y + dd.h / 2) * m;
+          totalMass += m;
         });
-        gcx /= Math.max(1, nodeIds.length);
-        gcy /= Math.max(1, nodeIds.length);
+        if (totalMass > 0) { gcx /= totalMass; gcy /= totalMass; }
 
         // Apply gentle gravity to every node.
         nodeIds.forEach(id => {
@@ -2068,18 +2206,20 @@
           fy[id] += (gcy - ncy) * GRAVITY_K;
         });
 
-        // Additional pull between top-level hubs (and top-level signals) so the
-        // composition stays cohesive as more clusters are created. This is the
-        // counterforce that prevents "the first cluster floats away" drift.
+        // Additional pull between top-level nodes (parentless hubs + signals)
+        // so the composition stays cohesive as more clusters are created.
+        // Mass-weighted: heavy top-level hubs anchor the group center.
         const topLevelIds = nodeIds.filter(id => !parentHubId(id));
         if (topLevelIds.length >= 2) {
-          let tcx = 0, tcy = 0;
+          let tcx = 0, tcy = 0, tm = 0;
           topLevelIds.forEach(id => {
             const dd = dims[id];
-            tcx += pos[id].x + dd.w / 2;
-            tcy += pos[id].y + dd.h / 2;
+            const m = mass[id];
+            tcx += (pos[id].x + dd.w / 2) * m;
+            tcy += (pos[id].y + dd.h / 2) * m;
+            tm += m;
           });
-          tcx /= topLevelIds.length; tcy /= topLevelIds.length;
+          if (tm > 0) { tcx /= tm; tcy /= tm; }
           topLevelIds.forEach(id => {
             const dd = dims[id];
             const ncx = pos[id].x + dd.w / 2;
@@ -2119,9 +2259,9 @@
           const hub = cluster.id;
           const members = [...cluster.itemIds, ...(cluster.hubIds || [])];
           const n = members.length;
-          const tier = hubTier(hub);
-          const R = Math.max(220, 150 + n * 22 + (tier - 1) * 60);
-          // Hub anchor: gentle pull toward centroid of members.
+          const R = idealRadiusFor(hub, n);
+          // Hub anchor: gentle pull toward centroid of members (lets the heavy
+          // hub center itself among its kids even with strong mass).
           if (n > 0) {
             let cx = 0, cy = 0, count = 0;
             members.forEach(mid => {
@@ -2137,7 +2277,8 @@
               fy[hub] += (cy - hcy) * HUB_ANCHOR_K;
             }
           }
-          // Member spring at radius R from hub.
+          // Member spring at radius R from hub. Equal & opposite forces;
+          // mass handles the asymmetry — heavy hubs barely accelerate.
           const hd = dims[hub];
           const hcx = pos[hub].x + hd.w / 2, hcy = pos[hub].y + hd.h / 2;
           members.forEach(mid => {
@@ -2150,19 +2291,20 @@
             const ux = dx / dist, uy = dy / dist;
             const f = -delta * SPRING_K;
             fx[mid] += ux * f; fy[mid] += uy * f;
-            fx[hub] -= ux * f * 0.4; fy[hub] -= uy * f * 0.4;
+            fx[hub] -= ux * f; fy[hub] -= uy * f;
           });
         });
 
-        // Integrate.
+        // Integrate. force → acceleration via 1/mass, so heavy nodes barely move.
         let kinetic = 0;
         nodeIds.forEach(id => {
           if (isPinned(id)) {
             vel[id].x = 0; vel[id].y = 0;
             return;
           }
-          vel[id].x = (vel[id].x + fx[id]) * DAMP;
-          vel[id].y = (vel[id].y + fy[id]) * DAMP;
+          const m = mass[id] || 1;
+          vel[id].x = (vel[id].x + fx[id] / m) * DAMP;
+          vel[id].y = (vel[id].y + fy[id] / m) * DAMP;
           // Cap velocity per frame to avoid jitter.
           const vmag = Math.hypot(vel[id].x, vel[id].y);
           if (vmag > 30) { vel[id].x = vel[id].x / vmag * 30; vel[id].y = vel[id].y / vmag * 30; }
@@ -2177,9 +2319,9 @@
         // Update edges for everything (small graph).
         nodeIds.forEach(id => updateEdgesForNode(id));
 
-        // Calm detection.
-        if (kinetic < 0.6) calmFrames++; else calmFrames = 0;
-        const done = frame >= maxFrames || calmFrames >= 4;
+        // Calm detection — generous threshold so motion eases visibly to rest.
+        if (kinetic < 0.4) calmFrames++; else calmFrames = 0;
+        const done = frame >= maxFrames || calmFrames >= 10;
         if (!done) {
           relaxAnim = requestAnimationFrame(tick);
         } else {
