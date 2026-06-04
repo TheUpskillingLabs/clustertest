@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OLOS - Sensemaking Dashboard</title>
+  <title>The Triangulatorizer</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
 
@@ -446,6 +446,307 @@
 
     @media print { .profile-anchor { display: none !important; } }
 
+    /* ============ WEB-MAP CANVAS ============ */
+    .webmap-panel { display: flex; flex-direction: column; height: 100vh; width: 100vw; min-height: 0; background: var(--cloud); }
+    .webmap-header { gap: 16px; padding: 16px 24px; }
+    .webmap-header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .webmap-search { min-width: 220px; }
+    .webmap-search .search-input { padding: 8px 14px; padding-right: 32px; }
+
+    .canvas-viewport {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 1px 1px, rgba(16,24,32,0.08) 1px, transparent 1px),
+        var(--cloud);
+      background-size: 24px 24px;
+      cursor: grab;
+      touch-action: none;
+    }
+    .canvas-viewport.is-panning { cursor: grabbing; }
+    .canvas-viewport.is-connecting { cursor: crosshair; }
+
+    .canvas-world {
+      position: absolute;
+      top: 0; left: 0;
+      width: 1px; height: 1px;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+    .edge-layer {
+      position: absolute;
+      left: -5000px; top: -5000px;
+      width: 10000px; height: 10000px;
+      overflow: visible;
+      pointer-events: none;
+    }
+    .edge-layer .edge {
+      fill: none;
+      stroke: var(--primary-teal);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      opacity: 0.85;
+      pointer-events: stroke;
+      cursor: pointer;
+      transition: stroke-width 0.15s ease, opacity 0.18s ease;
+    }
+    .edge-layer .edge:hover { stroke-width: 4; }
+    .edge-layer .edge.selected { stroke: var(--action-red); stroke-width: 4; }
+    .edge-layer .edge.spawning {
+      stroke-dasharray: var(--len, 1000);
+      stroke-dashoffset: var(--len, 1000);
+      animation: edge-draw 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .edge-layer .edge.retracting {
+      stroke-dasharray: var(--len, 1000);
+      stroke-dashoffset: 0;
+      animation: edge-retract 200ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
+    }
+    .edge-layer .edge.dimmed { opacity: 0.18; }
+    .edge-drawing {
+      fill: none;
+      stroke: var(--primary-teal);
+      stroke-width: 2.5;
+      stroke-dasharray: 6 5;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    @keyframes edge-draw {
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes edge-retract {
+      to { stroke-dashoffset: var(--len, 1000); }
+    }
+
+    .nodes-layer { position: absolute; top: 0; left: 0; }
+
+    .canvas-node {
+      position: absolute;
+      transform-origin: center center;
+      transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+                  box-shadow 180ms ease,
+                  opacity 180ms ease;
+      will-change: transform;
+    }
+    .canvas-node.dragging { transition: none; z-index: 50; }
+    .canvas-node.lifted { transform: scale(1.04); box-shadow: 0 16px 32px rgba(16,24,32,0.18); }
+    .canvas-node.dimmed { opacity: 0.22; pointer-events: none; }
+    .canvas-node.match-ring::before {
+      content: ""; position: absolute; inset: -6px;
+      border: 2px solid var(--primary-teal); border-radius: 14px;
+      animation: match-pulse 1.4s ease-out 2;
+      pointer-events: none;
+    }
+    @keyframes match-pulse {
+      0%   { opacity: 0.9; transform: scale(1); }
+      70%  { opacity: 0;   transform: scale(1.06); }
+      100% { opacity: 0;   transform: scale(1.06); }
+    }
+    .canvas-node.spawn {
+      animation: node-spawn 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes node-spawn {
+      0%   { transform: scale(0.6); opacity: 0; }
+      60%  { opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .canvas-node.hover-target { box-shadow: 0 0 0 3px rgba(0,148,160,0.55), 0 12px 28px rgba(16,24,32,0.18); }
+
+    /* Signal node */
+    .signal-node {
+      width: 240px;
+      background: var(--ghost-white);
+      border: 2px solid var(--cloud);
+      border-radius: 10px;
+      padding: 12px 14px 14px;
+      box-shadow: 0 2px 6px rgba(16,24,32,0.05);
+      user-select: none;
+    }
+    .signal-node:hover { border-color: var(--primary-teal); }
+    .signal-node .card-tag {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      background: var(--cloud);
+      color: var(--midnight);
+      padding: 3px 7px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .signal-node h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-bottom: 4px;
+      color: var(--midnight);
+    }
+    .signal-node .summary-text {
+      font-size: 0.72rem;
+      color: rgba(16,24,32,0.65);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Hub node */
+    .hub-node {
+      width: 280px;
+      background: var(--midnight);
+      color: var(--ghost-white);
+      border: 2px solid var(--primary-teal);
+      border-radius: 12px;
+      padding: 14px 16px 12px;
+      box-shadow: 0 8px 24px rgba(16,24,32,0.18);
+      user-select: none;
+    }
+    .hub-node .hub-tag {
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: var(--primary-teal);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .hub-node .hub-count {
+      background: var(--primary-teal);
+      color: var(--midnight);
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 0.65rem;
+    }
+    .hub-node input.hub-title,
+    .hub-node textarea.hub-desc {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--ghost-white);
+      font-family: 'Geologica', sans-serif;
+      padding: 4px 0;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.15s ease;
+    }
+    .hub-node input.hub-title {
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .hub-node input.hub-title:focus,
+    .hub-node textarea.hub-desc:focus {
+      border-bottom-color: var(--primary-teal);
+    }
+    .hub-node input.hub-title::placeholder,
+    .hub-node textarea.hub-desc::placeholder { color: rgba(255,255,255,0.5); }
+    .hub-node textarea.hub-desc {
+      font-size: 0.78rem;
+      line-height: 1.45;
+      resize: none;
+      min-height: 36px;
+      color: rgba(255,255,255,0.88);
+    }
+    .hub-node .hub-actions {
+      display: flex; justify-content: flex-end;
+      margin-top: 8px;
+    }
+    .hub-node .hub-delete {
+      background: transparent;
+      border: none;
+      color: var(--action-red);
+      font-size: 0.65rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 6px;
+    }
+    .hub-node .hub-delete:hover { text-decoration: underline; }
+
+    /* Connection handle */
+    .connect-handle {
+      position: absolute;
+      right: -9px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary-teal);
+      border: 2px solid var(--ghost-white);
+      box-shadow: 0 2px 6px rgba(0,148,160,0.55);
+      cursor: crosshair;
+      z-index: 2;
+      touch-action: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .connect-handle:hover { transform: translateY(-50%) scale(1.25); box-shadow: 0 4px 12px rgba(0,148,160,0.7); }
+    .connect-handle::after {
+      content: "";
+      position: absolute;
+      inset: -10px;
+    }
+    .hub-node .connect-handle { background: var(--ghost-white); box-shadow: 0 2px 6px rgba(255,255,255,0.4); }
+
+    .canvas-node.drag-source { opacity: 0.55; }
+
+    .zoom-toolbar {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      gap: 4px;
+      background: var(--ghost-white);
+      border: 2px solid var(--cloud);
+      border-radius: 10px;
+      padding: 4px;
+      box-shadow: 0 8px 16px rgba(16,24,32,0.08);
+      z-index: 10;
+    }
+    .zoom-btn {
+      min-width: 36px;
+      height: 32px;
+      padding: 0 10px;
+      border: none;
+      background: transparent;
+      color: var(--midnight);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border-radius: 6px;
+      font-family: 'Geologica', sans-serif;
+      transition: background 0.12s ease;
+    }
+    .zoom-btn:hover { background: var(--cloud); }
+    .zoom-btn.zoom-level { font-size: 0.78rem; min-width: 56px; }
+
+    .canvas-hint {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      background: rgba(16,24,32,0.85);
+      color: var(--ghost-white);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      pointer-events: none;
+      z-index: 10;
+      max-width: 70%;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .canvas-node, .edge-layer .edge { transition-duration: 60ms !important; animation-duration: 60ms !important; }
+      .canvas-node.spawn, .edge-layer .edge.spawning, .canvas-node.match-ring::before { animation: none !important; }
+    }
+
+
     @media print {
       body { background: var(--ghost-white); overflow: visible; height: auto; }
       .artifact-actions, .next-steps-section, .upskill-banner, .submission-actions { display: none !important; }
@@ -462,13 +763,14 @@
   <div id="setup-screen">
     <div class="config-container">
       <div class="config-header">
-        <h1>OLOS Clustering Setup</h1>
-        <p>Give your workspace a name and verify your raw list of input signals.</p>
+        <h1>The Triangulatorizer</h1>
+        <p>A facilitated AI cognitive scaffold to help you synthesize raw data into defensible problem spaces.</p>
       </div>
 
       <div class="upskill-banner">
-        <h3>Sorting Through Noise is a Superpower</h3>
-        <p>AI tools can write essays and generate code in seconds, but they don't actually understand what matters to real humans. That’s your job. This board helps you practice a skill called <strong>sensemaking</strong>: looking at a big, messy pile of real-world human complaints and sorting out the underlying patterns before you try to build or fix anything.</p>
+        <h3>Synth Sprint — Triangulate your problem space</h3>
+        <p>You're in the <strong>Synth Sprint</strong> phase of Lab Day 1 (Problematization Day). The AI here is a <strong>thinking partner</strong> — it stress-tests your assumptions and surfaces blind spots so you can defend a sharper problem framing. It is not here to generate ideas for you.</p>
+        <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.85;"><strong>Prototype note:</strong> in the real tool the signals below would be pre-loaded from earlier in this cycle — prior research plus contributions from <strong>Industry Advisors and activated upskillers</strong>. The pool shown here is sample data; use the CSV upload below to drop in a fresh batch.</p>
       </div>
       
       <div class="config-field">
@@ -477,8 +779,30 @@
       </div>
 
       <div class="config-field">
-        <label id="pool-label">Your Raw Data Pool (<span id="config-pool-count">44</span> Frustrations Found)</label>
+        <label id="pool-label">Industry signal pool — sample data (<span id="config-pool-count">44</span> signals; in production: pre-loaded from cycle research, Industry Advisors, and activated upskillers)</label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
+
+        <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px;">
+            <strong style="color: var(--ghost-white); font-size: 0.875rem;">Bulk load signals from CSV</strong>
+            <span style="font-size: 0.75rem; color: var(--cloud); opacity: 0.7;">Columns: <code>title,summary</code> (header row required)</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 16px 20px; align-items: center;">
+            <input type="file" id="csv-file-input" accept=".csv,text/csv" class="sr-only" onchange="handleCsvUpload(event)">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">Upload CSV</button>
+            <button type="button" class="btn btn-outline" onclick="downloadCsvTemplate()">Download template</button>
+            <fieldset style="border: none; padding: 0; margin: 0; display: flex; gap: 14px; color: var(--cloud); font-size: 0.8rem;">
+              <legend class="sr-only">CSV merge mode</legend>
+              <label style="display: inline-flex; gap: 6px; align-items: center; cursor: pointer;">
+                <input type="radio" name="csv-mode" value="append" checked> Append to pool
+              </label>
+              <label style="display: inline-flex; gap: 6px; align-items: center; cursor: pointer;">
+                <input type="radio" name="csv-mode" value="replace"> Replace existing pool
+              </label>
+            </fieldset>
+          </div>
+        </div>
+
         <div class="add-item-bar">
           <label class="sr-only" for="new-item-title">New signal short label</label>
           <input type="text" id="new-item-title" class="config-input" placeholder="Short label for this card..." style="flex:1;">
@@ -495,38 +819,42 @@
   </div>
 
   <div id="board-workspace" class="hidden">
-    <aside class="panel-left" aria-label="Unassigned signals">
-      <div class="panel-header">
-        <h2>Unassigned Signals</h2>
-        <span id="pool-count" style="font-size: 0.75rem; background: var(--cloud); color: var(--midnight); padding: 4px 10px; border-radius: 12px; font-weight: 700;" aria-live="polite"></span>
-      </div>
-      <div class="search-container">
-        <div class="search-wrap" id="search-wrap">
-          <label class="sr-only" for="search-input">Search signals</label>
-          <input type="text" id="search-input" class="search-input" placeholder="Search signals or keywords..." oninput="filterItems()">
-          <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
+    <main class="panel-center webmap-panel">
+      <div class="panel-header webmap-header">
+        <h2 id="board-title-display">Your Web Map <span id="save-status" aria-live="polite"></span></h2>
+        <div class="webmap-header-actions">
+          <div class="search-wrap webmap-search" id="search-wrap">
+            <label class="sr-only" for="search-input">Search signals</label>
+            <input type="text" id="search-input" class="search-input" placeholder="Search signals..." oninput="filterItems()">
+            <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
+          </div>
+          <button class="btn btn-outline" onclick="openAIPromptModal()" aria-label="Get AI brainstorming prompt for the full signal pool">✨ AI Prompt</button>
+          <button class="btn btn-primary" onclick="openCommitModal()">Commit to Clusters</button>
         </div>
-      </div>
-      <div class="tap-instruction" id="tap-hint">Drag a card to a cluster — or tap to select, then tap a cluster.</div>
-      <div class="scroll-area dropzone-pool" id="item-pool-zone" role="list" aria-label="Unassigned signal cards"></div>
-      <div class="ai-helper-bar">
-        <button class="btn btn-outline" style="width: 100%; border-color: var(--primary-teal); color: var(--primary-teal);" onclick="openAIPromptModal()" aria-label="Get AI brainstorming prompt for the full signal pool">
-          ✨ Get AI Brainstorming Prompt
-        </button>
-      </div>
-    </aside>
-
-    <main class="panel-center">
-      <div class="panel-header">
-        <h2 id="board-title-display">Your Sorting Board <span id="save-status" aria-live="polite"></span></h2>
-        <button class="btn btn-primary" onclick="openCommitModal()">Commit to Clusters</button>
       </div>
       <div class="canvas-infobar">
         <span id="validation-warning" style="color: var(--action-red);"></span>
         <span id="cluster-progress" aria-live="polite"></span>
       </div>
-      <div class="canvas-grid" id="canvas-grid-area">
-        <button class="add-cluster-btn" onclick="createNewCluster()">+ Create a New Cluster Group</button>
+      <div class="canvas-viewport" id="canvas-viewport" role="application" aria-label="Web map canvas">
+        <div class="canvas-world" id="canvas-world">
+          <svg class="edge-layer" id="edge-layer" aria-hidden="true">
+            <defs>
+              <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--primary-teal)"/>
+              </marker>
+            </defs>
+            <path id="edge-drawing" class="edge-drawing" d="" />
+          </svg>
+          <div id="nodes-layer" class="nodes-layer"></div>
+        </div>
+        <div class="zoom-toolbar" role="toolbar" aria-label="Canvas zoom">
+          <button type="button" class="zoom-btn" onclick="zoomBy(-1)" aria-label="Zoom out">−</button>
+          <button type="button" class="zoom-btn zoom-level" id="zoom-level" onclick="resetView()" aria-label="Reset zoom and fit">100%</button>
+          <button type="button" class="zoom-btn" onclick="zoomBy(1)" aria-label="Zoom in">+</button>
+          <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes">⤢</button>
+        </div>
+        <div class="canvas-hint" id="canvas-hint">Drag signals to move • Drag from the teal dot to connect two signals into a cluster</div>
       </div>
     </main>
   </div>
@@ -534,12 +862,13 @@
   <div id="welcome-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="welcome-modal-title">
     <div class="modal-content" style="border-top: 4px solid var(--primary-teal);">
       <div class="modal-header">
-        <h3 id="welcome-modal-title">Let's Uncover What's Broken</h3>
+        <h3 id="welcome-modal-title">Welcome to the Web Map</h3>
       </div>
       <div class="modal-body">
-        <p>Ready to sort through these real human frustration stories? Remember: <strong>AI can group words by running mathematical equations, but only you can see the real-world human connections.</strong></p>
-        <p>Your goal is to map out where the friction is and group them by <strong>shared barriers</strong>. Don't jump straight to building an app or inventing a solution just yet—focus purely on understanding the trouble first.</p>
-        <button class="btn btn-primary" style="width: 100%;" onclick="closeWelcomeModal()" data-autofocus>Let's Do It</button>
+        <p>Every signal is a node on the canvas. <strong>Drag any signal to move it.</strong> Pan by dragging empty space, zoom with the wheel or the toolbar.</p>
+        <p>To cluster signals, <strong>drag from the teal dot on one signal onto another</strong> — a <strong>hub</strong> appears between them holding the cluster's name and shared barrier. Add more signals to a cluster by connecting them to the hub.</p>
+        <p>The AI here is a thinking partner — it stress-tests your assumptions, it doesn't generate ideas for you.</p>
+        <button class="btn btn-primary" style="width: 100%;" onclick="closeWelcomeModal()" data-autofocus>Let's go</button>
       </div>
     </div>
   </div>
@@ -662,7 +991,11 @@
   <div id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
   <script>
-    const STORAGE_KEY = 'olos.sensemaking.v1';
+    const STORAGE_KEY = 'olos.sensemaking.v2';
+    const LEGACY_STORAGE_KEY = 'olos.sensemaking.v1';
+    const NODE_SIGNAL_W = 240, NODE_SIGNAL_H = 110;
+    const NODE_HUB_W = 280, NODE_HUB_H = 150;
+    const MIN_ZOOM = 0.25, MAX_ZOOM = 2.5;
     const DEFAULT_ITEMS = [
         { id: "item_01", tag: "Friction Signal", title: "Lack of localized, person-focused care communities", summary: "Neighborhoods and communities lack structured environments that prioritize person-focused care and localized education." },
         { id: "item_02", tag: "Friction Signal", title: "Diabetes management tools fail in real-world contexts", summary: "Adults with Type 2 diabetes struggle with real-time decisions about meals, activity, and medications in varied daily contexts, leading to frequent out-of-range glucose and frustration." },
@@ -720,7 +1053,9 @@
         settings: { title: "" },
         items: DEFAULT_ITEMS.map(i => ({ ...i })),
         clusters: [],
-        selectedItemForMove: null,
+        nodes: {},
+        view: { zoom: 1, panX: 0, panY: 0 },
+        viewInitialized: false,
         committedClusterIds: [],
         problematizations: {},
         stakeholderMaps: {},
@@ -735,8 +1070,7 @@
     let saveTimer = null;
     function save() {
       try {
-        const { selectedItemForMove, ...persistable } = appState;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
         showSaveStatus('Saved');
       } catch (e) {
         showSaveStatus('Save failed');
@@ -748,21 +1082,35 @@
     }
     function loadState() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return null;
+        let raw = localStorage.getItem(STORAGE_KEY);
+        let isLegacy = false;
+        if (!raw) {
+          raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+          if (!raw) return null;
+          isLegacy = true;
+        }
         const parsed = JSON.parse(raw);
         if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.clusters)) return null;
-        parsed.selectedItemForMove = null;
         if (!Array.isArray(parsed.committedClusterIds)) parsed.committedClusterIds = [];
         if (!parsed.problematizations || typeof parsed.problematizations !== 'object') parsed.problematizations = {};
         if (!parsed.stakeholderMaps || typeof parsed.stakeholderMaps !== 'object') parsed.stakeholderMaps = {};
         if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
         if (!parsed.currentScreen) parsed.currentScreen = 'setup';
+        if (!parsed.nodes || typeof parsed.nodes !== 'object') parsed.nodes = {};
+        if (!parsed.view || typeof parsed.view !== 'object') parsed.view = { zoom: 1, panX: 0, panY: 0 };
+        if (typeof parsed.view.zoom !== 'number') parsed.view.zoom = 1;
+        if (typeof parsed.view.panX !== 'number') parsed.view.panX = 0;
+        if (typeof parsed.view.panY !== 'number') parsed.view.panY = 0;
+        if (typeof parsed.viewInitialized !== 'boolean') parsed.viewInitialized = false;
+        if (isLegacy) {
+          try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch (_) {}
+        }
         return parsed;
       } catch (e) { return null; }
     }
     function clearSavedState() {
       try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch (e) {}
     }
     function showSaveStatus(msg) {
       const el = document.getElementById('save-status');
@@ -829,6 +1177,101 @@
       tEl.focus();
     }
 
+    // --- CSV bulk upload ---
+    function parseCsv(text) {
+      const rows = [];
+      let cur = [];
+      let field = '';
+      let i = 0;
+      let inQuotes = false;
+      while (i < text.length) {
+        const ch = text[i];
+        if (inQuotes) {
+          if (ch === '"') {
+            if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+            inQuotes = false; i++; continue;
+          }
+          field += ch; i++; continue;
+        }
+        if (ch === '"') { inQuotes = true; i++; continue; }
+        if (ch === ',') { cur.push(field); field = ''; i++; continue; }
+        if (ch === '\r') { i++; continue; }
+        if (ch === '\n') { cur.push(field); rows.push(cur); cur = []; field = ''; i++; continue; }
+        field += ch; i++;
+      }
+      cur.push(field);
+      if (cur.length > 1 || cur[0] !== '') rows.push(cur);
+      return rows;
+    }
+
+    function handleCsvUpload(evt) {
+      const file = evt.target.files && evt.target.files[0];
+      evt.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onerror = () => toast('Could not read that file.');
+      reader.onload = () => {
+        try {
+          const rows = parseCsv(String(reader.result || ''));
+          if (rows.length < 2) { toast('CSV needs a header row plus at least one signal.'); return; }
+          const header = rows[0].map(h => h.trim().toLowerCase());
+          const titleIdx = header.indexOf('title');
+          const summaryIdx = header.indexOf('summary');
+          if (titleIdx === -1 || summaryIdx === -1) {
+            toast('CSV header must include "title" and "summary" columns.');
+            return;
+          }
+          const newItems = [];
+          for (let r = 1; r < rows.length; r++) {
+            const row = rows[r];
+            const t = (row[titleIdx] || '').trim();
+            const s = (row[summaryIdx] || '').trim();
+            if (!t && !s) continue;
+            if (!t || !s) continue;
+            newItems.push({ id: uid('item'), tag: 'Friction Signal', title: t, summary: s });
+          }
+          if (newItems.length === 0) { toast('No valid rows found in CSV.'); return; }
+          const modeEl = document.querySelector('input[name="csv-mode"]:checked');
+          const mode = modeEl ? modeEl.value : 'append';
+          if (mode === 'replace') {
+            appState.items = newItems;
+            appState.clusters.forEach(c => { c.itemIds = []; });
+          } else {
+            appState.items = appState.items.concat(newItems);
+          }
+          renderConfigItems();
+          scheduleSave();
+          toast(`${newItems.length} signal${newItems.length === 1 ? '' : 's'} loaded (${mode}).`);
+        } catch (e) {
+          toast('Could not parse that CSV.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function csvEscape(s) {
+      const v = String(s == null ? '' : s);
+      return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+    }
+
+    function downloadCsvTemplate() {
+      const rows = [
+        ['title', 'summary'],
+        ['Short label for the signal', 'A 1–3 sentence description of the friction or frustration as observed.'],
+        ['Another signal', 'Describe what is broken, who feels it, and the context where it shows up.']
+      ];
+      const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n') + '\n';
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'triangulatorizer-signals-template.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
     function removeConfigItem(id) {
       const removed = appState.items.find(i => i.id === id);
       appState.items = appState.items.filter(i => i.id !== id);
@@ -849,24 +1292,23 @@
     }
 
     function launchWorkspace() {
-      appState.settings.title = document.getElementById('config-title').value || 'Clustering Board';
+      appState.settings.title = document.getElementById('config-title').value || 'Web Map';
       setBoardTitleDisplay();
-      if (appState.clusters.length === 0) createNewCluster();
-      ensureGlobalDragAndDrop();
+      ensureCanvasInitialized();
       goToScreen('board');
       openModal('welcome-modal');
     }
 
     function setBoardTitleDisplay() {
       const display = document.getElementById('board-title-display');
-      if (display && display.firstChild) display.firstChild.textContent = (appState.settings.title || 'Your Sorting Board') + ' ';
+      if (display && display.firstChild) display.firstChild.textContent = (appState.settings.title || 'Your Web Map') + ' ';
     }
 
-    let dragAndDropInitialized = false;
-    function ensureGlobalDragAndDrop() {
-      if (dragAndDropInitialized) return;
-      setupGlobalDragAndDrop();
-      dragAndDropInitialized = true;
+    let canvasInitialized = false;
+    function ensureCanvasInitialized() {
+      if (canvasInitialized) return;
+      setupCanvasInteractions();
+      canvasInitialized = true;
     }
 
     function goToScreen(name) {
@@ -889,433 +1331,738 @@
     function backToBoard() { goToScreen('board'); }
     function backToWorkspaceFromArtifact() { goToScreen('workspace'); }
 
-    function renderBoard() { renderItemPool(); renderCanvasGrid(); }
+    // ======================== WEB-MAP CANVAS ========================
+    function nodeSize(kind) {
+      return kind === 'hub'
+        ? { w: NODE_HUB_W, h: NODE_HUB_H }
+        : { w: NODE_SIGNAL_W, h: NODE_SIGNAL_H };
+    }
 
-    // --- Search ---
+    function isHubId(id) { return appState.clusters.some(c => c.id === id); }
+    function signalHubId(itemId) {
+      const c = appState.clusters.find(c => c.itemIds.includes(itemId));
+      return c ? c.id : null;
+    }
+    function getNodePos(id) {
+      const n = appState.nodes[id];
+      return n ? { x: n.x, y: n.y } : { x: 0, y: 0 };
+    }
+    function setNodePos(id, x, y) {
+      appState.nodes[id] = { x, y };
+    }
+    function nodeCenter(id) {
+      const kind = isHubId(id) ? 'hub' : 'signal';
+      const { w, h } = nodeSize(kind);
+      const p = getNodePos(id);
+      return { x: p.x + w / 2, y: p.y + h / 2 };
+    }
+
+    // Layout: scatter unpositioned items + clusters on a coarse grid.
+    function ensureLayoutPositions() {
+      const placed = new Set(Object.keys(appState.nodes));
+      // Determine viewport-ish bounds: we scatter in a 1600x1000 area, signals first.
+      let col = 0, row = 0;
+      const COLS = 6;
+      const GAP_X = 280, GAP_Y = 200;
+      const ORIGIN_X = 80, ORIGIN_Y = 80;
+      appState.items.forEach(item => {
+        if (placed.has(item.id)) return;
+        const x = ORIGIN_X + col * GAP_X + (row % 2 === 0 ? 0 : 40);
+        const y = ORIGIN_Y + row * GAP_Y;
+        setNodePos(item.id, x, y);
+        placed.add(item.id);
+        col++;
+        if (col >= COLS) { col = 0; row++; }
+      });
+      // Position any clusters without a node — at their members' centroid if possible.
+      appState.clusters.forEach(c => {
+        if (placed.has(c.id)) return;
+        if (c.itemIds.length) {
+          let sx = 0, sy = 0, n = 0;
+          c.itemIds.forEach(iid => {
+            const p = appState.nodes[iid];
+            if (p) { sx += p.x; sy += p.y; n++; }
+          });
+          if (n > 0) {
+            setNodePos(c.id, (sx / n) + 20, (sy / n) - 80);
+          } else {
+            setNodePos(c.id, ORIGIN_X + col * GAP_X, ORIGIN_Y + row * GAP_Y);
+          }
+        } else {
+          setNodePos(c.id, ORIGIN_X + col * GAP_X, ORIGIN_Y + row * GAP_Y);
+          col++;
+          if (col >= COLS) { col = 0; row++; }
+        }
+        placed.add(c.id);
+      });
+    }
+
+    function applyViewTransform() {
+      const world = document.getElementById('canvas-world');
+      if (!world) return;
+      const { panX, panY, zoom } = appState.view;
+      world.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+      const lvl = document.getElementById('zoom-level');
+      if (lvl) lvl.textContent = Math.round(zoom * 100) + '%';
+    }
+
+    function zoomBy(direction, anchorClientX, anchorClientY) {
+      const viewport = document.getElementById('canvas-viewport');
+      const rect = viewport.getBoundingClientRect();
+      const ax = (typeof anchorClientX === 'number') ? anchorClientX - rect.left : rect.width / 2;
+      const ay = (typeof anchorClientY === 'number') ? anchorClientY - rect.top : rect.height / 2;
+      const oldZoom = appState.view.zoom;
+      const factor = direction > 0 ? 1.18 : (1 / 1.18);
+      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom * factor));
+      if (newZoom === oldZoom) return;
+      // Keep the world-point under the anchor stationary.
+      const worldX = (ax - appState.view.panX) / oldZoom;
+      const worldY = (ay - appState.view.panY) / oldZoom;
+      appState.view.panX = ax - worldX * newZoom;
+      appState.view.panY = ay - worldY * newZoom;
+      appState.view.zoom = newZoom;
+      applyViewTransform();
+      scheduleSave();
+    }
+
+    function resetView() {
+      // Fit all nodes with 5% margin.
+      const ids = Object.keys(appState.nodes);
+      if (!ids.length) { appState.view = { zoom: 1, panX: 0, panY: 0 }; applyViewTransform(); return; }
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      ids.forEach(id => {
+        const p = appState.nodes[id];
+        const { w, h } = nodeSize(isHubId(id) ? 'hub' : 'signal');
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x + w > maxX) maxX = p.x + w;
+        if (p.y + h > maxY) maxY = p.y + h;
+      });
+      const viewport = document.getElementById('canvas-viewport');
+      const rect = viewport.getBoundingClientRect();
+      const contentW = maxX - minX, contentH = maxY - minY;
+      const margin = 60;
+      const sx = (rect.width - margin * 2) / contentW;
+      const sy = (rect.height - margin * 2) / contentH;
+      const zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(sx, sy, 1)));
+      appState.view.zoom = zoom;
+      appState.view.panX = (rect.width  - contentW * zoom) / 2 - minX * zoom;
+      appState.view.panY = (rect.height - contentH * zoom) / 2 - minY * zoom;
+      appState.viewInitialized = true;
+      applyViewTransform();
+      scheduleSave();
+    }
+
+    // ----- Rendering -----
+    function renderBoard() {
+      ensureLayoutPositions();
+      if (!appState.viewInitialized) {
+        // Lazy first-time fit on first render with a real viewport.
+        requestAnimationFrame(() => { resetView(); });
+        appState.viewInitialized = true;
+      } else {
+        applyViewTransform();
+      }
+      renderAllNodes();
+      renderAllEdges();
+      updateClusterProgressChip();
+      filterItems();
+    }
+
+    function renderAllNodes() {
+      const layer = document.getElementById('nodes-layer');
+      layer.innerHTML = '';
+      appState.items.forEach(item => layer.appendChild(buildSignalNode(item)));
+      appState.clusters.forEach(c => layer.appendChild(buildHubNode(c)));
+    }
+
+    function buildSignalNode(item) {
+      const el = document.createElement('div');
+      el.className = 'canvas-node signal-node';
+      el.id = 'node-' + item.id;
+      el.setAttribute('data-node-id', item.id);
+      el.setAttribute('data-kind', 'signal');
+      const pos = getNodePos(item.id);
+      el.style.left = pos.x + 'px';
+      el.style.top = pos.y + 'px';
+      el.innerHTML = `
+        <span class="card-tag">${escapeHtml(item.tag || 'Friction Signal')}</span>
+        <h3>${escapeHtml(item.title)}</h3>
+        <p class="summary-text">${escapeHtml(item.summary)}</p>
+        <div class="connect-handle" data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
+      `;
+      attachNodeDrag(el, item.id);
+      return el;
+    }
+
+    function buildHubNode(cluster) {
+      const el = document.createElement('div');
+      el.className = 'canvas-node hub-node';
+      el.id = 'node-' + cluster.id;
+      el.setAttribute('data-node-id', cluster.id);
+      el.setAttribute('data-kind', 'hub');
+      const pos = getNodePos(cluster.id);
+      el.style.left = pos.x + 'px';
+      el.style.top = pos.y + 'px';
+      el.innerHTML = `
+        <div class="hub-tag">
+          <span>Cluster Hub</span>
+          <span class="hub-count">${cluster.itemIds.length} signals</span>
+        </div>
+        <input type="text" class="hub-title" placeholder="Name this hub..." value="${escapeHtml(cluster.title || '')}" />
+        <textarea class="hub-desc" placeholder="What shared barrier connects these signals?" rows="2">${escapeHtml(cluster.description || '')}</textarea>
+        <div class="hub-actions">
+          <button type="button" class="hub-delete">Delete Hub</button>
+        </div>
+        <div class="connect-handle" data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
+      `;
+      const titleInput = el.querySelector('.hub-title');
+      titleInput.addEventListener('input', () => { cluster.title = titleInput.value; scheduleSave(); updateClusterProgressChip(); });
+      titleInput.addEventListener('pointerdown', (e) => e.stopPropagation());
+      const desc = el.querySelector('.hub-desc');
+      desc.addEventListener('input', () => { cluster.description = desc.value; autoResize(desc); scheduleSave(); });
+      desc.addEventListener('pointerdown', (e) => e.stopPropagation());
+      requestAnimationFrame(() => autoResize(desc));
+      const del = el.querySelector('.hub-delete');
+      del.addEventListener('pointerdown', (e) => e.stopPropagation());
+      del.addEventListener('click', (e) => { e.stopPropagation(); deleteCluster(cluster.id); });
+      attachNodeDrag(el, cluster.id);
+      return el;
+    }
+
+    function edgesFromState() {
+      const out = [];
+      appState.clusters.forEach(c => {
+        c.itemIds.forEach(iid => out.push({ id: c.id + '__' + iid, from: c.id, to: iid }));
+      });
+      return out;
+    }
+
+    function bezierBetween(a, b) {
+      const dx = (b.x - a.x);
+      const cx1 = a.x + dx * 0.5;
+      const cy1 = a.y;
+      const cx2 = b.x - dx * 0.5;
+      const cy2 = b.y;
+      return `M ${a.x} ${a.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${b.x} ${b.y}`;
+    }
+
+    let selectedEdgeId = null;
+    function renderAllEdges() {
+      const svg = document.getElementById('edge-layer');
+      // Clear existing real edges, keep <defs> and #edge-drawing.
+      Array.from(svg.querySelectorAll('path.edge')).forEach(p => p.remove());
+      const drawing = svg.querySelector('#edge-drawing');
+      edgesFromState().forEach(edge => {
+        const a = nodeCenter(edge.from);
+        const b = nodeCenter(edge.to);
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'edge');
+        path.setAttribute('data-edge-id', edge.id);
+        path.setAttribute('data-from', edge.from);
+        path.setAttribute('data-to', edge.to);
+        path.setAttribute('d', bezierBetween(a, b));
+        if (selectedEdgeId === edge.id) path.classList.add('selected');
+        svg.insertBefore(path, drawing);
+      });
+    }
+
+    function updateEdgesForNode(nodeId) {
+      const svg = document.getElementById('edge-layer');
+      const paths = svg.querySelectorAll(`path.edge[data-from="${nodeId}"], path.edge[data-to="${nodeId}"]`);
+      paths.forEach(p => {
+        const a = nodeCenter(p.getAttribute('data-from'));
+        const b = nodeCenter(p.getAttribute('data-to'));
+        p.setAttribute('d', bezierBetween(a, b));
+      });
+    }
+
+    // ----- Search (dim mode) -----
     function filterItems() {
       const input = document.getElementById('search-input');
       const wrap = document.getElementById('search-wrap');
-      const query = input.value.toLowerCase().trim();
-      wrap.classList.toggle('has-value', !!query);
-      const pool = document.getElementById('item-pool-zone');
-      const cards = pool.querySelectorAll('.item-card');
-      cards.forEach(card => {
-        const titleText = card.querySelector('h3').innerText.toLowerCase();
-        const summaryText = card.querySelector('.summary-text').innerText.toLowerCase();
-        card.style.display = (!query || titleText.includes(query) || summaryText.includes(query)) ? '' : 'none';
+      const query = (input && input.value || '').toLowerCase().trim();
+      if (wrap) wrap.classList.toggle('has-value', !!query);
+      const matches = new Set();
+      if (!query) {
+        document.querySelectorAll('.canvas-node').forEach(el => {
+          el.classList.remove('dimmed');
+          el.classList.remove('match-ring');
+        });
+        document.querySelectorAll('.edge').forEach(p => p.classList.remove('dimmed'));
+        return;
+      }
+      appState.items.forEach(item => {
+        if (item.title.toLowerCase().includes(query) || item.summary.toLowerCase().includes(query)) {
+          matches.add(item.id);
+        }
+      });
+      appState.clusters.forEach(c => {
+        if ((c.title || '').toLowerCase().includes(query) || (c.description || '').toLowerCase().includes(query)) {
+          matches.add(c.id);
+        }
+      });
+      document.querySelectorAll('.canvas-node').forEach(el => {
+        const id = el.getAttribute('data-node-id');
+        const hit = matches.has(id);
+        el.classList.toggle('dimmed', !hit);
+        el.classList.toggle('match-ring', hit);
+      });
+      document.querySelectorAll('.edge').forEach(p => {
+        const from = p.getAttribute('data-from');
+        const to = p.getAttribute('data-to');
+        p.classList.toggle('dimmed', !(matches.has(from) && matches.has(to)));
       });
     }
     function clearSearch() {
       const input = document.getElementById('search-input');
+      if (!input) return;
       input.value = '';
       filterItems();
       input.focus();
     }
 
-    function renderItemPool() {
-      const pool = document.getElementById('item-pool-zone');
-      pool.innerHTML = '';
-      let unused = 0;
-      appState.items.forEach(item => {
-        if (!appState.clusters.some(c => c.itemIds.includes(item.id))) {
-          unused++;
-          pool.appendChild(createItemCard(item));
-        }
-      });
-      document.getElementById('pool-count').innerText = `${unused} Unassigned`;
-      filterItems();
-    }
+    // ----- Node drag (move on canvas) -----
+    function attachNodeDrag(el, nodeId) {
+      const handle = el.querySelector('.connect-handle');
+      if (handle) attachConnectDrag(handle, nodeId);
 
-    function renderCanvasGrid() {
-      const grid = document.getElementById('canvas-grid-area');
-      grid.querySelectorAll('.cluster-node').forEach(n => n.remove());
-      const addBtn = grid.querySelector('.add-cluster-btn');
+      let pointerId = null;
+      let startClientX = 0, startClientY = 0;
+      let startX = 0, startY = 0;
+      let dragging = false;
+      let raf = null;
 
-      appState.clusters.forEach(cluster => {
-        const node = document.createElement('div');
-        node.className = 'cluster-node';
-        node.id = cluster.id;
-        node.setAttribute('role', 'group');
-        node.setAttribute('aria-label', cluster.title || 'Unnamed cluster');
-
-        const header = document.createElement('div');
-        header.className = 'cluster-header-edit';
-        const titleId = `lbl-title-${cluster.id}`;
-        const descId = `lbl-desc-${cluster.id}`;
-        header.innerHTML = `
-          <label class="sr-only" id="${titleId}" for="title-${cluster.id}">Cluster name</label>
-          <input id="title-${cluster.id}" type="text" class="inline-input-title" placeholder="Name this group..." value="${escapeHtml(cluster.title)}" aria-labelledby="${titleId}" onchange="updateClusterData('${cluster.id}', 'title', this.value)">
-          <label class="sr-only" id="${descId}" for="desc-${cluster.id}">Cluster shared barrier or synthesis</label>
-          <textarea id="desc-${cluster.id}" class="inline-input-desc" placeholder="What core problem or shared hurdle connects these?..." aria-labelledby="${descId}" oninput="autoResize(this)" onchange="updateClusterData('${cluster.id}', 'description', this.value)">${escapeHtml(cluster.description)}</textarea>
-        `;
-
-        const dropzone = document.createElement('div');
-        dropzone.className = 'cluster-dropzone dropzone-target';
-        dropzone.setAttribute('data-cluster-id', cluster.id);
-        dropzone.setAttribute('role', 'list');
-        dropzone.setAttribute('aria-label', `Signals in ${cluster.title || 'this cluster'}`);
-
-        dropzone.addEventListener('click', () => {
-          if (appState.selectedItemForMove) moveItemToCluster(appState.selectedItemForMove, cluster.id);
-        });
-
-        cluster.itemIds.forEach(itemId => {
-          const item = appState.items.find(i => i.id === itemId);
-          if (item) dropzone.appendChild(createItemCard(item, true));
-        });
-
-        if (cluster.itemIds.length === 0) dropzone.classList.add('is-empty');
-
-        const actions = document.createElement('div');
-        actions.className = 'cluster-actions';
-        actions.innerHTML = `<button onclick="deleteCluster('${cluster.id}')">Delete This Cluster</button>`;
-
-        node.appendChild(header);
-        node.appendChild(dropzone);
-        node.appendChild(actions);
-        grid.insertBefore(node, addBtn);
-
-        const ta = header.querySelector('textarea');
-        if (ta) autoResize(ta);
-      });
-
-      updateTapToMoveUI();
-      updateClusterProgressChip();
-    }
-
-    function createItemCard(item, inCluster = false) {
-      const card = document.createElement('div');
-      card.className = `item-card ${appState.selectedItemForMove === item.id ? 'selected-for-move' : ''}`;
-      card.id = item.id;
-      card.draggable = true;
-      card.setAttribute('role', 'listitem');
-      card.setAttribute('tabindex', '0');
-      card.setAttribute('aria-grabbed', 'false');
-      card.setAttribute('aria-label', `${item.title}. ${item.summary}. Press Enter or Space to pick up.`);
-      if (inCluster) card.style.marginBottom = '0';
-
-      card.innerHTML = `
-        <span class="card-tag">${escapeHtml(item.tag)}</span>
-        <h3>${escapeHtml(item.title)}</h3>
-        <p class="summary-text">${escapeHtml(item.summary)}</p>
-        <button class="expand-btn" aria-expanded="false">Read more</button>
-      `;
-
-      // Native HTML5 drag (desktop / mouse)
-      card.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', card.id);
-        e.dataTransfer.effectAllowed = 'move';
-        card.classList.add('dragging');
-      });
-      card.addEventListener('dragend', () => card.classList.remove('dragging'));
-
-      // Click / keyboard: toggle selection
-      card.addEventListener('click', (e) => {
+      el.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.connect-handle')) return;
+        // Don't start node drag from editable controls.
+        if (e.target.closest('input, textarea, button')) return;
         e.stopPropagation();
-        if (e.target.classList.contains('expand-btn')) {
-          const expanded = card.classList.toggle('expanded');
-          e.target.innerText = expanded ? 'Show less' : 'Read more';
-          e.target.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        pointerId = e.pointerId;
+        startClientX = e.clientX;
+        startClientY = e.clientY;
+        const p = getNodePos(nodeId);
+        startX = p.x; startY = p.y;
+        el.setPointerCapture(pointerId);
+        el.classList.add('lifted');
+
+        const onMove = (ev) => {
+          if (ev.pointerId !== pointerId) return;
+          if (!dragging) {
+            const dx = Math.abs(ev.clientX - startClientX);
+            const dy = Math.abs(ev.clientY - startClientY);
+            if (dx < 3 && dy < 3) return;
+            dragging = true;
+            el.classList.add('dragging');
+          }
+          const zoom = appState.view.zoom;
+          const dx = (ev.clientX - startClientX) / zoom;
+          const dy = (ev.clientY - startClientY) / zoom;
+          const nx = startX + dx;
+          const ny = startY + dy;
+          setNodePos(nodeId, nx, ny);
+          el.style.left = nx + 'px';
+          el.style.top = ny + 'px';
+          if (!raf) raf = requestAnimationFrame(() => { raf = null; updateEdgesForNode(nodeId); });
+        };
+        const onUp = (ev) => {
+          if (ev.pointerId !== pointerId) return;
+          el.removeEventListener('pointermove', onMove);
+          el.removeEventListener('pointerup', onUp);
+          el.removeEventListener('pointercancel', onUp);
+          try { el.releasePointerCapture(pointerId); } catch (_) {}
+          el.classList.remove('lifted');
+          el.classList.remove('dragging');
+          pointerId = null;
+          if (dragging) {
+            dragging = false;
+            scheduleSave();
+          }
+        };
+        el.addEventListener('pointermove', onMove);
+        el.addEventListener('pointerup', onUp);
+        el.addEventListener('pointercancel', onUp);
+      });
+    }
+
+    // ----- Connect drag (handle → other node) -----
+    function attachConnectDrag(handle, sourceId) {
+      handle.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const pointerId = e.pointerId;
+        const viewport = document.getElementById('canvas-viewport');
+        const drawing = document.getElementById('edge-drawing');
+        viewport.classList.add('is-connecting');
+        const sourceCenter = nodeCenter(sourceId);
+        let hoverTargetId = null;
+
+        const clientToWorld = (cx, cy) => {
+          const rect = viewport.getBoundingClientRect();
+          return {
+            x: (cx - rect.left - appState.view.panX) / appState.view.zoom,
+            y: (cy - rect.top - appState.view.panY) / appState.view.zoom
+          };
+        };
+
+        const updateHover = (cx, cy) => {
+          // Find the canvas-node under the pointer.
+          const els = document.elementsFromPoint(cx, cy);
+          const nodeEl = els.find(el => el.classList && el.classList.contains('canvas-node'));
+          const targetId = nodeEl ? nodeEl.getAttribute('data-node-id') : null;
+          if (targetId === sourceId) {
+            if (hoverTargetId) {
+              const prev = document.getElementById('node-' + hoverTargetId);
+              if (prev) prev.classList.remove('hover-target');
+              hoverTargetId = null;
+            }
+            return;
+          }
+          if (targetId !== hoverTargetId) {
+            if (hoverTargetId) {
+              const prev = document.getElementById('node-' + hoverTargetId);
+              if (prev) prev.classList.remove('hover-target');
+            }
+            hoverTargetId = targetId;
+            if (hoverTargetId) {
+              const next = document.getElementById('node-' + hoverTargetId);
+              if (next) next.classList.add('hover-target');
+            }
+          }
+        };
+
+        const onMove = (ev) => {
+          if (ev.pointerId !== pointerId) return;
+          const wp = clientToWorld(ev.clientX, ev.clientY);
+          drawing.setAttribute('d', bezierBetween(sourceCenter, wp));
+          updateHover(ev.clientX, ev.clientY);
+        };
+        const onUp = (ev) => {
+          if (ev.pointerId !== pointerId) return;
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          window.removeEventListener('pointercancel', onUp);
+          drawing.setAttribute('d', '');
+          viewport.classList.remove('is-connecting');
+          if (hoverTargetId) {
+            const target = document.getElementById('node-' + hoverTargetId);
+            if (target) target.classList.remove('hover-target');
+          }
+          if (hoverTargetId && hoverTargetId !== sourceId) {
+            connectNodes(sourceId, hoverTargetId);
+          }
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
+      });
+    }
+
+    // ----- Connection rules / auto-hub creation -----
+    function connectNodes(sourceId, targetId) {
+      const sourceIsHub = isHubId(sourceId);
+      const targetIsHub = isHubId(targetId);
+      if (sourceIsHub && targetIsHub) {
+        toast('Cannot connect two hubs directly.');
+        return;
+      }
+      // Case: hub ↔ signal
+      if (sourceIsHub || targetIsHub) {
+        const hubId = sourceIsHub ? sourceId : targetId;
+        const signalId = sourceIsHub ? targetId : sourceId;
+        const existingHub = signalHubId(signalId);
+        if (existingHub && existingHub !== hubId) {
+          toast('A signal can only belong to one hub. Disconnect it first.');
           return;
         }
-        toggleSelectItem(item.id);
-      });
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          if (document.activeElement === card) {
-            e.preventDefault();
-            toggleSelectItem(item.id);
-          }
-        } else if (e.key === 'Escape' && appState.selectedItemForMove === item.id) {
-          appState.selectedItemForMove = null;
-          renderBoard();
-        }
-      });
-
-      // Pointer-based drag (touch / pen) — best-practice mobile DnD
-      attachPointerDrag(card, item.id);
-
-      return card;
-    }
-
-    function toggleSelectItem(itemId) {
-      appState.selectedItemForMove = (appState.selectedItemForMove === itemId) ? null : itemId;
-      renderBoard();
-    }
-
-    function createNewCluster() {
-      const c = { id: uid('cluster'), title: '', description: '', itemIds: [] };
-      appState.clusters.push(c);
-      renderCanvasGrid();
+        if (existingHub === hubId) return; // already connected
+        const hub = appState.clusters.find(c => c.id === hubId);
+        hub.itemIds.push(signalId);
+        renderAllNodes();
+        renderAllEdges();
+        const edgeId = hubId + '__' + signalId;
+        animateNewEdge(edgeId);
+        scheduleSave();
+        updateClusterProgressChip();
+        toast(`Added to "${hub.title || 'Untitled Hub'}".`);
+        return;
+      }
+      // Case: signal ↔ signal
+      const sourceHubId = signalHubId(sourceId);
+      const targetHubId = signalHubId(targetId);
+      if (sourceHubId && targetHubId && sourceHubId !== targetHubId) {
+        toast('Those signals are in different hubs. Disconnect one first.');
+        return;
+      }
+      if (sourceHubId || targetHubId) {
+        // Add the free one to the existing hub.
+        const hubId = sourceHubId || targetHubId;
+        const freeSignal = sourceHubId ? targetId : sourceId;
+        const hub = appState.clusters.find(c => c.id === hubId);
+        if (hub.itemIds.includes(freeSignal)) return;
+        hub.itemIds.push(freeSignal);
+        renderAllNodes();
+        renderAllEdges();
+        animateNewEdge(hubId + '__' + freeSignal);
+        scheduleSave();
+        updateClusterProgressChip();
+        toast(`Added to "${hub.title || 'Untitled Hub'}".`);
+        return;
+      }
+      // Neither signal is in a hub — create a new hub between them.
+      const a = nodeCenter(sourceId);
+      const b = nodeCenter(targetId);
+      const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
+      const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
+      const newHub = { id: uid('cluster'), title: '', description: '', itemIds: [sourceId, targetId] };
+      appState.clusters.push(newHub);
+      setNodePos(newHub.id, midX, midY);
+      renderAllNodes();
+      renderAllEdges();
+      animateNodeSpawn(newHub.id);
+      animateNewEdge(newHub.id + '__' + sourceId, 0);
+      animateNewEdge(newHub.id + '__' + targetId, 60);
       scheduleSave();
-      // Focus the new cluster's title input
+      updateClusterProgressChip();
+      // Focus the new hub's title for naming.
       setTimeout(() => {
-        const el = document.getElementById('title-' + c.id);
-        if (el) el.focus();
-      }, 0);
+        const el = document.getElementById('node-' + newHub.id);
+        if (el) { const ti = el.querySelector('.hub-title'); if (ti) ti.focus(); }
+      }, 280);
     }
-    function updateClusterData(id, field, val) {
-      const c = appState.clusters.find(x => x.id === id);
-      if (c) { c[field] = val; scheduleSave(); }
+
+    function animateNodeSpawn(nodeId) {
+      const el = document.getElementById('node-' + nodeId);
+      if (!el) return;
+      el.classList.add('spawn');
+      el.addEventListener('animationend', () => el.classList.remove('spawn'), { once: true });
     }
+    function animateNewEdge(edgeId, delayMs) {
+      const path = document.querySelector(`.edge-layer path.edge[data-edge-id="${CSS.escape(edgeId)}"]`);
+      if (!path) return;
+      try {
+        const len = path.getTotalLength();
+        path.style.setProperty('--len', len);
+      } catch (_) {}
+      if (delayMs) {
+        path.style.animationDelay = delayMs + 'ms';
+      }
+      path.classList.add('spawning');
+      path.addEventListener('animationend', () => {
+        path.classList.remove('spawning');
+        path.style.animationDelay = '';
+      }, { once: true });
+    }
+
+    // ----- Cluster management (keep existing API) -----
     function deleteCluster(id) {
       const idx = appState.clusters.findIndex(c => c.id === id);
       if (idx < 0) return;
       const removed = appState.clusters[idx];
+      const removedPos = appState.nodes[id];
       const wasCommitted = appState.committedClusterIds.includes(id);
       const removedProblematization = appState.problematizations[id];
       const removedStakeholder = appState.stakeholderMaps[id];
       appState.clusters.splice(idx, 1);
+      delete appState.nodes[id];
       if (wasCommitted) {
         appState.committedClusterIds = appState.committedClusterIds.filter(x => x !== id);
         delete appState.problematizations[id];
         delete appState.stakeholderMaps[id];
       }
-      renderBoard();
+      renderAllNodes();
+      renderAllEdges();
+      updateClusterProgressChip();
       scheduleSave();
-      toast(removed.title ? `Deleted "${removed.title}".` : 'Cluster deleted.', {
+      toast(removed.title ? `Deleted hub "${removed.title}".` : 'Hub deleted.', {
         actionLabel: 'Undo',
         duration: 5000,
         onAction: () => {
           appState.clusters.splice(idx, 0, removed);
+          if (removedPos) appState.nodes[id] = removedPos;
           if (wasCommitted) {
             appState.committedClusterIds.push(id);
             if (removedProblematization !== undefined) appState.problematizations[id] = removedProblematization;
             if (removedStakeholder !== undefined) appState.stakeholderMaps[id] = removedStakeholder;
           }
-          renderBoard();
+          renderAllNodes();
+          renderAllEdges();
+          updateClusterProgressChip();
           scheduleSave();
         }
       });
     }
 
-    function moveItemToCluster(itemId, clusterId) {
-      let changed = false;
-      appState.clusters.forEach(c => {
-        const before = c.itemIds.length;
-        c.itemIds = c.itemIds.filter(i => i !== itemId);
-        if (c.itemIds.length !== before) changed = true;
+    // Edge selection + delete
+    function setupEdgeInteractions() {
+      const svg = document.getElementById('edge-layer');
+      svg.addEventListener('click', (e) => {
+        const target = e.target.closest('path.edge');
+        if (!target) {
+          if (selectedEdgeId) { selectedEdgeId = null; renderAllEdges(); }
+          return;
+        }
+        e.stopPropagation();
+        selectedEdgeId = target.getAttribute('data-edge-id');
+        renderAllEdges();
       });
-      if (clusterId) {
-        const target = appState.clusters.find(c => c.id === clusterId);
-        if (target && !target.itemIds.includes(itemId)) { target.itemIds.push(itemId); changed = true; }
-      }
-      appState.selectedItemForMove = null;
-      renderBoard();
-      if (changed) scheduleSave();
-    }
-
-    // --- Native HTML5 drag wiring for pool + cluster dropzones ---
-    function setupGlobalDragAndDrop() {
-      const pool = document.getElementById('item-pool-zone');
-      pool.addEventListener('dragover', e => { e.preventDefault(); pool.classList.add('drag-over'); });
-      pool.addEventListener('dragleave', e => { if (e.target === pool) pool.classList.remove('drag-over'); });
-      pool.addEventListener('drop', e => {
-        e.preventDefault();
-        pool.classList.remove('drag-over');
-        const id = e.dataTransfer.getData('text/plain');
-        if (id) moveItemToCluster(id, null);
-      });
-      pool.addEventListener('click', () => {
-        if (appState.selectedItemForMove) moveItemToCluster(appState.selectedItemForMove, null);
-      });
-
-      const grid = document.getElementById('canvas-grid-area');
-      grid.addEventListener('dragover', e => {
-        const z = e.target.closest('.dropzone-target');
-        if (z) { e.preventDefault(); z.classList.add('drag-over'); }
-      });
-      grid.addEventListener('dragleave', e => {
-        const z = e.target.closest('.dropzone-target');
-        if (z && !z.contains(e.relatedTarget)) z.classList.remove('drag-over');
-      });
-      grid.addEventListener('drop', e => {
-        const z = e.target.closest('.dropzone-target');
-        if (z) {
+      document.addEventListener('keydown', (e) => {
+        if (!selectedEdgeId) return;
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          if (document.activeElement && document.activeElement.matches('input, textarea')) return;
           e.preventDefault();
-          z.classList.remove('drag-over');
-          const id = e.dataTransfer.getData('text/plain');
-          if (id) moveItemToCluster(id, z.getAttribute('data-cluster-id'));
+          deleteEdge(selectedEdgeId);
         }
       });
     }
 
-    // --- Pointer-based drag (touch + pen, also works for mouse) ---
-    // Best-practice mobile DnD using Pointer Events:
-    // - long-press to pick up (avoids hijacking scroll)
-    // - floating ghost follows the finger
-    // - drop targets highlight on hover
-    // - edge auto-scroll
-    // - haptic feedback when available
-    function attachPointerDrag(card, itemId) {
-      let pressTimer = null;
-      let ghost = null;
-      let dragging = false;
-      let startX = 0, startY = 0;
-      let lastX = 0, lastY = 0;
-      let currentTarget = null;
-      let scrollRAF = null;
+    function deleteEdge(edgeId) {
+      const parts = edgeId.split('__');
+      if (parts.length !== 2) return;
+      const [hubId, itemId] = parts;
+      const cluster = appState.clusters.find(c => c.id === hubId);
+      if (!cluster) return;
+      cluster.itemIds = cluster.itemIds.filter(x => x !== itemId);
+      selectedEdgeId = null;
+      const orphaned = cluster.itemIds.length < 2;
+      renderAllNodes();
+      renderAllEdges();
+      updateClusterProgressChip();
+      scheduleSave();
+      if (orphaned) {
+        toast(`Hub "${cluster.title || 'Untitled'}" now has fewer than 2 signals.`, {
+          actionLabel: 'Delete hub',
+          duration: 6000,
+          onAction: () => deleteCluster(cluster.id)
+        });
+      }
+    }
 
-      const LONG_PRESS_MS = 200;
-      const MOVE_THRESHOLD = 8;
+    // ----- Viewport pan + wheel zoom -----
+    function setupCanvasInteractions() {
+      const viewport = document.getElementById('canvas-viewport');
 
-      const onPointerDown = (e) => {
-        // Only handle touch / pen here; mouse uses native HTML5 drag.
-        if (e.pointerType === 'mouse') return;
-        if (e.target.closest('.expand-btn')) return;
-        startX = lastX = e.clientX;
-        startY = lastY = e.clientY;
-        card.classList.add('pointer-pressing');
-        pressTimer = setTimeout(() => {
-          beginDrag(e);
-        }, LONG_PRESS_MS);
-        window.addEventListener('pointermove', onPointerMovePre, { passive: true });
-        window.addEventListener('pointerup', onPointerUpPre, { once: true });
-        window.addEventListener('pointercancel', onPointerCancel, { once: true });
-      };
+      // Wheel zoom (anchored to pointer)
+      viewport.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey || Math.abs(e.deltaY) > 0) {
+          e.preventDefault();
+          zoomBy(e.deltaY < 0 ? 1 : -1, e.clientX, e.clientY);
+        }
+      }, { passive: false });
 
-      const onPointerMovePre = (e) => {
-        const dx = Math.abs(e.clientX - startX);
-        const dy = Math.abs(e.clientY - startY);
-        if (!dragging && (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD)) {
-          // User is scrolling; cancel pickup.
-          cancelPress();
+      // Pan: pointerdown on the background (not on a node).
+      let panning = false;
+      let panPointerId = null;
+      let startClientX = 0, startClientY = 0;
+      let startPanX = 0, startPanY = 0;
+      let lastVelX = 0, lastVelY = 0;
+      let lastMoveTs = 0;
+      let momentumRaf = null;
+
+      viewport.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.canvas-node')) return;
+        if (e.target.closest('.zoom-toolbar')) return;
+        panning = true;
+        panPointerId = e.pointerId;
+        startClientX = e.clientX; startClientY = e.clientY;
+        startPanX = appState.view.panX; startPanY = appState.view.panY;
+        viewport.setPointerCapture(panPointerId);
+        viewport.classList.add('is-panning');
+        cancelMomentum();
+        if (selectedEdgeId) { selectedEdgeId = null; renderAllEdges(); }
+      });
+      viewport.addEventListener('pointermove', (e) => {
+        if (!panning || e.pointerId !== panPointerId) return;
+        const now = performance.now();
+        const prevPanX = appState.view.panX, prevPanY = appState.view.panY;
+        appState.view.panX = startPanX + (e.clientX - startClientX);
+        appState.view.panY = startPanY + (e.clientY - startClientY);
+        const dt = Math.max(1, now - lastMoveTs);
+        lastVelX = (appState.view.panX - prevPanX) / dt;
+        lastVelY = (appState.view.panY - prevPanY) / dt;
+        lastMoveTs = now;
+        applyViewTransform();
+      });
+      const endPan = (e) => {
+        if (!panning || e.pointerId !== panPointerId) return;
+        panning = false;
+        try { viewport.releasePointerCapture(panPointerId); } catch (_) {}
+        viewport.classList.remove('is-panning');
+        panPointerId = null;
+        // Momentum
+        if (Math.abs(lastVelX) > 0.2 || Math.abs(lastVelY) > 0.2) {
+          let vx = lastVelX * 16, vy = lastVelY * 16; // scale per-frame
+          const step = () => {
+            appState.view.panX += vx;
+            appState.view.panY += vy;
+            vx *= 0.92; vy *= 0.92;
+            applyViewTransform();
+            if (Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05) {
+              momentumRaf = requestAnimationFrame(step);
+            } else {
+              momentumRaf = null;
+              scheduleSave();
+            }
+          };
+          momentumRaf = requestAnimationFrame(step);
+        } else {
+          scheduleSave();
         }
       };
-
-      const onPointerUpPre = () => {
-        if (!dragging) cancelPress();
+      const cancelMomentum = () => {
+        if (momentumRaf) { cancelAnimationFrame(momentumRaf); momentumRaf = null; }
       };
+      viewport.addEventListener('pointerup', endPan);
+      viewport.addEventListener('pointercancel', endPan);
 
-      const onPointerCancel = () => cancelPress();
-
-      const cancelPress = () => {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-        card.classList.remove('pointer-pressing');
-        window.removeEventListener('pointermove', onPointerMovePre);
-      };
-
-      const beginDrag = (e) => {
-        dragging = true;
-        card.classList.remove('pointer-pressing');
-        card.classList.add('dragging');
-        card.setAttribute('aria-grabbed', 'true');
-        // Haptic
-        if (navigator.vibrate) { try { navigator.vibrate(10); } catch (_) {} }
-        // Build ghost
-        ghost = document.createElement('div');
-        ghost.className = 'drag-ghost';
-        const item = appState.items.find(i => i.id === itemId);
-        ghost.textContent = item ? item.title : 'Signal';
-        document.body.appendChild(ghost);
-        positionGhost(e.clientX, e.clientY);
-        // Lock to active drag
-        window.addEventListener('pointermove', onPointerMoveDrag, { passive: false });
-        window.addEventListener('pointerup', onPointerUpDrag, { once: true });
-        window.addEventListener('pointercancel', onPointerCancelDrag, { once: true });
-        // Stop scrolling underneath while we drag
-        document.body.style.overflow = 'hidden';
-      };
-
-      const positionGhost = (x, y) => {
-        if (!ghost) return;
-        ghost.style.left = x + 'px';
-        ghost.style.top = y + 'px';
-      };
-
-      const onPointerMoveDrag = (e) => {
-        e.preventDefault();
-        lastX = e.clientX; lastY = e.clientY;
-        positionGhost(e.clientX, e.clientY);
-        updateHoverTarget(e.clientX, e.clientY);
-        scheduleEdgeScroll();
-      };
-
-      const updateHoverTarget = (x, y) => {
-        // Temporarily hide the ghost so elementFromPoint reads through it.
-        const prev = ghost.style.display;
-        ghost.style.display = 'none';
-        const under = document.elementFromPoint(x, y);
-        ghost.style.display = prev;
-        const target = under && (under.closest('.dropzone-target') || under.closest('.dropzone-pool'));
-        if (target !== currentTarget) {
-          if (currentTarget) currentTarget.classList.remove('drag-over');
-          currentTarget = target;
-          if (currentTarget) currentTarget.classList.add('drag-over');
+      // Pinch zoom (two-pointer)
+      const activePointers = new Map();
+      let pinchStartDist = 0;
+      let pinchStartZoom = 1;
+      viewport.addEventListener('pointerdown', (e) => {
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (activePointers.size === 2) {
+          const pts = Array.from(activePointers.values());
+          pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+          pinchStartZoom = appState.view.zoom;
         }
-      };
-
-      const scheduleEdgeScroll = () => {
-        if (scrollRAF) return;
-        scrollRAF = requestAnimationFrame(() => {
-          scrollRAF = null;
-          edgeScrollStep();
-        });
-      };
-
-      const edgeScrollStep = () => {
-        if (!dragging) return;
-        // Try to scroll any scrollable ancestor near the pointer (pool, canvas-grid, dropzone).
-        const candidates = [
-          document.getElementById('item-pool-zone'),
-          document.getElementById('canvas-grid-area'),
-          currentTarget
-        ].filter(Boolean);
-        const EDGE = 60;
-        const SPEED = 14;
-        candidates.forEach(el => {
-          const r = el.getBoundingClientRect();
-          if (lastX < r.left || lastX > r.right) return;
-          if (lastY < r.top || lastY > r.bottom) return;
-          if (lastY - r.top < EDGE) el.scrollTop -= SPEED;
-          else if (r.bottom - lastY < EDGE) el.scrollTop += SPEED;
-        });
-        if (dragging) scheduleEdgeScroll();
-      };
-
-      const onPointerUpDrag = (e) => {
-        finishDrag(true, e);
-      };
-      const onPointerCancelDrag = () => finishDrag(false);
-
-      const finishDrag = (commit, e) => {
-        window.removeEventListener('pointermove', onPointerMoveDrag);
-        document.body.style.overflow = '';
-        card.classList.remove('dragging');
-        card.setAttribute('aria-grabbed', 'false');
-        if (ghost) { ghost.remove(); ghost = null; }
-        if (currentTarget) currentTarget.classList.remove('drag-over');
-        if (commit && currentTarget) {
-          if (currentTarget.classList.contains('dropzone-target')) {
-            moveItemToCluster(itemId, currentTarget.getAttribute('data-cluster-id'));
-          } else if (currentTarget.classList.contains('dropzone-pool')) {
-            moveItemToCluster(itemId, null);
+      });
+      viewport.addEventListener('pointermove', (e) => {
+        if (!activePointers.has(e.pointerId)) return;
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (activePointers.size === 2) {
+          const pts = Array.from(activePointers.values());
+          const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+          if (pinchStartDist > 0) {
+            const factor = dist / pinchStartDist;
+            const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * factor));
+            const cx = (pts[0].x + pts[1].x) / 2;
+            const cy = (pts[0].y + pts[1].y) / 2;
+            const rect = viewport.getBoundingClientRect();
+            const ax = cx - rect.left, ay = cy - rect.top;
+            const oldZoom = appState.view.zoom;
+            const worldX = (ax - appState.view.panX) / oldZoom;
+            const worldY = (ay - appState.view.panY) / oldZoom;
+            appState.view.panX = ax - worldX * newZoom;
+            appState.view.panY = ay - worldY * newZoom;
+            appState.view.zoom = newZoom;
+            applyViewTransform();
           }
         }
-        currentTarget = null;
-        dragging = false;
-      };
-
-      card.addEventListener('pointerdown', onPointerDown);
-    }
-
-    function updateTapToMoveUI() {
-      const dropzones = document.querySelectorAll('.dropzone-target, .dropzone-pool');
-      dropzones.forEach(z => {
-        if (appState.selectedItemForMove) z.classList.add('tap-target-active');
-        else z.classList.remove('tap-target-active');
       });
-      const hint = document.getElementById('tap-hint');
-      if (appState.selectedItemForMove) {
-        hint.innerText = 'Item selected — tap a cluster to drop it in, or tap the pool to put it back.';
-        hint.style.background = 'var(--primary-teal)';
-        hint.style.color = 'var(--ghost-white)';
-      } else {
-        hint.innerText = 'Drag a card to a cluster — or tap to select, then tap a cluster.';
-        hint.style.background = 'var(--cloud)';
-        hint.style.color = 'var(--midnight)';
-      }
+      const dropPointer = (e) => activePointers.delete(e.pointerId);
+      viewport.addEventListener('pointerup', dropPointer);
+      viewport.addEventListener('pointercancel', dropPointer);
+
+      // Click on background clears selection.
+      viewport.addEventListener('click', (e) => {
+        if (e.target === viewport || e.target.id === 'canvas-world' || e.target.id === 'nodes-layer') {
+          if (selectedEdgeId) { selectedEdgeId = null; renderAllEdges(); }
+        }
+      });
+
+      setupEdgeInteractions();
+      applyViewTransform();
     }
 
     // --- Modals: focus management + Esc ---
@@ -1873,7 +2620,7 @@
       // For board / workspace / artifact: scaffold the board (so Back navigation works) and jump.
       if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Clustering Board';
       setBoardTitleDisplay();
-      ensureGlobalDragAndDrop();
+      ensureCanvasInitialized();
       goToScreen(target);
       setTimeout(() => toast('Resumed your previous session.', { duration: 4000 }), 200);
     })();
