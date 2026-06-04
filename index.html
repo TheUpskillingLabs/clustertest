@@ -477,8 +477,8 @@
     }
     .edge-layer {
       position: absolute;
-      left: -5000px; top: -5000px;
-      width: 10000px; height: 10000px;
+      left: 0; top: 0;
+      width: 1px; height: 1px;
       overflow: visible;
       pointer-events: none;
     }
@@ -1782,6 +1782,7 @@
         renderAllEdges();
         const edgeId = hubId + '__' + signalId;
         animateNewEdge(edgeId);
+        tidyHubLayout(hubId);
         scheduleSave();
         updateClusterProgressChip();
         toast(`Added to "${hub.title || 'Untitled Hub'}".`);
@@ -1804,6 +1805,7 @@
         renderAllNodes();
         renderAllEdges();
         animateNewEdge(hubId + '__' + freeSignal);
+        tidyHubLayout(hubId);
         scheduleSave();
         updateClusterProgressChip();
         toast(`Added to "${hub.title || 'Untitled Hub'}".`);
@@ -1822,6 +1824,7 @@
       animateNodeSpawn(newHub.id);
       animateNewEdge(newHub.id + '__' + sourceId, 0);
       animateNewEdge(newHub.id + '__' + targetId, 60);
+      tidyHubLayout(newHub.id);
       scheduleSave();
       updateClusterProgressChip();
       // Focus the new hub's title for naming.
@@ -1829,6 +1832,93 @@
         const el = document.getElementById('node-' + newHub.id);
         if (el) { const ti = el.querySelector('.hub-title'); if (ti) ti.focus(); }
       }, 280);
+    }
+
+    // ----- Auto-respace: tidy a hub + its connected signals into a clean ring -----
+    function tidyHubLayout(hubId, opts) {
+      const cluster = appState.clusters.find(c => c.id === hubId);
+      if (!cluster) return;
+      const ids = cluster.itemIds.slice();
+      const n = ids.length;
+      if (n === 0) return;
+      const animMs = (opts && opts.animMs) || 360;
+      const skipIds = new Set((opts && opts.skipMove) || []);
+
+      // Anchor: weighted centroid of hub + its members (keeps the new shape close to where the user worked).
+      const hubNow = nodeCenter(hubId);
+      let cx = hubNow.x, cy = hubNow.y, wsum = 1;
+      ids.forEach(iid => {
+        const p = nodeCenter(iid);
+        cx += p.x; cy += p.y; wsum++;
+      });
+      cx /= wsum; cy /= wsum;
+
+      // Radius scales with the number of signals so cards don't overlap.
+      const radius = Math.max(220, 150 + n * 28);
+
+      // Preserve angular order of existing signals around the centroid so motion is minimal.
+      const angles = ids.map(iid => {
+        const p = nodeCenter(iid);
+        return { iid, ang: Math.atan2(p.y - cy, p.x - cx) };
+      }).sort((a, b) => a.ang - b.ang);
+
+      // Pick a phase offset that aligns the first slot to the first signal's existing angle.
+      const phase = angles[0].ang;
+
+      const targets = {};
+      // Hub target: centered.
+      targets[hubId] = {
+        x: cx - NODE_HUB_W / 2,
+        y: cy - NODE_HUB_H / 2,
+      };
+      angles.forEach((a, i) => {
+        const ang = phase + (2 * Math.PI * i) / n;
+        const tx = cx + radius * Math.cos(ang) - NODE_SIGNAL_W / 2;
+        const ty = cy + radius * Math.sin(ang) - NODE_SIGNAL_H / 2;
+        targets[a.iid] = { x: tx, y: ty };
+      });
+
+      animateNodesTo(targets, animMs, skipIds);
+    }
+
+    // Easing-aware tween from current node positions to target positions, updating edges each frame.
+    function animateNodesTo(targets, durationMs, skipIds) {
+      const ids = Object.keys(targets).filter(id => !skipIds || !skipIds.has(id));
+      if (!ids.length) return;
+      const startTs = performance.now();
+      const startPositions = {};
+      ids.forEach(id => { startPositions[id] = { ...getNodePos(id) }; });
+
+      // ease-out-quint
+      const ease = t => 1 - Math.pow(1 - t, 5);
+
+      const allEdgeNodeIds = new Set(ids);
+      // Also include any node connected to a moving node so edges update.
+      appState.clusters.forEach(c => {
+        if (allEdgeNodeIds.has(c.id)) c.itemIds.forEach(i => allEdgeNodeIds.add(i));
+        c.itemIds.forEach(iid => { if (allEdgeNodeIds.has(iid)) allEdgeNodeIds.add(c.id); });
+      });
+
+      const step = (now) => {
+        const t = Math.min(1, (now - startTs) / durationMs);
+        const k = ease(t);
+        ids.forEach(id => {
+          const s = startPositions[id];
+          const e = targets[id];
+          const nx = s.x + (e.x - s.x) * k;
+          const ny = s.y + (e.y - s.y) * k;
+          setNodePos(id, nx, ny);
+          const el = document.getElementById('node-' + id);
+          if (el) { el.style.left = nx + 'px'; el.style.top = ny + 'px'; }
+        });
+        allEdgeNodeIds.forEach(id => updateEdgesForNode(id));
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          scheduleSave();
+        }
+      };
+      requestAnimationFrame(step);
     }
 
     function animateNodeSpawn(nodeId) {
