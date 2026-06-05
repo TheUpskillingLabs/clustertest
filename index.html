@@ -1623,10 +1623,18 @@
       walk(hubId);
       return out;
     }
-    // Mass scales with tier: signal=1, cluster=4, super=16, mega=64, ...
+    // Mass scales with tier: signal=1, cluster=8, super=64, mega=512, ...
+    // High-tier hubs are effectively immovable anchors.
     function nodeMass(nodeId) {
       const tier = isHubId(nodeId) ? hubTier(nodeId) : 0;
-      return Math.pow(4, tier);
+      return Math.pow(8, tier);
+    }
+    // Walk up the parent chain to the topmost ancestor (or self if top-level).
+    function rootAnchorOf(nodeId) {
+      let cur = nodeId;
+      let parent = parentHubId(cur);
+      while (parent) { cur = parent; parent = parentHubId(cur); }
+      return cur;
     }
     // Ideal radius for a child to orbit its parent — keyed on the CHILD's
     // tier (so a signal under a mega cluster still sits at signal-distance,
@@ -1735,47 +1743,51 @@
       const target = {};
       const topHubs = appState.clusters.filter(c => appState.nodes[c.id] && !parentHubId(c.id)).map(c => c.id);
 
-      // Position top-level hubs.
+      // Position top-level hubs. The heaviest goes AT the centroid (the sun);
+      // any others orbit it on a ring at the heavy hub's child-tier radius.
       if (topHubs.length === 1) {
         target[topHubs[0]] = { x: acx, y: acy };
       } else if (topHubs.length > 1) {
-        // Current angles around centroid.
         const cur = topHubs.map(id => ({
           id,
           ang: Math.atan2(startCenter[id].y - acy, startCenter[id].x - acx),
-          tier: hubTier(id)
+          tier: hubTier(id),
+          m: mass[id]
         }));
-        const sorted = [...cur].sort((a, b) => a.ang - b.ang);
-        // Find min consecutive gap (wrap-around).
-        let minGap = Infinity;
-        for (let i = 0; i < sorted.length; i++) {
-          const a = sorted[i].ang;
-          const b = sorted[(i + 1) % sorted.length].ang;
-          let g = (b - a + Math.PI * 2) % (Math.PI * 2);
-          if (g === 0) g = Math.PI * 2;
-          if (g < minGap) minGap = g;
-        }
-        const bunched = minGap < (80 * Math.PI / 180);
-        // Top-level ring radius: scale from the largest child tier present.
-        const topTier = Math.max(...cur.map(c => c.tier));
-        const ringR = idealRadiusForChild(topTier, topHubs.length) * 1.1;
-        if (bunched) {
-          // Evenly space them, preserving the rotational starting angle of the heaviest hub.
-          const heavy = cur.slice().sort((a, b) => mass[b.id] - mass[a.id])[0];
-          const startAng = heavy.ang;
-          const step = (Math.PI * 2) / topHubs.length;
-          // Preserve order around the circle as drawn.
-          const ordered = [...sorted];
-          const startIdx = ordered.findIndex(o => o.id === heavy.id);
-          ordered.forEach((o, k) => {
-            const offset = ((k - startIdx) + ordered.length) % ordered.length;
-            const ang = startAng + offset * step;
-            target[o.id] = { x: acx + Math.cos(ang) * ringR, y: acy + Math.sin(ang) * ringR };
-          });
-        } else {
-          cur.forEach(o => {
-            target[o.id] = { x: acx + Math.cos(o.ang) * ringR, y: acy + Math.sin(o.ang) * ringR };
-          });
+        // Heaviest top-level hub (ties broken by tier).
+        const heavy = cur.slice().sort((a, b) => (b.m - a.m) || (b.tier - a.tier))[0];
+        target[heavy.id] = { x: acx, y: acy };
+        const others = cur.filter(o => o.id !== heavy.id);
+        if (others.length) {
+          // Ring radius: at the heavy hub's child-tier orbit.
+          const childTier = Math.max(0, heavy.tier - 1);
+          const ringR = idealRadiusForChild(childTier, others.length + 1);
+          // Sort orbiters by current angle around the heavy hub's NEW center.
+          const sorted = [...others].sort((a, b) => a.ang - b.ang);
+          // Detect bunching among the orbiters.
+          let minGap = Infinity;
+          if (sorted.length > 1) {
+            for (let i = 0; i < sorted.length; i++) {
+              const a = sorted[i].ang;
+              const b = sorted[(i + 1) % sorted.length].ang;
+              let g = (b - a + Math.PI * 2) % (Math.PI * 2);
+              if (g === 0) g = Math.PI * 2;
+              if (g < minGap) minGap = g;
+            }
+          }
+          const bunched = sorted.length > 1 && minGap < (80 * Math.PI / 180);
+          if (bunched) {
+            const step = (Math.PI * 2) / sorted.length;
+            const startAng = sorted[0].ang;
+            sorted.forEach((o, k) => {
+              const ang = startAng + k * step;
+              target[o.id] = { x: acx + Math.cos(ang) * ringR, y: acy + Math.sin(ang) * ringR };
+            });
+          } else {
+            sorted.forEach(o => {
+              target[o.id] = { x: acx + Math.cos(o.ang) * ringR, y: acy + Math.sin(o.ang) * ringR };
+            });
+          }
         }
       }
 
@@ -2567,7 +2579,7 @@
         const SPRING_K = 0.06;    // hub→signal spring stiffness
         const HUB_ANCHOR_K = 0.012; // hub→its centroid pull
         const GRAVITY_K = 0.004;    // gentle pull toward global centroid
-        const HUB_COHESION_K = 0.010; // extra pull between top-level hubs
+        const HUB_COHESION_K = 0.014; // extra pull between top-level hubs
         const BELT_K = 0.05;          // outward spring for free signals sitting inside the active system
         const BELT_GAP = 260;         // empty radius between active edge and belt
         const INNER_PAD = 80;         // signals nearer than activeOuter + INNER_PAD get pushed out
@@ -2582,12 +2594,33 @@
         const freeSignalIds = nodeIds.filter(id => !isHubId(id) && !parentHubId(id));
         const freeSet = new Set(freeSignalIds);
 
-        // Mass-weighted global centroid: heavier (higher-tier) hubs dominate,
-        // so signals orbit clusters and clusters orbit superclusters.
-        // Free signals don't participate in gravity (they have their own belt law).
+        // Per-tree anchor gravity: every non-free, non-anchor node is pulled
+        // toward its ROOT anchor (top-level ancestor). Anchors themselves
+        // feel no gravity — they are immovable suns for their subtree.
+        // This keeps separate top-level subtrees from sharing a centroid.
+        const anchorOf = {};
+        nodeIds.forEach(id => { anchorOf[id] = rootAnchorOf(id); });
+        nodeIds.forEach(id => {
+          if (freeSet.has(id)) return;
+          const anchor = anchorOf[id];
+          if (anchor === id) return; // top-level anchor: skip
+          if (!pos[anchor]) return;
+          const dd = dims[id], ad = dims[anchor];
+          const ncx = pos[id].x + dd.w / 2;
+          const ncy = pos[id].y + dd.h / 2;
+          const acx = pos[anchor].x + ad.w / 2;
+          const acy = pos[anchor].y + ad.h / 2;
+          fx[id] += (acx - ncx) * GRAVITY_K;
+          fy[id] += (acy - ncy) * GRAVITY_K;
+        });
+
+        // Mass-weighted centroid of the top-level anchors — used by the
+        // asteroid belt block below so the belt forms around the dominant
+        // anchor(s) rather than a global drift point.
         let gcx = 0, gcy = 0, totalMass = 0;
         nodeIds.forEach(id => {
           if (freeSet.has(id)) return;
+          if (parentHubId(id)) return; // top-level only
           const dd = dims[id];
           const m = mass[id];
           gcx += (pos[id].x + dd.w / 2) * m;
@@ -2596,18 +2629,6 @@
         });
         const hasActive = totalMass > 0;
         if (hasActive) { gcx /= totalMass; gcy /= totalMass; }
-
-        // Apply gentle gravity to every active node (skip free signals).
-        if (hasActive) {
-          nodeIds.forEach(id => {
-            if (freeSet.has(id)) return;
-            const dd = dims[id];
-            const ncx = pos[id].x + dd.w / 2;
-            const ncy = pos[id].y + dd.h / 2;
-            fx[id] += (gcx - ncx) * GRAVITY_K;
-            fy[id] += (gcy - ncy) * GRAVITY_K;
-          });
-        }
 
         // Cohesion between top-level *hubs* (parentless hubs only — free
         // signals get the belt law instead).
