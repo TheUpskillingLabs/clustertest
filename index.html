@@ -1636,17 +1636,15 @@
       while (parent) { cur = parent; parent = parentHubId(cur); }
       return cur;
     }
-    // Ideal radius for a child to orbit its parent — keyed on the CHILD's
-    // tier (so a signal under a mega cluster still sits at signal-distance,
-    // and a supercluster under a hyper cluster sits at supercluster-distance).
-    // Geometric growth per tier so higher tiers are visibly further out.
-    // ≈1.5× per tier — clearly distinct rings while keeping a 3-tier map
-    // (mega → super → cluster → signal, ~900px outer rim) on one screen.
-    const TIER_BASE_R = [180, 280, 440, 660, 980, 1450];
-    const TIER_STEP_R = [22,  34,  52,  78,  118, 175];
+    // Ideal radius for a child to orbit its parent — keyed on the PARENT's
+    // tier so that higher-tier hubs place children at progressively longer
+    // distances. Index 1 (tier-1 cluster → signals) is the bread-and-butter
+    // case; index 2+ grows geometrically for superclusters and beyond.
+    const TIER_BASE_R = [180, 200, 340, 520, 780, 1160];
+    const TIER_STEP_R = [22,  26,  42,  64,  96,  144];
     const TIER_RATIO  = 1.5;
-    function idealRadiusForChild(childTier, n) {
-      const t = Math.max(0, Math.min(childTier, 12));
+    function idealRadiusForChild(parentTier, n) {
+      const t = Math.max(0, Math.min(parentTier, 12));
       const base = TIER_BASE_R[t] ?? TIER_BASE_R[5] * Math.pow(TIER_RATIO, t - 5);
       const step = TIER_STEP_R[t] ?? TIER_STEP_R[5] * Math.pow(TIER_RATIO, t - 5);
       return base + Math.max(0, n - 2) * step;
@@ -1742,8 +1740,8 @@
           const prevA = (i === 0) ? prevAraw - Math.PI * 2 : prevAraw;
           const nextA = (i === n - 1) ? nextAraw + Math.PI * 2 : nextAraw;
           const half = Math.min((myA - prevA) / 2, (nextA - myA) / 2);
-          const childTier = isHubId(k) ? hubTier(k) : 0;
-          const gap = idealRadiusForChild(childTier, n);
+          const pTier = isHubId(id) ? hubTier(id) : 0;
+          const gap = idealRadiusForChild(pTier, n);
           place(k, myCenter, myA, half * WEDGE_SHRINK, radius + gap, dep + 1);
         });
       };
@@ -2293,6 +2291,28 @@
     }
 
     // ----- Connection rules / auto-hub creation (uniform across tiers) -----
+    function removeChildFromHub(parentId, childId) {
+      const cluster = appState.clusters.find(c => c.id === parentId);
+      if (!cluster) return;
+      cluster.itemIds = cluster.itemIds.filter(x => x !== childId);
+      cluster.hubIds = (cluster.hubIds || []).filter(x => x !== childId);
+    }
+
+    function createHubBetween(childA, childB) {
+      const a = nodeCenter(childA);
+      const b = nodeCenter(childB);
+      const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
+      const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
+      const newHub = { id: uid('cluster'), title: '', description: '', itemIds: [], hubIds: [] };
+      [childA, childB].forEach(id => {
+        if (isHubId(id)) newHub.hubIds.push(id);
+        else newHub.itemIds.push(id);
+      });
+      appState.clusters.push(newHub);
+      setNodePos(newHub.id, midX, midY);
+      return newHub;
+    }
+
     function addChildToHub(parentId, childId) {
       const parent = appState.clusters.find(c => c.id === parentId);
       if (!parent) return false;
@@ -2343,8 +2363,8 @@
         }
         ang = bestMid;
       }
-      const childTier = isHubId(childId) ? hubTier(childId) : 0;
-      const R = idealRadiusForChild(childTier, siblings.length + 1);
+      const pTier = isHubId(parentId) ? hubTier(parentId) : 0;
+      const R = idealRadiusForChild(pTier, siblings.length + 1);
       const cd = nodeSize(isHubId(childId) ? 'hub' : 'signal', childId);
       const x = pc.x + Math.cos(ang) * R - cd.w / 2;
       const y = pc.y + Math.sin(ang) * R - cd.h / 2;
@@ -2367,58 +2387,72 @@
       toast(`Added to "${parent.title || tierLabel(hubTier(parentId))}".`);
     }
 
-    function connectNodes(sourceId, targetId) {
-      if (sourceId === targetId) return;
-      const pa = parentHubId(sourceId);
-      const pb = parentHubId(targetId);
-      // Both already in parents.
-      if (pa && pb) {
-        if (pa === pb) return; // already siblings, no-op
-        toast('Disconnect from current parent first.');
-        return;
-      }
-      // One side has a parent: add the other under it.
-      if (pa || pb) {
-        const parentId = pa || pb;
-        const childId  = pa ? targetId : sourceId;
-        addUnderExistingParent(parentId, childId);
-        return;
-      }
-      // Both top-level. If exactly one is a hub, add the other to it directly.
-      const sourceIsHub = isHubId(sourceId);
-      const targetIsHub = isHubId(targetId);
-      if (sourceIsHub && !targetIsHub) { addUnderExistingParent(sourceId, targetId); return; }
-      if (targetIsHub && !sourceIsHub) { addUnderExistingParent(targetId, sourceId); return; }
-
-      // Both top-level signals → new cluster.
-      // Both top-level hubs → new super-hub above them.
-      if (sourceIsHub && isAncestor(sourceId, targetId)) { toast('That would create a loop.'); return; }
-      if (targetIsHub && isAncestor(targetId, sourceId)) { toast('That would create a loop.'); return; }
-
-      const a = nodeCenter(sourceId);
-      const b = nodeCenter(targetId);
-      const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
-      const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
-      const newHub = { id: uid('cluster'), title: '', description: '', itemIds: [], hubIds: [] };
-      [sourceId, targetId].forEach(id => {
-        if (isHubId(id)) newHub.hubIds.push(id);
-        else newHub.itemIds.push(id);
-      });
-      appState.clusters.push(newHub);
-      setNodePos(newHub.id, midX, midY);
+    function spawnHubUI(newHub, focusRootId) {
       renderAllNodes();
       renderAllEdges();
       animateNodeSpawn(newHub.id);
-      animateNewEdge(newHub.id + '__' + sourceId, 0);
-      animateNewEdge(newHub.id + '__' + targetId, 60);
-      relaxLayoutAround(newHub.id);
+      relaxLayoutAround(focusRootId || newHub.id);
       scheduleSave();
       updateClusterProgressChip();
-      // Focus the new hub's title for naming.
       setTimeout(() => {
         const el = document.getElementById('node-' + newHub.id);
         if (el) { const ti = el.querySelector('.hub-title'); if (ti) ti.focus(); }
       }, 280);
+    }
+
+    function warnIfUnderpopulated(hubId) {
+      const cluster = appState.clusters.find(c => c.id === hubId);
+      if (!cluster) return;
+      const remaining = cluster.itemIds.length + (cluster.hubIds || []).length;
+      if (remaining < 2) {
+        toast(`${tierLabel(hubTier(cluster.id))} "${cluster.title || 'Untitled'}" now has fewer than 2 members.`, {
+          actionLabel: 'Delete hub',
+          duration: 6000,
+          onAction: () => deleteCluster(cluster.id)
+        });
+      }
+    }
+
+    function connectNodes(sourceId, targetId) {
+      if (sourceId === targetId) return;
+      if (isHubId(sourceId) && isAncestor(sourceId, targetId)) { toast('That would create a loop.'); return; }
+      if (isHubId(targetId) && isAncestor(targetId, sourceId)) { toast('That would create a loop.'); return; }
+
+      const pa = parentHubId(sourceId);
+      const pb = parentHubId(targetId);
+
+      if (pa && pb && pa === pb) return;
+
+      // Both top-level, no parents.
+      if (!pa && !pb) {
+        const sourceIsHub = isHubId(sourceId);
+        const targetIsHub = isHubId(targetId);
+        if (sourceIsHub && !targetIsHub) { addUnderExistingParent(sourceId, targetId); return; }
+        if (targetIsHub && !sourceIsHub) { addUnderExistingParent(targetId, sourceId); return; }
+        const newHub = createHubBetween(sourceId, targetId);
+        spawnHubUI(newHub, newHub.id);
+        return;
+      }
+
+      // Exactly one has a parent: create sub-cluster inside that parent.
+      if (!pa || !pb) {
+        const parentedId = pa ? sourceId : targetId;
+        const freeId     = pa ? targetId : sourceId;
+        const existingParent = pa || pb;
+        removeChildFromHub(existingParent, parentedId);
+        const newHub = createHubBetween(parentedId, freeId);
+        addChildToHub(existingParent, newHub.id);
+        spawnHubUI(newHub, rootAnchorOf(existingParent));
+        return;
+      }
+
+      // Both in different parents: create sub-cluster, insert into source's parent.
+      removeChildFromHub(pa, sourceId);
+      removeChildFromHub(pb, targetId);
+      const newHub = createHubBetween(sourceId, targetId);
+      addChildToHub(pa, newHub.id);
+      spawnHubUI(newHub, rootAnchorOf(pa));
+      warnIfUnderpopulated(pb);
     }
 
     // ----- Force-directed auto-spacing -----
@@ -2728,22 +2762,13 @@
       const [parentId, childId] = parts;
       const cluster = appState.clusters.find(c => c.id === parentId);
       if (!cluster) return;
-      cluster.itemIds = cluster.itemIds.filter(x => x !== childId);
-      cluster.hubIds  = (cluster.hubIds || []).filter(x => x !== childId);
+      removeChildFromHub(parentId, childId);
       selectedEdgeId = null;
-      const directMembers = cluster.itemIds.length + (cluster.hubIds || []).length;
-      const orphaned = directMembers < 2;
       renderAllNodes();
       renderAllEdges();
       updateClusterProgressChip();
       scheduleSave();
-      if (orphaned) {
-        toast(`${tierLabel(hubTier(cluster.id))} "${cluster.title || 'Untitled'}" now has fewer than 2 members.`, {
-          actionLabel: 'Delete hub',
-          duration: 6000,
-          onAction: () => deleteCluster(cluster.id)
-        });
-      }
+      warnIfUnderpopulated(parentId);
     }
 
     // ----- Viewport pan + wheel zoom (FigJam-style) -----
