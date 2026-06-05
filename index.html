@@ -321,9 +321,122 @@
     .interview-helper h3 { font-size: 1.05rem; font-weight: 700; color: var(--midnight); margin-bottom: 4px; }
     .interview-helper .helper-desc { font-size: 0.85rem; color: var(--midnight); opacity: 0.8; line-height: 1.5; margin-bottom: 14px; }
     .workspace-cards { width: 100%; max-width: 880px; display: flex; flex-direction: column; gap: 24px; }
-    .workspace-cluster-card { background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px; padding: 28px 32px; box-shadow: 0 4px 6px rgba(16,24,32,0.02); }
-    .workspace-cluster-card > header { border-bottom: 2px solid var(--cloud); padding-bottom: 16px; margin-bottom: 20px; }
-    .workspace-cluster-card h3 { color: var(--primary-teal); font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; }
+    .workspace-cluster-card {
+      background: var(--ghost-white);
+      border: 2px solid var(--cloud);
+      border-radius: 12px;
+      padding: 0 32px 28px;
+      box-shadow: 0 4px 6px rgba(16,24,32,0.02);
+      transition: box-shadow 180ms ease, border-color 180ms ease;
+      scroll-margin-top: 70px;
+      overflow: visible;
+    }
+    .workspace-cluster-card.is-focused {
+      border-color: var(--primary-teal);
+      box-shadow: 0 0 0 3px rgba(0,148,160,0.18), 0 12px 24px rgba(16,24,32,0.06);
+    }
+    .workspace-cluster-card > header {
+      position: sticky;
+      top: 56px;
+      background: var(--ghost-white);
+      border-bottom: 2px solid var(--cloud);
+      padding: 18px 0 14px;
+      margin: 0 0 20px;
+      z-index: 5;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+    .workspace-cluster-card.is-focused > header { border-bottom-color: var(--primary-teal); }
+    .workspace-cluster-card .ws-card-titlerow { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+    .workspace-cluster-card .ws-card-tier {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--primary-teal);
+      background: rgba(0,148,160,0.10);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .workspace-cluster-card .ws-card-tier.tier-2 { color: var(--action-red); background: rgba(238,28,37,0.10); }
+    .workspace-cluster-card .ws-card-tier.tier-3 { color: #b07b00; background: rgba(244,180,0,0.16); }
+    .workspace-cluster-card .ws-card-tier.tier-4,
+    .workspace-cluster-card .ws-card-tier.tier-5,
+    .workspace-cluster-card .ws-card-tier.tier-6 { color: #6231cf; background: rgba(138,79,255,0.14); }
+    .workspace-cluster-card h3 { color: var(--midnight); font-size: 1.5rem; font-weight: 700; margin: 0; }
+
+    /* Jump bar */
+    .workspace-jump-bar {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      max-width: 880px;
+      background: rgba(230,230,230,0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 18px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 6px rgba(16,24,32,0.05);
+    }
+    .workspace-jump-bar:empty { display: none; }
+    .workspace-jump-bar .ws-jump-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--midnight);
+      opacity: 0.6;
+      margin-right: 4px;
+    }
+    .workspace-jump-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--ghost-white);
+      border: 2px solid var(--cloud);
+      color: var(--midnight);
+      font-family: 'Geologica', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+      max-width: 320px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .workspace-jump-chip:hover { border-color: var(--primary-teal); }
+    .workspace-jump-chip.is-active {
+      background: var(--primary-teal);
+      color: var(--ghost-white);
+      border-color: var(--primary-teal);
+    }
+    .workspace-jump-chip.is-active .ws-jump-tier { color: rgba(255,255,255,0.85); }
+    .workspace-jump-chip .ws-jump-tier {
+      font-size: 0.62rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--primary-teal);
+    }
+    .workspace-jump-chip.tier-2 .ws-jump-tier { color: var(--action-red); }
+    .workspace-jump-chip.tier-3 .ws-jump-tier { color: #b07b00; }
+    .workspace-jump-chip.tier-4 .ws-jump-tier,
+    .workspace-jump-chip.tier-5 .ws-jump-tier,
+    .workspace-jump-chip.tier-6 .ws-jump-tier { color: #6231cf; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .workspace-cluster-card, .workspace-cluster-card > header, .workspace-jump-chip {
+        transition-duration: 60ms !important;
+      }
+    }
     .workspace-cluster-card .cluster-desc { font-size: 0.875rem; color: var(--midnight); opacity: 0.8; font-style: italic; margin-bottom: 12px; line-height: 1.5; }
     .signal-chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
     .signal-chips li { font-size: 0.75rem; background: var(--cloud); color: var(--midnight); padding: 4px 10px; border-radius: 12px; font-weight: 600; }
@@ -569,6 +682,9 @@
       user-select: none;
     }
     .signal-node:hover { border-color: var(--primary-teal); }
+    /* Unclustered signals: muted, "available for clustering". */
+    .signal-node.parked { opacity: 0.78; border-color: var(--cloud); }
+    .signal-node.parked:hover { opacity: 1; border-color: var(--primary-teal); }
     .signal-node .card-tag {
       display: inline-block;
       font-size: 0.6rem;
@@ -711,6 +827,29 @@
       font-family: 'Geologica', sans-serif;
     }
     .hub-node .hub-suggest:hover { background: var(--primary-teal); color: var(--midnight); }
+
+    /* AI modal mode tabs */
+    .ai-mode-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--cloud); padding-bottom: 0; }
+    .ai-mode-tab {
+      background: transparent;
+      border: none;
+      color: var(--midnight);
+      opacity: 0.55;
+      font-family: 'Geologica', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .ai-mode-tab:hover { opacity: 0.85; }
+    .ai-mode-tab.is-active {
+      opacity: 1;
+      color: var(--primary-teal);
+      border-bottom-color: var(--primary-teal);
+    }
     .hub-node .hub-actions { gap: 8px; }
 
     /* Tier styling: accent color and width step up as hubs get more abstract. */
@@ -980,6 +1119,7 @@
         <p class="copy-hint">Paste into Gemini, ChatGPT, Claude, NotebookLM, or Perplexity. The prompt already includes your committed clusters' signals.</p>
       </div>
     </div>
+    <nav class="workspace-jump-bar" id="workspace-jump-bar" aria-label="Jump to a committed cluster"></nav>
     <div class="workspace-cards" id="workspace-cards-container"></div>
     <div class="workspace-footer">
       <span class="submit-status" id="submit-status-hint">Fill in both fields on every cluster to enable Submit for Voting.</span>
@@ -1037,14 +1177,19 @@
   </div>
 
   <div id="ai-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 720px;">
       <div class="modal-header">
-        <h3 id="ai-modal-title">AI Assistant Sparring Partner</h3>
+        <h3 id="ai-modal-title">AI thinking partner</h3>
       </div>
       <div class="modal-body">
-        <p style="margin-bottom: 12px;">Copy this text chunk and paste it into an AI tool to spot hidden patterns across the entire pool before you group them yourself.</p>
+        <div id="ai-mode-tabs" class="ai-mode-tabs hidden" role="tablist" aria-label="Prompt modes">
+          <button type="button" role="tab" data-mode="throughline" class="ai-mode-tab is-active">Through-line</button>
+          <button type="button" role="tab" data-mode="name" class="ai-mode-tab">Name &amp; describe</button>
+          <button type="button" role="tab" data-mode="stress" class="ai-mode-tab">Stress-test</button>
+        </div>
+        <p id="ai-modal-blurb" style="margin-bottom: 12px;">Copy this prompt and paste it into your AI tool of choice. The prompt is structured (role, context, task, thinking steps, output format, rules) so the model gives you sharper, more specific output.</p>
         <p style="font-size: 0.8rem; margin-bottom: 16px;">
-          <em>Launch targets: <a href="https://gemini.google.com" target="_blank" rel="noopener">Google Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>.</em>
+          <em>Launch targets: <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>.</em>
         </p>
         <label class="sr-only" for="ai-prompt-text">Generated AI prompt</label>
         <textarea id="ai-prompt-text" readonly></textarea>
@@ -1669,7 +1814,8 @@
 
     function buildSignalNode(item) {
       const el = document.createElement('div');
-      el.className = 'canvas-node signal-node';
+      const parked = !parentHubId(item.id);
+      el.className = 'canvas-node signal-node' + (parked ? ' parked' : '');
       el.id = 'node-' + item.id;
       el.setAttribute('data-node-id', item.id);
       el.setAttribute('data-kind', 'signal');
@@ -1719,15 +1865,27 @@
       const countText = tier >= 2
         ? `${memberCount} item${memberCount === 1 ? '' : 's'} · ${leafCount} signal${leafCount === 1 ? '' : 's'}`
         : `${memberCount} signal${memberCount === 1 ? '' : 's'}`;
+      // Tier-aware placeholders to nudge the user toward synthesis, not labels.
+      let titlePh, descPh;
+      if (tier <= 1) {
+        titlePh = 'Through-line title…';
+        descPh = 'Shared barrier or pattern this cluster captures…';
+      } else if (tier === 2) {
+        titlePh = 'Name the systemic pattern…';
+        descPh = 'What systemic pattern bridges these clusters?';
+      } else {
+        titlePh = 'Name the meta-theme…';
+        descPh = 'What meta-theme connects these systems?';
+      }
       el.innerHTML = `
         <div class="hub-tag">
           <span>${escapeHtml(tierLabel(tier))}</span>
           <span class="hub-count">${countText}</span>
         </div>
-        <input type="text" class="hub-title" placeholder="Name this ${escapeHtml(tierLabel(tier).toLowerCase())}..." value="${escapeHtml(cluster.title || '')}" />
-        <textarea class="hub-desc" placeholder="What shared barrier connects these?" rows="2">${escapeHtml(cluster.description || '')}</textarea>
+        <input type="text" class="hub-title" placeholder="${escapeHtml(titlePh)}" value="${escapeHtml(cluster.title || '')}" />
+        <textarea class="hub-desc" placeholder="${escapeHtml(descPh)}" rows="2">${escapeHtml(cluster.description || '')}</textarea>
         <div class="hub-actions">
-          <button type="button" class="hub-suggest">✨ Suggest name</button>
+          <button type="button" class="hub-suggest" title="Open the AI thinking partner for this ${escapeHtml(tierLabel(tier).toLowerCase())}">✨ AI thinking partner</button>
           <button type="button" class="hub-delete">Delete</button>
         </div>
         <div class="connect-handle side-top"    data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
@@ -2178,6 +2336,9 @@
         const HUB_ANCHOR_K = 0.012; // hub→its centroid pull
         const GRAVITY_K = 0.004;    // gentle pull toward global centroid
         const HUB_COHESION_K = 0.010; // extra pull between top-level hubs
+        const BELT_K = 0.05;          // outward spring for free signals sitting inside the active system
+        const BELT_GAP = 260;         // empty radius between active edge and belt
+        const INNER_PAD = 80;         // signals nearer than activeOuter + INNER_PAD get pushed out
         const MAX_FORCE = 40;
         const DAMP = 0.82;
 
@@ -2185,34 +2346,43 @@
         const fx = {}, fy = {};
         nodeIds.forEach(id => { fx[id] = 0; fy[id] = 0; });
 
+        // Identify free-floating signals (no parent hub, not a hub themselves).
+        const freeSignalIds = nodeIds.filter(id => !isHubId(id) && !parentHubId(id));
+        const freeSet = new Set(freeSignalIds);
+
         // Mass-weighted global centroid: heavier (higher-tier) hubs dominate,
         // so signals orbit clusters and clusters orbit superclusters.
+        // Free signals don't participate in gravity (they have their own belt law).
         let gcx = 0, gcy = 0, totalMass = 0;
         nodeIds.forEach(id => {
+          if (freeSet.has(id)) return;
           const dd = dims[id];
           const m = mass[id];
           gcx += (pos[id].x + dd.w / 2) * m;
           gcy += (pos[id].y + dd.h / 2) * m;
           totalMass += m;
         });
-        if (totalMass > 0) { gcx /= totalMass; gcy /= totalMass; }
+        const hasActive = totalMass > 0;
+        if (hasActive) { gcx /= totalMass; gcy /= totalMass; }
 
-        // Apply gentle gravity to every node.
-        nodeIds.forEach(id => {
-          const dd = dims[id];
-          const ncx = pos[id].x + dd.w / 2;
-          const ncy = pos[id].y + dd.h / 2;
-          fx[id] += (gcx - ncx) * GRAVITY_K;
-          fy[id] += (gcy - ncy) * GRAVITY_K;
-        });
+        // Apply gentle gravity to every active node (skip free signals).
+        if (hasActive) {
+          nodeIds.forEach(id => {
+            if (freeSet.has(id)) return;
+            const dd = dims[id];
+            const ncx = pos[id].x + dd.w / 2;
+            const ncy = pos[id].y + dd.h / 2;
+            fx[id] += (gcx - ncx) * GRAVITY_K;
+            fy[id] += (gcy - ncy) * GRAVITY_K;
+          });
+        }
 
-        // Additional pull between top-level nodes (parentless hubs + signals)
-        // so the composition stays cohesive as more clusters are created.
-        // Mass-weighted: heavy top-level hubs anchor the group center.
-        const topLevelIds = nodeIds.filter(id => !parentHubId(id));
-        if (topLevelIds.length >= 2) {
+        // Cohesion between top-level *hubs* (parentless hubs only — free
+        // signals get the belt law instead).
+        const topHubIds = nodeIds.filter(id => isHubId(id) && !parentHubId(id));
+        if (topHubIds.length >= 2) {
           let tcx = 0, tcy = 0, tm = 0;
-          topLevelIds.forEach(id => {
+          topHubIds.forEach(id => {
             const dd = dims[id];
             const m = mass[id];
             tcx += (pos[id].x + dd.w / 2) * m;
@@ -2220,12 +2390,45 @@
             tm += m;
           });
           if (tm > 0) { tcx /= tm; tcy /= tm; }
-          topLevelIds.forEach(id => {
+          topHubIds.forEach(id => {
             const dd = dims[id];
             const ncx = pos[id].x + dd.w / 2;
             const ncy = pos[id].y + dd.h / 2;
             fx[id] += (tcx - ncx) * HUB_COHESION_K;
             fy[id] += (tcy - ncy) * HUB_COHESION_K;
+          });
+        }
+
+        // Asteroid belt: free signals get an outward spring only if they're
+        // sitting inside the active system. Past the inner bound they're
+        // inert (user-placed), so users can park cards in faraway corners.
+        if (hasActive && freeSignalIds.length) {
+          // Outer radius of the active system around its mass-weighted centroid.
+          let activeOuter = 0;
+          nodeIds.forEach(id => {
+            if (freeSet.has(id)) return;
+            const dd = dims[id];
+            const cx = pos[id].x + dd.w / 2, cy = pos[id].y + dd.h / 2;
+            const d = Math.hypot(cx - gcx, cy - gcy);
+            if (d > activeOuter) activeOuter = d;
+          });
+          const innerBound = activeOuter + INNER_PAD;
+          const beltRadius = activeOuter + BELT_GAP;
+          freeSignalIds.forEach(id => {
+            const dd = dims[id];
+            const cx = pos[id].x + dd.w / 2, cy = pos[id].y + dd.h / 2;
+            let dx = cx - gcx, dy = cy - gcy;
+            let dist = Math.hypot(dx, dy);
+            if (dist >= innerBound) return; // already at/beyond belt, respect placement
+            if (dist < 0.01) {
+              // Pick an arbitrary direction so the signal doesn't get stuck at centroid.
+              const ang = Math.random() * Math.PI * 2;
+              dx = Math.cos(ang); dy = Math.sin(ang); dist = 1;
+            }
+            const ux = dx / dist, uy = dy / dist;
+            const delta = beltRadius - dist; // positive → push outward
+            fx[id] += ux * delta * BELT_K;
+            fy[id] += uy * delta * BELT_K;
           });
         }
 
@@ -2647,6 +2850,15 @@
       setupKeyboardNavigation();
     }
 
+    // Click delegation for the AI modal mode tabs (one-time wiring).
+    document.addEventListener('click', (e) => {
+      const tab = e.target.closest('#ai-mode-tabs .ai-mode-tab');
+      if (!tab) return;
+      e.preventDefault();
+      const mode = tab.getAttribute('data-mode');
+      if (mode) switchAIMode(mode);
+    });
+
     function setupKeyboardNavigation() {
       const isTyping = () => {
         const a = document.activeElement;
@@ -2787,35 +2999,254 @@
       return lines.join('\n');
     }
 
-    function openHubNamePromptModal(hubId) {
+    // Tier-specific framing inserted into the <context> block.
+    function tierFraming(tier) {
+      if (tier <= 1) {
+        return 'Focus on lived human friction: who is affected, in what context, when does it happen, and what workaround do they already improvise.';
+      }
+      if (tier === 2) {
+        return 'Focus on systemic / structural patterns that bridge the child clusters: shared infrastructures, shared incentive structures, shared power asymmetries, shared regulatory gaps.';
+      }
+      return 'Focus on meta-themes and ideological substrates — the civilizational, economic, or epistemic pattern that these systems all rest on. The abstraction level is high; demand specificity anyway, with named mechanisms, not category labels.';
+    }
+
+    // Three task / thinking / format blocks per mode. Each mode adds one rule.
+    const HUB_PROMPT_MODES = {
+      throughline: {
+        task: 'Help the user find the THROUGH-LINE of this {tierLabel} — the deep mechanism or shared barrier that genuinely connects everything underneath, beyond any surface topic. A through-line is not a category label; it is the underlying mechanism, power structure, missing affordance, or human experience that makes these signals belong together.',
+        thinking: [
+          'Read each signal. Note the specific actor, action, and barrier.',
+          'Group the signals by *mechanism*, not by topic.',
+          'Find the single mechanism most signals share. If the contents do not share one cleanly, surface the 2 most plausible.',
+          'Test the through-line: would removing it from the world resolve most of these signals? If not, it is not the through-line.'
+        ],
+        output: `## Through-line candidate
+1–2 sentences. Mechanism-level. Specific.
+
+## Why this fits
+3–5 bullets — which signals point at this and HOW.
+
+## What does not fit
+1–3 bullets — signals that don't cleanly fit, with a guess why they're here.
+
+## Sharpening question
+One question I must answer before locking this in.`,
+        modeRule: 'Resist topical names. If the candidate sounds like a category, return to step 3.'
+      },
+      name: {
+        task: 'Help the user write a precise NAME and DESCRIPTION for this {tierLabel}. A good name is ≤ 6 words, concrete, and points at the mechanism, not the topic. A good description is 1–2 sentences that name the actor, the mechanism, and the consequence.',
+        thinking: [
+          'Identify the actor (who feels the pain) and the mechanism (what makes the pain happen) common to most signals.',
+          'Draft 3 candidate names that vary in framing: one experiential, one structural, one provocative.',
+          'For each, write a description that includes actor + mechanism + consequence.',
+          'Rank them by which one a stranger could understand without seeing the signals.'
+        ],
+        output: `## Candidates (ranked)
+
+### 1. {Most defensible name}
+**Description:** 1–2 sentences (actor + mechanism + consequence).
+**Why this leads:** 1 line.
+
+### 2. {Alternative framing}
+**Description:** 1–2 sentences.
+**Why this is interesting:** 1 line.
+
+### 3. {Provocative framing}
+**Description:** 1–2 sentences.
+**Why this could be risky:** 1 line.
+
+## Locking-in question
+The one question to answer before committing to a name.`,
+        modeRule: '≤ 6 words per name; reject anything that sounds like a domain label.'
+      },
+      stress: {
+        task: "Stress-test the user's current framing of this {tierLabel}. Surface what is wrong, missing, or assumed. The goal is to make the user defend their clustering — not to validate it.",
+        thinking: [
+          'Read the working title + description as a claim.',
+          'For each signal, ask: does it actually support this claim, or is it being made to fit?',
+          'Identify the strongest counter-grouping that could be made from the same signals.',
+          'Identify whose voice / context / stakeholder position is NOT represented and would likely complicate the framing.',
+          'Identify hidden assumptions — economic, geographic, demographic, technological — baked into the description.'
+        ],
+        output: `## Where this framing breaks
+3 bullets. Each names the specific signal(s) that don't fit, and why.
+
+## A stronger counter-grouping
+1–2 sentences proposing an alternative cluster from the same signals, and what it would change.
+
+## Voices missing
+2–3 bullets — whose lived experience is absent and what they would likely complicate.
+
+## Hidden assumptions
+3 bullets — economic / geographic / demographic / technological. Name each assumption explicitly.
+
+## The one defense
+A single question the user must be able to answer to defend the current framing as-is.`,
+        modeRule: 'Do not soften criticisms; the user benefits from being challenged here, not reassured.'
+      }
+    };
+
+    function buildHubPrompt(hubId, mode) {
+      const c = appState.clusters.find(c => c.id === hubId);
+      if (!c) return '';
+      const tier = hubTier(hubId);
+      const label = tierLabel(tier);
+      const m = HUB_PROMPT_MODES[mode] || HUB_PROMPT_MODES.throughline;
+      const task = m.task.replaceAll('{tierLabel}', label);
+      const thinking = m.thinking.map((s, i) => `${i + 1}. ${s}`).join('\n');
+      const contents = formatHubForPrompt(hubId, 0, 2) || '(none yet)';
+      return `<role>
+You are an expert critical theorist, design researcher, and qualitative
+sensemaking partner. You act as a sparring partner — you do not write
+the user's synthesis for them. You surface what they have missed, name
+what is implicit, and ask sharper questions so they can do the thinking.
+</role>
+
+<context>
+The user is in the "Synth Sprint" phase of a problematization workshop.
+They are clustering observed friction signals from real interviews into
+defensible problem spaces. They are working on one ${label} in their
+web map.
+
+${tierFraming(tier)}
+</context>
+
+<cluster>
+  <tier>${label}</tier>
+  <current_title>${c.title || '(none yet)'}</current_title>
+  <current_description>${c.description || '(none yet)'}</current_description>
+  <contents>
+${contents}
+  </contents>
+</cluster>
+
+<task>${task}</task>
+
+<thinking_steps>
+Before producing output, work through these steps internally:
+${thinking}
+</thinking_steps>
+
+<output_format>
+${m.output}
+</output_format>
+
+<rules>
+- Do NOT propose solutions, interventions, products, or features.
+- Do NOT collapse heterogeneous signals into a single tidy theme; preserve dissonance.
+- Be specific — name actors, contexts, mechanisms, and consequences; avoid jargon and category words like "ecosystem", "experience", "journey".
+- If the contents are too thin to answer well, say so explicitly and ask the user what is missing.
+- ${m.modeRule}
+</rules>`;
+    }
+
+    // State for the AI modal so the tabs know which hub & mode they're driving.
+    let currentAIHubId = null;
+    let currentAIMode = 'throughline';
+
+    function openHubAIModal(hubId, mode) {
       const c = appState.clusters.find(c => c.id === hubId);
       if (!c) return;
+      currentAIHubId = hubId;
+      currentAIMode = mode || 'throughline';
       const tier = hubTier(hubId);
       const label = tierLabel(tier);
       const titleEl = document.getElementById('ai-modal-title');
+      const blurb = document.getElementById('ai-modal-blurb');
+      const tabs = document.getElementById('ai-mode-tabs');
       const ta = document.getElementById('ai-prompt-text');
-      if (titleEl) titleEl.textContent = `Suggest a name & description for this ${label}`;
-      const contents = formatHubForPrompt(hubId, 0, 2);
-      const leafCount = allSignalsUnderHub(hubId).length;
-      const prompt = `Act as a critical theorist and sensemaking partner.\n\n` +
-        `I have a ${label} on my problem-space map (${leafCount} leaf signal${leafCount === 1 ? '' : 's'} underneath). Help me name it and write a 1–2 sentence shared-barrier description that captures what genuinely connects everything underneath it — not just the surface topic.\n\n` +
-        `Propose:\n` +
-        `1. Three candidate titles, ranked, each ≤ 6 words and concrete.\n` +
-        `2. One 1–2 sentence description per title.\n` +
-        `3. The deepest framing question I should ask before locking in a name.\n\n` +
-        `— Current working title: ${c.title || '(none yet)'}\n` +
-        `— Current working description: ${c.description || '(none yet)'}\n\n` +
-        `Direct members${tier >= 2 ? ' (sub-hubs expanded one level)' : ''}:\n${contents || '(none yet)'}`;
-      ta.value = prompt;
+      if (titleEl) titleEl.textContent = `AI thinking partner — ${label} "${c.title || 'Untitled'}"`;
+      if (blurb) blurb.textContent = 'Pick how you want the AI to push your thinking. The prompt is engineered with explicit role, context, thinking steps, and output structure so models give you sharper, more specific responses.';
+      if (tabs) {
+        tabs.classList.remove('hidden');
+        tabs.querySelectorAll('.ai-mode-tab').forEach(btn => {
+          btn.classList.toggle('is-active', btn.getAttribute('data-mode') === currentAIMode);
+        });
+      }
+      ta.value = buildHubPrompt(hubId, currentAIMode);
       openModal('ai-modal');
     }
 
+    function switchAIMode(mode) {
+      if (!currentAIHubId) return;
+      currentAIMode = mode;
+      const ta = document.getElementById('ai-prompt-text');
+      ta.value = buildHubPrompt(currentAIHubId, mode);
+      document.querySelectorAll('#ai-mode-tabs .ai-mode-tab').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-mode') === mode);
+      });
+      ta.focus();
+      ta.setSelectionRange(0, 0);
+    }
+
+    // Back-compat shim — the old name is still wired to the hub buttons.
+    function openHubNamePromptModal(hubId) { openHubAIModal(hubId, 'throughline'); }
+
     function openAIPromptModal() {
+      currentAIHubId = null;
+      const tabs = document.getElementById('ai-mode-tabs');
+      if (tabs) tabs.classList.add('hidden');
+      const blurb = document.getElementById('ai-modal-blurb');
+      if (blurb) blurb.textContent = 'Copy this text chunk and paste it into an AI tool to spot hidden patterns across the entire pool before you group them yourself.';
       const titleEl = document.getElementById('ai-modal-title');
-      if (titleEl) titleEl.textContent = 'AI Assistant Sparring Partner';
+      if (titleEl) titleEl.textContent = 'AI thinking partner — explore the pool';
       const t = document.getElementById('ai-prompt-text');
-      let p = `Act as an expert UX researcher and sensemaking partner.\n\nI have collected a list of ${appState.items.length} observed friction signals. Before I start clustering these into problem spaces, I need to fully understand the landscape of this data.\n\nPlease read the items below and follow this 3-step process:\n\n1. UNDERSTAND THE LANDSCAPE: Provide a concise, high-level summary of the major themes and pain points represented here. What are the loudest and most urgent signals?\n2. NOTICE THROUGHLINES: Point out 1 or 2 unexpected structural connections or hidden patterns across seemingly different contexts (e.g., healthcare systems vs. environmental compliance).\n3. GUIDE CLUSTERING: Ask me 2 provocative, probing questions to help me start grouping these into meaningful problem spaces myself. DO NOT do the clustering for me.\n\nHere is the raw data pool:\n`;
-      appState.items.forEach(i => p += `\n- [${i.title}] ${i.summary}`);
+      const signalList = appState.items.map(i => `  - "${i.title}": ${i.summary}`).join('\n');
+      const p = `<role>
+You are an expert critical theorist, design researcher, and qualitative
+sensemaking partner. You act as a sparring partner — you do not write
+the user's synthesis for them. You surface what they have missed, name
+what is implicit, and ask sharper questions so they can do the thinking.
+</role>
+
+<context>
+The user is at the start of the "Synth Sprint" phase of a problematization
+workshop. Before they cluster these friction signals into problem spaces,
+they need to see the landscape of the data — the loudest signals, the
+unexpected throughlines, and the questions that will lead to better
+clustering than they could make alone.
+</context>
+
+<signals count="${appState.items.length}">
+${signalList}
+</signals>
+
+<task>
+Read every signal and follow this 3-step process:
+
+1. UNDERSTAND THE LANDSCAPE — A concise, high-level summary of the major
+   pain points represented here. Which signals are loudest, most urgent,
+   most repeated?
+2. SURFACE UNEXPECTED THROUGHLINES — Name 1–2 structural connections that
+   cross seemingly different contexts (e.g., healthcare records and
+   environmental compliance might share a "fragmented public data"
+   pattern). These should be mechanism-level, not topic-level.
+3. ASK PROVOCATIVE QUESTIONS — Ask the user 2 sharp, probing questions
+   that will help them cluster these themselves. The questions should
+   force the user to defend their groupings, not validate them.
+</task>
+
+<output_format>
+## Landscape
+2–4 sentences summarizing the loudest and most urgent signals. Name the
+specific signals where useful.
+
+## Throughlines (2)
+For each throughline:
+**Pattern:** 1 sentence naming the mechanism.
+**Signals it crosses:** 3+ signal titles that exemplify it.
+**Why this is non-obvious:** 1 sentence.
+
+## Two questions for the user
+Numbered. Each ≤ 30 words. Each forces a defense, not a description.
+</output_format>
+
+<rules>
+- Do NOT cluster the data for the user. You name patterns; they do the clustering.
+- Do NOT propose solutions, products, or interventions.
+- Be specific — name signals by their title; avoid category labels like "the healthcare ones".
+- Preserve dissonance — if two signals seem to belong together but actually point at opposed mechanisms, say so.
+</rules>`;
       t.value = p;
       openModal('ai-modal');
     }
@@ -3003,17 +3434,88 @@
       if (interviewEl) interviewEl.textContent = buildInterviewPromptForCommitted(committed);
 
       const container = document.getElementById('workspace-cards-container');
+      const jumpBar = document.getElementById('workspace-jump-bar');
       container.innerHTML = '';
+      if (jumpBar) jumpBar.innerHTML = '';
       if (!committed.length) {
         const empty = document.createElement('p');
         empty.style.cssText = 'background: var(--ghost-white); padding: 24px; border-radius: 12px; border: 2px solid var(--cloud); color: var(--midnight);';
         empty.textContent = 'No clusters committed yet. Go back to the board to commit 2–3 clusters first.';
         container.appendChild(empty);
       } else {
+        // Build the jump bar first (>1 card only).
+        if (jumpBar && committed.length > 1) {
+          const label = document.createElement('span');
+          label.className = 'ws-jump-label';
+          label.textContent = 'Jump to:';
+          jumpBar.appendChild(label);
+          committed.forEach((cluster, idx) => {
+            const tier = hubTier(cluster.id);
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'workspace-jump-chip tier-' + Math.min(tier, 6);
+            chip.setAttribute('data-cluster-id', cluster.id);
+            chip.innerHTML = `<span class="ws-jump-tier">${escapeHtml(tierLabel(tier))}</span><span>${escapeHtml(cluster.title || 'Untitled')}</span>`;
+            chip.addEventListener('click', () => {
+              const card = document.getElementById('ws-card-' + cluster.id);
+              if (!card) return;
+              card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              const firstField = card.querySelector('textarea');
+              if (firstField) setTimeout(() => firstField.focus({ preventScroll: true }), 320);
+            });
+            if (idx === 0) chip.classList.add('is-active');
+            jumpBar.appendChild(chip);
+          });
+        }
         committed.forEach(cluster => container.appendChild(renderCommittedClusterCard(cluster)));
+        // Wire focus highlight + IntersectionObserver for the jump bar.
+        setupWorkspaceFocusTracking(committed);
       }
 
       recomputeSubmitButton();
+    }
+
+    let workspaceObserver = null;
+    function setupWorkspaceFocusTracking(committed) {
+      const container = document.getElementById('workspace-cards-container');
+      // Focus highlight via delegated focusin/focusout.
+      container.onfocusin = (e) => {
+        const card = e.target.closest('.workspace-cluster-card');
+        if (!card) return;
+        document.querySelectorAll('.workspace-cluster-card.is-focused').forEach(el => el.classList.remove('is-focused'));
+        card.classList.add('is-focused');
+        // Sync the jump-bar active chip.
+        const id = card.id.replace('ws-card-', '');
+        document.querySelectorAll('.workspace-jump-chip').forEach(c => {
+          c.classList.toggle('is-active', c.getAttribute('data-cluster-id') === id);
+        });
+      };
+      container.onfocusout = (e) => {
+        // Don't clear if focus is moving within the same card.
+        const card = e.target.closest('.workspace-cluster-card');
+        const next = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.workspace-cluster-card');
+        if (card && card !== next) card.classList.remove('is-focused');
+      };
+      // IntersectionObserver: as the user scrolls without focus, still highlight the chip of the most-visible card.
+      if (workspaceObserver) workspaceObserver.disconnect();
+      if (!('IntersectionObserver' in window)) return;
+      const screenEl = document.getElementById('workspace-screen');
+      workspaceObserver = new IntersectionObserver((entries) => {
+        // Only update if no textarea is currently focused (focusin path wins).
+        if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') return;
+        entries.forEach(entry => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+            const id = entry.target.id.replace('ws-card-', '');
+            document.querySelectorAll('.workspace-jump-chip').forEach(c => {
+              c.classList.toggle('is-active', c.getAttribute('data-cluster-id') === id);
+            });
+          }
+        });
+      }, { root: screenEl, threshold: [0.5] });
+      committed.forEach(cluster => {
+        const card = document.getElementById('ws-card-' + cluster.id);
+        if (card) workspaceObserver.observe(card);
+      });
     }
 
     function renderCommittedClusterCard(cluster) {
@@ -3031,9 +3533,14 @@
       const stakeholderPromptId = `stakeholder-prompt-${cluster.id}`;
 
       const tier = hubTier(cluster.id);
+      card.id = 'ws-card-' + cluster.id;
+      card.setAttribute('data-tier', String(tier));
       card.innerHTML = `
         <header>
-          <h3>${escapeHtml(cluster.title || 'Untitled')} <span style="font-size:0.7rem; color:var(--primary-teal); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:6px;">${escapeHtml(tierLabel(tier))}</span></h3>
+          <div class="ws-card-titlerow">
+            <span class="ws-card-tier tier-${Math.min(tier, 6)}">${escapeHtml(tierLabel(tier))}</span>
+            <h3>${escapeHtml(cluster.title || 'Untitled')}</h3>
+          </div>
           ${cluster.description ? `<p class="cluster-desc">${escapeHtml(cluster.description)}</p>` : ''}
           <ul class="signal-chips">
             ${signals.map(s => `<li>${escapeHtml(s.title)}</li>`).join('')}
