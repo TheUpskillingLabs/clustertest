@@ -1056,6 +1056,7 @@
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
           <button class="btn btn-outline" onclick="openAIPromptModal()" aria-label="Get AI brainstorming prompt for the full signal pool">✨ AI Prompt</button>
+          <button id="tidy-btn" class="btn btn-outline" onclick="tidyLayout()" title="Snap clusters back into clean concentric rings (keeps your angles). Shift+T" aria-label="Auto-arrange the cluster network into clean concentric tier rings">🧹 Tidy layout</button>
           <button class="btn btn-primary" onclick="openCommitModal()">Commit to Clusters</button>
         </div>
       </div>
@@ -1627,22 +1628,28 @@
       const tier = isHubId(nodeId) ? hubTier(nodeId) : 0;
       return Math.pow(4, tier);
     }
-    // Ideal radius a parent wants its children to orbit at.
-    function idealRadiusFor(parentId, n) {
-      const c = appState.clusters.find(c => c.id === parentId);
-      if (!c) return 220;
-      const hasHubChildren = (c.hubIds || []).length > 0;
-      const parentTier = hubTier(parentId);
-      const base = hasHubChildren ? 260 + Math.max(0, parentTier - 2) * 60 : 200;
-      const step = hasHubChildren ? 36 : 22;
+    // Ideal radius for a child to orbit its parent — keyed on the CHILD's
+    // tier (so a signal under a mega cluster still sits at signal-distance,
+    // and a supercluster under a hyper cluster sits at supercluster-distance).
+    // Geometric growth per tier so higher tiers are visibly further out.
+    const TIER_BASE_R = [180, 340, 600, 1040, 1760, 2900]; // signal..hyper
+    const TIER_STEP_R = [22,  38,  62,  100,  160,  240];
+    const TIER_RATIO  = 1.72;
+    function idealRadiusForChild(childTier, n) {
+      const t = Math.max(0, Math.min(childTier, 12));
+      const base = TIER_BASE_R[t] ?? TIER_BASE_R[5] * Math.pow(TIER_RATIO, t - 5);
+      const step = TIER_STEP_R[t] ?? TIER_STEP_R[5] * Math.pow(TIER_RATIO, t - 5);
       return base + Math.max(0, n - 2) * step;
     }
     // Find the largest empty angular gap around a parent and return that angle.
-    function bestAngularSlot(parentId) {
+    function bestAngularSlot(parentId, childTier) {
       const c = appState.clusters.find(c => c.id === parentId);
-      if (!c) return { angle: -Math.PI / 2, radius: 220 };
+      const t = (typeof childTier === 'number') ? childTier : 0;
+      if (!c) return { angle: -Math.PI / 2, radius: idealRadiusForChild(t, 1) };
       const members = [...c.itemIds, ...(c.hubIds || [])];
-      const radius = idealRadiusFor(parentId, members.length + 1);
+      // Count how many existing members already orbit at the new child's tier.
+      const sameTierCount = members.filter(mid => (isHubId(mid) ? hubTier(mid) : 0) === t).length;
+      const radius = idealRadiusForChild(t, sameTierCount + 1);
       if (members.length === 0) return { angle: -Math.PI / 2, radius };
       const center = nodeCenter(parentId);
       const angles = members
@@ -1661,13 +1668,229 @@
         const a = angles[i];
         const b = angles[(i + 1) % angles.length];
         let gap = (b - a + Math.PI * 2) % (Math.PI * 2);
-        if (gap === 0) gap = Math.PI * 2; // shouldn't happen with sorted distinct
+        if (gap === 0) gap = Math.PI * 2;
         if (gap > bestGap) {
           bestGap = gap;
           bestMid = a + gap / 2;
         }
       }
       return { angle: bestMid, radius };
+    }
+
+    // Tidy the whole network: keep each child's angle around its parent;
+    // snap radii to the correct per-child-tier orbit; settle free signals
+    // onto the asteroid belt at their current angles. Tween smoothly.
+    let tidyAnim = null;
+    function tidyLayout() {
+      if (tidyAnim || relaxAnim) { toast('Already arranging…'); return; }
+      const tidyBtn = document.getElementById('tidy-btn');
+      if (tidyBtn) tidyBtn.disabled = true;
+
+      const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Build mass + dims maps so we can compute centroids and convert centers to top-left.
+      const allIds = [];
+      const dims = {};
+      const mass = {};
+      appState.items.forEach(it => {
+        if (!appState.nodes[it.id]) return;
+        allIds.push(it.id);
+        dims[it.id] = nodeSize('signal');
+        mass[it.id] = nodeMass(it.id);
+      });
+      appState.clusters.forEach(c => {
+        if (!appState.nodes[c.id]) return;
+        allIds.push(c.id);
+        dims[c.id] = nodeSize('hub', c.id);
+        mass[c.id] = nodeMass(c.id);
+      });
+      if (!allIds.length) { if (tidyBtn) tidyBtn.disabled = false; return; }
+
+      const startCenter = {};
+      allIds.forEach(id => {
+        const p = getNodePos(id);
+        const d = dims[id];
+        startCenter[id] = { x: p.x + d.w / 2, y: p.y + d.h / 2 };
+      });
+
+      // Mass-weighted active centroid over hubs + in-cluster signals.
+      const isFree = (id) => !isHubId(id) && !parentHubId(id);
+      let acx = 0, acy = 0, am = 0;
+      allIds.forEach(id => {
+        if (isFree(id)) return;
+        acx += startCenter[id].x * mass[id];
+        acy += startCenter[id].y * mass[id];
+        am += mass[id];
+      });
+      if (am > 0) { acx /= am; acy /= am; }
+      else {
+        // Fallback: viewport center in world space.
+        const canvas = document.querySelector('.canvas-content') || document.body;
+        const r = canvas.getBoundingClientRect();
+        acx = (r.width || 1400) / 2;
+        acy = (r.height || 900) / 2;
+      }
+
+      // Target centers — build by walking from top-level hubs down.
+      const target = {};
+      const topHubs = appState.clusters.filter(c => appState.nodes[c.id] && !parentHubId(c.id)).map(c => c.id);
+
+      // Position top-level hubs.
+      if (topHubs.length === 1) {
+        target[topHubs[0]] = { x: acx, y: acy };
+      } else if (topHubs.length > 1) {
+        // Current angles around centroid.
+        const cur = topHubs.map(id => ({
+          id,
+          ang: Math.atan2(startCenter[id].y - acy, startCenter[id].x - acx),
+          tier: hubTier(id)
+        }));
+        const sorted = [...cur].sort((a, b) => a.ang - b.ang);
+        // Find min consecutive gap (wrap-around).
+        let minGap = Infinity;
+        for (let i = 0; i < sorted.length; i++) {
+          const a = sorted[i].ang;
+          const b = sorted[(i + 1) % sorted.length].ang;
+          let g = (b - a + Math.PI * 2) % (Math.PI * 2);
+          if (g === 0) g = Math.PI * 2;
+          if (g < minGap) minGap = g;
+        }
+        const bunched = minGap < (80 * Math.PI / 180);
+        // Top-level ring radius: scale from the largest child tier present.
+        const topTier = Math.max(...cur.map(c => c.tier));
+        const ringR = idealRadiusForChild(topTier, topHubs.length) * 1.1;
+        if (bunched) {
+          // Evenly space them, preserving the rotational starting angle of the heaviest hub.
+          const heavy = cur.slice().sort((a, b) => mass[b.id] - mass[a.id])[0];
+          const startAng = heavy.ang;
+          const step = (Math.PI * 2) / topHubs.length;
+          // Preserve order around the circle as drawn.
+          const ordered = [...sorted];
+          const startIdx = ordered.findIndex(o => o.id === heavy.id);
+          ordered.forEach((o, k) => {
+            const offset = ((k - startIdx) + ordered.length) % ordered.length;
+            const ang = startAng + offset * step;
+            target[o.id] = { x: acx + Math.cos(ang) * ringR, y: acy + Math.sin(ang) * ringR };
+          });
+        } else {
+          cur.forEach(o => {
+            target[o.id] = { x: acx + Math.cos(o.ang) * ringR, y: acy + Math.sin(o.ang) * ringR };
+          });
+        }
+      }
+
+      // Recursively position each hub's children around the hub's NEW center.
+      const placeChildren = (hubId) => {
+        const c = appState.clusters.find(c => c.id === hubId);
+        if (!c) return;
+        const members = [...c.itemIds, ...(c.hubIds || [])].filter(mid => appState.nodes[mid]);
+        if (!members.length) return;
+        const pcx = target[hubId].x, pcy = target[hubId].y;
+        // Per-tier sibling counts for ring sizing.
+        const tierMembers = {};
+        members.forEach(mid => {
+          const t = isHubId(mid) ? hubTier(mid) : 0;
+          (tierMembers[t] = tierMembers[t] || []).push(mid);
+        });
+        // For each tier ring, take current angles, sort, fix near-collisions.
+        Object.keys(tierMembers).forEach(tKey => {
+          const t = parseInt(tKey, 10);
+          const ring = tierMembers[t];
+          const R = idealRadiusForChild(t, ring.length);
+          const entries = ring.map(mid => ({
+            id: mid,
+            ang: Math.atan2(startCenter[mid].y - pcy, startCenter[mid].x - pcx)
+          }));
+          entries.sort((a, b) => a.ang - b.ang);
+          // Spread any near-collisions (< 12°) by nudging successive entries.
+          const minSep = 12 * Math.PI / 180;
+          for (let i = 1; i < entries.length; i++) {
+            const prev = entries[i - 1].ang;
+            if (entries[i].ang - prev < minSep) entries[i].ang = prev + minSep;
+          }
+          // Wrap-around fix: if last vs first (after +2π) collide, push first slightly.
+          if (entries.length > 1) {
+            const wrap = (entries[0].ang + Math.PI * 2) - entries[entries.length - 1].ang;
+            if (wrap < minSep) {
+              const total = entries[entries.length - 1].ang - entries[0].ang;
+              const ideal = (Math.PI * 2) / entries.length;
+              entries.forEach((e, k) => { e.ang = entries[0].ang + k * Math.max(ideal, minSep); });
+            }
+          }
+          entries.forEach(e => {
+            target[e.id] = { x: pcx + Math.cos(e.ang) * R, y: pcy + Math.sin(e.ang) * R };
+          });
+        });
+        // Recurse into sub-hubs.
+        (c.hubIds || []).forEach(hid => placeChildren(hid));
+      };
+      topHubs.forEach(placeChildren);
+
+      // Free signals: place on the asteroid belt at their current angle around (acx, acy).
+      // Compute activeOuter from TARGET positions so the belt sits outside the new layout.
+      let activeOuter = 0;
+      allIds.forEach(id => {
+        if (isFree(id)) return;
+        const tc = target[id] || startCenter[id];
+        const d = Math.hypot(tc.x - acx, tc.y - acy);
+        if (d > activeOuter) activeOuter = d;
+      });
+      const beltR = activeOuter + 260;
+      allIds.forEach(id => {
+        if (!isFree(id)) return;
+        const dx = startCenter[id].x - acx, dy = startCenter[id].y - acy;
+        const d = Math.hypot(dx, dy);
+        const ang = d < 1 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx);
+        target[id] = { x: acx + Math.cos(ang) * beltR, y: acy + Math.sin(ang) * beltR };
+      });
+
+      // Convert target centers to top-left and apply (with optional tween).
+      const writePos = (id, cx, cy) => {
+        const d = dims[id];
+        setNodePos(id, cx - d.w / 2, cy - d.h / 2);
+        const el = document.getElementById('node-' + id);
+        if (el) { el.style.left = (cx - d.w / 2) + 'px'; el.style.top = (cy - d.h / 2) + 'px'; }
+      };
+
+      const finish = () => {
+        tidyAnim = null;
+        if (tidyBtn) tidyBtn.disabled = false;
+        // Polish pass — relax around the heaviest top-level hub (or whatever exists).
+        let focus = null;
+        if (topHubs.length) {
+          focus = topHubs.slice().sort((a, b) => mass[b] - mass[a])[0];
+        }
+        relaxLayoutAround(focus);
+        scheduleSave();
+      };
+
+      if (reduceMotion) {
+        allIds.forEach(id => {
+          const t = target[id]; if (!t) return;
+          writePos(id, t.x, t.y);
+        });
+        renderAllEdges();
+        finish();
+        return;
+      }
+
+      const startTs = performance.now();
+      const duration = 520;
+      // cubic-bezier(0.22, 1, 0.36, 1) — easeOutQuint-ish
+      const ease = (t) => 1 - Math.pow(1 - t, 4);
+      const step = (now) => {
+        const k = Math.min(1, (now - startTs) / duration);
+        const e = ease(k);
+        allIds.forEach(id => {
+          const t = target[id]; if (!t) return;
+          const s = startCenter[id];
+          writePos(id, s.x + (t.x - s.x) * e, s.y + (t.y - s.y) * e);
+        });
+        renderAllEdges();
+        if (k < 1) tidyAnim = requestAnimationFrame(step);
+        else finish();
+      };
+      tidyAnim = requestAnimationFrame(step);
     }
 
     // Is targetId an ancestor of nodeId (or equal)?
@@ -2204,7 +2427,8 @@
 
     function addUnderExistingParent(parentId, childId, source) {
       // Compute pre-placement target BEFORE we mutate state (so existing siblings drive the slot search).
-      const slot = bestAngularSlot(parentId);
+      const childTier = isHubId(childId) ? hubTier(childId) : 0;
+      const slot = bestAngularSlot(parentId, childTier);
       const parentCenter = nodeCenter(parentId);
       const childKind = isHubId(childId) ? 'hub' : 'signal';
       const cdims = nodeSize(childKind, childId);
@@ -2456,15 +2680,20 @@
           }
         }
 
-        // Hub springs (signals + sub-hubs).
+        // Hub springs (signals + sub-hubs). Radius is per CHILD tier, so a
+        // signal under a mega cluster sits at signal-radius (not mega-child-radius).
         appState.clusters.forEach(cluster => {
           if (!pos[cluster.id]) return;
           const hub = cluster.id;
           const members = [...cluster.itemIds, ...(cluster.hubIds || [])];
           const n = members.length;
-          const R = idealRadiusFor(hub, n);
-          // Hub anchor: gentle pull toward centroid of members (lets the heavy
-          // hub center itself among its kids even with strong mass).
+          // Per-tier sibling counts for n-based fan-out within the same ring.
+          const tierCounts = {};
+          members.forEach(mid => {
+            const t = isHubId(mid) ? hubTier(mid) : 0;
+            tierCounts[t] = (tierCounts[t] || 0) + 1;
+          });
+          // Hub anchor: gentle pull toward centroid of members.
           if (n > 0) {
             let cx = 0, cy = 0, count = 0;
             members.forEach(mid => {
@@ -2480,13 +2709,14 @@
               fy[hub] += (cy - hcy) * HUB_ANCHOR_K;
             }
           }
-          // Member spring at radius R from hub. Equal & opposite forces;
-          // mass handles the asymmetry — heavy hubs barely accelerate.
+          // Per-member spring at this member's tier radius.
           const hd = dims[hub];
           const hcx = pos[hub].x + hd.w / 2, hcy = pos[hub].y + hd.h / 2;
           members.forEach(mid => {
             if (!pos[mid]) return;
             const dd = dims[mid];
+            const childTier = isHubId(mid) ? hubTier(mid) : 0;
+            const R = idealRadiusForChild(childTier, tierCounts[childTier] || 1);
             const sx = pos[mid].x + dd.w / 2, sy = pos[mid].y + dd.h / 2;
             const dx = sx - hcx, dy = sy - hcy;
             const dist = Math.hypot(dx, dy) || 0.01;
@@ -2879,6 +3109,11 @@
         }
         if (isTyping()) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
+        if (e.shiftKey && (e.key === 'T' || e.key === 't')) {
+          e.preventDefault();
+          tidyLayout();
+          return;
+        }
         switch (e.key) {
           case '+': case '=':
             e.preventDefault(); zoomBy(1); break;
