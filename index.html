@@ -1649,260 +1649,82 @@
       const step = TIER_STEP_R[t] ?? TIER_STEP_R[5] * Math.pow(TIER_RATIO, t - 5);
       return base + Math.max(0, n - 2) * step;
     }
-    // Find the largest empty angular gap around a parent and return that angle.
-    function bestAngularSlot(parentId, childTier) {
-      const c = appState.clusters.find(c => c.id === parentId);
-      const t = (typeof childTier === 'number') ? childTier : 0;
-      if (!c) return { angle: -Math.PI / 2, radius: idealRadiusForChild(t, 1) };
-      const members = [...c.itemIds, ...(c.hubIds || [])];
-      // Count how many existing members already orbit at the new child's tier.
-      const sameTierCount = members.filter(mid => (isHubId(mid) ? hubTier(mid) : 0) === t).length;
-      const radius = idealRadiusForChild(t, sameTierCount + 1);
-      if (members.length === 0) return { angle: Math.random() * Math.PI * 2, radius };
-      const center = nodeCenter(parentId);
-      const angles = members
-        .filter(mid => appState.nodes[mid])
-        .map(mid => {
-          const p = nodeCenter(mid);
-          return Math.atan2(p.y - center.y, p.x - center.x);
-        })
-        .sort((a, b) => a - b);
-      if (angles.length === 0) return { angle: Math.random() * Math.PI * 2, radius };
-      if (angles.length === 1) return { angle: angles[0] + Math.PI, radius };
-      // Largest gap (wrap around).
-      let bestGap = -Infinity;
-      let bestMid = angles[0] + Math.PI;
-      for (let i = 0; i < angles.length; i++) {
-        const a = angles[i];
-        const b = angles[(i + 1) % angles.length];
-        let gap = (b - a + Math.PI * 2) % (Math.PI * 2);
-        if (gap === 0) gap = Math.PI * 2;
-        if (gap > bestGap) {
-          bestGap = gap;
-          bestMid = a + gap / 2;
-        }
-      }
-      return { angle: bestMid, radius };
+    // All descendant node ids under a root (excludes the root), DFS order.
+    function subtreeNodeIds(rootId) {
+      const out = [];
+      const walk = (id) => {
+        const c = appState.clusters.find(c => c.id === id);
+        if (!c) return;
+        [...c.itemIds, ...(c.hubIds || [])].forEach(k => {
+          if (appState.nodes[k]) { out.push(k); walk(k); }
+        });
+      };
+      walk(rootId);
+      return out;
     }
 
-    // Tidy the whole network: keep each child's angle around its parent;
-    // snap radii to the correct per-child-tier orbit; settle free signals
-    // onto the asteroid belt at their current angles. Tween smoothly.
-    let tidyAnim = null;
+    // Deterministic, crossing-free radial tree layout. Lays out the whole
+    // subtree of rootId as absolute CENTER positions, given where the root
+    // center should sit. Each subtree gets a disjoint angular wedge and a
+    // radius that strictly increases with depth → edges fan out and can
+    // never cross. Returns { positions:{id:{x,y}}, depth:{id:n}, boundingRadius }.
+    function computeRadialTree(rootId, rootCenter) {
+      const positions = {};
+      const depth = {};
+      let boundingRadius = 0;
+      const WEDGE_SHRINK = 0.82; // breathing room between sibling subtrees
+      const leafMemo = {};
+      const leafCount = (id) => {
+        if (leafMemo[id] != null) return leafMemo[id];
+        const c = appState.clusters.find(c => c.id === id);
+        if (!c) return (leafMemo[id] = 1);
+        const kids = [...c.itemIds, ...(c.hubIds || [])].filter(k => appState.nodes[k]);
+        if (!kids.length) return (leafMemo[id] = 1);
+        let s = 0; kids.forEach(k => s += leafCount(k));
+        return (leafMemo[id] = s);
+      };
+      const childrenOf = (id) => {
+        const c = appState.clusters.find(c => c.id === id);
+        if (!c) return [];
+        return [...c.itemIds, ...(c.hubIds || [])]
+          .filter(k => appState.nodes[k])
+          // Heaviest subtrees first (stable) so the fan reads consistently.
+          .sort((a, b) => (leafCount(b) - leafCount(a)) || (a < b ? -1 : 1));
+      };
+      const place = (id, mid, half, radius, dep) => {
+        positions[id] = { x: rootCenter.x + Math.cos(mid) * radius, y: rootCenter.y + Math.sin(mid) * radius };
+        depth[id] = dep;
+        const d = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
+        const br = radius + Math.hypot(d.w, d.h) / 2;
+        if (br > boundingRadius) boundingRadius = br;
+        const kids = childrenOf(id);
+        if (!kids.length) return;
+        const total = kids.reduce((s, k) => s + leafCount(k), 0) || 1;
+        let cursor = mid - half;
+        kids.forEach(kid => {
+          const frac = leafCount(kid) / total;
+          const kidHalf = frac * half;            // kid's allocated sub-wedge
+          const kidMid = cursor + kidHalf;
+          const childTier = isHubId(kid) ? hubTier(kid) : 0;
+          const gap = idealRadiusForChild(childTier, kids.length);
+          place(kid, kidMid, kidHalf * WEDGE_SHRINK, radius + gap, dep + 1);
+          cursor += 2 * kidHalf;
+        });
+      };
+      place(rootId, 0, Math.PI, 0, 0); // root at center, full 360° fan
+      return { positions, depth, boundingRadius };
+    }
+
+    // Tidy: re-run the deterministic radial layout for every tree and let
+    // the repulsion settle separate systems apart. Same engine as the
+    // auto-relax, just triggered manually and focused on the heaviest hub.
     function tidyLayout() {
-      if (tidyAnim || relaxAnim) { toast('Already arranging…'); return; }
-      const tidyBtn = document.getElementById('tidy-btn');
-      if (tidyBtn) tidyBtn.disabled = true;
-
-      const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      // Build mass + dims maps so we can compute centroids and convert centers to top-left.
-      const allIds = [];
-      const dims = {};
-      const mass = {};
-      appState.items.forEach(it => {
-        if (!appState.nodes[it.id]) return;
-        allIds.push(it.id);
-        dims[it.id] = nodeSize('signal');
-        mass[it.id] = nodeMass(it.id);
-      });
-      appState.clusters.forEach(c => {
-        if (!appState.nodes[c.id]) return;
-        allIds.push(c.id);
-        dims[c.id] = nodeSize('hub', c.id);
-        mass[c.id] = nodeMass(c.id);
-      });
-      if (!allIds.length) { if (tidyBtn) tidyBtn.disabled = false; return; }
-
-      const startCenter = {};
-      allIds.forEach(id => {
-        const p = getNodePos(id);
-        const d = dims[id];
-        startCenter[id] = { x: p.x + d.w / 2, y: p.y + d.h / 2 };
-      });
-
-      // Mass-weighted active centroid over hubs + in-cluster signals.
-      const isFree = (id) => !isHubId(id) && !parentHubId(id);
-      let acx = 0, acy = 0, am = 0;
-      allIds.forEach(id => {
-        if (isFree(id)) return;
-        acx += startCenter[id].x * mass[id];
-        acy += startCenter[id].y * mass[id];
-        am += mass[id];
-      });
-      if (am > 0) { acx /= am; acy /= am; }
-      else {
-        // Fallback: viewport center in world space.
-        const canvas = document.querySelector('.canvas-content') || document.body;
-        const r = canvas.getBoundingClientRect();
-        acx = (r.width || 1400) / 2;
-        acy = (r.height || 900) / 2;
-      }
-
-      // Target centers — build by walking from top-level hubs down.
-      const target = {};
-      const topHubs = appState.clusters.filter(c => appState.nodes[c.id] && !parentHubId(c.id)).map(c => c.id);
-
-      // Position top-level hubs. The heaviest goes AT the centroid (the sun);
-      // any others orbit it on a ring at the heavy hub's child-tier radius.
-      if (topHubs.length === 1) {
-        target[topHubs[0]] = { x: acx, y: acy };
-      } else if (topHubs.length > 1) {
-        const cur = topHubs.map(id => ({
-          id,
-          ang: Math.atan2(startCenter[id].y - acy, startCenter[id].x - acx),
-          tier: hubTier(id),
-          m: mass[id]
-        }));
-        // Heaviest top-level hub (ties broken by tier).
-        const heavy = cur.slice().sort((a, b) => (b.m - a.m) || (b.tier - a.tier))[0];
-        target[heavy.id] = { x: acx, y: acy };
-        const others = cur.filter(o => o.id !== heavy.id);
-        if (others.length) {
-          // Ring radius: at the heavy hub's child-tier orbit.
-          const childTier = Math.max(0, heavy.tier - 1);
-          const ringR = idealRadiusForChild(childTier, others.length + 1);
-          // Sort orbiters by current angle around the heavy hub's NEW center.
-          const sorted = [...others].sort((a, b) => a.ang - b.ang);
-          // Detect bunching among the orbiters.
-          let minGap = Infinity;
-          if (sorted.length > 1) {
-            for (let i = 0; i < sorted.length; i++) {
-              const a = sorted[i].ang;
-              const b = sorted[(i + 1) % sorted.length].ang;
-              let g = (b - a + Math.PI * 2) % (Math.PI * 2);
-              if (g === 0) g = Math.PI * 2;
-              if (g < minGap) minGap = g;
-            }
-          }
-          const bunched = sorted.length > 1 && minGap < (80 * Math.PI / 180);
-          if (bunched) {
-            const step = (Math.PI * 2) / sorted.length;
-            const startAng = sorted[0].ang;
-            sorted.forEach((o, k) => {
-              const ang = startAng + k * step;
-              target[o.id] = { x: acx + Math.cos(ang) * ringR, y: acy + Math.sin(ang) * ringR };
-            });
-          } else {
-            sorted.forEach(o => {
-              target[o.id] = { x: acx + Math.cos(o.ang) * ringR, y: acy + Math.sin(o.ang) * ringR };
-            });
-          }
-        }
-      }
-
-      // Recursively position each hub's children around the hub's NEW center.
-      const placeChildren = (hubId) => {
-        const c = appState.clusters.find(c => c.id === hubId);
-        if (!c) return;
-        const members = [...c.itemIds, ...(c.hubIds || [])].filter(mid => appState.nodes[mid]);
-        if (!members.length) return;
-        const pcx = target[hubId].x, pcy = target[hubId].y;
-        // Per-tier sibling counts for ring sizing.
-        const tierMembers = {};
-        members.forEach(mid => {
-          const t = isHubId(mid) ? hubTier(mid) : 0;
-          (tierMembers[t] = tierMembers[t] || []).push(mid);
-        });
-        // For each tier ring, take current angles, sort, fix near-collisions.
-        Object.keys(tierMembers).forEach(tKey => {
-          const t = parseInt(tKey, 10);
-          const ring = tierMembers[t];
-          const R = idealRadiusForChild(t, ring.length);
-          const entries = ring.map(mid => ({
-            id: mid,
-            ang: Math.atan2(startCenter[mid].y - pcy, startCenter[mid].x - pcx)
-          }));
-          entries.sort((a, b) => a.ang - b.ang);
-          // Spread any near-collisions (< 12°) by nudging successive entries.
-          const minSep = 12 * Math.PI / 180;
-          for (let i = 1; i < entries.length; i++) {
-            const prev = entries[i - 1].ang;
-            if (entries[i].ang - prev < minSep) entries[i].ang = prev + minSep;
-          }
-          // Wrap-around fix: if last vs first (after +2π) collide, push first slightly.
-          if (entries.length > 1) {
-            const wrap = (entries[0].ang + Math.PI * 2) - entries[entries.length - 1].ang;
-            if (wrap < minSep) {
-              const total = entries[entries.length - 1].ang - entries[0].ang;
-              const ideal = (Math.PI * 2) / entries.length;
-              entries.forEach((e, k) => { e.ang = entries[0].ang + k * Math.max(ideal, minSep); });
-            }
-          }
-          entries.forEach(e => {
-            target[e.id] = { x: pcx + Math.cos(e.ang) * R, y: pcy + Math.sin(e.ang) * R };
-          });
-        });
-        // Recurse into sub-hubs.
-        (c.hubIds || []).forEach(hid => placeChildren(hid));
-      };
-      topHubs.forEach(placeChildren);
-
-      // Free signals: place on the asteroid belt at their current angle around (acx, acy).
-      // Compute activeOuter from TARGET positions so the belt sits outside the new layout.
-      let activeOuter = 0;
-      allIds.forEach(id => {
-        if (isFree(id)) return;
-        const tc = target[id] || startCenter[id];
-        const d = Math.hypot(tc.x - acx, tc.y - acy);
-        if (d > activeOuter) activeOuter = d;
-      });
-      const beltR = activeOuter + 260;
-      allIds.forEach(id => {
-        if (!isFree(id)) return;
-        const dx = startCenter[id].x - acx, dy = startCenter[id].y - acy;
-        const d = Math.hypot(dx, dy);
-        const ang = d < 1 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx);
-        target[id] = { x: acx + Math.cos(ang) * beltR, y: acy + Math.sin(ang) * beltR };
-      });
-
-      // Convert target centers to top-left and apply (with optional tween).
-      const writePos = (id, cx, cy) => {
-        const d = dims[id];
-        setNodePos(id, cx - d.w / 2, cy - d.h / 2);
-        const el = document.getElementById('node-' + id);
-        if (el) { el.style.left = (cx - d.w / 2) + 'px'; el.style.top = (cy - d.h / 2) + 'px'; }
-      };
-
-      const finish = () => {
-        tidyAnim = null;
-        if (tidyBtn) tidyBtn.disabled = false;
-        // Polish pass — relax around the heaviest top-level hub (or whatever exists).
-        let focus = null;
-        if (topHubs.length) {
-          focus = topHubs.slice().sort((a, b) => mass[b] - mass[a])[0];
-        }
-        relaxLayoutAround(focus);
-        scheduleSave();
-      };
-
-      if (reduceMotion) {
-        allIds.forEach(id => {
-          const t = target[id]; if (!t) return;
-          writePos(id, t.x, t.y);
-        });
-        renderAllEdges();
-        finish();
-        return;
-      }
-
-      const startTs = performance.now();
-      const duration = 520;
-      // cubic-bezier(0.22, 1, 0.36, 1) — easeOutQuint-ish
-      const ease = (t) => 1 - Math.pow(1 - t, 4);
-      const step = (now) => {
-        const k = Math.min(1, (now - startTs) / duration);
-        const e = ease(k);
-        allIds.forEach(id => {
-          const t = target[id]; if (!t) return;
-          const s = startCenter[id];
-          writePos(id, s.x + (t.x - s.x) * e, s.y + (t.y - s.y) * e);
-        });
-        renderAllEdges();
-        if (k < 1) tidyAnim = requestAnimationFrame(step);
-        else finish();
-      };
-      tidyAnim = requestAnimationFrame(step);
+      if (relaxAnim) { toast('Already arranging\u2026'); return; }
+      const tops = appState.clusters.filter(c => appState.nodes[c.id] && !parentHubId(c.id));
+      const anyNodes = tops.length || appState.items.some(it => appState.nodes[it.id]);
+      if (!anyNodes) return;
+      const heavy = tops.slice().sort((a, b) => nodeMass(b.id) - nodeMass(a.id))[0];
+      relaxLayoutAround(heavy ? heavy.id : null);
     }
 
     // Is targetId an ancestor of nodeId (or equal)?
@@ -2168,21 +1990,19 @@
       return out;
     }
 
-    // Center-to-center bezier. Control points bias along the dominant axis so two cards
-    // bow gently rather than going straight through their interiors.
+    // Radial spoke between two centers. Control points lie ALONG the straight
+    // parent→child segment (at ~⅓ and ~⅔) so the curve stays inside its
+    // angular wedge corridor and can never bulge across a neighbor's spoke —
+    // preserving the crossing-free guarantee of the radial tree layout. A
+    // tiny perpendicular bow keeps it from looking mechanically rigid.
     function bezierBetween(a, b) {
       const dx = b.x - a.x, dy = b.y - a.y;
-      const horizontal = Math.abs(dx) >= Math.abs(dy);
-      let cx1, cy1, cx2, cy2;
-      if (horizontal) {
-        const k = Math.max(60, Math.abs(dx) * 0.45);
-        cx1 = a.x + Math.sign(dx || 1) * k; cy1 = a.y;
-        cx2 = b.x - Math.sign(dx || 1) * k; cy2 = b.y;
-      } else {
-        const k = Math.max(60, Math.abs(dy) * 0.45);
-        cx1 = a.x; cy1 = a.y + Math.sign(dy || 1) * k;
-        cx2 = b.x; cy2 = b.y - Math.sign(dy || 1) * k;
-      }
+      const len = Math.hypot(dx, dy) || 1;
+      // Unit perpendicular; bow is a small fraction of length (capped).
+      const px = -dy / len, py = dx / len;
+      const bow = Math.min(len * 0.05, 26);
+      const cx1 = a.x + dx / 3 + px * bow, cy1 = a.y + dy / 3 + py * bow;
+      const cx2 = a.x + dx * 2 / 3 + px * bow, cy2 = a.y + dy * 2 / 3 + py * bow;
       return `M ${a.x} ${a.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${b.x} ${b.y}`;
     }
 
@@ -2291,6 +2111,16 @@
         el.setPointerCapture(pointerId);
         el.classList.add('lifted');
 
+        // Classify the node so drag behaves per the radial-layout rules:
+        //  • top-level root → moves its whole subtree rigidly
+        //  • in-tree node (has a parent) → free-drag, snaps back on release
+        //  • free signal → free-drag, stays where dropped
+        const hasParent = !!parentHubId(nodeId);
+        const isRoot = isHubId(nodeId) && !hasParent;
+        const subIds = isRoot ? subtreeNodeIds(nodeId) : [];
+        const subStart = {};
+        subIds.forEach(id => { subStart[id] = { ...getNodePos(id) }; });
+
         const onMove = (ev) => {
           if (ev.pointerId !== pointerId) return;
           if (!dragging) {
@@ -2308,7 +2138,21 @@
           setNodePos(nodeId, nx, ny);
           el.style.left = nx + 'px';
           el.style.top = ny + 'px';
-          if (!raf) raf = requestAnimationFrame(() => { raf = null; updateEdgesForNode(nodeId); });
+          // Move the whole subtree rigidly with a dragged root.
+          if (isRoot) {
+            subIds.forEach(id => {
+              const s = subStart[id];
+              const ix = s.x + dx, iy = s.y + dy;
+              setNodePos(id, ix, iy);
+              const cel = document.getElementById('node-' + id);
+              if (cel) { cel.style.left = ix + 'px'; cel.style.top = iy + 'px'; }
+            });
+          }
+          if (!raf) raf = requestAnimationFrame(() => {
+            raf = null;
+            updateEdgesForNode(nodeId);
+            if (isRoot) subIds.forEach(id => updateEdgesForNode(id));
+          });
         };
         const onUp = (ev) => {
           if (ev.pointerId !== pointerId) return;
@@ -2322,6 +2166,15 @@
           if (dragging) {
             dragging = false;
             scheduleSave();
+            if (hasParent) {
+              // In-tree node: re-run the radial layout so it eases back to
+              // its computed slot — crossings can never persist.
+              relaxLayoutAround(rootAnchorOf(nodeId));
+            } else if (isRoot) {
+              // Moved a whole system: let neighbors re-space via repulsion.
+              relaxLayoutAround(nodeId);
+            }
+            // Free signals: stay exactly where dropped (no relax).
           }
         };
         el.addEventListener('pointermove', onMove);
@@ -2422,56 +2275,14 @@
       return true;
     }
 
-    // Ease a single node from its current position to (toX, toY).
-    function tweenNodeTo(nodeId, toX, toY, durationMs) {
-      const startTs = performance.now();
-      const from = { ...getNodePos(nodeId) };
-      // Overshoot ease for delight (cubic-bezier(0.34, 1.56, 0.64, 1) approximated).
-      const ease = t => {
-        const c1 = 1.70158, c3 = c1 + 1;
-        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-      };
-      const step = (now) => {
-        const t = Math.min(1, (now - startTs) / durationMs);
-        const k = ease(t);
-        const nx = from.x + (toX - from.x) * k;
-        const ny = from.y + (toY - from.y) * k;
-        setNodePos(nodeId, nx, ny);
-        const el = document.getElementById('node-' + nodeId);
-        if (el) { el.style.left = nx + 'px'; el.style.top = ny + 'px'; }
-        updateEdgesForNode(nodeId);
-        if (t < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    }
-
     function addUnderExistingParent(parentId, childId, source) {
-      // Compute pre-placement target BEFORE we mutate state (so existing siblings drive the slot search).
-      const childTier = isHubId(childId) ? hubTier(childId) : 0;
-      const slot = bestAngularSlot(parentId, childTier);
-      const parentCenter = nodeCenter(parentId);
-      const childKind = isHubId(childId) ? 'hub' : 'signal';
-      const cdims = nodeSize(childKind, childId);
-      const targetX = parentCenter.x + Math.cos(slot.angle) * slot.radius - cdims.w / 2;
-      const targetY = parentCenter.y + Math.sin(slot.angle) * slot.radius - cdims.h / 2;
-
       if (!addChildToHub(parentId, childId)) return;
       renderAllNodes();
       renderAllEdges();
-      // Re-target the child element to its new position with an overshoot ease.
-      // The relax then refines around this good starting layout.
-      const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reducedMotion) {
-        setNodePos(childId, targetX, targetY);
-        const el = document.getElementById('node-' + childId);
-        if (el) { el.style.left = targetX + 'px'; el.style.top = targetY + 'px'; }
-        updateEdgesForNode(childId);
-      } else {
-        tweenNodeTo(childId, targetX, targetY, 280);
-      }
       animateNewEdge(parentId + '__' + childId);
-      // Run the relax slightly after pre-placement so it eases the final position.
-      setTimeout(() => relaxLayoutAround(parentId), reducedMotion ? 0 : 120);
+      // The deterministic radial relax eases the new child from its current
+      // spot into its correct, crossing-free wedge — no pre-placement needed.
+      relaxLayoutAround(rootAnchorOf(parentId));
       scheduleSave();
       updateClusterProgressChip();
       const parent = appState.clusters.find(c => c.id === parentId);
@@ -2537,264 +2348,165 @@
     function relaxLayoutAround(focusHubId) {
       if (relaxAnim) cancelAnimationFrame(relaxAnim);
 
-      // Collect all nodes + initial velocities.
-      const nodeIds = [];
-      const pos = {}, vel = {};
+      // New model: each top-level tree is a RIGID, crossing-free radial
+      // layout (its own "sphere of influence"); separate trees and free
+      // signals REPEL each other (no gravity) so spheres never crowd. A
+      // weak containment keeps the whole composition from drifting away.
       const dims = {};
-      const mass = {};
-      appState.items.forEach(it => {
-        if (!appState.nodes[it.id]) return;
-        nodeIds.push(it.id);
-        pos[it.id] = { ...getNodePos(it.id) };
-        vel[it.id] = { x: 0, y: 0 };
-        dims[it.id] = nodeSize('signal');
-        mass[it.id] = nodeMass(it.id); // 1
-      });
-      appState.clusters.forEach(c => {
-        if (!appState.nodes[c.id]) return;
-        nodeIds.push(c.id);
-        pos[c.id] = { ...getNodePos(c.id) };
-        vel[c.id] = { x: 0, y: 0 };
-        dims[c.id] = nodeSize('hub', c.id);
-        mass[c.id] = nodeMass(c.id);
-      });
+      appState.items.forEach(it => { if (appState.nodes[it.id]) dims[it.id] = nodeSize('signal'); });
+      appState.clusters.forEach(c => { if (appState.nodes[c.id]) dims[c.id] = nodeSize('hub', c.id); });
+
+      // Build systems.
+      const systems = [];
+      appState.clusters
+        .filter(c => appState.nodes[c.id] && !parentHubId(c.id))
+        .forEach(c => {
+          const tree = computeRadialTree(c.id, { x: 0, y: 0 });
+          const rc = nodeCenter(c.id);
+          const lc = Math.max(1, allSignalsUnderHub(c.id).length);
+          systems.push({
+            kind: 'tree', rootId: c.id,
+            offsets: tree.positions, depth: tree.depth,
+            R: Math.max(tree.boundingRadius, 1),
+            cx: rc.x, cy: rc.y, vx: 0, vy: 0,
+            mass: Math.max(1, Math.sqrt(lc))
+          });
+        });
+      appState.items
+        .filter(it => appState.nodes[it.id] && !parentHubId(it.id))
+        .forEach(it => {
+          const c = nodeCenter(it.id);
+          const d = dims[it.id];
+          systems.push({
+            kind: 'free', id: it.id,
+            R: Math.hypot(d.w, d.h) / 2,
+            cx: c.x, cy: c.y, vx: 0, vy: 0, mass: 1
+          });
+        });
+      if (!systems.length) { relaxAnim = null; return; }
 
       const isPinned = (id) => {
         const el = document.getElementById('node-' + id);
         return !!(el && el.classList.contains('dragging'));
       };
+      const sysPinId = (s) => (s.kind === 'tree' ? s.rootId : s.id);
 
-      const maxFrames = 90;
-      let frame = 0;
-      let calmFrames = 0;
-      const startTs = performance.now();
-      const minHubViewTs = startTs + 700;
+      // Tuning. Structure/no-crossings come from computeRadialTree and are
+      // independent of these — they only govern how systems space apart.
+      const MARGIN = 180;          // empty gap between two spheres of influence
+      const REPEL_SYS_K = 0.06;    // push when spheres overlap/are close
+      const CONTAIN_K = 0.0022;    // weak pull toward the group centroid
+      const DAMP = 0.84;
+      const BASE_LERP = 0.22;      // ease toward rigid target
+      const STAGGER = 2;           // frames of delay per depth → fan sweeps open
+
+      const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const writeNode = (id, cx, cy) => {
+        const d = dims[id]; if (!d) return;
+        const x = cx - d.w / 2, y = cy - d.h / 2;
+        setNodePos(id, x, y);
+        const el = document.getElementById('node-' + id);
+        if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+      };
+
+      // One physics step over SYSTEM CENTERS only (repulsion + containment +
+      // integrate). Returns total kinetic energy. No DOM writes.
+      const physicsStep = () => {
+        systems.forEach(s => {
+          if (isPinned(sysPinId(s))) { const c = nodeCenter(sysPinId(s)); s.cx = c.x; s.cy = c.y; s.vx = 0; s.vy = 0; }
+          s.fx = 0; s.fy = 0;
+        });
+        for (let i = 0; i < systems.length; i++) {
+          for (let j = i + 1; j < systems.length; j++) {
+            const a = systems[i], b = systems[j];
+            let dx = a.cx - b.cx, dy = a.cy - b.cy, dist = Math.hypot(dx, dy);
+            if (dist < 0.01) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; dist = Math.hypot(dx, dy) || 1; }
+            const desired = a.R + b.R + MARGIN;
+            // Continuous push that fades to exactly 0 at the desired gap, so
+            // systems settle there against weak containment (no oscillation).
+            if (dist < desired) {
+              const f = (desired - dist) * REPEL_SYS_K;
+              const ux = dx / dist, uy = dy / dist;
+              a.fx += ux * f; a.fy += uy * f; b.fx -= ux * f; b.fy -= uy * f;
+            }
+          }
+        }
+        // Weak containment toward the centroid of all system centers.
+        let bx = 0, by = 0;
+        systems.forEach(s => { bx += s.cx; by += s.cy; });
+        bx /= systems.length; by /= systems.length;
+        systems.forEach(s => { s.fx += (bx - s.cx) * CONTAIN_K; s.fy += (by - s.cy) * CONTAIN_K; });
+        // Integrate.
+        let kinetic = 0;
+        systems.forEach(s => {
+          if (isPinned(sysPinId(s))) return;
+          s.vx = (s.vx + s.fx / s.mass) * DAMP;
+          s.vy = (s.vy + s.fy / s.mass) * DAMP;
+          const vmag = Math.hypot(s.vx, s.vy);
+          if (vmag > 45) { s.vx = s.vx / vmag * 45; s.vy = s.vy / vmag * 45; }
+          s.cx += s.vx; s.cy += s.vy;
+          kinetic += vmag * vmag;
+        });
+        return kinetic;
+      };
+
+      // Write every node to its target (ef=1 → exact). Used by reduced-motion.
+      const snapAll = () => {
+        systems.forEach(s => {
+          if (s.kind === 'free') { writeNode(s.id, s.cx, s.cy); return; }
+          for (const id in s.offsets) writeNode(id, s.cx + s.offsets[id].x, s.cy + s.offsets[id].y);
+        });
+        Object.keys(dims).forEach(id => updateEdgesForNode(id));
+      };
+
       const finishedHubViewCheck = { done: false };
+      const finish = () => {
+        relaxAnim = null;
+        scheduleSave();
+        if (focusHubId && !finishedHubViewCheck.done) { finishedHubViewCheck.done = true; ensureHubInView(focusHubId); }
+      };
+
+      if (reduceMotion) {
+        for (let it = 0; it < 140; it++) physicsStep();
+        snapAll();
+        finish();
+        return;
+      }
+
+      const maxFrames = 160;
+      let frame = 0, calm = 0;
 
       const tick = () => {
         frame++;
-        // For each pair, apply repulsion if too close to comfortable spacing.
-        const PAD = 60;
-        const REPEL_K = 5200;     // Coulomb constant
-        const SPRING_K = 0.06;    // hub→signal spring stiffness
-        const HUB_ANCHOR_K = 0.012; // hub→its centroid pull
-        const GRAVITY_K = 0.004;    // gentle pull toward global centroid
-        const HUB_COHESION_K = 0.014; // extra pull between top-level hubs
-        const BELT_K = 0.05;          // outward spring for free signals sitting inside the active system
-        const BELT_GAP = 260;         // empty radius between active edge and belt
-        const INNER_PAD = 80;         // signals nearer than activeOuter + INNER_PAD get pushed out
-        const MAX_FORCE = 40;
-        const DAMP = 0.82;
-
-        // Reset frame forces.
-        const fx = {}, fy = {};
-        nodeIds.forEach(id => { fx[id] = 0; fy[id] = 0; });
-
-        // Identify free-floating signals (no parent hub, not a hub themselves).
-        const freeSignalIds = nodeIds.filter(id => !isHubId(id) && !parentHubId(id));
-        const freeSet = new Set(freeSignalIds);
-
-        // Per-tree anchor gravity: every non-free, non-anchor node is pulled
-        // toward its ROOT anchor (top-level ancestor). Anchors themselves
-        // feel no gravity — they are immovable suns for their subtree.
-        // This keeps separate top-level subtrees from sharing a centroid.
-        const anchorOf = {};
-        nodeIds.forEach(id => { anchorOf[id] = rootAnchorOf(id); });
-        nodeIds.forEach(id => {
-          if (freeSet.has(id)) return;
-          const anchor = anchorOf[id];
-          if (anchor === id) return; // top-level anchor: skip
-          if (!pos[anchor]) return;
-          const dd = dims[id], ad = dims[anchor];
-          const ncx = pos[id].x + dd.w / 2;
-          const ncy = pos[id].y + dd.h / 2;
-          const acx = pos[anchor].x + ad.w / 2;
-          const acy = pos[anchor].y + ad.h / 2;
-          fx[id] += (acx - ncx) * GRAVITY_K;
-          fy[id] += (acy - ncy) * GRAVITY_K;
-        });
-
-        // Mass-weighted centroid of the top-level anchors — used by the
-        // asteroid belt block below so the belt forms around the dominant
-        // anchor(s) rather than a global drift point.
-        let gcx = 0, gcy = 0, totalMass = 0;
-        nodeIds.forEach(id => {
-          if (freeSet.has(id)) return;
-          if (parentHubId(id)) return; // top-level only
-          const dd = dims[id];
-          const m = mass[id];
-          gcx += (pos[id].x + dd.w / 2) * m;
-          gcy += (pos[id].y + dd.h / 2) * m;
-          totalMass += m;
-        });
-        const hasActive = totalMass > 0;
-        if (hasActive) { gcx /= totalMass; gcy /= totalMass; }
-
-        // Cohesion between top-level *hubs* (parentless hubs only — free
-        // signals get the belt law instead).
-        const topHubIds = nodeIds.filter(id => isHubId(id) && !parentHubId(id));
-        if (topHubIds.length >= 2) {
-          let tcx = 0, tcy = 0, tm = 0;
-          topHubIds.forEach(id => {
-            const dd = dims[id];
-            const m = mass[id];
-            tcx += (pos[id].x + dd.w / 2) * m;
-            tcy += (pos[id].y + dd.h / 2) * m;
-            tm += m;
-          });
-          if (tm > 0) { tcx /= tm; tcy /= tm; }
-          topHubIds.forEach(id => {
-            const dd = dims[id];
-            const ncx = pos[id].x + dd.w / 2;
-            const ncy = pos[id].y + dd.h / 2;
-            fx[id] += (tcx - ncx) * HUB_COHESION_K;
-            fy[id] += (tcy - ncy) * HUB_COHESION_K;
-          });
-        }
-
-        // Asteroid belt: free signals get an outward spring only if they're
-        // sitting inside the active system. Past the inner bound they're
-        // inert (user-placed), so users can park cards in faraway corners.
-        if (hasActive && freeSignalIds.length) {
-          // Outer radius of the active system around its mass-weighted centroid.
-          let activeOuter = 0;
-          nodeIds.forEach(id => {
-            if (freeSet.has(id)) return;
-            const dd = dims[id];
-            const cx = pos[id].x + dd.w / 2, cy = pos[id].y + dd.h / 2;
-            const d = Math.hypot(cx - gcx, cy - gcy);
-            if (d > activeOuter) activeOuter = d;
-          });
-          const innerBound = activeOuter + INNER_PAD;
-          const beltRadius = activeOuter + BELT_GAP;
-          freeSignalIds.forEach(id => {
-            const dd = dims[id];
-            const cx = pos[id].x + dd.w / 2, cy = pos[id].y + dd.h / 2;
-            let dx = cx - gcx, dy = cy - gcy;
-            let dist = Math.hypot(dx, dy);
-            if (dist >= innerBound) return; // already at/beyond belt, respect placement
-            if (dist < 0.01) {
-              // Pick an arbitrary direction so the signal doesn't get stuck at centroid.
-              const ang = Math.random() * Math.PI * 2;
-              dx = Math.cos(ang); dy = Math.sin(ang); dist = 1;
-            }
-            const ux = dx / dist, uy = dy / dist;
-            const delta = beltRadius - dist; // positive → push outward
-            fx[id] += ux * delta * BELT_K;
-            fy[id] += uy * delta * BELT_K;
-          });
-        }
-
-        // Pairwise repulsion.
-        for (let i = 0; i < nodeIds.length; i++) {
-          for (let j = i + 1; j < nodeIds.length; j++) {
-            const a = nodeIds[i], b = nodeIds[j];
-            const pa = pos[a], pb = pos[b];
-            const da = dims[a], db = dims[b];
-            const cax = pa.x + da.w / 2, cay = pa.y + da.h / 2;
-            const cbx = pb.x + db.w / 2, cby = pb.y + db.h / 2;
-            let dx = cax - cbx, dy = cay - cby;
-            let dist = Math.hypot(dx, dy);
-            if (dist < 0.01) { dx = (Math.random() - 0.5); dy = (Math.random() - 0.5); dist = Math.hypot(dx, dy); }
-            const minDist = (Math.hypot(da.w, da.h) + Math.hypot(db.w, db.h)) / 2 + PAD;
-            if (dist >= minDist * 1.6) continue; // far enough, skip
-            const overlap = Math.max(0, minDist - dist);
-            // Force grows steeply when overlapping, gentle when near.
-            let force = REPEL_K / (dist * dist);
-            if (overlap > 0) force += overlap * 0.6;
-            force = Math.min(MAX_FORCE, force);
-            const ux = dx / dist, uy = dy / dist;
-            fx[a] += ux * force; fy[a] += uy * force;
-            fx[b] -= ux * force; fy[b] -= uy * force;
+        const kinetic = physicsStep();
+        // Ease every node toward its rigid target; stagger by depth so the
+        // fan visibly sweeps open instead of teleporting.
+        let maxErr = 0;
+        systems.forEach(s => {
+          const pinned = isPinned(sysPinId(s));
+          if (s.kind === 'free') { if (!pinned) writeNode(s.id, s.cx, s.cy); return; }
+          if (pinned) return; // drag handler owns this subtree right now
+          for (const id in s.offsets) {
+            const off = s.offsets[id];
+            const tx = s.cx + off.x, ty = s.cy + off.y;
+            const p = getNodePos(id), d = dims[id];
+            const ccx = p.x + d.w / 2, ccy = p.y + d.h / 2;
+            const dep = s.depth[id] || 0;
+            const ef = (frame < dep * STAGGER) ? 0 : BASE_LERP;
+            const nx = ccx + (tx - ccx) * ef;
+            const ny = ccy + (ty - ccy) * ef;
+            const err = Math.hypot(tx - nx, ty - ny);
+            if (err > maxErr) maxErr = err;
+            writeNode(id, nx, ny);
           }
-        }
-
-        // Hub springs (signals + sub-hubs). Radius is per CHILD tier, so a
-        // signal under a mega cluster sits at signal-radius (not mega-child-radius).
-        appState.clusters.forEach(cluster => {
-          if (!pos[cluster.id]) return;
-          const hub = cluster.id;
-          const members = [...cluster.itemIds, ...(cluster.hubIds || [])];
-          const n = members.length;
-          // Per-tier sibling counts for n-based fan-out within the same ring.
-          const tierCounts = {};
-          members.forEach(mid => {
-            const t = isHubId(mid) ? hubTier(mid) : 0;
-            tierCounts[t] = (tierCounts[t] || 0) + 1;
-          });
-          // Hub anchor: gentle pull toward centroid of members.
-          if (n > 0) {
-            let cx = 0, cy = 0, count = 0;
-            members.forEach(mid => {
-              if (!pos[mid]) return;
-              const dd = dims[mid];
-              cx += pos[mid].x + dd.w / 2; cy += pos[mid].y + dd.h / 2; count++;
-            });
-            if (count > 0) {
-              cx /= count; cy /= count;
-              const hd = dims[hub];
-              const hcx = pos[hub].x + hd.w / 2, hcy = pos[hub].y + hd.h / 2;
-              fx[hub] += (cx - hcx) * HUB_ANCHOR_K;
-              fy[hub] += (cy - hcy) * HUB_ANCHOR_K;
-            }
-          }
-          // Per-member spring at this member's tier radius.
-          const hd = dims[hub];
-          const hcx = pos[hub].x + hd.w / 2, hcy = pos[hub].y + hd.h / 2;
-          members.forEach(mid => {
-            if (!pos[mid]) return;
-            const dd = dims[mid];
-            const childTier = isHubId(mid) ? hubTier(mid) : 0;
-            const R = idealRadiusForChild(childTier, tierCounts[childTier] || 1);
-            const sx = pos[mid].x + dd.w / 2, sy = pos[mid].y + dd.h / 2;
-            const dx = sx - hcx, dy = sy - hcy;
-            const dist = Math.hypot(dx, dy) || 0.01;
-            const delta = dist - R;
-            const ux = dx / dist, uy = dy / dist;
-            const f = -delta * SPRING_K;
-            fx[mid] += ux * f; fy[mid] += uy * f;
-            fx[hub] -= ux * f; fy[hub] -= uy * f;
-          });
         });
+        Object.keys(dims).forEach(id => updateEdgesForNode(id));
 
-        // Integrate. force → acceleration via 1/mass, so heavy nodes barely move.
-        let kinetic = 0;
-        nodeIds.forEach(id => {
-          if (isPinned(id)) {
-            vel[id].x = 0; vel[id].y = 0;
-            return;
-          }
-          const m = mass[id] || 1;
-          vel[id].x = (vel[id].x + fx[id] / m) * DAMP;
-          vel[id].y = (vel[id].y + fy[id] / m) * DAMP;
-          // Cap velocity per frame to avoid jitter.
-          const vmag = Math.hypot(vel[id].x, vel[id].y);
-          if (vmag > 30) { vel[id].x = vel[id].x / vmag * 30; vel[id].y = vel[id].y / vmag * 30; }
-          pos[id].x += vel[id].x;
-          pos[id].y += vel[id].y;
-          kinetic += vmag * vmag;
-          // Write through to state + DOM.
-          setNodePos(id, pos[id].x, pos[id].y);
-          const el = document.getElementById('node-' + id);
-          if (el) { el.style.left = pos[id].x + 'px'; el.style.top = pos[id].y + 'px'; }
-        });
-        // Update edges for everything (small graph).
-        nodeIds.forEach(id => updateEdgesForNode(id));
-
-        // Calm detection — generous threshold so motion eases visibly to rest.
-        if (kinetic < 0.4) calmFrames++; else calmFrames = 0;
-        const done = frame >= maxFrames || calmFrames >= 10;
-        if (!done) {
-          relaxAnim = requestAnimationFrame(tick);
-        } else {
-          relaxAnim = null;
-          scheduleSave();
-          // Pan to keep the focused hub in view, once.
-          if (focusHubId && !finishedHubViewCheck.done) {
-            finishedHubViewCheck.done = true;
-            ensureHubInView(focusHubId);
-          }
-        }
+        if (kinetic < 0.5 && maxErr < 0.6) calm++; else calm = 0;
+        const done = frame >= maxFrames || calm >= 8;
+        if (!done) relaxAnim = requestAnimationFrame(tick);
+        else { snapAll(); finish(); }
       };
       relaxAnim = requestAnimationFrame(tick);
     }
