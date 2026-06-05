@@ -1741,7 +1741,7 @@
           const half = Math.min((myA - prevA) / 2, (nextA - myA) / 2);
           const childTier = isHubId(k) ? hubTier(k) : 0;
           const gap = idealRadiusForChild(childTier, n);
-          place(k, myCenter, myA, half * WEDGE_SHRINK, radius + gap, dep + 1);
+          place(k, myCenter, myA, half * WEDGE_SHRINK, gap, dep + 1);
         });
       };
 
