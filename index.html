@@ -1640,9 +1640,11 @@
     // tier (so a signal under a mega cluster still sits at signal-distance,
     // and a supercluster under a hyper cluster sits at supercluster-distance).
     // Geometric growth per tier so higher tiers are visibly further out.
-    const TIER_BASE_R = [200, 520, 1300, 3000, 6500, 13500]; // signal..hyper, ~2.3x per tier
-    const TIER_STEP_R = [24,  56,  130,  280,  560,  1100];
-    const TIER_RATIO  = 2.3;
+    // ≈1.5× per tier — clearly distinct rings while keeping a 3-tier map
+    // (mega → super → cluster → signal, ~900px outer rim) on one screen.
+    const TIER_BASE_R = [180, 280, 440, 660, 980, 1450];
+    const TIER_STEP_R = [22,  34,  52,  78,  118, 175];
+    const TIER_RATIO  = 1.5;
     function idealRadiusForChild(childTier, n) {
       const t = Math.max(0, Math.min(childTier, 12));
       const base = TIER_BASE_R[t] ?? TIER_BASE_R[5] * Math.pow(TIER_RATIO, t - 5);
@@ -1663,55 +1665,90 @@
       return out;
     }
 
-    // Deterministic, crossing-free radial tree layout. Lays out the whole
-    // subtree of rootId as absolute CENTER positions, given where the root
-    // center should sit. Each subtree gets a disjoint angular wedge and a
-    // radius that strictly increases with depth → edges fan out and can
-    // never cross. Returns { positions:{id:{x,y}}, depth:{id:n}, boundingRadius }.
+    // Deterministic, crossing-free radial tree layout — STABLE EDITION.
+    // Each child's wedge is centered on its CURRENT angle around its parent's
+    // current center (so existing nodes don't shuffle when a sibling is added).
+    // Fresh children (never placed, coincident with parent) are inserted at
+    // the midpoint of the widest available angular gap. Wedge half-widths come
+    // from the gaps to angular neighbors, so wedges remain disjoint and the
+    // layout stays provably planar.
     function computeRadialTree(rootId, rootCenter) {
       const positions = {};
       const depth = {};
       let boundingRadius = 0;
-      const WEDGE_SHRINK = 0.82; // breathing room between sibling subtrees
-      const leafMemo = {};
-      const leafCount = (id) => {
-        if (leafMemo[id] != null) return leafMemo[id];
-        const c = appState.clusters.find(c => c.id === id);
-        if (!c) return (leafMemo[id] = 1);
-        const kids = [...c.itemIds, ...(c.hubIds || [])].filter(k => appState.nodes[k]);
-        if (!kids.length) return (leafMemo[id] = 1);
-        let s = 0; kids.forEach(k => s += leafCount(k));
-        return (leafMemo[id] = s);
-      };
+      const WEDGE_SHRINK = 0.92;
+      const FRESH_THRESHOLD = 8; // px — distance below which a child is "fresh"
+
       const childrenOf = (id) => {
         const c = appState.clusters.find(c => c.id === id);
         if (!c) return [];
-        return [...c.itemIds, ...(c.hubIds || [])]
-          .filter(k => appState.nodes[k])
-          // Heaviest subtrees first (stable) so the fan reads consistently.
-          .sort((a, b) => (leafCount(b) - leafCount(a)) || (a < b ? -1 : 1));
+        return [...c.itemIds, ...(c.hubIds || [])].filter(k => appState.nodes[k]);
       };
-      const place = (id, mid, half, radius, dep) => {
-        positions[id] = { x: rootCenter.x + Math.cos(mid) * radius, y: rootCenter.y + Math.sin(mid) * radius };
+
+      // Choose an angle for a fresh kid given the currently-assigned angles
+      // of its siblings. Returns the midpoint of the widest wrap-around gap.
+      const slotInWidestGap = (existingAngles, fallback) => {
+        const arr = existingAngles.slice().sort((a, b) => a - b);
+        if (arr.length === 0) return fallback;
+        if (arr.length === 1) return arr[0] + Math.PI;
+        let bestGap = -Infinity, bestMid = arr[0] + Math.PI;
+        for (let i = 0; i < arr.length; i++) {
+          const a = arr[i];
+          const b = (i + 1 === arr.length) ? arr[0] + Math.PI * 2 : arr[i + 1];
+          const gap = b - a;
+          if (gap > bestGap) { bestGap = gap; bestMid = (a + b) / 2; }
+        }
+        return bestMid;
+      };
+
+      const place = (id, parentCenter, angleFromParent, halfWedge, radius, dep) => {
+        const myCenter = (radius < 0.01)
+          ? { x: rootCenter.x, y: rootCenter.y }
+          : { x: parentCenter.x + Math.cos(angleFromParent) * radius,
+              y: parentCenter.y + Math.sin(angleFromParent) * radius };
+        positions[id] = myCenter;
         depth[id] = dep;
         const d = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
-        const br = radius + Math.hypot(d.w, d.h) / 2;
+        const br = Math.hypot(myCenter.x - rootCenter.x, myCenter.y - rootCenter.y) + Math.hypot(d.w, d.h) / 2;
         if (br > boundingRadius) boundingRadius = br;
+
         const kids = childrenOf(id);
         if (!kids.length) return;
-        const total = kids.reduce((s, k) => s + leafCount(k), 0) || 1;
-        let cursor = mid - half;
-        kids.forEach(kid => {
-          const frac = leafCount(kid) / total;
-          const kidHalf = frac * half;            // kid's allocated sub-wedge
-          const kidMid = cursor + kidHalf;
-          const childTier = isHubId(kid) ? hubTier(kid) : 0;
-          const gap = idealRadiusForChild(childTier, kids.length);
-          place(kid, kidMid, kidHalf * WEDGE_SHRINK, radius + gap, dep + 1);
-          cursor += 2 * kidHalf;
+
+        // Derive each kid's preferred angle from its CURRENT position around
+        // id's current (live) center. Mark "fresh" kids that haven't been placed.
+        const parentLive = nodeCenter(id);
+        const angles = {};
+        const fresh = [];
+        kids.forEach(k => {
+          const kc = nodeCenter(k);
+          const dx = kc.x - parentLive.x, dy = kc.y - parentLive.y;
+          if (Math.hypot(dx, dy) < FRESH_THRESHOLD) fresh.push(k);
+          else angles[k] = Math.atan2(dy, dx);
+        });
+        // Slot fresh kids into the widest gap one at a time.
+        fresh.forEach(fk => {
+          angles[fk] = slotInWidestGap(Object.values(angles), angleFromParent);
+        });
+
+        // Sort kids by angle and allocate each a sub-wedge from neighbor gaps.
+        const sorted = kids.slice().sort((a, b) => angles[a] - angles[b]);
+        const n = sorted.length;
+        sorted.forEach((k, i) => {
+          const myA = angles[k];
+          const prevAraw = angles[sorted[(i - 1 + n) % n]];
+          const nextAraw = angles[sorted[(i + 1) % n]];
+          // Unwrap so prev < my < next.
+          const prevA = (i === 0) ? prevAraw - Math.PI * 2 : prevAraw;
+          const nextA = (i === n - 1) ? nextAraw + Math.PI * 2 : nextAraw;
+          const half = Math.min((myA - prevA) / 2, (nextA - myA) / 2);
+          const childTier = isHubId(k) ? hubTier(k) : 0;
+          const gap = idealRadiusForChild(childTier, n);
+          place(k, myCenter, myA, half * WEDGE_SHRINK, radius + gap, dep + 1);
         });
       };
-      place(rootId, 0, Math.PI, 0, 0); // root at center, full 360° fan
+
+      place(rootId, rootCenter, 0, Math.PI, 0, 0);
       return { positions, depth, boundingRadius };
     }
 
@@ -2272,7 +2309,48 @@
         if (parent.itemIds.includes(childId)) return false;
         parent.itemIds.push(childId);
       }
+      // Pre-place the new child at the widest angular gap around its parent
+      // at the correct child-tier radius. This means the stable radial relax
+      // can keep every other node in place — only the new child eases in.
+      placeNewChildAtWidestGap(parentId, childId);
       return true;
+    }
+
+    // Position childId at the midpoint of the widest empty angular gap around
+    // parentId, at the appropriate child-tier orbit. Operates on live state.
+    function placeNewChildAtWidestGap(parentId, childId) {
+      const cluster = appState.clusters.find(c => c.id === parentId);
+      if (!cluster || !appState.nodes[parentId]) return;
+      const pc = nodeCenter(parentId);
+      const siblings = [...cluster.itemIds, ...(cluster.hubIds || [])]
+        .filter(id => id !== childId && appState.nodes[id]);
+      const angles = siblings
+        .map(id => {
+          const sc = nodeCenter(id);
+          return Math.atan2(sc.y - pc.y, sc.x - pc.x);
+        })
+        .sort((a, b) => a - b);
+      let ang;
+      if (angles.length === 0) ang = Math.random() * Math.PI * 2;
+      else if (angles.length === 1) ang = angles[0] + Math.PI;
+      else {
+        let bestGap = -Infinity, bestMid = angles[0] + Math.PI;
+        for (let i = 0; i < angles.length; i++) {
+          const a = angles[i];
+          const b = (i + 1 === angles.length) ? angles[0] + Math.PI * 2 : angles[i + 1];
+          const gap = b - a;
+          if (gap > bestGap) { bestGap = gap; bestMid = (a + b) / 2; }
+        }
+        ang = bestMid;
+      }
+      const childTier = isHubId(childId) ? hubTier(childId) : 0;
+      const R = idealRadiusForChild(childTier, siblings.length + 1);
+      const cd = nodeSize(isHubId(childId) ? 'hub' : 'signal', childId);
+      const x = pc.x + Math.cos(ang) * R - cd.w / 2;
+      const y = pc.y + Math.sin(ang) * R - cd.h / 2;
+      setNodePos(childId, x, y);
+      const el = document.getElementById('node-' + childId);
+      if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
     }
 
     function addUnderExistingParent(parentId, childId, source) {
@@ -2460,11 +2538,12 @@
         Object.keys(dims).forEach(id => updateEdgesForNode(id));
       };
 
-      const finishedHubViewCheck = { done: false };
       const finish = () => {
         relaxAnim = null;
         scheduleSave();
-        if (focusHubId && !finishedHubViewCheck.done) { finishedHubViewCheck.done = true; ensureHubInView(focusHubId); }
+        // Intentionally NO ensureHubInView pan — the user keeps their viewport.
+        // ensureHubInView is still defined for any callsite that needs it
+        // explicitly, but the relax doesn't fire it anymore.
       };
 
       if (reduceMotion) {
