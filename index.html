@@ -569,6 +569,9 @@
       user-select: none;
     }
     .signal-node:hover { border-color: var(--primary-teal); }
+    /* Unclustered signals: muted, "available for clustering". */
+    .signal-node.parked { opacity: 0.78; border-color: var(--cloud); }
+    .signal-node.parked:hover { opacity: 1; border-color: var(--primary-teal); }
     .signal-node .card-tag {
       display: inline-block;
       font-size: 0.6rem;
@@ -1669,7 +1672,8 @@
 
     function buildSignalNode(item) {
       const el = document.createElement('div');
-      el.className = 'canvas-node signal-node';
+      const parked = !parentHubId(item.id);
+      el.className = 'canvas-node signal-node' + (parked ? ' parked' : '');
       el.id = 'node-' + item.id;
       el.setAttribute('data-node-id', item.id);
       el.setAttribute('data-kind', 'signal');
@@ -2178,6 +2182,9 @@
         const HUB_ANCHOR_K = 0.012; // hub→its centroid pull
         const GRAVITY_K = 0.004;    // gentle pull toward global centroid
         const HUB_COHESION_K = 0.010; // extra pull between top-level hubs
+        const BELT_K = 0.05;          // outward spring for free signals sitting inside the active system
+        const BELT_GAP = 260;         // empty radius between active edge and belt
+        const INNER_PAD = 80;         // signals nearer than activeOuter + INNER_PAD get pushed out
         const MAX_FORCE = 40;
         const DAMP = 0.82;
 
@@ -2185,34 +2192,43 @@
         const fx = {}, fy = {};
         nodeIds.forEach(id => { fx[id] = 0; fy[id] = 0; });
 
+        // Identify free-floating signals (no parent hub, not a hub themselves).
+        const freeSignalIds = nodeIds.filter(id => !isHubId(id) && !parentHubId(id));
+        const freeSet = new Set(freeSignalIds);
+
         // Mass-weighted global centroid: heavier (higher-tier) hubs dominate,
         // so signals orbit clusters and clusters orbit superclusters.
+        // Free signals don't participate in gravity (they have their own belt law).
         let gcx = 0, gcy = 0, totalMass = 0;
         nodeIds.forEach(id => {
+          if (freeSet.has(id)) return;
           const dd = dims[id];
           const m = mass[id];
           gcx += (pos[id].x + dd.w / 2) * m;
           gcy += (pos[id].y + dd.h / 2) * m;
           totalMass += m;
         });
-        if (totalMass > 0) { gcx /= totalMass; gcy /= totalMass; }
+        const hasActive = totalMass > 0;
+        if (hasActive) { gcx /= totalMass; gcy /= totalMass; }
 
-        // Apply gentle gravity to every node.
-        nodeIds.forEach(id => {
-          const dd = dims[id];
-          const ncx = pos[id].x + dd.w / 2;
-          const ncy = pos[id].y + dd.h / 2;
-          fx[id] += (gcx - ncx) * GRAVITY_K;
-          fy[id] += (gcy - ncy) * GRAVITY_K;
-        });
+        // Apply gentle gravity to every active node (skip free signals).
+        if (hasActive) {
+          nodeIds.forEach(id => {
+            if (freeSet.has(id)) return;
+            const dd = dims[id];
+            const ncx = pos[id].x + dd.w / 2;
+            const ncy = pos[id].y + dd.h / 2;
+            fx[id] += (gcx - ncx) * GRAVITY_K;
+            fy[id] += (gcy - ncy) * GRAVITY_K;
+          });
+        }
 
-        // Additional pull between top-level nodes (parentless hubs + signals)
-        // so the composition stays cohesive as more clusters are created.
-        // Mass-weighted: heavy top-level hubs anchor the group center.
-        const topLevelIds = nodeIds.filter(id => !parentHubId(id));
-        if (topLevelIds.length >= 2) {
+        // Cohesion between top-level *hubs* (parentless hubs only — free
+        // signals get the belt law instead).
+        const topHubIds = nodeIds.filter(id => isHubId(id) && !parentHubId(id));
+        if (topHubIds.length >= 2) {
           let tcx = 0, tcy = 0, tm = 0;
-          topLevelIds.forEach(id => {
+          topHubIds.forEach(id => {
             const dd = dims[id];
             const m = mass[id];
             tcx += (pos[id].x + dd.w / 2) * m;
@@ -2220,12 +2236,45 @@
             tm += m;
           });
           if (tm > 0) { tcx /= tm; tcy /= tm; }
-          topLevelIds.forEach(id => {
+          topHubIds.forEach(id => {
             const dd = dims[id];
             const ncx = pos[id].x + dd.w / 2;
             const ncy = pos[id].y + dd.h / 2;
             fx[id] += (tcx - ncx) * HUB_COHESION_K;
             fy[id] += (tcy - ncy) * HUB_COHESION_K;
+          });
+        }
+
+        // Asteroid belt: free signals get an outward spring only if they're
+        // sitting inside the active system. Past the inner bound they're
+        // inert (user-placed), so users can park cards in faraway corners.
+        if (hasActive && freeSignalIds.length) {
+          // Outer radius of the active system around its mass-weighted centroid.
+          let activeOuter = 0;
+          nodeIds.forEach(id => {
+            if (freeSet.has(id)) return;
+            const dd = dims[id];
+            const cx = pos[id].x + dd.w / 2, cy = pos[id].y + dd.h / 2;
+            const d = Math.hypot(cx - gcx, cy - gcy);
+            if (d > activeOuter) activeOuter = d;
+          });
+          const innerBound = activeOuter + INNER_PAD;
+          const beltRadius = activeOuter + BELT_GAP;
+          freeSignalIds.forEach(id => {
+            const dd = dims[id];
+            const cx = pos[id].x + dd.w / 2, cy = pos[id].y + dd.h / 2;
+            let dx = cx - gcx, dy = cy - gcy;
+            let dist = Math.hypot(dx, dy);
+            if (dist >= innerBound) return; // already at/beyond belt, respect placement
+            if (dist < 0.01) {
+              // Pick an arbitrary direction so the signal doesn't get stuck at centroid.
+              const ang = Math.random() * Math.PI * 2;
+              dx = Math.cos(ang); dy = Math.sin(ang); dist = 1;
+            }
+            const ux = dx / dist, uy = dy / dist;
+            const delta = beltRadius - dist; // positive → push outward
+            fx[id] += ux * delta * BELT_K;
+            fy[id] += uy * delta * BELT_K;
           });
         }
 
