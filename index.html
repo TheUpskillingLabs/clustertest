@@ -2419,39 +2419,53 @@
 
       const pa = parentHubId(sourceId);
       const pb = parentHubId(targetId);
+      if (pa && pb && pa === pb) return; // already siblings — no-op
 
-      if (pa && pb && pa === pb) return;
+      const sourceIsHub = isHubId(sourceId);
+      const targetIsHub = isHubId(targetId);
 
-      // Both top-level, no parents.
-      if (!pa && !pb) {
-        const sourceIsHub = isHubId(sourceId);
-        const targetIsHub = isHubId(targetId);
-        if (sourceIsHub && !targetIsHub) { addUnderExistingParent(sourceId, targetId); return; }
-        if (targetIsHub && !sourceIsHub) { addUnderExistingParent(targetId, sourceId); return; }
+      // ── Signal + Signal → always create a new cluster ────────────────────
+      if (!sourceIsHub && !targetIsHub) {
+        if (pa) removeChildFromHub(pa, sourceId);
+        if (pb) removeChildFromHub(pb, targetId);
         const newHub = createHubBetween(sourceId, targetId);
-        spawnHubUI(newHub, newHub.id);
+        if (pa) addChildToHub(pa, newHub.id);
+        else if (pb) addChildToHub(pb, newHub.id);
+        spawnHubUI(newHub, pa ? rootAnchorOf(pa) : pb ? rootAnchorOf(pb) : newHub.id);
+        if (pa && pb && pa !== pb) warnIfUnderpopulated(pb);
         return;
       }
 
-      // Exactly one has a parent: create sub-cluster inside that parent.
-      if (!pa || !pb) {
-        const parentedId = pa ? sourceId : targetId;
-        const freeId     = pa ? targetId : sourceId;
-        const existingParent = pa || pb;
-        removeChildFromHub(existingParent, parentedId);
-        const newHub = createHubBetween(parentedId, freeId);
-        addChildToHub(existingParent, newHub.id);
-        spawnHubUI(newHub, rootAnchorOf(existingParent));
+      // ── Hub + Hub, same tier → create a new higher-tier hub for both ─────
+      if (sourceIsHub && targetIsHub) {
+        const sTier = hubTier(sourceId);
+        const tTier = hubTier(targetId);
+        if (sTier === tTier) {
+          if (pa) removeChildFromHub(pa, sourceId);
+          if (pb) removeChildFromHub(pb, targetId);
+          const newHub = createHubBetween(sourceId, targetId);
+          if (pa) addChildToHub(pa, newHub.id);
+          else if (pb) addChildToHub(pb, newHub.id);
+          spawnHubUI(newHub, pa ? rootAnchorOf(pa) : pb ? rootAnchorOf(pb) : newHub.id);
+          if (pa && pb && pa !== pb) warnIfUnderpopulated(pb);
+          return;
+        }
+        // Different tiers: add lower-tier hub into higher-tier hub
+        const hubId   = (sTier > tTier) ? sourceId : targetId;
+        const childId = (sTier > tTier) ? targetId : sourceId;
+        const oldParent = parentHubId(childId);
+        if (oldParent && oldParent !== hubId) { removeChildFromHub(oldParent, childId); warnIfUnderpopulated(oldParent); }
+        addUnderExistingParent(hubId, childId);
         return;
       }
 
-      // Both in different parents: create sub-cluster, insert into source's parent.
-      removeChildFromHub(pa, sourceId);
-      removeChildFromHub(pb, targetId);
-      const newHub = createHubBetween(sourceId, targetId);
-      addChildToHub(pa, newHub.id);
-      spawnHubUI(newHub, rootAnchorOf(pa));
-      warnIfUnderpopulated(pb);
+      // ── Signal + Hub (either direction) → add signal into hub ────────────
+      const hubId   = sourceIsHub ? sourceId : targetId;
+      const childId = sourceIsHub ? targetId : sourceId;
+      if (isHubId(childId) && isAncestor(childId, hubId)) { toast('That would create a loop.'); return; }
+      const oldParent = parentHubId(childId);
+      if (oldParent && oldParent !== hubId) { removeChildFromHub(oldParent, childId); warnIfUnderpopulated(oldParent); }
+      addUnderExistingParent(hubId, childId);
     }
 
     // ----- Force-directed auto-spacing -----
