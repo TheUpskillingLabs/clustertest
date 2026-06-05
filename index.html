@@ -1632,9 +1632,9 @@
     // tier (so a signal under a mega cluster still sits at signal-distance,
     // and a supercluster under a hyper cluster sits at supercluster-distance).
     // Geometric growth per tier so higher tiers are visibly further out.
-    const TIER_BASE_R = [180, 340, 600, 1040, 1760, 2900]; // signal..hyper
-    const TIER_STEP_R = [22,  38,  62,  100,  160,  240];
-    const TIER_RATIO  = 1.72;
+    const TIER_BASE_R = [200, 520, 1300, 3000, 6500, 13500]; // signal..hyper, ~2.3x per tier
+    const TIER_STEP_R = [24,  56,  130,  280,  560,  1100];
+    const TIER_RATIO  = 2.3;
     function idealRadiusForChild(childTier, n) {
       const t = Math.max(0, Math.min(childTier, 12));
       const base = TIER_BASE_R[t] ?? TIER_BASE_R[5] * Math.pow(TIER_RATIO, t - 5);
