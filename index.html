@@ -1640,8 +1640,8 @@
     // tier so that higher-tier hubs place children at progressively longer
     // distances. Index 1 (tier-1 cluster → signals) is the bread-and-butter
     // case; index 2+ grows geometrically for superclusters and beyond.
-    const TIER_BASE_R = [180, 200, 340, 520, 780, 1160];
-    const TIER_STEP_R = [22,  26,  42,  64,  96,  144];
+    const TIER_BASE_R = [200, 350, 520, 720, 960, 1250];
+    const TIER_STEP_R = [28,  38,  52,  72,  96,  130];
     const TIER_RATIO  = 1.5;
     function idealRadiusForChild(parentTier, n) {
       const t = Math.max(0, Math.min(parentTier, 12));
