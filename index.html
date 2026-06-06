@@ -485,14 +485,14 @@
 
     /* --- PROFILE BUTTON + POPOVER --- */
     .profile-anchor {
-      position: fixed; top: 16px; right: 20px; z-index: 1500;
+      position: relative; flex-shrink: 0;
     }
     .profile-btn {
-      width: 44px; height: 44px; border-radius: 50%;
+      width: 36px; height: 36px; border-radius: 50%;
       background: var(--primary-teal); color: var(--ghost-white);
       border: 2px solid rgba(255,255,255,0.85);
-      box-shadow: 0 4px 12px rgba(16,24,32,0.18);
-      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(16,24,32,0.14);
+      font-size: 0.875rem; font-weight: 700; cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
       letter-spacing: 0.02em;
@@ -500,8 +500,6 @@
     .profile-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,24,32,0.25); }
     .profile-btn:focus-visible { outline: 3px solid var(--primary-teal); outline-offset: 2px; }
     .profile-btn[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(0,148,160,0.35), 0 6px 16px rgba(16,24,32,0.25); }
-    /* On the dark setup screen, lift the ring against the midnight background */
-    #setup-screen ~ .profile-anchor .profile-btn { border-color: rgba(255,255,255,0.95); }
 
     .profile-popover {
       position: absolute; top: calc(100% + 10px); right: 0;
@@ -510,6 +508,7 @@
       box-shadow: 0 20px 40px rgba(16,24,32,0.18), 0 4px 12px rgba(16,24,32,0.08);
       padding: 18px; transform-origin: top right;
       animation: pop-in 0.14s ease-out;
+      z-index: 500;
     }
     @keyframes pop-in {
       from { opacity: 0; transform: scale(0.96) translateY(-4px); }
@@ -561,10 +560,32 @@
 
     /* ============ WEB-MAP CANVAS ============ */
     .webmap-panel { display: flex; flex-direction: column; height: 100vh; width: 100vw; min-height: 0; background: var(--cloud); }
-    .webmap-header { gap: 16px; padding: 16px 24px; }
-    .webmap-header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .webmap-search { min-width: 220px; }
-    .webmap-search .search-input { padding: 8px 14px; padding-right: 32px; }
+    .webmap-header { gap: 12px; padding: 0 20px; height: 60px; overflow: visible; }
+    .webmap-header h2 { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .webmap-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0; }
+    .webmap-search { min-width: 180px; max-width: 260px; }
+    .webmap-search .search-input { padding: 7px 12px; padding-right: 30px; }
+
+    /* Mobile label switching: short label hidden by default */
+    .btn-label-short { display: none; }
+
+    @media (max-width: 1024px) {
+      .webmap-header { padding: 0 12px; height: 52px; gap: 8px; }
+      .webmap-header h2 { font-size: 0.875rem; }
+      .webmap-header-actions { gap: 6px; }
+      .webmap-search { min-width: 120px; max-width: 180px; }
+      .webmap-search .search-input { padding: 6px 10px; padding-right: 28px; font-size: 0.8rem; }
+      /* Collapse "AI Prompt" to just emoji */
+      .webmap-header-actions .btn-ai-prompt .btn-label { display: none; }
+      /* Swap "Commit to Clusters" → "Commit" */
+      .webmap-header-actions .btn-label { display: none; }
+      .webmap-header-actions .btn-label-short { display: inline; }
+    }
+
+    @media (max-width: 480px) {
+      .webmap-header { padding: 0 8px; gap: 6px; }
+      .webmap-search { min-width: 90px; max-width: 140px; }
+    }
 
     .canvas-viewport {
       position: relative;
@@ -1055,9 +1076,27 @@
             <input type="text" id="search-input" class="search-input" placeholder="Search signals..." oninput="filterItems()">
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
-          <button class="btn btn-outline" onclick="openAIPromptModal()" aria-label="Get AI brainstorming prompt for the full signal pool">✨ AI Prompt</button>
-          <button id="tidy-btn" class="btn btn-outline" onclick="tidyLayout()" title="Snap clusters back into clean concentric rings (keeps your angles). Shift+T" aria-label="Auto-arrange the cluster network into clean concentric tier rings">🧹 Tidy layout</button>
-          <button class="btn btn-primary" onclick="openCommitModal()">Commit to Clusters</button>
+          <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Get AI brainstorming prompt for the full signal pool">✨ <span class="btn-label">AI Prompt</span></button>
+          <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Commit to Clusters</span><span class="btn-label-short">Commit</span></button>
+          <div class="profile-anchor">
+            <button id="profile-btn" type="button" class="profile-btn"
+                    aria-haspopup="dialog" aria-expanded="false" aria-controls="profile-popover"
+                    aria-label="Profile menu" onclick="toggleProfilePopover()">
+              <span id="profile-initial" aria-hidden="true">?</span>
+            </button>
+            <div id="profile-popover" class="profile-popover hidden" role="dialog" aria-label="Profile">
+              <div class="profile-id">
+                <div class="avatar" id="profile-avatar" aria-hidden="true">?</div>
+                <div class="meta">
+                  <div class="label">Signed in as</div>
+                  <div class="email" id="profile-email">—</div>
+                </div>
+              </div>
+              <div class="divider"></div>
+              <p class="reset-desc">Clear all saved clusters, answers, and signals on this device. This cannot be undone.</p>
+              <button type="button" class="btn-reset" onclick="resetFromProfile()">Reset workspace</button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="canvas-infobar">
@@ -1199,26 +1238,6 @@
           <button class="btn btn-outline" onclick="closeAIPromptModal()">Dismiss</button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <div class="profile-anchor">
-    <button id="profile-btn" type="button" class="profile-btn"
-            aria-haspopup="dialog" aria-expanded="false" aria-controls="profile-popover"
-            aria-label="Profile menu" onclick="toggleProfilePopover()">
-      <span id="profile-initial" aria-hidden="true">?</span>
-    </button>
-    <div id="profile-popover" class="profile-popover hidden" role="dialog" aria-label="Profile">
-      <div class="profile-id">
-        <div class="avatar" id="profile-avatar" aria-hidden="true">?</div>
-        <div class="meta">
-          <div class="label">Signed in as</div>
-          <div class="email" id="profile-email">—</div>
-        </div>
-      </div>
-      <div class="divider"></div>
-      <p class="reset-desc">Clear all saved clusters, answers, and signals on this device. This cannot be undone.</p>
-      <button type="button" class="btn-reset" onclick="resetFromProfile()">Reset workspace</button>
     </div>
   </div>
 
