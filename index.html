@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>The Triangulatorizer</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
@@ -25,11 +25,11 @@
     }
 
     body { 
-      color: var(--midnight); 
-      background-color: var(--cloud); 
-      height: 100vh; 
+      color: var(--midnight);
+      background-color: var(--cloud);
+      height: 100vh; height: 100dvh;
       width: 100vw;
-      overflow: hidden; 
+      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
@@ -89,7 +89,7 @@
 
     /* --- VIEW 1: SETUP SCREEN --- */
     #setup-screen {
-      height: 100vh;
+      height: 100vh; height: 100dvh;
       width: 100vw;
       display: block;
       background: var(--midnight);
@@ -138,14 +138,14 @@
     .upskill-banner p { font-size: 0.875rem; line-height: 1.5; }
 
     /* --- VIEW 2: APPLICATION WORKSPACE --- */
-    #board-workspace { display: flex; flex-direction: row; width: 100vw; height: 100vh; flex: 1; min-height: 0; }
+    #board-workspace { display: flex; flex-direction: row; width: 100vw; height: 100vh; height: 100dvh; flex: 1; min-height: 0; }
     .panel-left { width: 360px; background: var(--ghost-white); border-right: 2px solid var(--cloud); display: flex; flex-direction: column; height: 100%; min-height: 0; }
     .panel-center { flex: 1; display: flex; flex-direction: column; background: var(--cloud); position: relative; height: 100%; min-height: 0; }
     
     @media (max-width: 1024px) {
       #board-workspace { flex-direction: column; }
-      .panel-left { width: 100%; height: 45vh; border-right: none; border-bottom: 2px solid var(--cloud); }
-      .panel-center { height: 55vh; }
+      .panel-left { width: 100%; height: 45vh; height: 45dvh; border-right: none; border-bottom: 2px solid var(--cloud); }
+      .panel-center { height: 55vh; height: 55dvh; }
     }
 
     .panel-header { padding: 20px 24px; border-bottom: 2px solid var(--cloud); display: flex; justify-content: space-between; align-items: center; background: var(--ghost-white); height: 80px; flex-shrink: 0; }
@@ -230,7 +230,7 @@
     .add-cluster-btn:hover { background: var(--ghost-white); border-color: var(--primary-teal); color: var(--primary-teal); }
 
     /* --- VIEW 3: ARTIFACT LAYOUT --- */
-    #artifact-screen { height: 100vh; width: 100vw; overflow-y: auto; background: var(--cloud); padding: 40px 24px; display: flex; flex-direction: column; align-items: center; }
+    #artifact-screen { height: 100vh; height: 100dvh; width: 100vw; overflow-y: auto; background: var(--cloud); padding: 40px 24px; display: flex; flex-direction: column; align-items: center; }
     .artifact-actions { width: 100%; max-width: 840px; display: flex; justify-content: space-between; margin-bottom: 24px; background: var(--ghost-white); padding: 20px 32px; border-radius: 12px; border: 2px solid var(--cloud); align-items: center; flex-shrink: 0; }
     .action-group { display: flex; gap: 12px; }
 
@@ -247,14 +247,14 @@
     .prompt-text { background: var(--midnight); color: var(--cloud); padding: 20px; border-radius: 6px; font-family: monospace; font-size: 0.825rem; white-space: pre-wrap; margin-bottom: 16px; line-height: 1.5; }
 
     /* --- COMMON DESIGN SYSTEM MODALS --- */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 24, 32, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 24, 32, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom, 24px)); }
     @supports (backdrop-filter: blur(4px)) {
       .modal-overlay { background: rgba(16, 24, 32, 0.5); backdrop-filter: blur(4px); }
     }
 
     /* --- TOAST --- */
     #toast-region {
-      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
       z-index: 2000; display: flex; flex-direction: column; gap: 8px;
       pointer-events: none;
     }
@@ -295,7 +295,7 @@
       font-size: 0.7rem; font-weight: 600; color: var(--text-muted, #6b7378);
       opacity: 0.7; margin-left: 12px;
     }
-    .modal-content { background: var(--ghost-white); padding: 40px; border-radius: 12px; width: 100%; max-width: 640px; box-shadow: 0 30px 60px rgba(0,0,0,0.25); border: 2px solid var(--cloud); }
+    .modal-content { background: var(--ghost-white); padding: 40px; border-radius: 12px; width: 100%; max-width: 640px; box-shadow: 0 30px 60px rgba(0,0,0,0.25); border: 2px solid var(--cloud); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow-y: auto; }
     .modal-header h3 { font-size: 1.4rem; font-weight: 700; color: var(--midnight); margin-bottom: 16px; }
     .modal-body p { font-size: 0.95rem; color: var(--midnight); margin-bottom: 20px; line-height: 1.6; }
     .modal-body textarea { width: 100%; height: 260px; font-family: monospace; font-size: 0.825rem; padding: 16px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--cloud); color: var(--midnight); resize: none; margin-bottom: 20px; outline: none; }
@@ -310,7 +310,7 @@
     #cluster-progress.below-target { color: var(--cloud); opacity: 0.8; }
 
     /* --- VIEW 2b: DEEPENING WORKSPACE --- */
-    #workspace-screen { height: 100vh; width: 100vw; overflow-y: auto; background: var(--cloud); padding: 32px 24px; display: flex; flex-direction: column; align-items: center; }
+    #workspace-screen { height: 100vh; height: 100dvh; width: 100vw; overflow-y: auto; background: var(--cloud); padding: 32px 24px; display: flex; flex-direction: column; align-items: center; }
     .workspace-header { width: 100%; max-width: 880px; background: var(--ghost-white); padding: 24px 32px; border-radius: 12px; border: 2px solid var(--cloud); margin-bottom: 24px; }
     .workspace-title-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
     .workspace-title-row h2 { font-size: 1.2rem; font-weight: 700; color: var(--midnight); flex: 1; min-width: 240px; }
@@ -559,7 +559,7 @@
     @media print { .profile-anchor { display: none !important; } }
 
     /* ============ WEB-MAP CANVAS ============ */
-    .webmap-panel { display: flex; flex-direction: column; height: 100vh; width: 100vw; min-height: 0; background: var(--cloud); }
+    .webmap-panel { display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; background: var(--cloud); }
     .webmap-header { gap: 12px; padding: 0 20px; height: 60px; overflow: visible; }
     .webmap-header h2 { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .webmap-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0; }
@@ -585,6 +585,43 @@
     @media (max-width: 480px) {
       .webmap-header { padding: 0 8px; gap: 6px; }
       .webmap-search { min-width: 90px; max-width: 140px; }
+    }
+
+    /* --- MOBILE COMPACT DENSITY --- */
+    @media (max-width: 1024px) {
+      .panel-left .panel-header    { height: 56px; padding: 10px 16px; }
+      .panel-left .panel-header h2 { font-size: 0.95rem; }
+      .search-container            { padding: 8px 12px; }
+      .scroll-area                 { padding: 12px; }
+      .ai-helper-bar               { padding: 10px 16px; }
+      .canvas-infobar              { padding: 6px 12px; font-size: 0.7rem; }
+      .item-card                   { padding: 10px 12px; margin-bottom: 8px; }
+    }
+
+    @media (max-width: 600px) {
+      /* Modals */
+      .modal-overlay  { padding: 12px; padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)); }
+      .modal-content  { padding: 24px; }
+      .modal-header h3 { font-size: 1.1rem; }
+      /* Setup screen */
+      #setup-screen     { padding: 12px; }
+      .config-container { padding: 20px; }
+      .config-header h1 { font-size: 1.3rem; }
+      /* Workspace screen */
+      #workspace-screen        { padding: 12px; }
+      .workspace-header        { padding: 16px; }
+      .workspace-cluster-card  { padding: 0 16px 20px; }
+      /* Artifact screen */
+      #artifact-screen   { padding: 12px; }
+      .document-paper    { padding: 24px 20px; }
+      .artifact-actions  { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+    }
+
+    /* Canvas hint: show touch-specific text on mobile */
+    .hint-mobile { display: none; }
+    @media (max-width: 1024px) {
+      .hint-desktop { display: none; }
+      .hint-mobile  { display: inline; }
     }
 
     .canvas-viewport {
@@ -947,7 +984,7 @@
     .zoom-toolbar {
       position: absolute;
       right: 20px;
-      bottom: 20px;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
       display: flex;
       gap: 4px;
       background: var(--ghost-white);
@@ -977,7 +1014,7 @@
     .canvas-hint {
       position: absolute;
       left: 20px;
-      bottom: 20px;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
       background: rgba(16,24,32,0.85);
       color: var(--ghost-white);
       padding: 8px 14px;
@@ -1121,7 +1158,7 @@
           <button type="button" class="zoom-btn" onclick="zoomBy(1)" aria-label="Zoom in">+</button>
           <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes">⤢</button>
         </div>
-        <div class="canvas-hint" id="canvas-hint">Drag signals to move • Pull from any edge or corner to connect • 2-finger scroll to pan • Cmd/Ctrl-scroll or pinch to zoom • Space + drag to pan</div>
+        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag signals to move • Pull from any edge or corner to connect • 2-finger scroll to pan • Cmd/Ctrl-scroll or pinch to zoom • Space + drag to pan</span><span class="hint-mobile">Drag to move • Connect from edge dots • Pinch to zoom • Drag canvas to pan</span></div>
       </div>
     </main>
   </div>
