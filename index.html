@@ -663,12 +663,18 @@
       stroke-width: 2.5;
       stroke-linecap: round;
       opacity: 0.85;
-      pointer-events: stroke;
-      cursor: pointer;
+      pointer-events: none;
       transition: stroke-width 0.15s ease, opacity 0.18s ease;
     }
-    .edge-layer .edge:hover { stroke-width: 4; }
     .edge-layer .edge.selected { stroke: var(--action-red); stroke-width: 4; }
+    .edge-layer .edge-hit {
+      fill: none;
+      stroke: rgba(0,0,0,0.001);
+      stroke-width: 16;
+      pointer-events: stroke;
+      cursor: pointer;
+    }
+    .edge-layer .edge-hit:hover + .edge { stroke-width: 4; }
     .edge-layer .edge.spawning {
       stroke-dasharray: var(--len, 1000);
       stroke-dashoffset: var(--len, 1000);
@@ -2132,16 +2138,26 @@
     const hubLastTier = new Map();
     function renderAllEdges() {
       const svg = document.getElementById('edge-layer');
-      // Clear existing real edges, keep <defs> and #edge-drawing.
-      Array.from(svg.querySelectorAll('path.edge')).forEach(p => p.remove());
+      // Clear existing real edges and hit paths, keep <defs> and #edge-drawing.
+      Array.from(svg.querySelectorAll('path.edge, path.edge-hit')).forEach(p => p.remove());
       const drawing = svg.querySelector('#edge-drawing');
       edgesFromState().forEach(edge => {
+        const d = bezierBetween(nodeCenter(edge.from), nodeCenter(edge.to));
+        // Wide transparent hit path for easy clicking (inserted first = below visual)
+        const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        hit.setAttribute('class', 'edge-hit');
+        hit.setAttribute('data-edge-id', edge.id);
+        hit.setAttribute('data-from', edge.from);
+        hit.setAttribute('data-to', edge.to);
+        hit.setAttribute('d', d);
+        svg.insertBefore(hit, drawing);
+        // Visual path (inserted after hit = on top)
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('class', 'edge');
         path.setAttribute('data-edge-id', edge.id);
         path.setAttribute('data-from', edge.from);
         path.setAttribute('data-to', edge.to);
-        path.setAttribute('d', bezierBetween(nodeCenter(edge.from), nodeCenter(edge.to)));
+        path.setAttribute('d', d);
         if (selectedEdgeId === edge.id) path.classList.add('selected');
         svg.insertBefore(path, drawing);
       });
@@ -2165,7 +2181,7 @@
 
     function updateEdgesForNode(nodeId) {
       const svg = document.getElementById('edge-layer');
-      const paths = svg.querySelectorAll(`path.edge[data-from="${nodeId}"], path.edge[data-to="${nodeId}"]`);
+      const paths = svg.querySelectorAll(`path[data-from="${nodeId}"], path[data-to="${nodeId}"]`);
       paths.forEach(p => {
         const a = nodeCenter(p.getAttribute('data-from'));
         const b = nodeCenter(p.getAttribute('data-to'));
@@ -2853,7 +2869,7 @@
     function setupEdgeInteractions() {
       const svg = document.getElementById('edge-layer');
       svg.addEventListener('click', (e) => {
-        const target = e.target.closest('path.edge');
+        const target = e.target.closest('.edge-hit');
         if (!target) {
           if (selectedEdgeId) { selectedEdgeId = null; renderAllEdges(); }
           return;
@@ -2939,9 +2955,11 @@
       viewport.addEventListener('pointerdown', (e) => {
         if (e.target.closest('.zoom-toolbar')) return;
         const onNode = !!e.target.closest('.canvas-node');
+        const onEdge = !!(e.target.classList && e.target.classList.contains('edge-hit'));
         const isMiddle = e.button === 1;
         const forcePan = spaceHeld || isMiddle;
         if (onNode && !forcePan) return;
+        if (onEdge && !forcePan) return;  // let edge clicks through without panning
         e.preventDefault();
         panning = true;
         panPointerId = e.pointerId;
