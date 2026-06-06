@@ -680,6 +680,30 @@
       animation: edge-retract 200ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
     }
     .edge-layer .edge.dimmed { opacity: 0.18; }
+    .edge-delete-btn {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background: var(--action-red);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 15px;
+      line-height: 24px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 30;
+      pointer-events: all;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.28);
+      transition: transform 0.12s ease, background 0.12s ease;
+      font-family: sans-serif;
+    }
+    .edge-delete-btn:hover {
+      background: #c0392b;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+    .edge-delete-btn.hidden { display: none; }
     .edge-drawing {
       fill: none;
       stroke: var(--primary-teal);
@@ -1151,6 +1175,7 @@
             <path id="edge-drawing" class="edge-drawing" d="" />
           </svg>
           <div id="nodes-layer" class="nodes-layer"></div>
+          <button id="edge-delete-btn" class="edge-delete-btn hidden" title="Delete connection" aria-label="Delete connection">✕</button>
         </div>
         <div class="zoom-toolbar" role="toolbar" aria-label="Canvas zoom">
           <button type="button" class="zoom-btn" onclick="zoomBy(-1)" aria-label="Zoom out">−</button>
@@ -2120,6 +2145,22 @@
         if (selectedEdgeId === edge.id) path.classList.add('selected');
         svg.insertBefore(path, drawing);
       });
+      const edgeDelBtn = document.getElementById('edge-delete-btn');
+      if (edgeDelBtn) {
+        if (selectedEdgeId) {
+          const selEdge = edgesFromState().find(e => e.id === selectedEdgeId);
+          if (selEdge) {
+            const a = nodeCenter(selEdge.from), b = nodeCenter(selEdge.to);
+            edgeDelBtn.style.left = ((a.x + b.x) / 2) + 'px';
+            edgeDelBtn.style.top  = ((a.y + b.y) / 2) + 'px';
+            edgeDelBtn.classList.remove('hidden');
+          } else {
+            edgeDelBtn.classList.add('hidden');
+          }
+        } else {
+          edgeDelBtn.classList.add('hidden');
+        }
+      }
     }
 
     function updateEdgesForNode(nodeId) {
@@ -2828,6 +2869,12 @@
           e.preventDefault();
           deleteEdge(selectedEdgeId);
         }
+      });
+      const edgeDelBtn = document.getElementById('edge-delete-btn');
+      edgeDelBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+      edgeDelBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (selectedEdgeId) deleteEdge(selectedEdgeId);
       });
     }
 
