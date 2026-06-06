@@ -1856,6 +1856,12 @@
       if (!world) return;
       const { panX, panY, zoom } = appState.view;
       world.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+      const viewport = document.getElementById('canvas-viewport');
+      if (viewport) {
+        const s = 24 * zoom;
+        viewport.style.backgroundSize = `${s}px ${s}px`;
+        viewport.style.backgroundPosition = `${panX % s}px ${panY % s}px`;
+      }
       const lvl = document.getElementById('zoom-level');
       if (lvl) lvl.textContent = Math.round(zoom * 100) + '%';
     }
