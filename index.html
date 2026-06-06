@@ -1059,7 +1059,208 @@
     @media (prefers-reduced-motion: reduce) {
       .canvas-node, .edge-layer .edge, .hub-node { transition-duration: 60ms !important; animation-duration: 60ms !important; }
       .canvas-node.spawn, .edge-layer .edge.spawning, .canvas-node.match-ring::before, .hub-node.tier-up { animation: none !important; }
+      .illus-signal-card, .illus-teal-dot, .illus-drag-line, .illus-hub { animation: none !important; opacity: 1 !important; width: auto !important; }
     }
+
+    /* ===================== ONBOARDING: MULTI-STEP WELCOME MODAL ===================== */
+    #welcome-modal .modal-content { max-width: 560px; padding: 0; overflow: hidden; }
+    .welcome-slides { overflow: hidden; position: relative; }
+    .welcome-slide-track { display: flex; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); will-change: transform; }
+    .welcome-slide { min-width: 100%; padding: 36px 36px 0; box-sizing: border-box; }
+    .welcome-illustration {
+      width: 100%; height: 150px;
+      background: rgba(0,148,160,0.07);
+      border: 1px solid rgba(0,148,160,0.15);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Slide 1 — scattered signal cards animating in */
+    .illus-canvas { width: 100%; height: 100%; position: relative; }
+    .illus-signal-card {
+      position: absolute;
+      width: 76px; height: 40px;
+      background: var(--ghost-white);
+      border: 2px solid rgba(0,148,160,0.35);
+      border-radius: 6px;
+      font-size: 0.48rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--midnight);
+      opacity: 0;
+      animation: illus-card-appear 0.4s ease forwards;
+    }
+    .illus-signal-card:nth-child(1) { left: 16px;  top: 24px;  animation-delay: 0.05s; }
+    .illus-signal-card:nth-child(2) { left: 110px; top: 12px;  animation-delay: 0.2s;  }
+    .illus-signal-card:nth-child(3) { left: 205px; top: 20px;  animation-delay: 0.35s; }
+    .illus-signal-card:nth-child(4) { left: 56px;  top: 84px;  animation-delay: 0.5s;  }
+    .illus-signal-card:nth-child(5) { left: 162px; top: 88px;  animation-delay: 0.65s; }
+    @keyframes illus-card-appear {
+      from { opacity: 0; transform: scale(0.7) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Slide 2 — drag-to-connect animation */
+    .illus-connect { width: 100%; height: 100%; position: relative; display: flex; align-items: center; }
+    .illus-node-a {
+      position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
+      width: 80px; height: 44px;
+      background: var(--ghost-white); border: 2px solid var(--primary-teal);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.5rem; font-weight: 700; color: var(--midnight);
+    }
+    .illus-teal-dot {
+      position: absolute; right: -8px; top: 50%; transform: translateY(-50%);
+      width: 14px; height: 14px;
+      background: var(--primary-teal); border: 2px solid var(--ghost-white);
+      border-radius: 50%;
+      animation: illus-dot-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes illus-dot-pulse {
+      0%, 100% { transform: translateY(-50%) scale(1);    box-shadow: 0 2px 6px rgba(0,148,160,0.5); }
+      50%       { transform: translateY(-50%) scale(1.3); box-shadow: 0 4px 14px rgba(0,148,160,0.8); }
+    }
+    .illus-drag-line {
+      position: absolute; left: 111px; top: 50%; transform: translateY(-50%);
+      height: 2px; background: var(--primary-teal); border-radius: 2px;
+      width: 0; animation: illus-line-extend 1.8s ease-in-out infinite;
+    }
+    @keyframes illus-line-extend {
+      0%   { width: 0; opacity: 0; }
+      10%  { opacity: 1; }
+      55%  { width: 88px; opacity: 0.9; }
+      75%  { width: 88px; opacity: 0; }
+      100% { width: 0; opacity: 0; }
+    }
+    .illus-hub {
+      position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+      width: 92px; height: 50px;
+      background: #101820; border: 2px solid var(--primary-teal);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.5rem; font-weight: 800; color: var(--primary-teal); letter-spacing: 0.05em;
+      opacity: 0; animation: illus-hub-appear 1.8s ease-in-out infinite;
+    }
+    @keyframes illus-hub-appear {
+      0%, 55%   { opacity: 0; transform: translateY(-50%) scale(0.82); }
+      72%       { opacity: 1; transform: translateY(-50%) scale(1.06); }
+      90%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
+    }
+
+    /* Slide 3 — AI pill cards */
+    .illus-ai {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px; gap: 12px;
+    }
+    .illus-ai-pill {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px;
+      background: var(--ghost-white);
+      border: 2px solid rgba(0,148,160,0.3);
+      border-radius: 10px; padding: 12px 16px;
+      flex: 1; max-width: 170px; text-align: center;
+      box-shadow: 0 2px 8px rgba(16,24,32,0.06);
+    }
+    .illus-ai-pill .pill-icon { font-size: 1.5rem; line-height: 1; }
+    .illus-ai-pill .pill-name { font-size: 0.7rem; font-weight: 700; color: var(--midnight); }
+    .illus-ai-pill .pill-label { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--primary-teal); }
+    .illus-ai-sep { font-size: 1rem; opacity: 0.3; color: var(--midnight); flex-shrink: 0; }
+
+    /* Welcome slide text */
+    .welcome-slide h3 { font-size: 1.2rem; font-weight: 700; color: var(--midnight); margin-bottom: 8px; }
+    .welcome-slide p { font-size: 0.875rem; color: var(--midnight); line-height: 1.6; opacity: 0.82; margin-bottom: 0; }
+
+    /* Welcome footer: dots + nav */
+    .welcome-footer { padding: 20px 36px 28px; display: flex; align-items: center; gap: 12px; }
+    .welcome-step-dots { display: flex; gap: 7px; flex: 1; }
+    .welcome-step-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--cloud); border: none; padding: 0; cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .welcome-step-dot.active { background: var(--primary-teal); transform: scale(1.4); }
+    .welcome-nav { display: flex; gap: 8px; }
+    .welcome-nav .btn-back {
+      background: transparent; border: 2px solid var(--cloud);
+      color: var(--midnight); padding: 9px 16px; border-radius: 8px;
+      font-weight: 600; font-size: 0.85rem; cursor: pointer; min-height: 38px;
+      transition: background 0.15s ease;
+    }
+    .welcome-nav .btn-back:hover { background: var(--cloud); }
+    .welcome-nav .btn-next {
+      background: var(--primary-teal); color: var(--ghost-white);
+      border: none; padding: 9px 20px; border-radius: 8px;
+      font-weight: 700; font-size: 0.875rem; cursor: pointer; min-height: 38px;
+      transition: background 0.15s ease, transform 0.12s ease;
+    }
+    .welcome-nav .btn-next:hover { background: #007882; transform: translateY(-1px); }
+
+    @media (max-width: 600px) {
+      .welcome-slide { padding: 22px 22px 0; }
+      .welcome-illustration { height: 120px; }
+      .welcome-footer { padding: 16px 22px 22px; }
+      .welcome-slide h3 { font-size: 1.05rem; }
+    }
+
+    /* ===================== ONBOARDING: SPOTLIGHT TOUR ===================== */
+    #tour-overlay { position: fixed; inset: 0; z-index: 2100; pointer-events: all; }
+    .tour-spotlight {
+      position: fixed;
+      border-radius: 8px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.62);
+      pointer-events: none;
+      z-index: 2101;
+      transition: top 0.28s ease, left 0.28s ease, width 0.28s ease, height 0.28s ease, border-radius 0.28s ease;
+    }
+    .tour-tooltip {
+      position: fixed;
+      background: var(--ghost-white);
+      border-radius: 12px;
+      padding: 20px 22px 18px;
+      max-width: min(320px, calc(100vw - 32px));
+      min-width: 240px;
+      box-shadow: 0 16px 48px rgba(16,24,32,0.26), 0 0 0 2px var(--primary-teal);
+      z-index: 2102;
+      pointer-events: all;
+    }
+    .tour-tooltip-step {
+      font-size: 0.62rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.09em; color: var(--primary-teal); margin-bottom: 5px;
+    }
+    .tour-tooltip h4 { font-size: 0.975rem; font-weight: 700; color: var(--midnight); margin-bottom: 7px; }
+    .tour-tooltip p { font-size: 0.825rem; color: var(--midnight); line-height: 1.55; opacity: 0.8; margin-bottom: 14px; }
+    .tour-tooltip-nav { display: flex; align-items: center; gap: 8px; }
+    .tour-btn-skip {
+      background: transparent; border: none; color: var(--midnight); opacity: 0.4;
+      font-size: 0.78rem; font-weight: 600; cursor: pointer; padding: 6px 0; margin-right: auto;
+      transition: opacity 0.15s ease;
+    }
+    .tour-btn-skip:hover { opacity: 0.65; }
+    .tour-step-count { font-size: 0.7rem; font-weight: 600; color: var(--midnight); opacity: 0.35; }
+    .tour-btn-next {
+      background: var(--primary-teal); color: var(--ghost-white); border: none;
+      padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;
+      cursor: pointer; transition: background 0.15s ease, transform 0.12s ease;
+    }
+    .tour-btn-next:hover { background: #007882; transform: translateY(-1px); }
+
+    #tour-help-btn {
+      position: absolute; right: 16px; bottom: 72px;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--ghost-white); border: 2px solid var(--cloud);
+      color: var(--primary-teal); font-weight: 800; font-size: 0.95rem;
+      cursor: pointer; z-index: 12;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 10px rgba(16,24,32,0.1);
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+    }
+    #tour-help-btn:hover { background: var(--cloud); box-shadow: 0 5px 14px rgba(16,24,32,0.14); }
+
+    @keyframes tour-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    #tour-overlay.tour-entering { animation: tour-fade-in 0.22s ease forwards; }
 
 
     @media print {
@@ -1190,20 +1391,102 @@
           <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes">⤢</button>
         </div>
         <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag signals to move • Pull from any edge or corner to connect • 2-finger scroll to pan • Cmd/Ctrl-scroll or pinch to zoom • Space + drag to pan</span><span class="hint-mobile">Drag to move • Connect from edge dots • Pinch to zoom • Drag canvas to pan</span></div>
+        <button id="tour-help-btn" class="hidden" onclick="tourRestart()"
+                aria-label="Restart feature tour" title="Restart tour">?</button>
       </div>
     </main>
   </div>
 
   <div id="welcome-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="welcome-modal-title">
-    <div class="modal-content" style="border-top: 4px solid var(--primary-teal);">
-      <div class="modal-header">
-        <h3 id="welcome-modal-title">Welcome to the Web Map</h3>
+    <div class="modal-content" style="border-top: 4px solid var(--primary-teal); padding: 0;">
+
+      <div class="welcome-slides" id="welcome-slides">
+        <div class="welcome-slide-track" id="welcome-slide-track">
+
+          <!-- SLIDE 1: What is this tool -->
+          <div class="welcome-slide" role="tabpanel" aria-label="Slide 1 of 3" id="welcome-slide-0">
+            <div class="welcome-illustration">
+              <div class="illus-canvas" aria-hidden="true">
+                <div class="illus-signal-card">Signal A</div>
+                <div class="illus-signal-card">Signal B</div>
+                <div class="illus-signal-card">Signal C</div>
+                <div class="illus-signal-card">Signal D</div>
+                <div class="illus-signal-card">Signal E</div>
+              </div>
+            </div>
+            <h3 id="welcome-modal-title">Welcome to the Web Map</h3>
+            <p>You've got a pool of friction signals — real problems people experience. Your job is to <strong>cluster them into 2–3 defensible problem spaces</strong> so you can dig deeper with a stakeholder map and problematization.</p>
+          </div>
+
+          <!-- SLIDE 2: Build your first cluster -->
+          <div class="welcome-slide" role="tabpanel" aria-label="Slide 2 of 3" id="welcome-slide-1">
+            <div class="welcome-illustration">
+              <div class="illus-connect" aria-hidden="true">
+                <div class="illus-node-a">
+                  Signal
+                  <div class="illus-teal-dot"></div>
+                </div>
+                <div class="illus-drag-line"></div>
+                <div class="illus-hub">HUB</div>
+              </div>
+            </div>
+            <h3>Build your first cluster</h3>
+            <p>Hover any signal card to reveal <strong>teal dots</strong> on its edges. Drag from a dot onto another signal — a <strong>hub node</strong> appears between them. Keep connecting signals to the hub to grow the cluster.</p>
+          </div>
+
+          <!-- SLIDE 3: AI thinking partner -->
+          <div class="welcome-slide" role="tabpanel" aria-label="Slide 3 of 3" id="welcome-slide-2">
+            <div class="welcome-illustration">
+              <div class="illus-ai" aria-hidden="true">
+                <div class="illus-ai-pill">
+                  <span class="pill-icon">✨</span>
+                  <span class="pill-name">Hub AI</span>
+                  <span class="pill-label">Per cluster</span>
+                </div>
+                <span class="illus-ai-sep">→</span>
+                <div class="illus-ai-pill">
+                  <span class="pill-icon">✨</span>
+                  <span class="pill-name">AI Prompt</span>
+                  <span class="pill-label">Whole pool</span>
+                </div>
+              </div>
+            </div>
+            <h3>Your AI thinking partner</h3>
+            <p>Every hub has a <strong>✨ AI thinking partner</strong> button — it helps you name clusters, find through-lines, and stress-test assumptions. The header <strong>✨ AI Prompt</strong> analyzes your entire signal pool to spot patterns before you start clustering.</p>
+          </div>
+
+        </div><!-- end .welcome-slide-track -->
+      </div><!-- end .welcome-slides -->
+
+      <div class="welcome-footer">
+        <div class="welcome-step-dots" role="tablist" aria-label="Slide navigation">
+          <button class="welcome-step-dot active" role="tab" aria-selected="true"
+                  aria-label="Go to slide 1" onclick="welcomeGoToSlide(0)"></button>
+          <button class="welcome-step-dot" role="tab" aria-selected="false"
+                  aria-label="Go to slide 2" onclick="welcomeGoToSlide(1)"></button>
+          <button class="welcome-step-dot" role="tab" aria-selected="false"
+                  aria-label="Go to slide 3" onclick="welcomeGoToSlide(2)"></button>
+        </div>
+        <div class="welcome-nav">
+          <button class="btn-back hidden" id="welcome-btn-back" onclick="welcomeBack()">← Back</button>
+          <button class="btn-next" id="welcome-btn-next" onclick="welcomeNext()" data-autofocus>Next →</button>
+        </div>
       </div>
-      <div class="modal-body">
-        <p>Every signal is a node on the canvas. <strong>Drag any signal to move it.</strong> Pan by dragging empty space, zoom with the wheel or the toolbar.</p>
-        <p>To cluster signals, <strong>drag from the teal dot on one signal onto another</strong> — a <strong>hub</strong> appears between them holding the cluster's name and shared barrier. Add more signals to a cluster by connecting them to the hub.</p>
-        <p>The AI here is a thinking partner — it stress-tests your assumptions, it doesn't generate ideas for you.</p>
-        <button class="btn btn-primary" style="width: 100%;" onclick="closeWelcomeModal()" data-autofocus>Let's go</button>
+
+    </div><!-- end .modal-content -->
+  </div>
+
+  <!-- SPOTLIGHT TOUR OVERLAY -->
+  <div id="tour-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Feature tour">
+    <div class="tour-spotlight" id="tour-spotlight" aria-hidden="true"></div>
+    <div class="tour-tooltip" id="tour-tooltip" role="document">
+      <div class="tour-tooltip-step" id="tour-step-label">Step 1 of 4</div>
+      <h4 id="tour-tooltip-title"></h4>
+      <p id="tour-tooltip-body"></p>
+      <div class="tour-tooltip-nav">
+        <button class="tour-btn-skip" onclick="tourSkip()" aria-label="Skip tour">Skip tour</button>
+        <span class="tour-step-count" id="tour-step-count" aria-hidden="true"></span>
+        <button class="tour-btn-next" id="tour-btn-next" onclick="tourNext()">Next →</button>
       </div>
     </div>
   </div>
@@ -1314,6 +1597,7 @@
   <script>
     const STORAGE_KEY = 'olos.sensemaking.v2';
     const LEGACY_STORAGE_KEY = 'olos.sensemaking.v1';
+    const TOUR_DONE_KEY = 'olos.tour.done';
     const NODE_SIGNAL_W = 240, NODE_SIGNAL_H = 110;
     const NODE_HUB_W = 280, NODE_HUB_H = 150;
     const MIN_ZOOM = 0.25, MAX_ZOOM = 2.5;
@@ -1622,7 +1906,14 @@
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
-      openModal('welcome-modal');
+      if (!localStorage.getItem(TOUR_DONE_KEY)) {
+        _welcomeSlide = 0;
+        _applyWelcomeSlideState();
+        openModal('welcome-modal');
+      } else {
+        const helpBtn = document.getElementById('tour-help-btn');
+        if (helpBtn) helpBtn.classList.remove('hidden');
+      }
     }
 
     function setBoardTitleDisplay() {
@@ -3161,17 +3452,225 @@
         lastFocusBeforeModal.focus();
       }
     }
-    function closeWelcomeModal() { closeModal('welcome-modal'); }
     function closeAIPromptModal() { closeModal('ai-modal'); }
+
+    // ===================== ONBOARDING MODULE =====================
+
+    let _welcomeSlide = 0;
+    const WELCOME_TOTAL_SLIDES = 3;
+
+    function closeWelcomeModal() {
+      closeModal('welcome-modal');
+      _welcomeSlide = 0;
+      if (!localStorage.getItem(TOUR_DONE_KEY)) {
+        setTimeout(tourStart, 320);
+      }
+    }
+
+    function welcomeGoToSlide(index) {
+      _welcomeSlide = index;
+      _applyWelcomeSlideState();
+    }
+    function welcomeNext() {
+      if (_welcomeSlide < WELCOME_TOTAL_SLIDES - 1) { _welcomeSlide++; _applyWelcomeSlideState(); }
+      else closeWelcomeModal();
+    }
+    function welcomeBack() {
+      if (_welcomeSlide > 0) { _welcomeSlide--; _applyWelcomeSlideState(); }
+    }
+    function _applyWelcomeSlideState() {
+      const track = document.getElementById('welcome-slide-track');
+      if (track) track.style.transform = `translateX(-${_welcomeSlide * 100}%)`;
+      document.querySelectorAll('.welcome-step-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === _welcomeSlide);
+        dot.setAttribute('aria-selected', i === _welcomeSlide ? 'true' : 'false');
+      });
+      const backBtn = document.getElementById('welcome-btn-back');
+      if (backBtn) backBtn.classList.toggle('hidden', _welcomeSlide === 0);
+      const nextBtn = document.getElementById('welcome-btn-next');
+      if (nextBtn) nextBtn.textContent = _welcomeSlide === WELCOME_TOTAL_SLIDES - 1 ? "Let's go!" : 'Next →';
+      if (nextBtn) setTimeout(() => nextBtn.focus(), 50);
+    }
+
+    // ---- Spotlight Tour ----
+    const TOUR_STEPS = [
+      {
+        targetId: 'canvas-viewport',
+        title: 'The Canvas',
+        body: 'Your signals are already laid out here. Drag empty space to pan, use the toolbar or Cmd/Ctrl-scroll to zoom, and drag any signal card to reposition it.',
+        tooltipPlacement: 'bottom-right',
+        spotlightPadding: 0
+      },
+      {
+        targetSelector: '.signal-node',
+        title: 'Signal Cards',
+        body: 'Hover a signal to reveal teal dots on its edges. Drag from any dot onto another signal to connect them — a hub cluster node appears automatically between them.',
+        tooltipPlacement: 'bottom-right',
+        spotlightPadding: 8
+      },
+      {
+        targetSelector: '.btn-ai-prompt',
+        title: '✨ AI Prompt — Whole Pool',
+        body: "Before you start clustering, use this to ask the AI to spot patterns across your entire signal pool. It's a great first move that surfaces non-obvious connections.",
+        tooltipPlacement: 'bottom-left',
+        spotlightPadding: 6
+      },
+      {
+        targetSelector: 'button[onclick="openCommitModal()"]',
+        title: 'Commit to Clusters',
+        body: 'When you have 2–3 clusters with clear through-lines, commit them here to move into the deep-dive workspace. Quality over quantity — defend your groupings.',
+        tooltipPlacement: 'bottom-left',
+        spotlightPadding: 6
+      }
+    ];
+
+    let _tourStep = 0, _tourActive = false, _tourResizeObserver = null;
+
+    function tourStart() {
+      _tourStep = 0;
+      _tourActive = true;
+      const overlay = document.getElementById('tour-overlay');
+      overlay.classList.remove('hidden');
+      overlay.classList.add('tour-entering');
+      overlay.addEventListener('animationend', () => overlay.classList.remove('tour-entering'), { once: true });
+      _tourRenderStep();
+      _tourAttachResizeObserver();
+    }
+
+    function tourNext() {
+      if (_tourStep < TOUR_STEPS.length - 1) { _tourStep++; _tourRenderStep(); }
+      else tourComplete();
+    }
+
+    function tourSkip() { tourComplete(); }
+
+    function tourRestart() {
+      localStorage.removeItem(TOUR_DONE_KEY);
+      _tourStep = 0;
+      tourStart();
+    }
+
+    function tourComplete() {
+      _tourActive = false;
+      localStorage.setItem(TOUR_DONE_KEY, '1');
+      document.getElementById('tour-overlay').classList.add('hidden');
+      _tourDetachObservers();
+      const helpBtn = document.getElementById('tour-help-btn');
+      if (helpBtn) helpBtn.classList.remove('hidden');
+    }
+
+    function _tourRenderStep() {
+      const step = TOUR_STEPS[_tourStep];
+      let target = _tourResolveTarget(step);
+
+      if (!target) {
+        if (step.targetSelector === '.signal-node') {
+          setTimeout(() => { if (_tourActive) _tourRenderStep(); }, 500);
+          return;
+        }
+        const remaining = TOUR_STEPS.slice(_tourStep + 1);
+        const nextValidIdx = remaining.findIndex(s => _tourResolveTarget(s));
+        if (nextValidIdx >= 0) { _tourStep = _tourStep + 1 + nextValidIdx; _tourRenderStep(); }
+        else tourComplete();
+        return;
+      }
+
+      document.getElementById('tour-step-label').textContent = `Step ${_tourStep + 1} of ${TOUR_STEPS.length}`;
+      document.getElementById('tour-tooltip-title').textContent = step.title;
+      document.getElementById('tour-tooltip-body').textContent = step.body;
+      document.getElementById('tour-step-count').textContent = `${_tourStep + 1}/${TOUR_STEPS.length}`;
+      const nextBtn = document.getElementById('tour-btn-next');
+      if (nextBtn) nextBtn.textContent = _tourStep === TOUR_STEPS.length - 1 ? 'Done ✓' : 'Next →';
+
+      _tourPositionSpotlight(target, step.spotlightPadding || 0);
+      _tourPositionTooltip(target, step.tooltipPlacement);
+      setTimeout(() => nextBtn && nextBtn.focus(), 60);
+    }
+
+    function _tourResolveTarget(step) {
+      if (step.targetId) return document.getElementById(step.targetId);
+      if (step.targetSelector) return document.querySelector(step.targetSelector);
+      return null;
+    }
+
+    function _tourPositionSpotlight(el, padding) {
+      const rect = el.getBoundingClientRect();
+      const pad = padding || 0;
+      const s = document.getElementById('tour-spotlight');
+      s.style.top    = (rect.top    - pad) + 'px';
+      s.style.left   = (rect.left   - pad) + 'px';
+      s.style.width  = (rect.width  + pad * 2) + 'px';
+      s.style.height = (rect.height + pad * 2) + 'px';
+      s.style.borderRadius = getComputedStyle(el).borderRadius || '8px';
+    }
+
+    function _tourPositionTooltip(targetEl, placement) {
+      const rect = targetEl.getBoundingClientRect();
+      const tooltip = document.getElementById('tour-tooltip');
+      tooltip.style.visibility = 'hidden';
+      tooltip.style.top  = '-9999px';
+      tooltip.style.left = '-9999px';
+      requestAnimationFrame(() => {
+        const tw = tooltip.offsetWidth  || 300;
+        const th = tooltip.offsetHeight || 150;
+        const margin = 14;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        let top, left;
+        const spaceBelow = vh - rect.bottom - margin;
+        const spaceAbove = rect.top - margin;
+        if (spaceBelow >= th + margin) {
+          top = rect.bottom + margin;
+        } else if (spaceAbove >= th + margin) {
+          top = rect.top - th - margin;
+        } else {
+          top = Math.max(margin, (vh - th) / 2);
+        }
+        if (placement === 'bottom-right') {
+          left = Math.min(rect.left, vw - tw - margin);
+          left = Math.max(margin, left);
+        } else {
+          left = Math.max(margin, rect.right - tw);
+          left = Math.min(left, vw - tw - margin);
+        }
+        tooltip.style.top  = top  + 'px';
+        tooltip.style.left = left + 'px';
+        tooltip.style.visibility = 'visible';
+      });
+    }
+
+    function _tourAttachResizeObserver() {
+      if (window.ResizeObserver) {
+        _tourResizeObserver = new ResizeObserver(() => {
+          if (!_tourActive) return;
+          const step = TOUR_STEPS[_tourStep];
+          const target = _tourResolveTarget(step);
+          if (target) {
+            _tourPositionSpotlight(target, step.spotlightPadding || 0);
+            _tourPositionTooltip(target, step.tooltipPlacement);
+          }
+        });
+        _tourResizeObserver.observe(document.body);
+      }
+    }
+
+    function _tourDetachObservers() {
+      if (_tourResizeObserver) { _tourResizeObserver.disconnect(); _tourResizeObserver = null; }
+    }
+
+    // ===================== END ONBOARDING MODULE =====================
 
     // Trap Tab within an open modal, and close on Escape.
     document.addEventListener('keydown', (e) => {
+      // Tour escape shortcut (runs before modal-overlay check)
+      if (e.key === 'Escape' && _tourActive) { e.preventDefault(); tourSkip(); return; }
       const open = Array.from(document.querySelectorAll('.modal-overlay'))
         .find(m => !m.classList.contains('hidden'));
       if (!open) return;
       if (e.key === 'Escape') {
         e.preventDefault();
-        closeModal(open.id);
+        if (open.id === 'welcome-modal') closeWelcomeModal();
+        else closeModal(open.id);
         return;
       }
       if (e.key === 'Tab') {
@@ -3189,7 +3688,8 @@
     // Click outside modal-content closes (overlay click).
     document.addEventListener('click', (e) => {
       if (e.target.classList && e.target.classList.contains('modal-overlay') && !e.target.classList.contains('hidden')) {
-        closeModal(e.target.id);
+        if (e.target.id === 'welcome-modal') closeWelcomeModal();
+        else closeModal(e.target.id);
       }
     });
 
@@ -4050,6 +4550,9 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen(target);
+      // Show tour help button for return visitors resuming to the board
+      const resumeHelpBtn = document.getElementById('tour-help-btn');
+      if (resumeHelpBtn) resumeHelpBtn.classList.remove('hidden');
       setTimeout(() => toast('Resumed your previous session.', { duration: 4000 }), 200);
     })();
 
