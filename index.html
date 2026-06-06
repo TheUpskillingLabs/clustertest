@@ -1009,6 +1009,16 @@
     .connect-handle.side-br:hover     { transform: scale(1.3); box-shadow: 0 4px 12px rgba(0,148,160,0.75); }
     .hub-node .connect-handle { background: var(--ghost-white); box-shadow: 0 2px 6px rgba(255,255,255,0.4); }
 
+    /* Touch-selected node ring (tap to reveal connect handles on touch) */
+    .canvas-node.touch-selected {
+      box-shadow: 0 0 0 3px rgba(0,148,160,0.6), 0 12px 28px rgba(16,24,32,0.18);
+    }
+    /* Coarse pointer (touch/stylus) — larger handles, dimly visible at all times */
+    @media (pointer: coarse) {
+      .connect-handle { width: 20px; height: 20px; opacity: 0.3; }
+      .canvas-node.touch-selected .connect-handle { opacity: 1; }
+    }
+
     .canvas-node.drag-source { opacity: 0.55; }
 
     .zoom-toolbar {
@@ -1040,6 +1050,11 @@
     }
     .zoom-btn:hover { background: var(--cloud); }
     .zoom-btn.zoom-level { font-size: 0.78rem; min-width: 56px; }
+    /* Panel toggle button — highlighted when header is hidden */
+    #board-workspace.header-collapsed #panel-toggle-btn { background: var(--cloud); }
+    /* Collapsed header state — hides top chrome, canvas expands to fill */
+    #board-workspace.header-collapsed .webmap-header  { display: none; }
+    #board-workspace.header-collapsed .canvas-infobar { display: none; }
 
     .canvas-hint {
       position: absolute;
@@ -1389,8 +1404,9 @@
           <button type="button" class="zoom-btn zoom-level" id="zoom-level" onclick="resetView()" aria-label="Reset zoom and fit">100%</button>
           <button type="button" class="zoom-btn" onclick="zoomBy(1)" aria-label="Zoom in">+</button>
           <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes">⤢</button>
+          <button type="button" class="zoom-btn" id="panel-toggle-btn" onclick="toggleHeaderCollapse()" aria-label="Hide / show header" title="Hide / show header">↕</button>
         </div>
-        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag signals to move • Pull from any edge or corner to connect • 2-finger scroll to pan • Cmd/Ctrl-scroll or pinch to zoom • Space + drag to pan</span><span class="hint-mobile">Drag to move • Connect from edge dots • Pinch to zoom • Drag canvas to pan</span></div>
+        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag signals to move • Pull from any edge or corner to connect • 2-finger scroll to pan • Cmd/Ctrl-scroll or pinch to zoom • Space + drag to pan</span><span class="hint-mobile">Drag to move • Tap card to connect • Pinch to zoom • Two fingers to pan</span></div>
         <button id="tour-help-btn" class="hidden" onclick="tourRestart()"
                 aria-label="Restart feature tour" title="Restart tour">?</button>
       </div>
@@ -1601,6 +1617,8 @@
     const NODE_SIGNAL_W = 240, NODE_SIGNAL_H = 110;
     const NODE_HUB_W = 280, NODE_HUB_H = 150;
     const MIN_ZOOM = 0.25, MAX_ZOOM = 2.5;
+    const activeCanvasTouches = new Map(); // non-mouse pointers tracked for pinch
+    let pinchActive = false;
     const DEFAULT_ITEMS = [
         { id: "item_01", tag: "Friction Signal", title: "Lack of localized, person-focused care communities", summary: "Neighborhoods and communities lack structured environments that prioritize person-focused care and localized education." },
         { id: "item_02", tag: "Friction Signal", title: "Diabetes management tools fail in real-world contexts", summary: "Adults with Type 2 diabetes struggle with real-time decisions about meals, activity, and medications in varied daily contexts, leading to frequent out-of-range glucose and frustration." },
@@ -1925,6 +1943,9 @@
     function ensureCanvasInitialized() {
       if (canvasInitialized) return;
       setupCanvasInteractions();
+      if (localStorage.getItem('olos.headerCollapsed')) {
+        document.getElementById('board-workspace').classList.add('header-collapsed');
+      }
       canvasInitialized = true;
     }
 
@@ -2223,6 +2244,12 @@
       }
       const lvl = document.getElementById('zoom-level');
       if (lvl) lvl.textContent = Math.round(zoom * 100) + '%';
+    }
+
+    function toggleHeaderCollapse() {
+      const ws = document.getElementById('board-workspace');
+      const collapsed = ws.classList.toggle('header-collapsed');
+      localStorage.setItem('olos.headerCollapsed', collapsed ? '1' : '');
     }
 
     function zoomBy(direction, anchorClientX, anchorClientY) {
@@ -2546,6 +2573,8 @@
         if (e.target.closest('input, textarea, button')) return;
         // Let space-pan and middle-mouse take over panning instead.
         if (spaceHeld || e.button === 1) return;
+        // Don't start node drag when two touch fingers are down (pinch mode).
+        if (e.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) return;
         e.stopPropagation();
         pointerId = e.pointerId;
         startClientX = e.clientX;
@@ -2567,6 +2596,26 @@
 
         const onMove = (ev) => {
           if (ev.pointerId !== pointerId) return;
+          // Second touch finger arrived — cancel this drag and let pinch take over.
+          if (ev.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) {
+            el.removeEventListener('pointermove', onMove);
+            el.removeEventListener('pointerup', onUp);
+            el.removeEventListener('pointercancel', onUp);
+            try { el.releasePointerCapture(pointerId); } catch (_) {}
+            el.classList.remove('lifted', 'dragging');
+            if (dragging) {
+              setNodePos(nodeId, startX, startY);
+              el.style.left = startX + 'px'; el.style.top = startY + 'px';
+              if (isRoot) subIds.forEach(id => {
+                const s = subStart[id];
+                setNodePos(id, s.x, s.y);
+                const cel = document.getElementById('node-' + id);
+                if (cel) { cel.style.left = s.x + 'px'; cel.style.top = s.y + 'px'; }
+              });
+            }
+            pointerId = null; dragging = false;
+            return;
+          }
           if (!dragging) {
             const dx = Math.abs(ev.clientX - startClientX);
             const dy = Math.abs(ev.clientY - startClientY);
@@ -2619,6 +2668,10 @@
               relaxLayoutAround(nodeId);
             }
             // Free signals: stay exactly where dropped (no relax).
+          } else if (ev.pointerType !== 'mouse') {
+            // Tap on touch: select node so connect handles become visible.
+            document.querySelectorAll('.canvas-node.touch-selected').forEach(n => n.classList.remove('touch-selected'));
+            el.classList.add('touch-selected');
           }
         };
         el.addEventListener('pointermove', onMove);
@@ -3245,6 +3298,8 @@
 
       viewport.addEventListener('pointerdown', (e) => {
         if (e.target.closest('.zoom-toolbar')) return;
+        // Yield to pinch when two touch fingers are active.
+        if (e.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) return;
         const onNode = !!e.target.closest('.canvas-node');
         const onEdge = !!(e.target.classList && e.target.classList.contains('edge-hit'));
         const isMiddle = e.button === 1;
@@ -3263,6 +3318,14 @@
       });
       viewport.addEventListener('pointermove', (e) => {
         if (!panning || e.pointerId !== panPointerId) return;
+        // Cancel pan if a second touch lands (pinch taking over).
+        if (activeCanvasTouches.size >= 2) {
+          panning = false;
+          viewport.classList.remove('is-panning');
+          try { viewport.releasePointerCapture(panPointerId); } catch (_) {}
+          panPointerId = null;
+          return;
+        }
         const now = performance.now();
         const prevPanX = appState.view.panX, prevPanY = appState.view.panY;
         appState.view.panX = startPanX + (e.clientX - startClientX);
@@ -3305,48 +3368,71 @@
       viewport.addEventListener('pointerup', endPan);
       viewport.addEventListener('pointercancel', endPan);
 
-      // Pinch zoom (two-pointer)
-      const activePointers = new Map();
-      let pinchStartDist = 0;
-      let pinchStartZoom = 1;
-      viewport.addEventListener('pointerdown', (e) => {
-        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (activePointers.size === 2) {
-          const pts = Array.from(activePointers.values());
+      // Window-level touch tracker (capture phase — fires before stopPropagation
+      // and before pointer capture, so it sees ALL touch events including those
+      // on nodes that have captured their pointer).
+      window.addEventListener('pointerdown', e => {
+        if (e.pointerType !== 'mouse') activeCanvasTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }, true);
+      window.addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse' && activeCanvasTouches.has(e.pointerId))
+          activeCanvasTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }, true);
+      window.addEventListener('pointerup',     e => activeCanvasTouches.delete(e.pointerId), true);
+      window.addEventListener('pointercancel', e => activeCanvasTouches.delete(e.pointerId), true);
+
+      // Pinch zoom + two-finger pan — window-level so it works when fingers land
+      // on nodes (not just empty canvas). Uses activeCanvasTouches which is always
+      // up-to-date via the capture-phase listeners above.
+      let pinchStartDist = 0, pinchStartZoom = 1;
+      window.addEventListener('pointerdown', e => {
+        if (e.pointerType === 'mouse') return;
+        if (activeCanvasTouches.size === 2) {
+          const pts = Array.from(activeCanvasTouches.values());
           pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
           pinchStartZoom = appState.view.zoom;
-        }
-      });
-      viewport.addEventListener('pointermove', (e) => {
-        if (!activePointers.has(e.pointerId)) return;
-        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (activePointers.size === 2) {
-          const pts = Array.from(activePointers.values());
-          const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-          if (pinchStartDist > 0) {
-            const factor = dist / pinchStartDist;
-            const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * factor));
-            const cx = (pts[0].x + pts[1].x) / 2;
-            const cy = (pts[0].y + pts[1].y) / 2;
-            const rect = viewport.getBoundingClientRect();
-            const ax = cx - rect.left, ay = cy - rect.top;
-            const oldZoom = appState.view.zoom;
-            const worldX = (ax - appState.view.panX) / oldZoom;
-            const worldY = (ay - appState.view.panY) / oldZoom;
-            appState.view.panX = ax - worldX * newZoom;
-            appState.view.panY = ay - worldY * newZoom;
-            appState.view.zoom = newZoom;
-            applyViewTransform();
+          pinchActive = true;
+          cancelMomentum();
+          // Cancel any ongoing single-finger canvas pan.
+          if (panning) {
+            panning = false;
+            viewport.classList.remove('is-panning');
+            try { viewport.releasePointerCapture(panPointerId); } catch (_) {}
+            panPointerId = null;
           }
         }
-      });
-      const dropPointer = (e) => activePointers.delete(e.pointerId);
-      viewport.addEventListener('pointerup', dropPointer);
-      viewport.addEventListener('pointercancel', dropPointer);
+      }, true);
+      window.addEventListener('pointermove', e => {
+        if (e.pointerType === 'mouse' || !pinchActive || activeCanvasTouches.size !== 2) return;
+        const pts = Array.from(activeCanvasTouches.values());
+        const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        if (pinchStartDist <= 0) return;
+        const factor = dist / pinchStartDist;
+        const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * factor));
+        const cx = (pts[0].x + pts[1].x) / 2;
+        const cy = (pts[0].y + pts[1].y) / 2;
+        const rect = viewport.getBoundingClientRect();
+        const ax = cx - rect.left, ay = cy - rect.top;
+        const oldZoom = appState.view.zoom;
+        const worldX = (ax - appState.view.panX) / oldZoom;
+        const worldY = (ay - appState.view.panY) / oldZoom;
+        appState.view.panX = ax - worldX * newZoom;
+        appState.view.panY = ay - worldY * newZoom;
+        appState.view.zoom = newZoom;
+        applyViewTransform();
+      }, true);
+      window.addEventListener('pointerup', e => {
+        if (e.pointerType === 'mouse') return;
+        if (activeCanvasTouches.size < 2) { pinchActive = false; pinchStartDist = 0; scheduleSave(); }
+      }, true);
+      window.addEventListener('pointercancel', e => {
+        if (e.pointerType !== 'mouse' && activeCanvasTouches.size < 2) { pinchActive = false; pinchStartDist = 0; }
+      }, true);
 
-      // Click on background clears selection.
+      // Click on background clears selection and touch-selection.
       viewport.addEventListener('click', (e) => {
         if (e.target === viewport || e.target.id === 'canvas-world' || e.target.id === 'nodes-layer') {
+          document.querySelectorAll('.canvas-node.touch-selected').forEach(n => n.classList.remove('touch-selected'));
           if (selectedEdgeId) { selectedEdgeId = null; renderAllEdges(); }
         }
       });
