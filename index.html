@@ -1300,7 +1300,7 @@
 
       <div class="upskill-banner">
         <h3>Synth Sprint — Lab Day 1</h3>
-        <p>You're about to sort through a pool of friction signals and triangulate your way to a defensible problem space. The AI here is a thinking partner. It will push your reasoning. It will surface what you missed. It won't do the thinking for you.</p>
+        <p>You're about to sort through a pool of friction signals and triangulate your way to a defensible problem space. The AI here is a thinking partner — but you drive the conversation. Copy the prompts this tool generates, paste them into your LLM of choice, and push back on every answer until you believe it. The AI's job is to surface what you missed. Your job is to decide what matters.</p>
         <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.85; font-style: italic;">Prototype note: In a live cycle, these signals would be pre-loaded from your cycle's research and industry advisors. The pool below is sample data — upload a fresh batch via CSV if you have one.</p>
       </div>
       
@@ -1467,13 +1467,13 @@
                 <span class="illus-ai-sep">→</span>
                 <div class="illus-ai-pill">
                   <span class="pill-icon">✨</span>
-                  <span class="pill-name">AI Prompt</span>
+                  <span class="pill-name">Full pool</span>
                   <span class="pill-label">Whole pool</span>
                 </div>
               </div>
             </div>
-            <h3>Your thinking partner</h3>
-            <p>Every hub has a <strong>✨ AI</strong> button that generates a prompt for you to take to your own AI tool. It'll help you find the through-line, name it, and stress-test it. The <strong>✨ See the whole pool</strong> button in the header does the same for your entire signal pool — use it first.</p>
+            <h3>How to use the AI</h3>
+            <p>This tool generates prompts — you take them to Claude, ChatGPT, Gemini, or whatever you use. Don't accept the first answer. Ask "what am I missing?" and "what's the strongest argument against this?" The <strong>✨ See the whole pool</strong> button in the header is your best starting move.</p>
           </div>
 
         </div><!-- end .welcome-slide-track -->
@@ -1519,7 +1519,7 @@
         <button class="btn btn-outline" onclick="backToBoard()">← Back to Board</button>
         <h2 id="workspace-title">Build the case</h2>
       </div>
-      <p class="workspace-intro">For each problem space, map who's affected and pressure-test your framing. The AI prompts are thinking partners — take them to your AI tool, develop your point of view, then come back and write it in your own words.</p>
+      <p class="workspace-intro">For each problem space, map who's affected and pressure-test your framing. Each section has a prompt you copy into your LLM — but the goal isn't to get an answer. It's to have a conversation that sharpens your thinking. Argue with the AI. Ask it "who's missing?" and "what breaks if I'm wrong?" Then come back and write what you actually believe.</p>
       <div class="interview-helper">
         <div class="step-label">Step 1 — Before you write anything</div>
         <h3>Talk to the people first</h3>
@@ -1529,7 +1529,7 @@
           <button class="btn btn-primary copy-btn" onclick="copyText('workspace-interview-prompt')">Copy this prompt</button>
         </div>
         <div class="prompt-text" id="workspace-interview-prompt"></div>
-        <p class="copy-hint">Take this to Claude, ChatGPT, Gemini, NotebookLM, or Perplexity. The prompt includes your committed clusters' signals.</p>
+        <p class="copy-hint">Paste into Claude, ChatGPT, Gemini, NotebookLM, or Perplexity. Use it to prep your interview questions — then go talk to the actual people.</p>
       </div>
     </div>
     <nav class="workspace-jump-bar" id="workspace-jump-bar" aria-label="Jump to a committed cluster"></nav>
@@ -1601,9 +1601,9 @@
           <button type="button" role="tab" data-mode="name" class="ai-mode-tab">Name &amp; describe</button>
           <button type="button" role="tab" data-mode="stress" class="ai-mode-tab">Stress-test</button>
         </div>
-        <p id="ai-modal-blurb" style="margin-bottom: 12px;">Pick a direction. Copy the prompt. Take it to your AI tool and think out loud before you write anything here.</p>
+        <p id="ai-modal-blurb" style="margin-bottom: 12px;">Pick a direction below, then copy the prompt into your LLM. Read the response out loud. If you agree too easily, ask it to argue the opposite. Come back when you have a point of view, not just an answer.</p>
         <p style="font-size: 0.8rem; margin-bottom: 16px;">
-          Take this to <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>.
+          Paste into <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>. Ask follow-ups. Don't stop at the first response.
         </p>
         <label class="sr-only" for="ai-prompt-text">Generated AI prompt</label>
         <textarea id="ai-prompt-text" readonly></textarea>
@@ -2413,7 +2413,7 @@
         <input type="text" class="hub-title" placeholder="${escapeHtml(titlePh)}" value="${escapeHtml(cluster.title || '')}" />
         <textarea class="hub-desc" placeholder="${escapeHtml(descPh)}" rows="2">${escapeHtml(cluster.description || '')}</textarea>
         <div class="hub-actions">
-          <button type="button" class="hub-suggest" title="Open the AI thinking partner for this ${escapeHtml(tierLabel(tier).toLowerCase())}">✨ AI thinking partner</button>
+          <button type="button" class="hub-suggest" title="Get a prompt to think through this ${escapeHtml(tierLabel(tier).toLowerCase())} with your LLM">✨ AI</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
         <div class="connect-handle side-top"    data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
@@ -3615,7 +3615,7 @@
       {
         targetSelector: '.btn-ai-prompt',
         title: '✨ AI Prompt — Whole Pool',
-        body: "Before you start clustering, use this to ask the AI to spot patterns across your entire signal pool. It's a great first move that surfaces non-obvious connections.",
+        body: "Start here. Copy this prompt into your LLM and read what comes back — but don't take it at face value. Look for patterns it names that surprise you, then ask it to defend the ones that feel too neat.",
         tooltipPlacement: 'bottom-left',
         spotlightPadding: 6
       },
@@ -3980,7 +3980,7 @@ ${m.output}
       const tabs = document.getElementById('ai-mode-tabs');
       const ta = document.getElementById('ai-prompt-text');
       if (titleEl) titleEl.textContent = `AI thinking partner — ${label} "${c.title || 'Untitled'}"`;
-      if (blurb) blurb.textContent = 'Pick a direction. Copy the prompt. Take it to your AI tool and think out loud before you write anything here.';
+      if (blurb) blurb.textContent = 'Pick a direction below, then copy the prompt into your LLM. Read the response out loud. If you agree too easily, ask it to argue the opposite. Come back when you have a point of view, not just an answer.';
       if (tabs) {
         tabs.classList.remove('hidden');
         tabs.querySelectorAll('.ai-mode-tab').forEach(btn => {
@@ -4011,7 +4011,7 @@ ${m.output}
       const tabs = document.getElementById('ai-mode-tabs');
       if (tabs) tabs.classList.add('hidden');
       const blurb = document.getElementById('ai-modal-blurb');
-      if (blurb) blurb.textContent = 'Before you start clustering, get the lay of the land. Copy this prompt, take it to your AI tool, and see what\'s hiding in the data.';
+      if (blurb) blurb.textContent = 'Start here before you cluster anything. Copy this prompt into your LLM to see the landscape. When it names patterns, ask yourself: is this what the data says, or what the model assumes? Push back on at least one thing before you move on.';
       const titleEl = document.getElementById('ai-modal-title');
       if (titleEl) titleEl.textContent = 'Explore the full signal pool';
       const t = document.getElementById('ai-prompt-text');
@@ -4387,9 +4387,9 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
               <button class="btn btn-primary copy-btn" onclick="copyText('${stakeholderPromptId}')">Copy this prompt</button>
             </div>
             <div class="prompt-text" id="${stakeholderPromptId}"></div>
-            <p class="copy-hint">Take this to your AI tool. Think with it. Come back and write your own.</p>
+            <p class="copy-hint">Paste into your LLM. When it lists stakeholders, ask "who did you leave out and why?" Write your map from what you learned, not what it said.</p>
           </div>
-          <textarea id="${stakeholderId}" oninput="updateStakeholderMap('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your map. Your words. Who's most affected, who's blocking progress, who has access."></textarea>
+          <textarea id="${stakeholderId}" oninput="updateStakeholderMap('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="After talking to the AI and the people — who's most affected, who's blocking, who has access? Your words."></textarea>
         </section>
         <section class="workspace-section">
           <label for="${problemId}">Pressure-test this space</label>
@@ -4400,9 +4400,9 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
               <button class="btn btn-primary copy-btn" onclick="copyText('${problemPromptId}')">Copy this prompt</button>
             </div>
             <div class="prompt-text" id="${problemPromptId}"></div>
-            <p class="copy-hint">Take this to your AI tool. Think with it. Come back and write your own.</p>
+            <p class="copy-hint">Paste into your LLM. If the response confirms your framing, ask it to break it. Your problematization should be harder to write after this conversation, not easier.</p>
           </div>
-          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your framing. What's assumed, what's missing, who benefits from the status quo."></textarea>
+          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="After the AI challenged your framing — what's assumed, what's missing, who benefits? Your words."></textarea>
         </section>
       `;
 
