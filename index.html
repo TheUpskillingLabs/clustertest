@@ -1310,8 +1310,9 @@
       </div>
 
       <div class="config-field">
-        <label id="pool-label">Signal pool — <span id="config-pool-count">44</span> friction signals <span style="opacity: 0.7; font-weight: 400;">(sample data — in a live cycle, these come from your industry's research and advisory network)</span></label>
+        <label id="pool-label">Signal pool — <span id="config-pool-count">0</span> friction signals <span style="opacity: 0.7; font-weight: 400;">(sample data — in a live cycle, these come from your industry's research and advisory network)</span></label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
+        <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()" style="margin-bottom: 12px;">Load 44 sample signals</button>
 
         <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
           <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px;">
@@ -1680,7 +1681,7 @@
     function defaultState() {
       return {
         settings: { title: "" },
-        items: DEFAULT_ITEMS.map(i => ({ ...i })),
+        items: [],
         clusters: [],
         nodes: {},
         view: { zoom: 1, panX: 0, panY: 0 },
@@ -1790,6 +1791,8 @@
       `).join('');
       const countEl = document.getElementById('config-pool-count');
       if (countEl) countEl.textContent = appState.items.length;
+      const sampleBtn = document.getElementById('load-sample-btn');
+      if (sampleBtn) sampleBtn.disabled = DEFAULT_ITEMS.every(d => appState.items.some(i => i.id === d.id));
     }
 
     function addConfigItem() {
@@ -1809,6 +1812,15 @@
       scheduleSave();
       toast('Added.');
       tEl.focus();
+    }
+
+    function loadSampleSignals() {
+      const newItems = DEFAULT_ITEMS.filter(d => !appState.items.some(i => i.id === d.id));
+      if (!newItems.length) { toast('Sample signals already loaded.'); return; }
+      appState.items.push(...newItems.map(i => ({ ...i })));
+      renderConfigItems();
+      scheduleSave();
+      toast(`${newItems.length} sample signals loaded.`);
     }
 
     // --- CSV bulk upload ---
@@ -2390,7 +2402,7 @@
         titlePh = 'What system are these clusters all inside?';
         descPh = 'The structural pattern that bridges these — name the shared infrastructure, incentive, or power dynamic';
       } else {
-        titlePh = 'What’s the thing underneath the thing?';
+        titlePh = 'What\'s the thing underneath the thing?';
         descPh = 'The civilizational, economic, or epistemic pattern these systems rest on';
       }
       el.innerHTML = `
@@ -3999,7 +4011,7 @@ ${m.output}
       const tabs = document.getElementById('ai-mode-tabs');
       if (tabs) tabs.classList.add('hidden');
       const blurb = document.getElementById('ai-modal-blurb');
-      if (blurb) blurb.textContent = 'Before you start clustering, get the lay of the land. Copy this prompt, take it to your AI tool, and see what's hiding in the data.';
+      if (blurb) blurb.textContent = 'Before you start clustering, get the lay of the land. Copy this prompt, take it to your AI tool, and see what\'s hiding in the data.';
       const titleEl = document.getElementById('ai-modal-title');
       if (titleEl) titleEl.textContent = 'Explore the full signal pool';
       const t = document.getElementById('ai-prompt-text');
