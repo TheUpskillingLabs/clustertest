@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>The Triangulatorizer</title>
+  <title>The Triangulator-inator</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
 
@@ -1280,7 +1280,7 @@
 
     @media print {
       body { background: var(--ghost-white); overflow: visible; height: auto; }
-      .artifact-actions, .next-steps-section, .upskill-banner, .submission-actions { display: none !important; }
+      .artifact-actions, .next-steps-section, .upskill-banner, .submission-actions, .peer-review-section { display: none !important; }
       #artifact-screen { padding: 0; height: auto; overflow: visible; display: block; }
       .document-paper { box-shadow: none; border: none; padding: 0; max-width: 100%; }
       .doc-cluster, .submission-cluster { page-break-inside: avoid; }
@@ -1294,28 +1294,28 @@
   <div id="setup-screen">
     <div class="config-container">
       <div class="config-header">
-        <h1>The Triangulatorizer</h1>
-        <p>A facilitated AI cognitive scaffold to help you synthesize raw data into defensible problem spaces.</p>
+        <h1>The Triangulator-inator</h1>
+        <p>Sort the noise. Find the signal. Locate the problem worth solving.</p>
       </div>
 
       <div class="upskill-banner">
-        <h3>Synth Sprint — Triangulate your problem space</h3>
-        <p>You're in the <strong>Synth Sprint</strong> phase of Lab Day 1 (Problematization Day). The AI here is a <strong>thinking partner</strong> — it stress-tests your assumptions and surfaces blind spots so you can defend a sharper problem framing. It is not here to generate ideas for you.</p>
-        <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.85;"><strong>Prototype note:</strong> in the real tool the signals below would be pre-loaded from earlier in this cycle — prior research plus contributions from <strong>Industry Advisors and activated upskillers</strong>. The pool shown here is sample data; use the CSV upload below to drop in a fresh batch.</p>
+        <h3>Synth Sprint — Lab Day 1</h3>
+        <p>You're about to sort through a pool of friction signals and triangulate your way to a defensible problem space. The AI here is a thinking partner. It will push your reasoning. It will surface what you missed. It won't do the thinking for you.</p>
+        <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.85; font-style: italic;">Prototype note: In a live cycle, these signals would be pre-loaded from your cycle's research and industry advisors. The pool below is sample data — upload a fresh batch via CSV if you have one.</p>
       </div>
       
       <div class="config-field">
-        <label for="config-title">Give Your Board a Name</label>
-        <input type="text" id="config-title" class="config-input" value="Upskilling Labs: Comprehensive Problem Signals">
+        <label for="config-title">Name your web map</label>
+        <input type="text" id="config-title" class="config-input" value="Upskilling Labs: Signal Pool">
       </div>
 
       <div class="config-field">
-        <label id="pool-label">Industry signal pool — sample data (<span id="config-pool-count">44</span> signals; in production: pre-loaded from cycle research, Industry Advisors, and activated upskillers)</label>
+        <label id="pool-label">Signal pool — <span id="config-pool-count">44</span> friction signals <span style="opacity: 0.7; font-weight: 400;">(sample data — in a live cycle, these come from your industry's research and advisory network)</span></label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
 
         <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
           <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px;">
-            <strong style="color: var(--ghost-white); font-size: 0.875rem;">Bulk load signals from CSV</strong>
+            <strong style="color: var(--ghost-white); font-size: 0.875rem;">Load your own signals</strong>
             <span style="font-size: 0.75rem; color: var(--cloud); opacity: 0.7;">Columns: <code>title,summary</code> (header row required)</span>
           </div>
           <div style="display: flex; flex-wrap: wrap; gap: 16px 20px; align-items: center;">
@@ -1336,10 +1336,10 @@
 
         <div class="add-item-bar">
           <label class="sr-only" for="new-item-title">New signal short label</label>
-          <input type="text" id="new-item-title" class="config-input" placeholder="Short label for this card..." style="flex:1;">
+          <input type="text" id="new-item-title" class="config-input" placeholder="Signal title..." style="flex:1;">
           <label class="sr-only" for="new-item-summary">New signal description</label>
-          <input type="text" id="new-item-summary" class="config-input" placeholder="What is the exact frustration data?..." style="flex:2;">
-          <button class="btn btn-primary" onclick="addConfigItem()">Add Custom Card</button>
+          <input type="text" id="new-item-summary" class="config-input" placeholder="What's the friction? Who feels it?..." style="flex:2;">
+          <button class="btn btn-primary" onclick="addConfigItem()">Add Signal</button>
         </div>
       </div>
 
@@ -1359,7 +1359,7 @@
             <input type="text" id="search-input" class="search-input" placeholder="Search signals..." oninput="filterItems()">
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
-          <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Get AI brainstorming prompt for the full signal pool">✨ <span class="btn-label">AI Prompt</span></button>
+          <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full signal pool with your AI thinking partner">✨ <span class="btn-label">See the whole pool</span></button>
           <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Commit to Clusters</span><span class="btn-label-short">Commit</span></button>
           <div class="profile-anchor">
             <button id="profile-btn" type="button" class="profile-btn"
@@ -1376,13 +1376,14 @@
                 </div>
               </div>
               <div class="divider"></div>
-              <p class="reset-desc">Clear all saved clusters, answers, and signals on this device. This cannot be undone.</p>
+              <p class="reset-desc">Wipe everything on this device and start fresh. No undo.</p>
               <button type="button" class="btn-reset" onclick="resetFromProfile()">Reset workspace</button>
             </div>
           </div>
         </div>
       </div>
       <div class="canvas-infobar">
+        <span style="opacity: 0.6;">Sort & triangulate</span>
         <span id="validation-warning" style="color: var(--action-red);"></span>
         <span id="cluster-progress" aria-live="polite"></span>
       </div>
@@ -1406,7 +1407,7 @@
           <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes">⤢</button>
           <button type="button" class="zoom-btn" id="panel-toggle-btn" onclick="toggleHeaderCollapse()" aria-label="Hide / show header" title="Hide / show header">↕</button>
         </div>
-        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag signals to move • Pull from any edge or corner to connect • 2-finger scroll to pan • Cmd/Ctrl-scroll or pinch to zoom • Space + drag to pan</span><span class="hint-mobile">Drag to move • Tap card to connect • Pinch to zoom • Two fingers to pan</span></div>
+        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag to move · Edge dots to connect · Scroll to pan · Cmd-scroll to zoom · Space-drag to pan</span><span class="hint-mobile">Drag to move · Tap to connect · Pinch to zoom · Two fingers to pan</span></div>
         <button id="tour-help-btn" class="hidden" onclick="tourRestart()"
                 aria-label="Restart feature tour" title="Restart tour">?</button>
       </div>
@@ -1417,6 +1418,9 @@
     <div class="modal-content" style="border-top: 4px solid var(--primary-teal); padding: 0;">
 
       <div class="welcome-slides" id="welcome-slides">
+        <div style="padding: 28px 36px 0; text-align: center;">
+          <p style="font-size: 0.95rem; color: var(--midnight); opacity: 0.75; line-height: 1.6; max-width: 420px; margin: 0 auto;">The tool holds the structure. The thinking is yours.</p>
+        </div>
         <div class="welcome-slide-track" id="welcome-slide-track">
 
           <!-- SLIDE 1: What is this tool -->
@@ -1430,8 +1434,8 @@
                 <div class="illus-signal-card">Signal E</div>
               </div>
             </div>
-            <h3 id="welcome-modal-title">Welcome to the Web Map</h3>
-            <p>You've got a pool of friction signals — real problems people experience. Your job is to <strong>cluster them into 2–3 defensible problem spaces</strong> so you can dig deeper with a stakeholder map and problematization.</p>
+            <h3 id="welcome-modal-title">Welcome to your canvas</h3>
+            <p>You're looking at a pool of friction signals — real problems, reported by real people. Your job is to find the problem spaces hiding inside them. Sort the noise. Connect the signals. Name what you find.</p>
           </div>
 
           <!-- SLIDE 2: Build your first cluster -->
@@ -1446,8 +1450,8 @@
                 <div class="illus-hub">HUB</div>
               </div>
             </div>
-            <h3>Build your first cluster</h3>
-            <p>Hover any signal card to reveal <strong>teal dots</strong> on its edges. Drag from a dot onto another signal — a <strong>hub node</strong> appears between them. Keep connecting signals to the hub to grow the cluster.</p>
+            <h3>Connect what belongs together</h3>
+            <p>Hover any signal to reveal <strong>teal dots</strong> on its edges. Drag from a dot onto another signal — a <strong>hub</strong> appears between them. Keep connecting signals to grow the cluster.</p>
           </div>
 
           <!-- SLIDE 3: AI thinking partner -->
@@ -1467,8 +1471,8 @@
                 </div>
               </div>
             </div>
-            <h3>Your AI thinking partner</h3>
-            <p>Every hub has a <strong>✨ AI thinking partner</strong> button — it helps you name clusters, find through-lines, and stress-test assumptions. The header <strong>✨ AI Prompt</strong> analyzes your entire signal pool to spot patterns before you start clustering.</p>
+            <h3>Your thinking partner</h3>
+            <p>Every hub has a <strong>✨ AI</strong> button that generates a prompt for you to take to your own AI tool. It'll help you find the through-line, name it, and stress-test it. The <strong>✨ See the whole pool</strong> button in the header does the same for your entire signal pool — use it first.</p>
           </div>
 
         </div><!-- end .welcome-slide-track -->
@@ -1509,34 +1513,36 @@
 
   <div id="workspace-screen" class="hidden">
     <div class="workspace-header">
+      <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary-teal); margin-bottom: 8px;">Map</div>
       <div class="workspace-title-row">
         <button class="btn btn-outline" onclick="backToBoard()">← Back to Board</button>
-        <h2 id="workspace-title">Deepen your committed clusters</h2>
+        <h2 id="workspace-title">Build the case</h2>
       </div>
-      <p class="workspace-intro">For each cluster below, write your <strong>stakeholder map</strong> and <strong>problematization</strong>. The AI prompts inside each card are sparring partners — copy them into your favorite AI tool to think out loud before you write your own answer.</p>
+      <p class="workspace-intro">For each problem space, map who's affected and pressure-test your framing. The AI prompts are thinking partners — take them to your AI tool, develop your point of view, then come back and write it in your own words.</p>
       <div class="interview-helper">
         <div class="step-label">Step 1 — Before you write anything</div>
-        <h3>Interview the contributors of each cluster</h3>
-        <p class="helper-desc">Reach out to the people who reported these signals. Use the prompt below to plan a 30-minute conversation per cluster.</p>
+        <h3>Talk to the people first</h3>
+        <p class="helper-desc">Before you map stakeholders or write a problematization, talk to the people who reported these signals. They have ground truth you can't guess at. Use the prompt below to plan a 30-minute conversation per cluster.</p>
         <div class="prompt-cta-header">
           <div class="prompt-cta-label">✨ Interview &amp; Validate prompt</div>
           <button class="btn btn-primary copy-btn" onclick="copyText('workspace-interview-prompt')">Copy this prompt</button>
         </div>
         <div class="prompt-text" id="workspace-interview-prompt"></div>
-        <p class="copy-hint">Paste into Gemini, ChatGPT, Claude, NotebookLM, or Perplexity. The prompt already includes your committed clusters' signals.</p>
+        <p class="copy-hint">Take this to Claude, ChatGPT, Gemini, NotebookLM, or Perplexity. The prompt includes your committed clusters' signals.</p>
       </div>
     </div>
     <nav class="workspace-jump-bar" id="workspace-jump-bar" aria-label="Jump to a committed cluster"></nav>
     <div class="workspace-cards" id="workspace-cards-container"></div>
     <div class="workspace-footer">
-      <span class="submit-status" id="submit-status-hint">Fill in both fields on every cluster to enable Submit for Voting.</span>
+      <span class="submit-status" id="submit-status-hint">Complete every section to submit.</span>
       <button class="btn btn-primary" id="submit-for-voting-btn" onclick="submitForVoting()" disabled>Submit for Voting</button>
     </div>
   </div>
 
   <div id="artifact-screen" class="hidden">
     <div class="submission-header">
-      <h2 id="submission-heading">Submission</h2>
+      <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary-teal); margin-bottom: 8px;">Your artifact</div>
+      <h2 id="submission-heading">Your Artifact</h2>
       <p class="submission-timestamp" id="submission-timestamp"></p>
       <div class="submission-actions">
         <button class="btn btn-outline" onclick="backToWorkspaceFromArtifact()">← Back to Workspace</button>
@@ -1552,15 +1558,15 @@
   <div id="commit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="commit-modal-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="commit-modal-title">Commit to 2–3 clusters</h3>
+        <h3 id="commit-modal-title">Pick the problem spaces you'll defend</h3>
       </div>
       <div class="modal-body">
-        <p>Pick the 2–3 clusters you'll deepen with a problematization and stakeholder map. These are the clusters you'll submit for voting.</p>
+        <p>These are the problem spaces you're willing to stand behind. Choose 2–3 with enough signal density to build a real case — you'll map the stakeholders and pressure-test the framing before submitting.</p>
         <div id="commit-warning" class="commit-warning hidden"></div>
         <div id="commit-cluster-list" class="commit-cluster-list" role="group" aria-label="Clusters available to commit"></div>
         <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
           <button class="btn btn-outline" onclick="closeModal('commit-modal')">Cancel</button>
-          <button class="btn btn-primary" id="commit-continue-btn" onclick="confirmCommit()" disabled data-autofocus>Continue to Workspace</button>
+          <button class="btn btn-primary" id="commit-continue-btn" onclick="confirmCommit()" disabled data-autofocus>Continue</button>
         </div>
       </div>
     </div>
@@ -1574,7 +1580,7 @@
       <div class="modal-body">
         <p id="submit-modal-summary"></p>
         <p id="submit-modal-prior" class="hidden" style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;"></p>
-        <p style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;">In a real deployment this would queue your map for cohort review. For this prototype, submitting records a timestamp and locks in the read-only artifact view.</p>
+        <p style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;">In a live cycle, this queues your work for community review. In this prototype, it timestamps your submission and produces a read-only artifact.</p>
         <div style="display: flex; gap: 12px; justify-content: flex-end;">
           <button class="btn btn-outline" onclick="closeModal('submit-modal')">Cancel</button>
           <button class="btn btn-primary" id="submit-modal-confirm-btn" onclick="confirmSubmit()" data-autofocus>Submit</button>
@@ -1594,9 +1600,9 @@
           <button type="button" role="tab" data-mode="name" class="ai-mode-tab">Name &amp; describe</button>
           <button type="button" role="tab" data-mode="stress" class="ai-mode-tab">Stress-test</button>
         </div>
-        <p id="ai-modal-blurb" style="margin-bottom: 12px;">Copy this prompt and paste it into your AI tool of choice. The prompt is structured (role, context, task, thinking steps, output format, rules) so the model gives you sharper, more specific output.</p>
+        <p id="ai-modal-blurb" style="margin-bottom: 12px;">Pick a direction. Copy the prompt. Take it to your AI tool and think out loud before you write anything here.</p>
         <p style="font-size: 0.8rem; margin-bottom: 16px;">
-          <em>Launch targets: <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>.</em>
+          Take this to <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>.
         </p>
         <label class="sr-only" for="ai-prompt-text">Generated AI prompt</label>
         <textarea id="ai-prompt-text" readonly></textarea>
@@ -1801,7 +1807,7 @@
       sEl.value = '';
       renderConfigItems();
       scheduleSave();
-      toast('Signal added.');
+      toast('Added.');
       tEl.focus();
     }
 
@@ -1893,7 +1899,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'triangulatorizer-signals-template.csv';
+      a.download = 'triangulator-inator-signals-template.csv';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -2152,7 +2158,7 @@
     // the repulsion settle separate systems apart. Same engine as the
     // auto-relax, just triggered manually and focused on the heaviest hub.
     function tidyLayout() {
-      if (relaxAnim) { toast('Already arranging\u2026'); return; }
+      if (relaxAnim) { toast('Already arranging.'); return; }
       const tops = appState.clusters.filter(c => appState.nodes[c.id] && !parentHubId(c.id));
       const anyNodes = tops.length || appState.items.some(it => appState.nodes[it.id]);
       if (!anyNodes) return;
@@ -2378,14 +2384,14 @@
       // Tier-aware placeholders to nudge the user toward synthesis, not labels.
       let titlePh, descPh;
       if (tier <= 1) {
-        titlePh = 'Through-line title…';
-        descPh = 'Shared barrier or pattern this cluster captures…';
+        titlePh = 'What connects these?';
+        descPh = 'The mechanism underneath — who feels it, why it persists';
       } else if (tier === 2) {
-        titlePh = 'Name the systemic pattern…';
-        descPh = 'What systemic pattern bridges these clusters?';
+        titlePh = 'What system are these clusters all inside?';
+        descPh = 'The structural pattern that bridges these — name the shared infrastructure, incentive, or power dynamic';
       } else {
-        titlePh = 'Name the meta-theme…';
-        descPh = 'What meta-theme connects these systems?';
+        titlePh = 'What’s the thing underneath the thing?';
+        descPh = 'The civilizational, economic, or epistemic pattern these systems rest on';
       }
       el.innerHTML = `
         <div class="hub-tag">
@@ -2396,7 +2402,7 @@
         <textarea class="hub-desc" placeholder="${escapeHtml(descPh)}" rows="2">${escapeHtml(cluster.description || '')}</textarea>
         <div class="hub-actions">
           <button type="button" class="hub-suggest" title="Open the AI thinking partner for this ${escapeHtml(tierLabel(tier).toLowerCase())}">✨ AI thinking partner</button>
-          <button type="button" class="hub-delete">Delete</button>
+          <button type="button" class="hub-delete">Remove</button>
         </div>
         <div class="connect-handle side-top"    data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
         <div class="connect-handle side-right"  data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
@@ -3183,7 +3189,7 @@
       updateClusterProgressChip();
       scheduleSave();
       const label = tierLabel(hubTier(id)); // hubTier returns 0 now (deleted); fallback ok
-      toast(removed.title ? `Deleted "${removed.title}".` : 'Hub deleted.', {
+      toast(removed.title ? `Removed "${removed.title}".` : 'Hub removed.', {
         actionLabel: 'Undo',
         duration: 5000,
         onAction: () => {
@@ -3574,7 +3580,7 @@
       const backBtn = document.getElementById('welcome-btn-back');
       if (backBtn) backBtn.classList.toggle('hidden', _welcomeSlide === 0);
       const nextBtn = document.getElementById('welcome-btn-next');
-      if (nextBtn) nextBtn.textContent = _welcomeSlide === WELCOME_TOTAL_SLIDES - 1 ? "Let's go!" : 'Next →';
+      if (nextBtn) nextBtn.textContent = _welcomeSlide === WELCOME_TOTAL_SLIDES - 1 ? 'Start' : 'Next →';
       if (nextBtn) setTimeout(() => nextBtn.focus(), 50);
     }
 
@@ -3903,7 +3909,7 @@ A single question the user must be able to answer to defend the current framing 
       const contents = formatHubForPrompt(hubId, 0, 2) || '(none yet)';
       return `<role>
 You are an expert critical theorist, design researcher, and qualitative
-sensemaking partner. You act as a sparring partner — you do not write
+sensemaking partner. You are a thinking partner — you do not write
 the user's synthesis for them. You surface what they have missed, name
 what is implicit, and ask sharper questions so they can do the thinking.
 </role>
@@ -3962,7 +3968,7 @@ ${m.output}
       const tabs = document.getElementById('ai-mode-tabs');
       const ta = document.getElementById('ai-prompt-text');
       if (titleEl) titleEl.textContent = `AI thinking partner — ${label} "${c.title || 'Untitled'}"`;
-      if (blurb) blurb.textContent = 'Pick how you want the AI to push your thinking. The prompt is engineered with explicit role, context, thinking steps, and output structure so models give you sharper, more specific responses.';
+      if (blurb) blurb.textContent = 'Pick a direction. Copy the prompt. Take it to your AI tool and think out loud before you write anything here.';
       if (tabs) {
         tabs.classList.remove('hidden');
         tabs.querySelectorAll('.ai-mode-tab').forEach(btn => {
@@ -3993,14 +3999,14 @@ ${m.output}
       const tabs = document.getElementById('ai-mode-tabs');
       if (tabs) tabs.classList.add('hidden');
       const blurb = document.getElementById('ai-modal-blurb');
-      if (blurb) blurb.textContent = 'Copy this text chunk and paste it into an AI tool to spot hidden patterns across the entire pool before you group them yourself.';
+      if (blurb) blurb.textContent = 'Before you start clustering, get the lay of the land. Copy this prompt, take it to your AI tool, and see what's hiding in the data.';
       const titleEl = document.getElementById('ai-modal-title');
-      if (titleEl) titleEl.textContent = 'AI thinking partner — explore the pool';
+      if (titleEl) titleEl.textContent = 'Explore the full signal pool';
       const t = document.getElementById('ai-prompt-text');
       const signalList = appState.items.map(i => `  - "${i.title}": ${i.summary}`).join('\n');
       const p = `<role>
 You are an expert critical theorist, design researcher, and qualitative
-sensemaking partner. You act as a sparring partner — you do not write
+sensemaking partner. You are a thinking partner — you do not write
 the user's synthesis for them. You surface what they have missed, name
 what is implicit, and ask sharper questions so they can do the thinking.
 </role>
@@ -4021,7 +4027,7 @@ ${signalList}
 Read every signal and follow this 3-step process:
 
 1. UNDERSTAND THE LANDSCAPE — A concise, high-level summary of the major
-   pain points represented here. Which signals are loudest, most urgent,
+   signals represented here. Which signals are loudest, most urgent,
    most repeated?
 2. SURFACE UNEXPECTED THROUGHLINES — Name 1–2 structural connections that
    cross seemingly different contexts (e.g., healthcare records and
@@ -4078,12 +4084,12 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
     async function copyAIPrompt() {
       const t = document.getElementById('ai-prompt-text');
       const ok = await clipboardCopy(t.value);
-      toast(ok ? 'Prompt copied to clipboard.' : 'Copy failed — select and copy manually.');
+      toast(ok ? 'Copied.' : 'Copy failed — select and copy manually.');
     }
     async function copyText(elementId) {
       const text = document.getElementById(elementId).innerText;
       const ok = await clipboardCopy(text);
-      toast(ok ? 'Prompt copied.' : 'Copy failed — select and copy manually.');
+      toast(ok ? 'Copied.' : 'Copy failed — select and copy manually.');
     }
 
     // --- Validation + cluster progress ---
@@ -4114,7 +4120,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const el = document.getElementById('cluster-progress');
       if (!el) return;
       const { count, meets } = getClusterProgress();
-      el.textContent = `Clusters with 3+ pain points: ${count} / target 2–3`;
+      el.textContent = `${count} cluster${count === 1 ? '' : 's'} with 3+ signals — looking for 2–3`;
       el.classList.toggle('meets-target', meets);
       el.classList.toggle('below-target', !meets);
     }
@@ -4155,7 +4161,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       if (v.usable === 0) {
         const msg = v.warnings[0] || 'Add a titled cluster with at least one signal.';
         warningEl.textContent = msg;
-        toast('Cannot commit: ' + msg);
+        toast('Can\'t commit yet: ' + msg);
         return;
       }
       warningEl.textContent = '';
@@ -4185,11 +4191,19 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const warn = document.getElementById('commit-warning');
       const { count } = getClusterProgress();
       if (count < 2) {
-        warn.textContent = `You have ${count} cluster${count === 1 ? '' : 's'} with 3+ pain points. The workflow asks for 2–3 such clusters — you can still commit, but consider going back to add more signals.`;
+        warn.textContent = `You have ${count} cluster${count === 1 ? '' : 's'} with 3+ signals. The sweet spot is 2–3 — you can still commit, but thinner clusters are harder to defend.`;
         warn.classList.remove('hidden');
       } else {
         warn.classList.add('hidden');
       }
+
+      const prevCountLine = list.parentNode.querySelector('.commit-signal-count');
+      if (prevCountLine) prevCountLine.remove();
+      const signalCountLine = document.createElement('p');
+      signalCountLine.className = 'commit-signal-count';
+      signalCountLine.style.cssText = 'font-size: 0.875rem; color: var(--midnight); opacity: 0.7; margin-bottom: 16px; font-style: italic;';
+      signalCountLine.textContent = `You sorted through ${appState.items.length} signals to get here. These are the ones you're standing behind.`;
+      list.parentNode.insertBefore(signalCountLine, list);
 
       updateCommitContinueButton();
       openModal('commit-modal');
@@ -4226,8 +4240,8 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
     function renderWorkspace() {
       const titleEl = document.getElementById('workspace-title');
       if (titleEl) titleEl.textContent = appState.settings.title
-        ? `Deepen: ${appState.settings.title}`
-        : 'Deepen your committed clusters';
+        ? `Build the case: ${appState.settings.title}`
+        : 'Build the case';
 
       // Clean any committed ids that no longer point to a real cluster.
       appState.committedClusterIds = appState.committedClusterIds.filter(id => appState.clusters.some(c => c.id === id));
@@ -4354,29 +4368,29 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         </header>
         <section class="workspace-section">
           <label for="${stakeholderId}">Stakeholder Map</label>
-          <p class="field-hint">Primary affected, adjacent, gatekeepers, enablers — informed by the interviews you ran in Step 1.</p>
+          <p class="field-hint">Who's most affected, who else is impacted, who's blocking, who has access — grounded in what you heard in Step 1.</p>
           <div class="prompt-cta">
             <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Step 2 — Stakeholder mapping prompt</div>
+              <div class="prompt-cta-label">✨ Step 2 — Map who's affected</div>
               <button class="btn btn-primary copy-btn" onclick="copyText('${stakeholderPromptId}')">Copy this prompt</button>
             </div>
             <div class="prompt-text" id="${stakeholderPromptId}"></div>
-            <p class="copy-hint">Paste into your favorite AI tool, spar with it, then write your own map below.</p>
+            <p class="copy-hint">Take this to your AI tool. Think with it. Come back and write your own.</p>
           </div>
-          <textarea id="${stakeholderId}" oninput="updateStakeholderMap('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your stakeholder map — write your own answer here after sparring with the AI."></textarea>
+          <textarea id="${stakeholderId}" oninput="updateStakeholderMap('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your map. Your words. Who's most affected, who's blocking progress, who has access."></textarea>
         </section>
         <section class="workspace-section">
-          <label for="${problemId}">Problematize this space</label>
-          <p class="field-hint">Complicate your framing: hidden assumptions, who benefits from the status quo, structural biases.</p>
+          <label for="${problemId}">Pressure-test this space</label>
+          <p class="field-hint">Hidden assumptions, structural biases, who benefits from things staying broken — complicate your own framing before someone else does.</p>
           <div class="prompt-cta">
             <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Step 3 — Problematization prompt</div>
+              <div class="prompt-cta-label">✨ Step 3 — Pressure-test your framing</div>
               <button class="btn btn-primary copy-btn" onclick="copyText('${problemPromptId}')">Copy this prompt</button>
             </div>
             <div class="prompt-text" id="${problemPromptId}"></div>
-            <p class="copy-hint">Paste into your favorite AI tool, spar with it, then write your own conclusion below.</p>
+            <p class="copy-hint">Take this to your AI tool. Think with it. Come back and write your own.</p>
           </div>
-          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your problematization — write your own conclusion here after sparring with the AI."></textarea>
+          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="Your framing. What's assumed, what's missing, who benefits from the status quo."></textarea>
         </section>
       `;
 
@@ -4420,9 +4434,9 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         if (ok) {
           hint.textContent = appState.submittedAt
             ? `Last submitted ${new Date(appState.submittedAt).toLocaleString()}. Re-submit to update.`
-            : 'Ready to submit.';
+            : 'Ready.';
         } else {
-          hint.textContent = 'Fill in both fields on every cluster to enable Submit for Voting.';
+          hint.textContent = 'Complete every section to submit.';
         }
       }
     }
@@ -4435,7 +4449,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
 
     function openSubmitModal() {
       if (!workspaceIsComplete()) {
-        toast('Fill in both fields on every cluster first.');
+        toast('Complete every section to submit.');
         return;
       }
       const committed = appState.committedClusterIds
@@ -4466,7 +4480,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       closeModal('submit-modal');
       scheduleSave();
       goToScreen('artifact');
-      toast('Submitted ✓');
+      toast('Submitted.');
     }
 
     // --- Submitted artifact (read-only) ---
@@ -4475,12 +4489,12 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       if (tsEl) {
         tsEl.textContent = appState.submittedAt
           ? `Submitted on ${new Date(appState.submittedAt).toLocaleString()}`
-          : 'Draft — not yet submitted.';
+          : 'Draft — not yet submitted';
       }
       const heading = document.getElementById('submission-heading');
       if (heading) heading.textContent = appState.settings.title
-        ? `Submission: ${appState.settings.title}`
-        : 'Submission';
+        ? `${appState.settings.title} — Artifact`
+        : 'Your Artifact';
 
       const body = document.getElementById('submission-body');
       body.innerHTML = '';
@@ -4515,6 +4529,25 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         wrap.appendChild(article);
       });
       body.appendChild(wrap);
+
+      const peerReview = document.createElement('div');
+      peerReview.className = 'peer-review-section';
+      peerReview.style.cssText = 'width: 100%; max-width: 840px; margin-top: 40px;';
+      peerReview.innerHTML = `
+        <div style="background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px; padding: 28px 32px;">
+          <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary-teal); margin-bottom: 8px;">Before Peer Review</div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--midnight); margin-bottom: 12px;">Can you defend this?</h3>
+          <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; line-height: 1.6; margin-bottom: 20px;">Your peers are going to challenge your framing. Before you walk in, make sure you have an answer to each of these — for every problem space you committed to.</p>
+          <ol style="font-size: 0.9rem; color: var(--midnight); line-height: 1.8; padding-left: 20px;">
+            <li style="margin-bottom: 8px;">Which signal doesn't quite fit — and why did you keep it anyway?</li>
+            <li style="margin-bottom: 8px;">Whose voice is missing from your stakeholder map?</li>
+            <li style="margin-bottom: 8px;">What assumption would break your framing if it turned out to be wrong?</li>
+            <li style="margin-bottom: 8px;">If you had to explain your problem space in one sentence to someone who hasn't seen any of these signals — what would you say?</li>
+            <li style="margin-bottom: 8px;">What's the strongest argument that your clusters should have been grouped differently?</li>
+          </ol>
+        </div>
+      `;
+      body.appendChild(peerReview);
     }
 
     function downloadMarkdown() {
@@ -4616,15 +4649,15 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return;
         setTimeout(() => {
-          toast('Resumed your previous session.', {
+          toast('Picked up where you left off.', {
             actionLabel: 'Start fresh',
             duration: 6000,
             onAction: () => {
               clearSavedState();
               appState = defaultState();
-              if (titleEl) titleEl.value = 'Upskilling Labs: Comprehensive Problem Signals';
+              if (titleEl) titleEl.value = 'Upskilling Labs: Signal Pool';
               renderConfigItems();
-              toast('Saved session cleared.');
+              toast('Cleared.');
             }
           });
         }, 200);
@@ -4639,7 +4672,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       // Show tour help button for return visitors resuming to the board
       const resumeHelpBtn = document.getElementById('tour-help-btn');
       if (resumeHelpBtn) resumeHelpBtn.classList.remove('hidden');
-      setTimeout(() => toast('Resumed your previous session.', { duration: 4000 }), 200);
+      setTimeout(() => toast('Picked up where you left off.', { duration: 4000 }), 200);
     })();
 
     // Warn before unload if there's in-progress, unsubmitted work.
