@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#101820">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Triangulator">
   <title>The Triangulator-inator</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
@@ -35,6 +40,7 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
+    html, body { overscroll-behavior: none; } /* no pull-to-refresh/rubber-band under canvas gestures */
     body {
       color: var(--midnight);
       background-color: var(--cloud);
@@ -44,6 +50,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .hidden { display: none !important; }
@@ -150,7 +157,7 @@
     .upskill-banner p { font-size: 0.875rem; line-height: 1.5; }
     /* --- LANDING (editorial layout) --- */
     /* Big type hierarchy, hairline rules, indexed sections; existing fonts & palette only. */
-    #setup-screen { padding: 0 24px; }
+    #setup-screen { padding: env(safe-area-inset-top, 0px) max(24px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(24px, env(safe-area-inset-left, 0px)); }
     #setup-screen .config-container {
       background: none; border: none; max-width: 960px; padding: 88px 0 120px;
     }
@@ -695,8 +702,8 @@
     @media print { .profile-anchor { display: none !important; } }
 
     /* ============ WEB-MAP CANVAS ============ */
-    .webmap-panel { display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; background: var(--cloud); }
-    .webmap-header { gap: 12px; padding: 0 20px; height: 60px; overflow: visible; }
+    .webmap-panel { display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; background: var(--cloud); padding-top: env(safe-area-inset-top, 0px); }
+    .webmap-header { gap: 12px; padding: 0 max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px)); height: 60px; overflow: visible; }
     .webmap-header h2 { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .webmap-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0; }
     .webmap-search { min-width: 180px; max-width: 260px; }
@@ -706,7 +713,7 @@
     .btn-label-short { display: none; }
 
     @media (max-width: 1024px) {
-      .webmap-header { padding: 0 12px; height: 52px; gap: 8px; }
+      .webmap-header { padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px)); height: 52px; gap: 8px; }
       .webmap-header h2 { font-size: 0.875rem; }
       .webmap-header-actions { gap: 6px; }
       .webmap-search { min-width: 120px; max-width: 180px; }
@@ -725,7 +732,7 @@
       .webmap-search { min-width: 70px; }
     }
     @media (max-width: 480px) {
-      .webmap-header { padding: 0 8px; gap: 6px; }
+      .webmap-header { padding: 0 max(8px, env(safe-area-inset-right, 0px)) 0 max(8px, env(safe-area-inset-left, 0px)); gap: 6px; }
       .webmap-search { min-width: 70px; max-width: 140px; }
     }
 
@@ -751,7 +758,7 @@
       .modal-content  { padding: 24px; }
       .modal-header h3 { font-size: 1.1rem; }
       /* Setup screen */
-      #setup-screen     { padding: 12px; }
+      #setup-screen     { padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
       .config-container { padding: 20px; }
       .config-header h1 { font-size: 1.3rem; }
       /* Workspace screen */
@@ -808,7 +815,7 @@
     .canvas-viewport.space-pan-ready.is-panning * { cursor: grabbing !important; }
 
     /* Canvas node cursor overrides — reset the grab inherited from viewport */
-    .canvas-node { cursor: default; }
+    .canvas-node { cursor: default; -webkit-touch-callout: none; } /* no long-press callout mid-drag */
     .canvas-node input,
     .canvas-node textarea,
     .canvas-node [contenteditable="true"] { cursor: text; }
@@ -935,7 +942,9 @@
       border-radius: 12px; padding: 12px 16px; cursor: grab;
       box-shadow: 0 8px 24px rgba(16,24,32,0.18);
       touch-action: none; /* drag the lattice by the panel on touch too */
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
     }
+    .section-title, .section-desc { user-select: text; -webkit-user-select: text; }
     .section-titles:active { cursor: grabbing; }
     .section-title {
       width: 100%; background: transparent; border: none; outline: none;
@@ -1353,14 +1362,13 @@
     @media (pointer: coarse) {
       .connect-handle { width: 20px; height: 20px; opacity: 0.3; }
       .canvas-node.touch-selected .connect-handle { opacity: 1; }
-      .zoom-btn { min-width: 42px; height: 40px; }
     }
 
     .canvas-node.drag-source { opacity: 0.55; }
 
     .zoom-toolbar {
       position: absolute;
-      right: 20px;
+      right: calc(20px + env(safe-area-inset-right, 0px));
       bottom: calc(20px + env(safe-area-inset-bottom, 0px));
       display: flex;
       gap: 4px;
@@ -1395,8 +1403,8 @@
 
     .canvas-hint {
       position: absolute;
-      right: 16px;
-      bottom: 122px; /* above #tour-help-btn (72px + 34px + 16px gap) */
+      right: calc(16px + env(safe-area-inset-right, 0px));
+      bottom: calc(122px + env(safe-area-inset-bottom, 0px)); /* above #tour-help-btn (72px + 34px + 16px gap) */
       background: rgba(16,24,32,0.88);
       color: var(--ghost-white);
       padding: 8px 14px;
@@ -1437,8 +1445,8 @@
     /* Coach panel: docked, scrollable, rich educational copy. */
     #tutorial-coach {
       position: fixed;
-      left: 16px;
-      bottom: 16px;
+      left: calc(16px + env(safe-area-inset-left, 0px));
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       z-index: 2098;
       width: min(440px, calc(100vw - 24px));
       background: var(--ghost-white);
@@ -1505,7 +1513,7 @@
     #tutorial-offer-modal .modal-content { max-width: 480px; text-align: center; border-top: 4px solid var(--primary-teal); }
 
     @media (max-width: 600px) {
-      #tutorial-coach { left: 8px; right: 8px; bottom: 8px; width: auto; }
+      #tutorial-coach { left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: max(8px, env(safe-area-inset-bottom, 0px)); width: auto; }
       #tutorial-coach.coach-right { left: 8px; right: 8px; }
       #tutorial-coach-body { max-height: 38vh; }
     }
@@ -1553,7 +1561,9 @@
     .tour-btn-next:hover { background: #007882; transform: translateY(-1px); }
 
     #tour-help-btn {
-      position: absolute; right: 16px; bottom: 72px;
+      position: absolute;
+      right: calc(16px + env(safe-area-inset-right, 0px));
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
       width: 34px; height: 34px; border-radius: 50%;
       background: var(--ghost-white); border: 2px solid var(--cloud);
       color: var(--primary-teal); font-weight: 800; font-size: 0.95rem;
@@ -1569,7 +1579,7 @@
 
 
     /* ======================== SORTING SCREEN ======================== */
-    #sorting-screen { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--midnight); overflow: hidden; }
+    #sorting-screen { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--midnight); overflow: hidden; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
     .sorting-top { position: relative; padding: 16px 24px 0; flex-shrink: 0; }
     .sorting-back-link { position: absolute; top: 18px; left: 24px; font-size: 0.75rem; color: var(--cloud); opacity: 0.5; background: none; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
     .sorting-back-link:hover { opacity: 1; }
@@ -1769,6 +1779,17 @@
     .signal-node .summary-text { line-height: 1.5; }
     .hub-node input.hub-title { letter-spacing: var(--track-snug); }
     .quality-check { line-height: 1.55; }
+
+    /* Apple HIG ~44pt touch targets. Last in the sheet so these win the
+       cascade over the base rules above at equal specificity. */
+    @media (pointer: coarse) {
+      .zoom-btn { min-width: 44px; height: 42px; }
+      .profile-btn { width: 44px; height: 44px; }
+      #tour-help-btn { width: 44px; height: 44px; }
+      .search-clear { width: 32px; height: 32px; }
+      .view-tab { padding: 10px 12px; }
+      .sorting-undo-link { padding: 12px 14px; }
+    }
   </style>
 </head>
 <body>
@@ -2211,6 +2232,18 @@
   <div id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
   <script>
+    // iOS Safari auto-zooms the page when an input under 16px gets focus,
+    // which wrecks the canvas view. Capping maximum-scale suppresses only
+    // that auto-zoom — iOS deliberately ignores the cap for user pinch
+    // gestures (accessibility) — and other platforms are left untouched.
+    (function () {
+      const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS desktop UA
+      if (!iOS) return;
+      const meta = document.querySelector('meta[name="viewport"]');
+      if (meta && !/maximum-scale/.test(meta.content)) meta.content += ', maximum-scale=1';
+    })();
+
     const STORAGE_KEY = 'olos.sensemaking.v2';
     const LEGACY_STORAGE_KEY = 'olos.sensemaking.v1';
     // Tour done keys are now per-screen: tourDoneKey(screen) → 'olos.tour.done.' + screen
