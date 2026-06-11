@@ -68,6 +68,7 @@
       align-items: center;
       justify-content: center;
       min-height: 44px;
+      text-decoration: none;
     }
     
     .btn-primary { 
@@ -1896,8 +1897,7 @@
         <h1>The<br>Triangulator<span class="hero-accent">-inator</span></h1>
         <p class="hero-lede">Some people find a better answer. Others find a better question — and change everything. You're about to become the second kind.</p>
         <div class="hero-cta">
-          <button type="button" class="btn btn-primary" onclick="tutorialStart()">Take the 5-minute guided tutorial</button>
-          <a href="#landing-h-start" class="hero-cta-note">or get started with your own pool ↓</a>
+          <a href="#landing-h-start" class="btn btn-primary">Get started with your own pool ↓</a>
           <a href="#" class="hero-cta-note" onclick="openImportModal(); return false;">or open a shared working folder</a>
         </div>
       </header>
@@ -2128,8 +2128,6 @@
           <button type="button" class="zoom-btn" id="panel-toggle-btn" onclick="toggleHeaderCollapse()" aria-label="Hide / show header" title="Hide / show header">↕</button>
         </div>
         <div id="marquee-rect" class="marquee-rect"></div>
-        <button id="tour-help-btn" class="hidden" onclick="tutorialStart()"
-                aria-label="Start the guided tutorial" title="Start tutorial">🎓</button>
         <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag to select · Edge dots to connect · Scroll to pan · Cmd-scroll to zoom · Space-drag to pan</span><span class="hint-mobile">Drag to move · Tap to connect · Pinch to zoom · Two fingers to pan</span></div>
       </div>
     </main>
@@ -4389,13 +4387,10 @@
 
     // --- Tutorial offer (replaces the old multi-slide welcome modal) ---
     function showTutorialOffer() {
-      // Never intrude on a tutorial that's already running, or one already
-      // completed — a deferred caller (e.g. the bootstrap setTimeout) can fire
-      // after the user has launched the tutorial straight from the hero button.
-      if (tutorialMode) return;
-      if (localStorage.getItem('olos.tutorial.done')) return;
-      localStorage.setItem('olos.tutorial.offered', '1');
-      openModal('tutorial-offer-modal');
+      // Guided tutorial removed for now: the offer never appears. The launcher
+      // (tutorialStart) and step machinery remain dormant below so this can be
+      // restored by reinstating the body and the hero / canvas entry points.
+      return;
     }
     function declineTutorialOffer() {
       closeModal('tutorial-offer-modal');

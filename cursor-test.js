@@ -22,9 +22,7 @@ const cssCursor = (page, sel) => page.evaluate(s => {
   });
   await page.reload();
   await page.waitForTimeout(700);
-  // Decline tutorial offer, build a small real board
-  await page.click('#tutorial-offer-modal .btn-outline');
-  await page.waitForTimeout(200);
+  // Build a small real board
   await page.evaluate(() => {
     loadSampleSignals();
     appState.items = appState.items.slice(0, 3);
@@ -80,22 +78,6 @@ const cssCursor = (page, sel) => page.evaluate(s => {
   await page.waitForTimeout(100);
   check('cursor returns to default after space released',
     (await cssCursor(page, '#canvas-viewport')) === 'default');
-
-  // --- Tutorial button: visible, hover shows hint, click starts tutorial ---
-  check('tour-help-btn visible on board',
-    await page.evaluate(() => !document.getElementById('tour-help-btn').classList.contains('hidden')));
-  check('hint hidden by default (opacity 0)',
-    (await page.evaluate(() => getComputedStyle(document.getElementById('canvas-hint')).opacity)) === '0');
-  await page.hover('#tour-help-btn');
-  await page.waitForTimeout(250);
-  check('hint visible on tour-help-btn hover (opacity 1)',
-    (await page.evaluate(() => getComputedStyle(document.getElementById('canvas-hint')).opacity)) === '1');
-  await page.click('#tour-help-btn');
-  await page.waitForTimeout(500);
-  check('clicking tour-help-btn starts tutorial (coach + sorting visible)',
-    await page.evaluate(() =>
-      !document.getElementById('tutorial-coach').classList.contains('hidden')
-      && !document.getElementById('sorting-screen').classList.contains('hidden')));
 
   await browser.close();
   console.log(failures === 0 ? '\nALL PASSED' : `\n${failures} FAILURE(S)`);
