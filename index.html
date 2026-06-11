@@ -4180,6 +4180,15 @@
       const nextBtn = document.getElementById('tour-btn-next');
       if (nextBtn) nextBtn.textContent = _tourStep === _currentTourSteps.length - 1 ? 'Done ✓' : 'Next →';
 
+      // Bring offscreen targets into view before measuring — the workspace and
+      // artifact tours spotlight sections that can sit well below the fold, and
+      // a spotlight/tooltip positioned around an offscreen target leaves the
+      // user staring at a click-blocking dim layer with no visible controls.
+      const tr = target.getBoundingClientRect();
+      if (tr.top < 0 || tr.bottom > window.innerHeight) {
+        target.scrollIntoView({ block: tr.height > window.innerHeight * 0.7 ? 'start' : 'center' });
+      }
+
       _tourPositionSpotlight(target, step.spotlightPadding || 0);
       _tourPositionTooltip(target, step.tooltipPlacement);
       setTimeout(() => nextBtn && nextBtn.focus(), 60);
@@ -4224,6 +4233,8 @@
         } else {
           top = Math.max(margin, (vh - th) / 2);
         }
+        // Never let the tooltip (and its Next/Skip controls) leave the viewport.
+        top = Math.max(margin, Math.min(top, vh - th - margin));
         if (placement === 'bottom-right') {
           left = Math.min(rect.left, vw - tw - margin);
           left = Math.max(margin, left);
