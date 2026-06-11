@@ -718,9 +718,15 @@
       .webmap-header-actions .btn-label-short { display: inline; }
     }
 
+    @media (max-width: 600px) {
+      /* Keep all five header controls on one row of a phone: trim button
+         padding (min-height keeps the 44px tap target) and let search yield. */
+      .webmap-header-actions .btn { padding: 10px 12px; }
+      .webmap-search { min-width: 70px; }
+    }
     @media (max-width: 480px) {
       .webmap-header { padding: 0 8px; gap: 6px; }
-      .webmap-search { min-width: 90px; max-width: 140px; }
+      .webmap-search { min-width: 70px; max-width: 140px; }
     }
 
     /* --- MOBILE COMPACT DENSITY --- */
@@ -730,7 +736,12 @@
       .search-container            { padding: 8px 12px; }
       .scroll-area                 { padding: 12px; }
       .ai-helper-bar               { padding: 10px 16px; }
-      .canvas-infobar              { padding: 6px 12px; font-size: 0.7rem; }
+      .canvas-infobar              { padding: 6px 12px; font-size: 0.7rem; gap: 10px; }
+      /* Level tabs scroll sideways on a phone instead of clipping */
+      .canvas-infobar .view-tabs   { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-shrink: 1; min-width: 0; }
+      .canvas-infobar .view-tabs::-webkit-scrollbar { display: none; }
+      .canvas-infobar .view-tab    { white-space: nowrap; flex-shrink: 0; }
+      .canvas-infobar #cluster-progress { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
       .item-card                   { padding: 10px 12px; margin-bottom: 8px; }
     }
 
@@ -906,15 +917,24 @@
       pointer-events: none;               /* panning works over the frame */
     }
     .section-header {
-      position: absolute; left: 0; bottom: 100%; margin-bottom: 12px;
-      width: 100%; display: flex; align-items: flex-start; gap: 12px;
+      position: absolute; left: 0; bottom: 100%;
+      margin-bottom: calc(12px / var(--world-zoom, 1)); /* constant screen gap */
+      display: flex; align-items: flex-start; gap: 12px;
       pointer-events: auto;
+      /* Constant on-screen size at any canvas zoom (FigJam-style): lay out at
+         box-width × zoom, then counter-scale so title and button stay legible
+         and tappable when the lattice is zoomed far out (small screens). */
+      width: calc(100% * var(--world-zoom, 1));
+      min-width: min(340px, 92vw); /* don't cramp the title when the box is narrow on screen */
+      transform: scale(calc(1 / var(--world-zoom, 1)));
+      transform-origin: 0 100%;
     }
     .section-titles {
       flex: 1; min-width: 0; max-width: 520px;
       background: var(--midnight); border: 2px solid var(--primary-teal);
       border-radius: 12px; padding: 12px 16px; cursor: grab;
       box-shadow: 0 8px 24px rgba(16,24,32,0.18);
+      touch-action: none; /* drag the lattice by the panel on touch too */
     }
     .section-titles:active { cursor: grabbing; }
     .section-title {
@@ -939,6 +959,11 @@
     .section-export.hidden { display: none; }
 
     /* Card page modal */
+    @media (pointer: coarse) {
+      /* ≥16px stops iOS Safari from zooming the page when these get focus */
+      #card-page-doc { font-size: 16px !important; }
+      .section-desc { font-size: 16px; }
+    }
     .cardpage-files { display: flex; flex-direction: column; gap: 8px; }
     .cardpage-file { display: flex; align-items: center; gap: 12px; background: var(--cloud); border-radius: 8px; padding: 10px 14px; }
     .cardpage-file > span:first-child { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1328,6 +1353,7 @@
     @media (pointer: coarse) {
       .connect-handle { width: 20px; height: 20px; opacity: 0.3; }
       .canvas-node.touch-selected .connect-handle { opacity: 1; }
+      .zoom-btn { min-width: 42px; height: 40px; }
     }
 
     .canvas-node.drag-source { opacity: 0.55; }
@@ -2118,7 +2144,7 @@
         <p id="card-page-sub" style="font-size:0.8rem; opacity:0.7; margin-bottom:16px;"></p>
         <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
         <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6; margin-bottom:6px;">Main document — notes.md</div>
-        <textarea id="card-page-doc" style="width:100%; height:240px; font-family:monospace; font-size:0.825rem; padding:14px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
+        <textarea id="card-page-doc" style="width:100%; height:min(240px, 38dvh); font-family:monospace; font-size:0.825rem; padding:14px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
         <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6; margin:18px 0 6px;">Attached markdown files</div>
         <div id="card-page-files" class="cardpage-files"></div>
         <input type="file" id="card-page-upload" accept=".md,.markdown,text/markdown,text/plain" multiple class="sr-only">
@@ -2140,7 +2166,7 @@
           <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; margin-bottom: 16px;">Load a working folder someone exported from this tool — either the <strong>.zip</strong> itself or the <strong>unzipped folder</strong>. You'll get their whole board: lattice, problem situation, card pages, and attached files.</p>
           <input type="file" id="import-zip-input" accept=".zip,application/zip" class="sr-only" onchange="handleImportZip(event)">
           <input type="file" id="import-folder-input" webkitdirectory multiple class="sr-only" onchange="handleImportFolder(event)">
-          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
             <button class="btn btn-outline" onclick="closeModal('import-modal')">Cancel</button>
             <button class="btn btn-outline" onclick="document.getElementById('import-folder-input').click()">Choose folder</button>
             <button class="btn btn-primary" onclick="document.getElementById('import-zip-input').click()" data-autofocus>Choose .zip</button>
@@ -2148,7 +2174,7 @@
         </div>
         <div id="import-confirm" class="hidden">
           <p id="import-confirm-summary" style="font-size: 0.9rem; color: var(--midnight); margin-bottom: 16px;"></p>
-          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
             <button class="btn btn-outline" onclick="closeModal('import-modal')">Cancel</button>
             <button class="btn btn-primary" onclick="confirmImport()">Replace my board</button>
           </div>
@@ -2875,6 +2901,7 @@
       if (!world) return;
       const { panX, panY, zoom } = appState.view;
       world.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+      world.style.setProperty('--world-zoom', zoom); // section header counter-scales against this
       const viewport = document.getElementById('canvas-viewport');
       if (viewport) {
         const s = 24 * zoom;
@@ -2925,16 +2952,26 @@
       });
       if (appState.situation.active && appState.situation.box) {
         const b = appState.situation.box;
-        minX = Math.min(minX, b.x); minY = Math.min(minY, b.y - 96); // header floats above
+        minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
         maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
       }
       const viewport = document.getElementById('canvas-viewport');
       const rect = viewport.getBoundingClientRect();
-      const contentW = maxX - minX, contentH = maxY - minY;
       const margin = 60;
-      const sx = (rect.width - margin * 2) / contentW;
-      const sy = (rect.height - margin * 2) / contentH;
-      const zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(sx, sy, 1)));
+      const fit = () => {
+        const sx = (rect.width - margin * 2) / (maxX - minX);
+        const sy = (rect.height - margin * 2) / (maxY - minY);
+        return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(sx, sy, 1)));
+      };
+      let zoom = fit();
+      if (appState.situation.active && appState.situation.box) {
+        // The box header is counter-scaled (constant ~110px on screen), so its
+        // world height depends on the zoom we just picked — refit once with
+        // headroom for it above the box.
+        minY = Math.min(minY, appState.situation.box.y - 116 / zoom);
+        zoom = fit();
+      }
+      const contentW = maxX - minX, contentH = maxY - minY;
       appState.view.zoom = zoom;
       appState.view.panX = (rect.width  - contentW * zoom) / 2 - minX * zoom;
       appState.view.panY = (rect.height - contentH * zoom) / 2 - minY * zoom;
