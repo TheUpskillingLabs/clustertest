@@ -51,7 +51,18 @@ Open `index.html` in any modern browser. No build step, no server, no dependenci
 2. Click **Start Sorting** to enter the swipe-based sorting phase
 3. After sorting, the canvas opens with your surviving signals ready to triangulate
 
-Your session is saved automatically to `localStorage`, so you can close and reopen without losing work. A guided tour runs on first visit to each screen — click the **?** button to replay it.
+Your session is saved automatically to `localStorage`, so you can close and reopen without losing work.
+
+### The guided tutorial
+
+First-time visitors are offered a **5-minute interactive tutorial** (also available any time via the **🎓 Tutorial** button). It runs on a self-contained worked example — *neighborhood food access* — completely sandboxed from your own data:
+
+1. **Sorting practice** — swipe three example cards (an opinion that's noise, an observed pattern that's a signal, and a reframing super signal), with an explanation after each swipe of *why* it sorts that way. The explanations adapt to whatever you actually swiped.
+2. **Canvas walkthrough** — eight pre-placed signals. You connect two into an evidence card, classify it (learning the seven evidence types), and name the claim. The tutorial fast-forwards the sibling cards, then you build a pattern (mechanism, not topic) and climb to a theme (bridge test + depth test), ending at the Push gate without pushing.
+
+Along the way it teaches the Frame Creation reasoning behind each step: why binary sorting forces commitment, why two signals beat one anecdote, why patterns must name mechanisms, and why you frame before you solve. Exit at any step — nothing in the tutorial touches your workspace or saved state.
+
+Lightweight spotlight tours still run on first visit to each screen for UI orientation — click the **?** button to replay them.
 
 ## Signal sorting
 
@@ -130,5 +141,6 @@ From the Artifact screen you can:
 - Unified tiered data model: a single `cards[]` array where each card has a `tier` (1 = evidence … up) and a `childIds` array; the Problem Situation is one synthesized object
 - Older state shapes (clusters, and the cards/themes/situations lattice) are auto-migrated on load
 - Per-screen onboarding tours with spotlight engine
+- Sandboxed interactive tutorial: the app state is swapped in-memory for example data, persistence is suspended, and steps advance on real user actions (swipes, connections, classification, naming)
 - Works offline after first load
 - Tested on Chrome, Safari, Firefox — desktop and mobile
