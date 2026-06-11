@@ -2417,6 +2417,7 @@
     // phyllotaxis (golden-angle) pattern — no top-down bias, even density.
     function ensureLayoutPositions() {
       const placed = new Set(Object.keys(appState.nodes));
+      const before = placed.size;
       const CENTER_X = 1000, CENTER_Y = 700;
       const GOLDEN = Math.PI * (3 - Math.sqrt(5)); // ~137.5°
       const C = 110; // radial spacing constant
@@ -2463,6 +2464,9 @@
         placed.add(hub.id);
         k++;
       });
+      // Persist any first-time placements immediately, so a node never gets
+      // re-scattered to a new random position on a later render or reload.
+      if (placed.size > before) scheduleSave();
     }
 
     function applyViewTransform() {
