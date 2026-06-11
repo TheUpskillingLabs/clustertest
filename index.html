@@ -2144,12 +2144,6 @@
       walk(hubId);
       return out;
     }
-    // Mass scales with tier: signal=1, cluster=8, super=64, mega=512, ...
-    // High-tier hubs are effectively immovable anchors.
-    function nodeMass(nodeId) {
-      const tier = isHubId(nodeId) ? hubTier(nodeId) : 0;
-      return Math.pow(8, tier);
-    }
     // Walk up the parent chain to the topmost ancestor (or self if top-level).
     function rootAnchorOf(nodeId) {
       let cur = nodeId;
@@ -2237,12 +2231,15 @@
         // id's current (live) center. Mark "fresh" kids that haven't been placed.
         const parentLive = nodeCenter(id);
         const angles = {};
+        const curRad = {};      // each kid's CURRENT distance from this parent
+        const freshSet = new Set();
         const fresh = [];
         kids.forEach(k => {
           const kc = nodeCenter(k);
           const dx = kc.x - parentLive.x, dy = kc.y - parentLive.y;
-          if (Math.hypot(dx, dy) < FRESH_THRESHOLD) fresh.push(k);
-          else angles[k] = Math.atan2(dy, dx);
+          const r = Math.hypot(dx, dy);
+          if (r < FRESH_THRESHOLD) { fresh.push(k); freshSet.add(k); }
+          else { angles[k] = Math.atan2(dy, dx); curRad[k] = r; }
         });
         // Slot fresh kids into the widest gap one at a time.
         fresh.forEach(fk => {
@@ -2261,25 +2258,27 @@
           const nextA = (i === n - 1) ? nextAraw + Math.PI * 2 : nextAraw;
           const half = Math.min((myA - prevA) / 2, (nextA - myA) / 2);
           const childTier = isHubId(k) ? hubTier(k) : 0;
-          const gap = idealRadiusForChild(childTier, n);
+          const idealR = idealRadiusForChild(childTier, n);
+          // Radius rule: move the child the MINIMUM distance. A fresh kid
+          // (just dragged on, coincident with parent) lands on the ideal
+          // orbit. An existing kid keeps its current distance, clamped so it
+          // never overlaps the parent and never sits beyond the ideal orbit —
+          // i.e. the closest point within the hub's radius from where it is.
+          let gap;
+          if (freshSet.has(k)) {
+            gap = idealR;
+          } else {
+            const pd = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
+            const kd = nodeSize(isHubId(k) ? 'hub' : 'signal', k);
+            const minR = Math.hypot(pd.w, pd.h) / 2 + Math.hypot(kd.w, kd.h) / 2 + 24;
+            gap = Math.max(minR, Math.min(curRad[k], idealR));
+          }
           place(k, myCenter, myA, half * WEDGE_SHRINK, gap, dep + 1);
         });
       };
 
       place(rootId, rootCenter, 0, Math.PI, 0, 0);
       return { positions, depth, boundingRadius };
-    }
-
-    // Tidy: re-run the deterministic radial layout for every tree and let
-    // the repulsion settle separate systems apart. Same engine as the
-    // auto-relax, just triggered manually and focused on the heaviest hub.
-    function tidyLayout() {
-      if (relaxAnim) { toast('Already arranging.'); return; }
-      const tops = appState.clusters.filter(c => appState.nodes[c.id] && !parentHubId(c.id));
-      const anyNodes = tops.length || appState.items.some(it => appState.nodes[it.id]);
-      if (!anyNodes) return;
-      const heavy = tops.slice().sort((a, b) => nodeMass(b.id) - nodeMass(a.id))[0];
-      relaxLayoutAround(heavy ? heavy.id : null);
     }
 
     // Is targetId an ancestor of nodeId (or equal)?
@@ -3110,8 +3109,8 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
 
       // Tuning. Structure/no-crossings come from computeRadialTree and are
       // independent of these — they only govern how systems space apart.
-      const MARGIN = 180;          // empty gap between two spheres of influence
-      const REPEL_SYS_K = 0.06;    // push when spheres overlap/are close
+      const MARGIN = 70;           // empty gap between two spheres of influence
+      const REPEL_SYS_K = 0.025;   // push when spheres overlap/are close
       const CONTAIN_K = 0.0022;    // weak pull toward the group centroid
       const DAMP = 0.84;
       const BASE_LERP = 0.22;      // ease toward rigid target
@@ -3149,19 +3148,25 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
             }
           }
         }
-        // Weak containment toward the centroid of all system centers.
+        // Weak containment toward the centroid of all system centers — only
+        // free cards are pulled (connected networks are anchored).
         let bx = 0, by = 0;
         systems.forEach(s => { bx += s.cx; by += s.cy; });
         bx /= systems.length; by /= systems.length;
-        systems.forEach(s => { s.fx += (bx - s.cx) * CONTAIN_K; s.fy += (by - s.cy) * CONTAIN_K; });
-        // Integrate.
+        systems.forEach(s => {
+          if (s.kind !== 'free') return;
+          s.fx += (bx - s.cx) * CONTAIN_K; s.fy += (by - s.cy) * CONTAIN_K;
+        });
+        // Integrate. Connected networks ('tree') stay fixed — they act as
+        // obstacles that push free cards aside but never move themselves.
         let kinetic = 0;
         systems.forEach(s => {
+          if (s.kind !== 'free') return;
           if (isPinned(sysPinId(s))) return;
           s.vx = (s.vx + s.fx / s.mass) * DAMP;
           s.vy = (s.vy + s.fy / s.mass) * DAMP;
           const vmag = Math.hypot(s.vx, s.vy);
-          if (vmag > 45) { s.vx = s.vx / vmag * 45; s.vy = s.vy / vmag * 45; }
+          if (vmag > 12) { s.vx = s.vx / vmag * 12; s.vy = s.vy / vmag * 12; }
           s.cx += s.vx; s.cy += s.vy;
           kinetic += vmag * vmag;
         });
@@ -3600,11 +3605,6 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
         }
         if (isTyping()) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
-        if (e.shiftKey && (e.key === 'T' || e.key === 't')) {
-          e.preventDefault();
-          tidyLayout();
-          return;
-        }
         switch (e.key) {
           case '+': case '=':
             e.preventDefault(); zoomBy(1); break;
