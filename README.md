@@ -62,13 +62,12 @@ The sorting screen is a pure gesture interface:
 | Connect signals | Hover card → drag from an edge dot to another card | Tap card → drag from an edge dot |
 | Fit all nodes | `0` key · click the `%` button | Tap `%` in zoom toolbar |
 | Delete a connection | Click the edge → press Delete | Tap the edge → Delete button |
-| Tidy layout | `Shift + T` | — |
 | Hide header chrome | `↕` button in zoom toolbar | Same |
 
 ## Building patterns, themes, and super-themes
 
 1. Hover any signal card to reveal **teal dots** on its edges.
-2. Drag from a dot to another signal — a **Pattern** node appears between them.
+2. Drag from a dot to another signal — a **Pattern** node appears at the midpoint between them. The signals stay where you placed them; connecting never reshuffles your layout.
 3. Continue dragging signals onto the pattern to grow it.
 4. Connect two patterns to create a **Theme**. Themes show quality-check prompts:
    - *Bridge test:* Does this theme describe both a structural condition AND a human experience?
