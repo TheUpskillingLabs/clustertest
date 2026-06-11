@@ -639,7 +639,21 @@
       touch-action: none;
     }
     .canvas-viewport.is-panning { cursor: grabbing; }
+    .canvas-viewport.is-marquee { cursor: crosshair; }
     .canvas-viewport.is-connecting { cursor: crosshair; }
+    .marquee-rect {
+      position: absolute;
+      pointer-events: none;
+      border: 1.5px solid rgba(0, 103, 214, 0.8);
+      background: rgba(0, 103, 214, 0.08);
+      border-radius: 2px;
+      display: none;
+      z-index: 1000;
+    }
+    .canvas-node.marquee-selected {
+      outline: 2px solid rgba(0, 103, 214, 0.7);
+      outline-offset: 3px;
+    }
     .canvas-viewport.space-pan-ready,
     .canvas-viewport.space-pan-ready * { cursor: grab !important; }
     .canvas-viewport.space-pan-ready.is-panning,
@@ -1567,7 +1581,8 @@
           <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes">⤢</button>
           <button type="button" class="zoom-btn" id="panel-toggle-btn" onclick="toggleHeaderCollapse()" aria-label="Hide / show header" title="Hide / show header">↕</button>
         </div>
-        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag to move · Edge dots to connect · Scroll to pan · Cmd-scroll to zoom · Space-drag to pan</span><span class="hint-mobile">Drag to move · Tap to connect · Pinch to zoom · Two fingers to pan</span></div>
+        <div id="marquee-rect" class="marquee-rect"></div>
+        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag to select · Edge dots to connect · Scroll to pan · Cmd-scroll to zoom · Space-drag to pan</span><span class="hint-mobile">Drag to move · Tap to connect · Pinch to zoom · Two fingers to pan</span></div>
         <button id="tour-help-btn" class="hidden" onclick="tourRestart()"
                 aria-label="Restart feature tour" title="Restart tour">?</button>
       </div>
@@ -1835,6 +1850,7 @@
     // (see the INTERACTIVE GUIDED TUTORIAL module). Never cache appState in a
     // long-lived closure — always read the binding at call time.
     let tutorialMode = false; // declared early: save() and other guards read it
+    let selectedNodeIds = new Set(); // Figma-style multi-selection
     let appState = loadState() || defaultState();
 
     // --- Persistence ---
@@ -2485,6 +2501,7 @@
       appState.cards.forEach(c => layer.appendChild(buildCardNode(c)));
       applyViewState();
       buildViewTabs();
+      applySelectionClasses();
     }
 
     // Distinct tiers currently present, ascending.
@@ -2707,9 +2724,14 @@
       const childCount = card.childIds.length;
       const sigCount = signalsUnder(card.id).length;
       const lightText = (card.tier === 3); // amber theme reads better with dark text
-      const themeQuality = card.tier === 3
-        ? `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`
-        : '';
+      let themeQuality = '';
+      if (card.tier === 3) {
+        themeQuality = `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`;
+      } else if (card.tier === 4) {
+        themeQuality = `<div class="quality-check"><em>Convergence test:</em> Does this sit at the intersection of all your patterns — not just summarize them?<br><em>Frame readiness:</em> Could "if this situation is approached as if it is [this]…" open new possibilities?</div>`;
+      } else if (card.tier >= 5) {
+        themeQuality = `<div class="quality-check"><em>Lens test:</em> Could someone outside your field understand this as a way of seeing the whole situation?</div>`;
+      }
       el.innerHTML = `
         <div class="hub-tag" style="color: ${color};">
           <span>${escapeHtml(label)}</span>
@@ -2870,45 +2892,64 @@
       input.focus();
     }
 
+    // ----- Marquee multi-selection helpers -----
+    function selectNode(id, additive) {
+      if (!additive) selectedNodeIds.clear();
+      selectedNodeIds.add(id);
+      applySelectionClasses();
+    }
+    function deselectAll() {
+      if (!selectedNodeIds.size) return;
+      selectedNodeIds.clear();
+      applySelectionClasses();
+    }
+    function toggleNodeSelection(id) {
+      if (selectedNodeIds.has(id)) selectedNodeIds.delete(id);
+      else selectedNodeIds.add(id);
+      applySelectionClasses();
+    }
+    function applySelectionClasses() {
+      document.querySelectorAll('.canvas-node.marquee-selected').forEach(n => n.classList.remove('marquee-selected'));
+      selectedNodeIds.forEach(id => {
+        const el = document.getElementById('node-' + id);
+        if (el) el.classList.add('marquee-selected');
+      });
+    }
+
     // ----- Node drag (move on canvas) -----
     function attachNodeDrag(el, nodeId) {
       el.querySelectorAll('.connect-handle').forEach(h => attachConnectDrag(h, nodeId));
 
       let pointerId = null;
       let startClientX = 0, startClientY = 0;
-      let startX = 0, startY = 0;
       let dragging = false;
       let raf = null;
 
       el.addEventListener('pointerdown', (e) => {
         if (e.target.closest('.connect-handle')) return;
-        // Don't start node drag from editable controls.
         if (e.target.closest('input, textarea, button')) return;
-        // Let space-pan and middle-mouse take over panning instead.
         if (spaceHeld || e.button === 1) return;
-        // Don't start node drag when two touch fingers are down (pinch mode).
         if (e.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) return;
         e.stopPropagation();
         pointerId = e.pointerId;
         startClientX = e.clientX;
         startClientY = e.clientY;
-        const p = getNodePos(nodeId);
-        startX = p.x; startY = p.y;
         el.setPointerCapture(pointerId);
         el.classList.add('lifted');
 
-        // Drag behavior (no auto-layout — everything stays where you drop it):
-        //  • top-level root → moves its whole connected network rigidly
-        //  • in-tree node or free signal → moves on its own, stays put
-        const hasParent = !!parentHubId(nodeId);
-        const isRoot = isHubId(nodeId) && !hasParent;
-        const subIds = isRoot ? subtreeNodeIds(nodeId) : [];
-        const subStart = {};
-        subIds.forEach(id => { subStart[id] = { ...getNodePos(id) }; });
+        // Multi-drag: if this node is already selected, drag all selected.
+        // Otherwise, select just this node (shift adds to selection).
+        if (!selectedNodeIds.has(nodeId)) {
+          if (!e.shiftKey) selectedNodeIds.clear();
+          selectedNodeIds.add(nodeId);
+          applySelectionClasses();
+        }
+        const dragIds = [...selectedNodeIds];
+        const dragStart = {};
+        dragIds.forEach(id => { dragStart[id] = { ...getNodePos(id) }; });
 
         const onMove = (ev) => {
           if (ev.pointerId !== pointerId) return;
-          // Second touch finger arrived — cancel this drag and let pinch take over.
           if (ev.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) {
             el.removeEventListener('pointermove', onMove);
             el.removeEventListener('pointerup', onUp);
@@ -2916,10 +2957,8 @@
             try { el.releasePointerCapture(pointerId); } catch (_) {}
             el.classList.remove('lifted', 'dragging');
             if (dragging) {
-              setNodePos(nodeId, startX, startY);
-              el.style.left = startX + 'px'; el.style.top = startY + 'px';
-              if (isRoot) subIds.forEach(id => {
-                const s = subStart[id];
+              dragIds.forEach(id => {
+                const s = dragStart[id];
                 setNodePos(id, s.x, s.y);
                 const cel = document.getElementById('node-' + id);
                 if (cel) { cel.style.left = s.x + 'px'; cel.style.top = s.y + 'px'; }
@@ -2938,25 +2977,16 @@
           const zoom = appState.view.zoom;
           const dx = (ev.clientX - startClientX) / zoom;
           const dy = (ev.clientY - startClientY) / zoom;
-          const nx = startX + dx;
-          const ny = startY + dy;
-          setNodePos(nodeId, nx, ny);
-          el.style.left = nx + 'px';
-          el.style.top = ny + 'px';
-          // Move the whole subtree rigidly with a dragged root.
-          if (isRoot) {
-            subIds.forEach(id => {
-              const s = subStart[id];
-              const ix = s.x + dx, iy = s.y + dy;
-              setNodePos(id, ix, iy);
-              const cel = document.getElementById('node-' + id);
-              if (cel) { cel.style.left = ix + 'px'; cel.style.top = iy + 'px'; }
-            });
-          }
+          dragIds.forEach(id => {
+            const s = dragStart[id];
+            const nx = s.x + dx, ny = s.y + dy;
+            setNodePos(id, nx, ny);
+            const cel = document.getElementById('node-' + id);
+            if (cel) { cel.style.left = nx + 'px'; cel.style.top = ny + 'px'; }
+          });
           if (!raf) raf = requestAnimationFrame(() => {
             raf = null;
-            updateEdgesForNode(nodeId);
-            if (isRoot) subIds.forEach(id => updateEdgesForNode(id));
+            dragIds.forEach(id => updateEdgesForNode(id));
           });
         };
         const onUp = (ev) => {
@@ -2971,11 +3001,17 @@
           if (dragging) {
             dragging = false;
             scheduleSave();
-            // Nodes stay exactly where the user dropped them — no auto-layout.
-          } else if (ev.pointerType !== 'mouse') {
-            // Tap on touch: select node so connect handles become visible.
-            document.querySelectorAll('.canvas-node.touch-selected').forEach(n => n.classList.remove('touch-selected'));
-            el.classList.add('touch-selected');
+          } else {
+            // Click (not drag): select/toggle this node
+            if (ev.pointerType !== 'mouse') {
+              document.querySelectorAll('.canvas-node.touch-selected').forEach(n => n.classList.remove('touch-selected'));
+              el.classList.add('touch-selected');
+            }
+            if (ev.shiftKey) {
+              toggleNodeSelection(nodeId);
+            } else {
+              selectNode(nodeId, false);
+            }
           }
         };
         el.addEventListener('pointermove', onMove);
@@ -3289,7 +3325,7 @@
         scheduleSave();
       }, { passive: false });
 
-      // Pan: pointerdown on the background (not on a node), OR space-held, OR middle-mouse.
+      // Pan + Marquee state
       let panning = false;
       let panPointerId = null;
       let startClientX = 0, startClientY = 0;
@@ -3298,55 +3334,118 @@
       let lastMoveTs = 0;
       let momentumRaf = null;
 
+      let marqueeStarting = false, marqueeActive = false;
+      let marqueePointerId = null;
+      let marqueeStartClientX = 0, marqueeStartClientY = 0;
+      let marqueeShift = false;
+      let marqueeJustEnded = false;
+      const marqueeEl = document.getElementById('marquee-rect');
+
       viewport.addEventListener('pointerdown', (e) => {
         if (e.target.closest('.zoom-toolbar')) return;
-        // Yield to pinch when two touch fingers are active.
         if (e.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) return;
         const onNode = !!e.target.closest('.canvas-node');
         const onEdge = !!(e.target.classList && e.target.classList.contains('edge-hit'));
         const isMiddle = e.button === 1;
         const forcePan = spaceHeld || isMiddle;
         if (onNode && !forcePan) return;
-        if (onEdge && !forcePan) return;  // let edge clicks through without panning
+        if (onEdge && !forcePan) return;
         e.preventDefault();
-        panning = true;
-        panPointerId = e.pointerId;
-        startClientX = e.clientX; startClientY = e.clientY;
-        startPanX = appState.view.panX; startPanY = appState.view.panY;
-        viewport.setPointerCapture(panPointerId);
-        viewport.classList.add('is-panning');
-        cancelMomentum();
         if (selectedEdgeId) { selectedEdgeId = null; renderAllEdges(); }
+
+        if (forcePan || e.pointerType !== 'mouse') {
+          // PAN (space-drag, middle-mouse, or touch)
+          panning = true;
+          panPointerId = e.pointerId;
+          startClientX = e.clientX; startClientY = e.clientY;
+          startPanX = appState.view.panX; startPanY = appState.view.panY;
+          viewport.setPointerCapture(panPointerId);
+          viewport.classList.add('is-panning');
+          cancelMomentum();
+        } else {
+          // MARQUEE (regular mouse on background)
+          marqueeStarting = true;
+          marqueePointerId = e.pointerId;
+          marqueeStartClientX = e.clientX;
+          marqueeStartClientY = e.clientY;
+          marqueeShift = e.shiftKey;
+          viewport.setPointerCapture(marqueePointerId);
+        }
       });
+
       viewport.addEventListener('pointermove', (e) => {
-        if (!panning || e.pointerId !== panPointerId) return;
-        // Cancel pan if a second touch lands (pinch taking over).
-        if (activeCanvasTouches.size >= 2) {
-          panning = false;
-          viewport.classList.remove('is-panning');
-          try { viewport.releasePointerCapture(panPointerId); } catch (_) {}
-          panPointerId = null;
+        // Pan movement
+        if (panning && e.pointerId === panPointerId) {
+          if (activeCanvasTouches.size >= 2) {
+            panning = false;
+            viewport.classList.remove('is-panning');
+            try { viewport.releasePointerCapture(panPointerId); } catch (_) {}
+            panPointerId = null;
+            return;
+          }
+          const now = performance.now();
+          const prevPanX = appState.view.panX, prevPanY = appState.view.panY;
+          appState.view.panX = startPanX + (e.clientX - startClientX);
+          appState.view.panY = startPanY + (e.clientY - startClientY);
+          const dt = Math.max(1, now - lastMoveTs);
+          lastVelX = (appState.view.panX - prevPanX) / dt;
+          lastVelY = (appState.view.panY - prevPanY) / dt;
+          lastMoveTs = now;
+          applyViewTransform();
           return;
         }
-        const now = performance.now();
-        const prevPanX = appState.view.panX, prevPanY = appState.view.panY;
-        appState.view.panX = startPanX + (e.clientX - startClientX);
-        appState.view.panY = startPanY + (e.clientY - startClientY);
-        const dt = Math.max(1, now - lastMoveTs);
-        lastVelX = (appState.view.panX - prevPanX) / dt;
-        lastVelY = (appState.view.panY - prevPanY) / dt;
-        lastMoveTs = now;
-        applyViewTransform();
+
+        // Marquee movement
+        if ((!marqueeStarting && !marqueeActive) || e.pointerId !== marqueePointerId) return;
+        if (marqueeStarting && !marqueeActive) {
+          const dx = Math.abs(e.clientX - marqueeStartClientX);
+          const dy = Math.abs(e.clientY - marqueeStartClientY);
+          if (dx < 3 && dy < 3) return;
+          marqueeActive = true;
+          marqueeStarting = false;
+          viewport.classList.add('is-marquee');
+          if (!marqueeShift) deselectAll();
+        }
+        const rect = viewport.getBoundingClientRect();
+        const x1 = marqueeStartClientX - rect.left;
+        const y1 = marqueeStartClientY - rect.top;
+        const x2 = e.clientX - rect.left;
+        const y2 = e.clientY - rect.top;
+        const left = Math.min(x1, x2), top = Math.min(y1, y2);
+        const width = Math.abs(x2 - x1), height = Math.abs(y2 - y1);
+        marqueeEl.style.display = 'block';
+        marqueeEl.style.left = left + 'px';
+        marqueeEl.style.top = top + 'px';
+        marqueeEl.style.width = width + 'px';
+        marqueeEl.style.height = height + 'px';
+
+        // Live hit-testing: convert marquee to canvas coordinates
+        const { panX, panY, zoom } = appState.view;
+        const wl = (left - panX) / zoom, wt = (top - panY) / zoom;
+        const wr = (left + width - panX) / zoom, wb = (top + height - panY) / zoom;
+        const temp = new Set(marqueeShift ? selectedNodeIds : []);
+        document.querySelectorAll('.canvas-node:not(.view-dim)').forEach(el => {
+          const id = el.getAttribute('data-node-id');
+          if (!id) return;
+          const pos = appState.nodes[id];
+          if (!pos) return;
+          const nw = el.offsetWidth, nh = el.offsetHeight;
+          if (pos.x + nw > wl && pos.x < wr && pos.y + nh > wt && pos.y < wb) {
+            temp.add(id);
+          }
+        });
+        selectedNodeIds = temp;
+        applySelectionClasses();
       });
+
       const endPan = (e) => {
         if (!panning || e.pointerId !== panPointerId) return;
         panning = false;
         try { viewport.releasePointerCapture(panPointerId); } catch (_) {}
         viewport.classList.remove('is-panning');
         panPointerId = null;
-        // Momentum
         if (Math.abs(lastVelX) > 0.2 || Math.abs(lastVelY) > 0.2) {
-          let vx = lastVelX * 16, vy = lastVelY * 16; // scale per-frame
+          let vx = lastVelX * 16, vy = lastVelY * 16;
           const step = () => {
             appState.view.panX += vx;
             appState.view.panY += vy;
@@ -3364,11 +3463,27 @@
           scheduleSave();
         }
       };
+      const endMarquee = (e) => {
+        if ((!marqueeStarting && !marqueeActive) || e.pointerId !== marqueePointerId) return;
+        const wasActive = marqueeActive;
+        marqueeStarting = false;
+        marqueeActive = false;
+        viewport.classList.remove('is-marquee');
+        try { viewport.releasePointerCapture(marqueePointerId); } catch (_) {}
+        marqueePointerId = null;
+        marqueeEl.style.display = 'none';
+        if (wasActive) {
+          marqueeJustEnded = true;
+          requestAnimationFrame(() => { marqueeJustEnded = false; });
+        } else if (!e.shiftKey) {
+          deselectAll();
+        }
+      };
       const cancelMomentum = () => {
         if (momentumRaf) { cancelAnimationFrame(momentumRaf); momentumRaf = null; }
       };
-      viewport.addEventListener('pointerup', endPan);
-      viewport.addEventListener('pointercancel', endPan);
+      viewport.addEventListener('pointerup', (e) => { endMarquee(e); endPan(e); });
+      viewport.addEventListener('pointercancel', (e) => { endMarquee(e); endPan(e); });
 
       // Window-level touch tracker (capture phase — fires before stopPropagation
       // and before pointer capture, so it sees ALL touch events including those
@@ -3433,8 +3548,10 @@
 
       // Click on background clears selection and touch-selection.
       viewport.addEventListener('click', (e) => {
-        if (e.target === viewport || e.target.id === 'canvas-world' || e.target.id === 'nodes-layer') {
+        if (marqueeJustEnded) return;
+        if (e.target === viewport || e.target.id === 'canvas-world' || e.target.id === 'nodes-layer' || e.target.id === 'marquee-rect') {
           document.querySelectorAll('.canvas-node.touch-selected').forEach(n => n.classList.remove('touch-selected'));
+          deselectAll();
           if (selectedEdgeId) { selectedEdgeId = null; renderAllEdges(); }
         }
       });
@@ -3471,7 +3588,19 @@
           }
           return;
         }
+        if (e.key === 'Escape' && !isTyping() && selectedNodeIds.size) {
+          e.preventDefault(); deselectAll(); return;
+        }
         if (isTyping()) return;
+        if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+          e.preventDefault();
+          document.querySelectorAll('.canvas-node:not(.view-dim)').forEach(el => {
+            const id = el.getAttribute('data-node-id');
+            if (id) selectedNodeIds.add(id);
+          });
+          applySelectionClasses();
+          return;
+        }
         if (e.metaKey || e.ctrlKey || e.altKey) return;
         switch (e.key) {
           case '+': case '=':
@@ -4320,26 +4449,30 @@
       }
     });
 
-    function formatHubForPrompt(hubId, depth, maxDepth) {
+    function formatTreeOutline(nodeId, depth, maxDepth) {
       const indent = '  '.repeat(depth);
       const lines = [];
-      const kids = childrenOfNode(hubId);
+      const c = findCard(nodeId);
+      if (c && depth > 0) {
+        lines.push(`${indent}• ${nodeLabel(nodeId)}: ${c.title || 'Untitled'}${c.description ? ' — ' + c.description : ''}`);
+      }
+      const kids = childrenOfNode(nodeId);
       kids.forEach(kid => {
         const item = appState.items.find(i => i.id === kid);
         if (item) {
-          lines.push(`${indent}• Signal "${item.title}" — ${item.summary}`);
+          lines.push(`${indent}  - Signal "${item.title}": ${item.summary}`);
           return;
         }
         const obj = findCard(kid);
         if (!obj) return;
-        const desc = obj.description ? ` — ${obj.description}` : '';
-        lines.push(`${indent}• ${nodeLabel(kid)} "${obj.title || 'Untitled'}"${desc}`);
-        if (depth < maxDepth) {
-          const sub = formatHubForPrompt(kid, depth + 1, maxDepth);
-          if (sub) lines.push(sub);
-        } else {
+        if (maxDepth != null && depth >= maxDepth) {
+          const desc = obj.description ? ` — ${obj.description}` : '';
+          lines.push(`${indent}  • ${nodeLabel(kid)}: ${obj.title || 'Untitled'}${desc}`);
           const leaves = allSignalsUnderHub(kid).length;
-          lines.push(`${indent}  (… ${leaves} signal${leaves === 1 ? '' : 's'} deeper)`);
+          if (leaves) lines.push(`${indent}    (… ${leaves} signal${leaves === 1 ? '' : 's'} deeper)`);
+        } else {
+          const sub = formatTreeOutline(kid, depth + 1, maxDepth);
+          if (sub) lines.push(sub);
         }
       });
       return lines.join('\n');
@@ -4362,12 +4495,24 @@
       if (t === 3) {
         return 'This is a Theme — a deeper universal that two or more patterns triangulate toward. A good theme bridges the human (cultural) domain and the technical or economic realm. Focus on the condition or force hidden beneath the surface of everyday professional life.';
       }
-      return `This is a ${tierName(t)} — a high-level convergence where the human and the structural meet, pointing toward how the whole situation might be framed. If this situation is approached as if it is [X], then [Y].`;
+      if (t === 4) {
+        return 'This is a Super-theme — a convergence where multiple patterns meet at a deeper level. Focus on what all constituent patterns share that none names on its own. A good super-theme is close to frame-ready: test it with "If this situation is approached as if it is [this super-theme], then ___" — does the sentence open new possibilities?';
+      }
+      return `This is a ${tierName(t)} — the highest convergence in your ladder, bridging multiple domains of human experience and structural forces. This should be close to frame-ready: a single lens that reorganizes everything below it. Test: could someone outside your field understand this as a way of seeing the whole situation?`;
     }
+
+    const AI_ROLE = `You are an expert critical theorist, design researcher, and qualitative sensemaking partner grounded in Kees Dorst's Frame Creation methodology. You are a thinking partner — you do not write the user's synthesis for them. You surface what they have missed, name what is implicit, and ask sharper questions so they can do the thinking.`;
+
+    const AI_RULES = `- Do NOT propose solutions, interventions, products, or features.
+- Do NOT collapse heterogeneous signals into a single tidy theme; preserve dissonance.
+- Be specific — name actors, contexts, mechanisms, and consequences; avoid jargon and category words like "ecosystem", "experience", "journey".
+- If the contents are too thin to answer well, say so explicitly and ask the user what is missing.`;
 
     // Three task / thinking / format blocks per mode. Each mode adds one rule.
     const HUB_PROMPT_MODES = {
       throughline: {
+        label: 'Through-line',
+        blurb: 'Find the mechanism connecting everything — not a category label, a causal force. Copy the prompt, argue with the response, come back with a point of view.',
         task: 'Help the user find the THROUGH-LINE of this {tierLabel} — the deep mechanism or shared condition that genuinely connects everything underneath, beyond any surface topic. A through-line is not a category label; it is the underlying mechanism, power structure, missing affordance, or human experience that the constituent elements triangulate toward.',
         thinking: [
           'Read each signal. Note the specific actor, action, and barrier.',
@@ -4389,6 +4534,8 @@ One question I must answer before locking this in.`,
         modeRule: 'Resist topical names. If the candidate sounds like a category, return to step 3.'
       },
       name: {
+        label: 'Name & describe',
+        blurb: 'Name the mechanism, not the topic. A good name is concrete and specific enough that a stranger would understand without seeing the signals.',
         task: 'Help the user write a precise NAME and DESCRIPTION for this {tierLabel}. A good name is ≤ 6 words, concrete, and points at the mechanism, not the topic. A good description is 1–2 sentences that name the actor, the mechanism, and the consequence.',
         thinking: [
           'Identify the actor (who feels the pain) and the mechanism (what makes the pain happen) common to most signals.',
@@ -4415,6 +4562,8 @@ The one question to answer before committing to a name.`,
         modeRule: '≤ 6 words per name; reject anything that sounds like a domain label.'
       },
       stress: {
+        label: 'Stress-test',
+        blurb: 'Challenge your framing — defend or revise. The AI will push back hard. If you agree with everything it says, you haven\'t thought hard enough yet.',
         task: "Stress-test the user's current framing of this {tierLabel}. Surface what is wrong, missing, or assumed. The goal is to make the user defend their clustering — not to validate it.",
         thinking: [
           'Read the working title + description as a claim.',
@@ -4449,19 +4598,15 @@ A single question the user must be able to answer to defend the current framing 
       const m = HUB_PROMPT_MODES[mode] || HUB_PROMPT_MODES.throughline;
       const task = m.task.replaceAll('{tierLabel}', label);
       const thinking = m.thinking.map((s, i) => `${i + 1}. ${s}`).join('\n');
-      const contents = formatHubForPrompt(hubId, 0, 2) || '(none yet)';
+      const contents = formatTreeOutline(hubId, 0, 4) || '(none yet)';
       return `<role>
-You are an expert critical theorist, design researcher, and qualitative
-sensemaking partner. You are a thinking partner — you do not write
-the user's synthesis for them. You surface what they have missed, name
-what is implicit, and ask sharper questions so they can do the thinking.
+${AI_ROLE}
 </role>
 
 <context>
-The user is in the "Synth Sprint" phase of a problematization workshop.
-They are triangulating observed friction signals into defensible problem
-spaces through patterns, themes, and super-themes. They are working on
-one ${label} in their web map.
+The user is triangulating observed friction signals into defensible problem
+spaces through a ladder of cards: evidence → patterns → themes → super-themes.
+They are working on one ${label} in their web map.
 
 ${tierFraming(tier, hubId)}
 </context>
@@ -4487,10 +4632,7 @@ ${m.output}
 </output_format>
 
 <rules>
-- Do NOT propose solutions, interventions, products, or features.
-- Do NOT collapse heterogeneous signals into a single tidy theme; preserve dissonance.
-- Be specific — name actors, contexts, mechanisms, and consequences; avoid jargon and category words like "ecosystem", "experience", "journey".
-- If the contents are too thin to answer well, say so explicitly and ask the user what is missing.
+${AI_RULES}
 - ${m.modeRule}
 </rules>`;
     }
@@ -4503,6 +4645,7 @@ ${m.output}
       const c = findCard(hubId);
       if (!c) return;
       currentAIHubId = hubId;
+      currentPoolMode = null;
       currentAIMode = mode || 'throughline';
       const tier = hubTier(hubId);
       const label = tierLabel(tier);
@@ -4510,12 +4653,20 @@ ${m.output}
       const blurb = document.getElementById('ai-modal-blurb');
       const tabs = document.getElementById('ai-mode-tabs');
       const ta = document.getElementById('ai-prompt-text');
+      const m = HUB_PROMPT_MODES[currentAIMode] || HUB_PROMPT_MODES.throughline;
       if (titleEl) titleEl.textContent = `AI thinking partner — ${label} "${c.title || 'Untitled'}"`;
-      if (blurb) blurb.textContent = 'Pick a direction below, then copy the prompt into your LLM. Read the response out loud. If you agree too easily, ask it to argue the opposite. Come back when you have a point of view, not just an answer.';
+      if (blurb) blurb.textContent = m.blurb;
       if (tabs) {
         tabs.classList.remove('hidden');
-        tabs.querySelectorAll('.ai-mode-tab').forEach(btn => {
-          btn.classList.toggle('is-active', btn.getAttribute('data-mode') === currentAIMode);
+        tabs.innerHTML = '';
+        Object.entries(HUB_PROMPT_MODES).forEach(([key, hm]) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.role = 'tab';
+          btn.setAttribute('data-mode', key);
+          btn.className = 'ai-mode-tab' + (key === currentAIMode ? ' is-active' : '');
+          btn.textContent = hm.label;
+          tabs.appendChild(btn);
         });
       }
       ta.value = buildHubPrompt(hubId, currentAIMode);
@@ -4523,10 +4674,23 @@ ${m.output}
     }
 
     function switchAIMode(mode) {
-      if (!currentAIHubId) return;
+      if (!currentAIHubId && !currentPoolMode) return;
       currentAIMode = mode;
       const ta = document.getElementById('ai-prompt-text');
-      ta.value = buildHubPrompt(currentAIHubId, mode);
+      if (currentPoolMode) {
+        ta.value = buildPoolPrompt(mode);
+        const pm = POOL_PROMPT_MODES[mode];
+        const blurb = document.getElementById('ai-modal-blurb');
+        if (blurb && pm) {
+          const hasSorted = Object.keys(appState.sorting.decisions || {}).length > 0;
+          blurb.textContent = hasSorted ? pm.blurbSorted : pm.blurbUnsorted;
+        }
+      } else {
+        ta.value = buildHubPrompt(currentAIHubId, mode);
+        const m = HUB_PROMPT_MODES[mode];
+        const blurb = document.getElementById('ai-modal-blurb');
+        if (blurb && m) blurb.textContent = m.blurb;
+      }
       document.querySelectorAll('#ai-mode-tabs .ai-mode-tab').forEach(btn => {
         btn.classList.toggle('is-active', btn.getAttribute('data-mode') === mode);
       });
@@ -4537,86 +4701,151 @@ ${m.output}
     // Back-compat shim — the old name is still wired to the hub buttons.
     function openHubNamePromptModal(hubId) { openHubAIModal(hubId, 'throughline'); }
 
-    function openAIPromptModal() {
-      currentAIHubId = null;
-      const tabs = document.getElementById('ai-mode-tabs');
-      if (tabs) tabs.classList.add('hidden');
-      const blurb = document.getElementById('ai-modal-blurb');
-      const titleEl = document.getElementById('ai-modal-title');
-      const t = document.getElementById('ai-prompt-text');
+    let currentPoolMode = null;
 
+    const POOL_PROMPT_MODES = {
+      landscape: {
+        label: 'Landscape',
+        blurbSorted: 'Your sorting decisions are data. This prompt uses what you kept, elevated, and discarded to help you begin triangulating.',
+        blurbUnsorted: 'See the landscape before you start triangulating. When it names patterns, ask: is this what the data says, or what the model assumes?'
+      },
+      stress: {
+        label: 'Stress-test sorting',
+        blurbSorted: 'Challenge why you sorted the way you did. What assumptions drove your super / signal / noise split?',
+        blurbUnsorted: 'Before you start sorting, surface the biases that will shape your decisions.'
+      },
+      bridge: {
+        label: 'Find bridges',
+        blurbSorted: 'Look for mechanism-level connections between signals that seem unrelated on the surface.',
+        blurbUnsorted: 'Scan for structural connections that cross contexts, stakeholders, or domains.'
+      }
+    };
+
+    function poolSignalData() {
       const decisions = appState.sorting.decisions || {};
       const hasSorted = Object.keys(decisions).length > 0;
-
       const superItems = appState.items.filter(i => decisions[i.id] === 'super');
       const signalItems = appState.items.filter(i => decisions[i.id] === 'signal' || (!decisions[i.id] && !hasSorted));
       const noiseItems = appState.items.filter(i => decisions[i.id] === 'noise');
       const unsortedItems = hasSorted ? appState.items.filter(i => !decisions[i.id]) : [];
-
       const formatList = (items) => items.map(i => `  - "${i.title}": ${i.summary}`).join('\n') || '  (none)';
+      return { hasSorted, superItems, signalItems, noiseItems, unsortedItems, formatList };
+    }
 
-      let p;
-      if (hasSorted) {
-        if (blurb) blurb.textContent = 'Your sorting decisions are data. This prompt uses what you kept, what you elevated, and what you discarded to help you begin triangulating. Copy it into your LLM — then push back on every pattern it names.';
-        if (titleEl) titleEl.textContent = 'Triangulate from your sorted signals';
-
-        p = `<role>
-You are an expert in Kees Dorst's Frame Creation methodology — specifically
-the Archaeology, Field, and Themes stages. You are a thinking partner who
-helps practitioners triangulate from raw signals through named patterns to
-deeper themes. You do not write the user's synthesis. You surface what they
-have missed and ask sharper questions.
-</role>
-
-<context>
-The user has completed the signal-sorting phase of a Frame Creation workshop.
-They sorted ${appState.items.length} friction signals into three categories:
-- SUPER SIGNALS (${superItems.length}): Evidence they consider most urgent or revelatory
-- SIGNALS (${signalItems.length + unsortedItems.length}): Evidence they consider meaningful and relevant
-- NOISE (${noiseItems.length}): Evidence they set aside as not relevant
-
-In Dorst's model, the next step is triangulation: grouping signals to reveal
-named patterns (specific conditions no single signal names directly), then
-grouping patterns to reveal themes (deeper universals that bridge human
-experience and structural/systemic factors).
-</context>
-
-<super_signals count="${superItems.length}">
-${formatList(superItems)}
+    function poolSignalBlock(d) {
+      if (d.hasSorted) {
+        return `<super_signals count="${d.superItems.length}">
+${d.formatList(d.superItems)}
 </super_signals>
 
-<signals count="${signalItems.length + unsortedItems.length}">
-${formatList([...signalItems, ...unsortedItems])}
+<signals count="${d.signalItems.length + d.unsortedItems.length}">
+${d.formatList([...d.signalItems, ...d.unsortedItems])}
 </signals>
 
-<noise count="${noiseItems.length}">
-${formatList(noiseItems)}
-</noise>
+<noise count="${d.noiseItems.length}">
+${d.formatList(d.noiseItems)}
+</noise>`;
+      }
+      return `<signals count="${appState.items.length}">
+${d.formatList(appState.items)}
+</signals>`;
+    }
 
-<task>
-Analyze the user's sorting decisions and help them begin triangulation:
+    function buildPoolPrompt(mode) {
+      const d = poolSignalData();
+      const signals = poolSignalBlock(d);
+      const context = d.hasSorted
+        ? `The user sorted ${appState.items.length} friction signals into three categories:\n- SUPER SIGNALS (${d.superItems.length}): most urgent or revelatory\n- SIGNALS (${d.signalItems.length + d.unsortedItems.length}): meaningful and relevant\n- NOISE (${d.noiseItems.length}): set aside as not relevant`
+        : `The user has ${appState.items.length} friction signals — raw evidence from the field, not yet sorted.`;
 
-1. WHAT THE SORTING REVEALS — What does the user's instinct tell us? What
-   connects the super signals? What pattern emerges from what they kept vs.
-   what they discarded? Is there signal hiding in the noise?
+      let task, output, modeRule;
+      if (mode === 'stress') {
+        if (d.hasSorted) {
+          task = `Challenge the user's sorting instincts. Surface the assumptions and biases driving their decisions:
 
-2. CANDIDATE PATTERNS (3–5) — Name specific conditions that two or more
-   signals triangulate toward. Each pattern should name a mechanism, not a
-   topic. For each, list which signals point toward it. Prioritize super
-   signals but draw from the full kept pool.
+1. SORTING BIASES — What pattern in the sorting itself is visible? What kinds of evidence consistently land in noise? What kinds get elevated to super?
 
-3. THE OVERLOOKED — Is there a signal in the noise pile that would
-   complicate or strengthen a candidate pattern? Name it specifically.
+2. WEAKEST SUPER SIGNAL — Which super signal is most defensible and which is most vulnerable? Why did the user elevate it — urgency, emotional resonance, or genuine analytical weight?
 
-4. TRIANGULATION QUESTIONS — Ask 2 sharp questions that force the user
-   to defend their sorting and begin grouping. These should be mechanism-
-   level, not topic-level.
-</task>
+3. SIGNAL HIDING IN NOISE — Identify 2–3 noise items that, if reconsidered, would most complicate or strengthen the emerging picture. Explain the mechanism each would reveal.
 
-<output_format>
-## What your sorting reveals
-2–3 sentences. What does your emphasis on the super signals tell us about
-your instincts? What might you be avoiding in the noise?
+4. THE UNCOMFORTABLE QUESTION — Ask one question the user is avoiding by sorting the way they did.`;
+          output = `## What your sorting says about you
+2–3 sentences on the pattern in the sorting decisions themselves.
+
+## Weakest super signal
+Name it, explain why it might not deserve elevation, and what changes if you demote it.
+
+## Strongest noise signal
+Name 2–3 noise items worth reconsidering. For each: which pattern would it create or destroy?
+
+## The question you're avoiding
+One question, ≤ 30 words. Name the discomfort.`;
+        } else {
+          task = `Before the user begins sorting, surface the biases that will shape their decisions:
+
+1. EXPECTED PATTERNS — What patterns will the user likely see before reading carefully? Name 2–3 and explain why they are predictable.
+
+2. LIKELY NOISE — Which signals will most tempt the user to dismiss, and what mechanism would be lost?
+
+3. STRUCTURAL BLIND SPOTS — What economic, geographic, demographic, or technological assumptions will shape what looks like "noise" vs. "signal"?
+
+4. THE PRE-SORTING CHALLENGE — Ask one question the user should answer before they start swiping.`;
+          output = `## Patterns you'll see too easily
+2–3 expected patterns and why they are low-hanging fruit.
+
+## Signals most likely to be dismissed
+2–3 signals that look like noise but may contain a mechanism worth preserving.
+
+## Structural blind spots
+3 bullets — economic / geographic / demographic / technological.
+
+## Before you swipe
+One question to answer first. ≤ 30 words.`;
+        }
+        modeRule = 'Do not reassure. The goal is to surface blind spots before they harden into assumptions.';
+      } else if (mode === 'bridge') {
+        task = `Find non-obvious structural connections between signals that seem unrelated on the surface:
+
+1. CROSS-CONTEXT BRIDGES (2–3) — Identify pairs or groups of signals from different contexts (different stakeholders, different geographies, different scales) that share a deep structural mechanism. Name the mechanism.
+
+2. THE HIDDEN ACTOR — Is there a stakeholder, institution, or force that appears across multiple signals but is never named directly? Name it and trace its influence.
+
+3. DOMAIN CROSSINGS — Identify 1–2 connections that bridge the human/cultural domain and the structural/economic domain. These are the seeds of defensible themes.
+
+4. BRIDGING QUESTIONS — Ask 2 questions that force the user to look across their signal pool rather than within clusters.`;
+        output = `## Cross-context bridges
+For each (2–3):
+**Bridge:** 1 sentence naming the shared mechanism.
+**Signals it connects:** 2–4 signal titles from different contexts.
+**Why this matters:** What becomes visible when you see them together?
+
+## The hidden actor
+Name the unnamed stakeholder or force, and trace which signals it touches.
+
+## Domain crossings
+For each (1–2):
+**Human side:** which signal names a lived experience.
+**Structural side:** which signal names an institutional or economic condition.
+**The bridge:** what connects them at the mechanism level.
+
+## Two bridging questions
+Numbered. ≤ 30 words each. Force the user to look across, not within.`;
+        modeRule = 'Prioritize connections that cross contexts over connections within a single domain.';
+      } else {
+        // landscape (default)
+        if (d.hasSorted) {
+          task = `Analyze the user's sorting decisions and help them begin triangulation:
+
+1. WHAT THE SORTING REVEALS — What does the user's instinct tell us? What connects the super signals? What pattern emerges from what they kept vs. what they discarded? Is there signal hiding in the noise?
+
+2. CANDIDATE PATTERNS (3–5) — Name specific conditions that two or more signals triangulate toward. Each pattern should name a mechanism, not a topic. For each, list which signals point toward it. Prioritize super signals but draw from the full kept pool.
+
+3. THE OVERLOOKED — Is there a signal in the noise pile that would complicate or strengthen a candidate pattern? Name it specifically.
+
+4. TRIANGULATION QUESTIONS — Ask 2 sharp questions that force the user to defend their sorting and begin grouping. These should be mechanism-level, not topic-level.`;
+          output = `## What your sorting reveals
+2–3 sentences. What does your emphasis on the super signals tell us about your instincts? What might you be avoiding in the noise?
 
 ## Candidate patterns
 For each (3–5):
@@ -4628,61 +4857,22 @@ For each (3–5):
 1–2 signals from the noise pile worth reconsidering, and why.
 
 ## Two questions for triangulation
-Numbered. ≤ 30 words each. Force a defense.
-</output_format>
+Numbered. ≤ 30 words each. Force a defense.`;
+        } else {
+          task = `Read every signal and help the user prepare for triangulation:
 
-<rules>
-- Do NOT group by topic. Group by mechanism — the underlying condition,
-  barrier, or structural force.
-- Do NOT propose solutions, products, or interventions.
-- The user's sorting is data, not error. Respect their instincts but
-  challenge their blind spots.
-- Be specific — name signals by title, not by category.
-- Preserve dissonance — if two signals seem to belong together but
-  actually point at opposed mechanisms, say so.
-</rules>`;
-      } else {
-        if (blurb) blurb.textContent = 'Copy this prompt into your LLM to see the landscape before you start triangulating. When it names patterns, ask yourself: is this what the data says, or what the model assumes?';
-        if (titleEl) titleEl.textContent = 'Explore the full signal pool';
+1. LANDSCAPE — Which signals are loudest, most urgent, most repeated? Summarize the terrain in 2–4 sentences.
 
-        p = `<role>
-You are an expert in Kees Dorst's Frame Creation methodology — specifically
-the Archaeology, Field, and Themes stages. You are a thinking partner who
-helps practitioners triangulate from raw signals through named patterns to
-deeper themes. You do not write the user's synthesis. You surface what they
-have missed and ask sharper questions.
-</role>
+2. CANDIDATE PATTERNS (3–5) — Name specific conditions that two or more signals triangulate toward. Each pattern should name a mechanism, not a topic. For each, list which signals point toward it.
 
-<context>
-The user is beginning the triangulation phase of a Frame Creation workshop.
-They have ${appState.items.length} friction signals — raw evidence from the
-field. Their task is to find named patterns (specific conditions that two or
-more signals point toward) and then triangulate those patterns into deeper
-themes (universals that bridge human experience and structural factors).
-</context>
+3. UNEXPECTED THROUGHLINES — Name 1–2 structural connections that cross seemingly different contexts. These should be mechanism-level.
 
-<signals count="${appState.items.length}">
-${formatList(appState.items)}
-</signals>
+4. SELF-CHECK — Before reading the AI's patterns, what 2 patterns did you expect to find? Name them so you can catch confirmation bias when it shows up.
 
-<task>
-Read every signal and help the user prepare for triangulation:
+5. TRIANGULATION QUESTIONS — Ask 2 sharp questions that force the user to defend their groupings, not validate them.`;
+          output = `## Before you read further
+Pause. Write down 2 patterns you EXPECT to find. Naming your assumptions makes it harder for them to hide.
 
-1. LANDSCAPE — Which signals are loudest, most urgent, most repeated?
-   Summarize the terrain in 2–4 sentences.
-
-2. CANDIDATE PATTERNS (3–5) — Name specific conditions that two or more
-   signals triangulate toward. Each pattern should name a mechanism, not
-   a topic. For each, list which signals point toward it.
-
-3. UNEXPECTED THROUGHLINES — Name 1–2 structural connections that cross
-   seemingly different contexts. These should be mechanism-level.
-
-4. TRIANGULATION QUESTIONS — Ask 2 sharp questions that force the user
-   to defend their groupings, not validate them.
-</task>
-
-<output_format>
 ## Landscape
 2–4 sentences naming the loudest signals and major terrain.
 
@@ -4699,20 +4889,68 @@ For each (1–2):
 **Why this is non-obvious:** 1 sentence.
 
 ## Two questions for the user
-Numbered. ≤ 30 words each. Force a defense.
+Numbered. ≤ 30 words each. Force a defense.`;
+        }
+        modeRule = "The user's sorting is data, not error. Respect their instincts but challenge their blind spots.";
+      }
+
+      return `<role>
+${AI_ROLE}
+</role>
+
+<context>
+${context}
+
+In Dorst's Frame Creation model, the next step is triangulation: grouping signals
+to reveal named patterns (specific conditions no single signal names directly),
+then grouping patterns to reveal themes (deeper universals that bridge human
+experience and structural/systemic factors).
+</context>
+
+${signals}
+
+<task>
+${task}
+</task>
+
+<output_format>
+${output}
 </output_format>
 
 <rules>
-- Do NOT group by topic. Group by mechanism — the underlying condition,
-  barrier, or structural force.
-- Do NOT propose solutions, products, or interventions.
-- Be specific — name signals by title, not by category.
-- Preserve dissonance — if two signals seem to belong together but
-  actually point at opposed mechanisms, say so.
+${AI_RULES}
+- ${modeRule}
 </rules>`;
-      }
+    }
 
-      t.value = p;
+    function openAIPromptModal(mode) {
+      currentAIHubId = null;
+      currentPoolMode = mode || 'landscape';
+      currentAIMode = currentPoolMode;
+      const d = poolSignalData();
+      const pm = POOL_PROMPT_MODES[currentPoolMode];
+
+      const titleEl = document.getElementById('ai-modal-title');
+      const blurb = document.getElementById('ai-modal-blurb');
+      const tabs = document.getElementById('ai-mode-tabs');
+      const ta = document.getElementById('ai-prompt-text');
+
+      if (titleEl) titleEl.textContent = d.hasSorted ? 'Triangulate from your sorted signals' : 'Explore the full signal pool';
+      if (blurb) blurb.textContent = d.hasSorted ? pm.blurbSorted : pm.blurbUnsorted;
+      if (tabs) {
+        tabs.classList.remove('hidden');
+        tabs.innerHTML = '';
+        Object.entries(POOL_PROMPT_MODES).forEach(([key, m]) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.role = 'tab';
+          btn.setAttribute('data-mode', key);
+          btn.className = 'ai-mode-tab' + (key === currentPoolMode ? ' is-active' : '');
+          btn.textContent = m.label;
+          tabs.appendChild(btn);
+        });
+      }
+      ta.value = buildPoolPrompt(currentPoolMode);
       openModal('ai-modal');
     }
 
@@ -4775,43 +5013,155 @@ Numbered. ≤ 30 words each. Force a defense.
 
     // --- Problem Situation evidence trail + AI prompts ---
     // Compact outline of the whole ladder (top-level cards → … → signals).
-    function formatCardOutline(id, depth) {
-      const c = findCard(id);
-      if (!c) return '';
-      const indent = '  '.repeat(depth);
-      const lines = [`${indent}• ${nodeLabel(id)}: ${c.title || 'Untitled'}${c.description ? ' — ' + c.description : ''}`];
-      c.childIds.forEach(kid => {
-        if (isSignalId(kid)) {
-          const it = appState.items.find(i => i.id === kid);
-          if (it) lines.push(`${indent}    - Signal "${it.title}": ${it.summary}`);
-        } else {
-          const sub = formatCardOutline(kid, depth + 1);
-          if (sub) lines.push(sub);
-        }
-      });
-      return lines.join('\n');
-    }
+    function formatCardOutline(id, depth) { return formatTreeOutline(id, depth); }
     function situationEvidenceText() {
       const tops = topLevelCards().filter(c => (c.title || '').trim() || c.childIds.length);
       if (!tops.length) return '(no cards yet)';
-      return tops.map(c => formatCardOutline(c.id, 0)).join('\n');
+      return tops.map(c => formatTreeOutline(c.id, 0)).join('\n');
     }
+
+    const SITUATION_PROMPT_KINDS = {
+      frame: {
+        task: 'Help me articulate a FRAME for this situation. A frame is a proposed new way of seeing: "If this situation is approached AS IF it is [X], then [Y] follows."',
+        thinking: [
+          'Read the full evidence trail. Identify the 2–3 deepest tensions or paradoxes.',
+          'For each tension, ask: what metaphor or analogy from ANOTHER domain reorganizes this evidence?',
+          'Test each candidate frame: does [Y] name something that was previously unthinkable or invisible?',
+          'Ask: what would Kees Dorst ask here? He would ask which frame creates the most NEW possibilities, not which fits most neatly.'
+        ],
+        output: `## Candidate frames (2–3)
+For each:
+**Frame:** "If this situation is approached as if it is [X]…"
+**Then:** what becomes thinkable or actionable that was not before.
+**Evidence that supports it:** 2–3 cards/themes by name.
+**Evidence that resists it:** 1–2 cards that don't fit.
+
+## Most generative frame
+Name it and explain why — not because it fits best, but because it opens the most new possibilities.
+
+## What would Dorst ask?
+One question that forces you to defend the frame as a genuine reorientation, not a restatement.`,
+        modeRule: 'Frames are metaphors from other domains — NOT restatements of the themes. Do NOT propose solutions; propose ways of seeing.'
+      },
+      stakeholder: {
+        task: 'Help me build a robust Stakeholder Map for this whole situation. Identify who is involved, affected, empowered, or excluded — without trying to solve anything.',
+        thinking: [
+          'Read the evidence trail. For each theme/pattern, identify whose voice is present and whose is absent.',
+          'Classify stakeholders into: inner-circle (already involved, necessary), wider-field (not yet involved, influential), possible owners/clients (could own or buy resolution), gatekeepers/blockers.',
+          'For each stakeholder, name their likely currency (what they trade in: attention, budget, authority, lived experience).',
+          'Identify the stakeholder whose absence most weakens the framing.'
+        ],
+        output: `## Inner-circle players
+For each: Name, Role, Currency, Why they are necessary.
+
+## Wider-field players
+For each: Name/type, Potential influence, What would bring them in.
+
+## Possible owners/clients
+For each: Who, Why they might own this, What they would need to see.
+
+## Gatekeepers & blockers
+For each: Who, What they control, How an enabler could reach the affected.
+
+## The missing voice
+The one stakeholder whose absence most weakens the current framing, and what they would likely complicate.`,
+        modeRule: 'Do NOT conflate stakeholders with job titles — name practices and currencies. The user\'s own organization is a stakeholder too.'
+      },
+      problematize: {
+        task: 'Problematize this situation. Complicate my understanding and surface systemic roots, hidden assumptions, and beneficiaries of the status quo.',
+        thinking: [
+          'Read the framing and evidence. Identify what the user takes for granted.',
+          'Ask: if this situation persists indefinitely, who benefits? Follow the incentives.',
+          'Identify structural biases: economic (growth, market logic), geographic (urban/Western), demographic (who is the default "user"), technological (what tools are assumed).',
+          'Find where the evidence is thin or one-sided — where is the user relying on a single signal or a single stakeholder perspective?'
+        ],
+        output: `## Hidden assumptions
+3–4 bullets. Name each assumption explicitly (economic, geographic, demographic, technological).
+
+## Who benefits from the status quo?
+2–3 bullets. Name the actors and the mechanism of their benefit.
+
+## Where the evidence is thin
+2–3 bullets. Name specific gaps — missing perspectives, single-source claims, unverified patterns.
+
+## The strongest counter-framing
+1–2 sentences proposing an alternative reading of the same evidence that contradicts your framing.
+
+## The one question
+A single question you must answer to defend this framing as-is.`,
+        modeRule: 'Do not soften criticisms — the user benefits from being challenged, not reassured.'
+      },
+      interview: {
+        task: 'Help me prepare to investigate this situation through interviews with the people behind these signals. They have ground truth I cannot guess.',
+        thinking: [
+          'Identify the 3–5 most load-bearing signals — those that, if wrong or differently nuanced, would most change the framing.',
+          'For each, draft one open-ended question that surfaces what the contributor actually meant, not what the researcher projected.',
+          'Identify edge cases and missing voices that could break the framing.',
+          'Suggest secondary research fields that could ground this in established evidence.'
+        ],
+        output: `## Interview plan
+For each of 3–5 key signals:
+**Signal:** title
+**Question:** one open-ended question (no leading, no yes/no)
+**Why this matters:** what it would change if the answer surprises you.
+
+## Complicating factors
+3–4 edge cases, missing voices, or contrarian data points that might break the framing.
+
+## Secondary research
+2–3 fields or bodies of literature to consult, with a specific reason for each.`,
+        modeRule: 'Interview questions must be open-ended — no leading questions, no yes/no. Do NOT assume what the interviewee will say.'
+      }
+    };
 
     function buildSituationPrompt(kind) {
       const s = appState.situation;
       const title = s.title || appState.settings.title || 'this problem situation';
       const evidence = situationEvidenceText();
-      const intro = `I am framing a PROBLEM SITUATION — an open, complex, networked, dynamic condition (in Kees Dorst's Frame Creation sense), not a bounded problem.\n\nWorking title: ${title}\nMy current description: ${s.description || '(none yet)'}\n\nI built it by triangulating friction signals up a ladder of cards (evidence → pattern → theme → …). The full evidence trail:\n\n${evidence}\n\n`;
-      if (kind === 'stakeholder') {
-        return `Act as an expert design researcher and systems thinker.\n\n${intro}Help me build a robust Stakeholder Map for this whole situation. Do not try to solve it. Identify, across all the evidence above:\n1. Inner-circle players — already involved, necessary to any resolution.\n2. Wider-field players — not yet involved but with potential influence.\n3. Possible owners/clients — who could own this situation or buy its resolution.\n4. Gatekeepers / blockers and the enablers who can reach the affected.`;
-      }
-      if (kind === 'problematize') {
-        return `Act as a critical theorist and problem-space analyst.\n\n${intro}Help me problematize this situation. Complicate my understanding and look for systemic roots:\n1. What hidden assumptions are baked into how I've framed this?\n2. If this situation persists, who benefits from the status quo?\n3. What structural biases (economic, geographic, demographic, technological) are embedded here?\n4. Where is my evidence thin or one-sided?`;
-      }
-      if (kind === 'frame') {
-        return `Act as a Frame Creation facilitator grounded in Kees Dorst's methodology.\n\n${intro}Help me articulate a FRAME for this situation. A frame is a proposed new way of seeing: "If this situation is approached AS IF it is [X], then [Y] follows." \n1. Propose 2–3 candidate frames ([X]) that reorganize the evidence in a non-obvious way — each is a metaphor or analogy from another domain, not a restatement.\n2. For each, spell out what [Y] would follow — what becomes thinkable or actionable.\n3. Note which frame is most generative and why. Do NOT propose solutions; propose ways of seeing.`;
-      }
-      return `Act as a research strategist helping me prepare to investigate this situation.\n\n${intro}My first step is to interview the people behind these signals — they have ground truth I can't guess. Help me with:\n1. Interview Plan: for the most load-bearing signals, one open-ended question each to surface what the contributor actually meant.\n2. Complicating Factors: edge cases, missing voices, or contrarian data that might break my framing.\n3. Secondary Research: fields or literature to ground this in established evidence.`;
+      const k = SITUATION_PROMPT_KINDS[kind];
+      if (!k) return '';
+      const thinking = k.thinking.map((s, i) => `${i + 1}. ${s}`).join('\n');
+      const currentState = [
+        `Working title: ${title}`,
+        `Description: ${s.description || '(none yet)'}`,
+        s.frame ? `Current frame: ${s.frame}` : null,
+        s.stakeholderMap ? `Stakeholder notes: ${s.stakeholderMap}` : null
+      ].filter(Boolean).join('\n');
+
+      return `<role>
+${AI_ROLE}
+</role>
+
+<context>
+The user is framing a PROBLEM SITUATION — an open, complex, networked,
+dynamic condition (in Kees Dorst's Frame Creation sense), not a bounded problem.
+They built it by triangulating friction signals up a ladder of cards
+(evidence → pattern → theme → …).
+</context>
+
+<current_state>
+${currentState}
+</current_state>
+
+<evidence_trail>
+${evidence}
+</evidence_trail>
+
+<task>${k.task}</task>
+
+<thinking_steps>
+Before producing output, work through these steps internally:
+${thinking}
+</thinking_steps>
+
+<output_format>
+${k.output}
+</output_format>
+
+<rules>
+${AI_RULES}
+- ${k.modeRule}
+</rules>`;
     }
 
     // --- Push to Problem Situation ---
