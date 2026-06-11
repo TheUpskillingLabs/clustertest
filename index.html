@@ -1278,6 +1278,62 @@
     #tour-overlay.tour-entering { animation: tour-fade-in 0.22s ease forwards; }
 
 
+    /* ======================== SORTING SCREEN ======================== */
+    #sorting-screen { display: flex; align-items: center; justify-content: center; height: 100vh; height: 100dvh; background: var(--midnight); }
+    .sorting-container { width: 100%; max-width: 480px; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .sorting-header { display: flex; align-items: flex-start; gap: 16px; width: 100%; margin-bottom: 8px; }
+    .sorting-header h2 { font-size: 1.4rem; font-weight: 700; color: var(--ghost-white); margin: 0; }
+    .sorting-subtitle { font-size: 0.85rem; color: var(--cloud); opacity: 0.8; margin-top: 4px; }
+    .sorting-subtitle strong { color: var(--ghost-white); }
+    .sorting-back-btn { flex-shrink: 0; margin-top: 2px; }
+    .sorting-progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+    .sorting-progress-fill { height: 100%; background: var(--primary-teal); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+    .sorting-counter { font-size: 0.8rem; color: var(--cloud); opacity: 0.7; }
+    .sorting-arena { position: relative; width: 100%; aspect-ratio: 3/4; max-height: 420px; display: flex; align-items: center; justify-content: center; }
+    .sort-zone { position: absolute; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; z-index: 0; }
+    .sort-zone.active { opacity: 1; }
+    .sort-zone-left { left: 0; top: 0; bottom: 0; width: 80px; background: linear-gradient(to right, rgba(238,28,37,0.25), transparent); border-radius: 12px 0 0 12px; }
+    .sort-zone-right { right: 0; top: 0; bottom: 0; width: 80px; background: linear-gradient(to left, rgba(0,148,160,0.25), transparent); border-radius: 0 12px 12px 0; }
+    .sort-zone-top { left: 0; right: 0; top: 0; height: 80px; background: linear-gradient(to bottom, rgba(244,180,0,0.3), transparent); border-radius: 12px 12px 0 0; }
+    .sort-zone-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ghost-white); opacity: 0.9; }
+    .sort-card { position: relative; z-index: 1; width: 320px; max-width: 90%; background: var(--ghost-white); border-radius: 16px; padding: 28px 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); cursor: grab; touch-action: none; user-select: none; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease; }
+    .sort-card.dragging { cursor: grabbing; transition: none; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+    .sort-card.exit-right { transform: translateX(140%) rotate(12deg); opacity: 0; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease; pointer-events: none; }
+    .sort-card.exit-left { transform: translateX(-140%) rotate(-12deg); opacity: 0; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease; pointer-events: none; }
+    .sort-card.exit-up { transform: translateY(-140%) scale(1.08); opacity: 0; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease; pointer-events: none; }
+    .sort-card-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary-teal); margin-bottom: 8px; }
+    .sort-card-title { font-size: 1.1rem; font-weight: 700; color: var(--midnight); margin: 0 0 10px 0; line-height: 1.3; }
+    .sort-card-desc { font-size: 0.85rem; color: var(--midnight); opacity: 0.75; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+    .sort-card-number { position: absolute; bottom: 12px; right: 16px; font-size: 0.7rem; color: var(--cloud); }
+    .sorting-actions { display: flex; gap: 12px; width: 100%; }
+    .sorting-btn { flex: 1; padding: 14px 8px; font-size: 0.85rem; font-weight: 700; border-radius: 10px; border: 2px solid; cursor: pointer; transition: all 0.15s ease; }
+    .sorting-btn-noise { background: transparent; color: var(--action-red); border-color: var(--action-red); }
+    .sorting-btn-noise:hover { background: var(--action-red); color: var(--ghost-white); }
+    .sorting-btn-signal { background: var(--primary-teal); color: var(--ghost-white); border-color: var(--primary-teal); }
+    .sorting-btn-signal:hover { filter: brightness(1.1); }
+    .sorting-btn-super { background: transparent; color: #f4b400; border-color: #f4b400; }
+    .sorting-btn-super:hover { background: #f4b400; color: var(--midnight); }
+    .sorting-undo-row { width: 100%; display: flex; justify-content: center; }
+    .sorting-undo { font-size: 0.8rem; opacity: 0.7; }
+    .sorting-undo:disabled { opacity: 0.3; cursor: not-allowed; }
+    .sorting-complete { text-align: center; width: 100%; padding: 20px 0; }
+    .sorting-complete h3 { font-size: 1.3rem; color: var(--ghost-white); margin-bottom: 12px; }
+    .sorting-summary { font-size: 0.95rem; color: var(--cloud); line-height: 1.6; margin-bottom: 8px; }
+    .sorting-reflection { font-size: 0.85rem; color: var(--primary-teal); font-style: italic; margin-bottom: 24px; }
+
+    .signal-node.super-signal { border-left: 3px solid #f4b400; box-shadow: 0 2px 8px rgba(244,180,0,0.2); }
+    .signal-node.super-signal .card-tag { color: #f4b400; }
+
+    .quality-check { font-size: 0.65rem; color: rgba(255,255,255,0.55); line-height: 1.5; padding: 6px 8px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .quality-check em { color: rgba(255,255,255,0.75); font-style: normal; font-weight: 600; }
+
+    @media (max-width: 480px) {
+      .sorting-container { padding: 16px; }
+      .sort-card { width: 280px; padding: 22px 18px; }
+      .sorting-actions { gap: 8px; }
+      .sorting-btn { padding: 12px 6px; font-size: 0.8rem; }
+    }
+
     @media print {
       body { background: var(--ghost-white); overflow: visible; height: auto; }
       .artifact-actions, .next-steps-section, .upskill-banner, .submission-actions, .peer-review-section { display: none !important; }
@@ -1300,7 +1356,7 @@
 
       <div class="upskill-banner">
         <h3>Synth Sprint — Lab Day 1</h3>
-        <p>You're about to sort through a pool of friction signals and triangulate your way to a defensible problem space. The AI here is a thinking partner — but you drive the conversation. Copy the prompts this tool generates, paste them into your LLM of choice, and push back on every answer until you believe it. The AI's job is to surface what you missed. Your job is to decide what matters.</p>
+        <p>You're about to sort through a pool of friction signals and triangulate your way to defensible patterns, themes, and super-themes. The AI here is a thinking partner — but you drive the conversation. Copy the prompts this tool generates, paste them into your LLM of choice, and push back on every answer until you believe it. The AI's job is to surface what you missed. Your job is to decide what matters.</p>
         <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.85; font-style: italic;">Prototype note: In a live cycle, these signals would be pre-loaded from your cycle's research and industry advisors. The pool below is sample data — upload a fresh batch via CSV if you have one.</p>
       </div>
       
@@ -1344,8 +1400,56 @@
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; margin-top: 32px;">
-        <button class="btn btn-primary" onclick="launchWorkspace()" style="min-width: 160px;">Start Sorting!</button>
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
+        <button class="btn btn-outline" onclick="skipSortingToBoard()" style="min-width: 120px;">Skip to Canvas</button>
+        <button class="btn btn-primary" onclick="startSorting()" style="min-width: 160px;">Start Sorting</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sorting-screen" class="hidden">
+    <div class="sorting-container">
+      <div class="sorting-header">
+        <button class="btn btn-outline sorting-back-btn" onclick="goToScreen('setup')">← Back</button>
+        <div>
+          <h2>Sort the Signals</h2>
+          <p class="sorting-subtitle">Swipe right for <strong>Signal</strong>, left for <strong>Noise</strong>, up for <strong>★ Super Signal</strong></p>
+        </div>
+      </div>
+      <div class="sorting-progress-bar">
+        <div class="sorting-progress-fill" id="sorting-progress-fill"></div>
+      </div>
+      <div class="sorting-counter" id="sorting-counter">0 of 0</div>
+      <div class="sorting-arena" id="sorting-arena">
+        <div class="sort-zone sort-zone-left" id="sort-zone-left">
+          <span class="sort-zone-label">✗ Noise</span>
+        </div>
+        <div class="sort-zone sort-zone-right" id="sort-zone-right">
+          <span class="sort-zone-label">Signal ✓</span>
+        </div>
+        <div class="sort-zone sort-zone-top" id="sort-zone-top">
+          <span class="sort-zone-label">★ Super Signal</span>
+        </div>
+        <div class="sort-card" id="sort-card">
+          <span class="sort-card-tag" id="sort-card-tag">Signal</span>
+          <h3 class="sort-card-title" id="sort-card-title"></h3>
+          <p class="sort-card-desc" id="sort-card-desc"></p>
+          <span class="sort-card-number" id="sort-card-number"></span>
+        </div>
+      </div>
+      <div class="sorting-actions">
+        <button class="btn sorting-btn sorting-btn-noise" id="btn-noise" onclick="sortDecision('noise')">✗ Noise</button>
+        <button class="btn sorting-btn sorting-btn-signal" id="btn-signal" onclick="sortDecision('signal')">✓ Signal</button>
+        <button class="btn sorting-btn sorting-btn-super" id="btn-super" onclick="sortDecision('super')">★ Super</button>
+      </div>
+      <div class="sorting-undo-row">
+        <button class="btn btn-outline sorting-undo" id="sorting-undo-btn" onclick="sortUndo()" disabled>↩ Undo</button>
+      </div>
+      <div class="sorting-complete hidden" id="sorting-complete">
+        <h3>Sorting Complete</h3>
+        <p class="sorting-summary" id="sorting-summary"></p>
+        <p class="sorting-reflection">What pattern do you notice in what you kept?</p>
+        <button class="btn btn-primary" onclick="finishSorting()" style="min-width: 200px;">Continue to Canvas →</button>
       </div>
     </div>
   </div>
@@ -1361,7 +1465,7 @@
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
           <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full signal pool with your AI thinking partner">✨ <span class="btn-label">See the whole pool</span></button>
-          <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Commit to Clusters</span><span class="btn-label-short">Commit</span></button>
+          <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Commit to Patterns</span><span class="btn-label-short">Commit</span></button>
           <div class="profile-anchor">
             <button id="profile-btn" type="button" class="profile-btn"
                     aria-haspopup="dialog" aria-expanded="false" aria-controls="profile-popover"
@@ -1384,7 +1488,7 @@
         </div>
       </div>
       <div class="canvas-infobar">
-        <span style="opacity: 0.6;">Sort & triangulate</span>
+        <span style="opacity: 0.6;">Triangulate signals → patterns → themes</span>
         <span id="validation-warning" style="color: var(--action-red);"></span>
         <span id="cluster-progress" aria-live="polite"></span>
       </div>
@@ -1436,7 +1540,7 @@
               </div>
             </div>
             <h3 id="welcome-modal-title">Welcome to your canvas</h3>
-            <p>You're looking at a pool of friction signals — real problems, reported by real people. Your job is to find the problem spaces hiding inside them. Sort the noise. Connect the signals. Name what you find.</p>
+            <p>You're looking at a pool of friction signals — real problems, reported by real people. Your job is to triangulate the patterns hiding inside them. Sort the noise. Connect the signals. Name the patterns, themes, and super-themes you find.</p>
           </div>
 
           <!-- SLIDE 2: Build your first cluster -->
@@ -1452,7 +1556,7 @@
               </div>
             </div>
             <h3>Connect what belongs together</h3>
-            <p>Hover any signal to reveal <strong>teal dots</strong> on its edges. Drag from a dot onto another signal — a <strong>hub</strong> appears between them. Keep connecting signals to grow the cluster.</p>
+            <p>Hover any signal to reveal <strong>teal dots</strong> on its edges. Drag from a dot onto another signal — a <strong>pattern</strong> appears between them. Keep connecting signals to grow the pattern, then connect patterns to form themes.</p>
           </div>
 
           <!-- SLIDE 3: AI thinking partner -->
@@ -1461,8 +1565,8 @@
               <div class="illus-ai" aria-hidden="true">
                 <div class="illus-ai-pill">
                   <span class="pill-icon">✨</span>
-                  <span class="pill-name">Hub AI</span>
-                  <span class="pill-label">Per cluster</span>
+                  <span class="pill-name">Pattern AI</span>
+                  <span class="pill-label">Per pattern</span>
                 </div>
                 <span class="illus-ai-sep">→</span>
                 <div class="illus-ai-pill">
@@ -1474,6 +1578,7 @@
             </div>
             <h3>How to use the AI</h3>
             <p>This tool generates prompts — you take them to Claude, ChatGPT, Gemini, or whatever you use. Don't accept the first answer. Ask "what am I missing?" and "what's the strongest argument against this?" The <strong>✨ See the whole pool</strong> button in the header is your best starting move.</p>
+            <p style="margin-top:8px; font-size:0.85rem; opacity:0.85;">Connect two signals to create a <strong>Pattern</strong>. Connect two patterns to create a <strong>Theme</strong>. Connect two themes to create a <strong>Super-theme</strong>. Each level goes deeper.</p>
           </div>
 
         </div><!-- end .welcome-slide-track -->
@@ -1519,11 +1624,11 @@
         <button class="btn btn-outline" onclick="backToBoard()">← Back to Board</button>
         <h2 id="workspace-title">Build the case</h2>
       </div>
-      <p class="workspace-intro">For each problem space, map who's affected and pressure-test your framing. Each section has a prompt you copy into your LLM — but the goal isn't to get an answer. It's to have a conversation that sharpens your thinking. Argue with the AI. Ask it "who's missing?" and "what breaks if I'm wrong?" Then come back and write what you actually believe.</p>
+      <p class="workspace-intro">For each pattern, map who's affected and pressure-test your framing. Each section has a prompt you copy into your LLM — but the goal isn't to get an answer. It's to have a conversation that sharpens your thinking. Argue with the AI. Ask it "who's missing?" and "what breaks if I'm wrong?" Then come back and write what you actually believe.</p>
       <div class="interview-helper">
         <div class="step-label">Step 1 — Before you write anything</div>
         <h3>Talk to the people first</h3>
-        <p class="helper-desc">Before you map stakeholders or write a problematization, talk to the people who reported these signals. They have ground truth you can't guess at. Use the prompt below to plan a 30-minute conversation per cluster.</p>
+        <p class="helper-desc">Before you map stakeholders or write a problematization, talk to the people who reported these signals. They have ground truth you can't guess at. Use the prompt below to plan a 30-minute conversation per pattern.</p>
         <div class="prompt-cta-header">
           <div class="prompt-cta-label">✨ Interview &amp; Validate prompt</div>
           <button class="btn btn-primary copy-btn" onclick="copyText('workspace-interview-prompt')">Copy this prompt</button>
@@ -1559,10 +1664,10 @@
   <div id="commit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="commit-modal-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="commit-modal-title">Pick the problem spaces you'll defend</h3>
+        <h3 id="commit-modal-title">Pick the patterns you'll defend</h3>
       </div>
       <div class="modal-body">
-        <p>These are the problem spaces you're willing to stand behind. Choose 2–3 with enough signal density to build a real case — you'll map the stakeholders and pressure-test the framing before submitting.</p>
+        <p>These are the patterns you're willing to stand behind. Choose 2–3 with enough signal density to build a real case — you'll map the stakeholders and pressure-test the framing before submitting.</p>
         <div id="commit-warning" class="commit-warning hidden"></div>
         <div id="commit-cluster-list" class="commit-cluster-list" role="group" aria-label="Clusters available to commit"></div>
         <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
@@ -1690,7 +1795,8 @@
         problematizations: {},
         stakeholderMaps: {},
         submittedAt: null,
-        currentScreen: 'setup'
+        currentScreen: 'setup',
+        sorting: { currentIndex: 0, decisions: {} }
       };
     }
 
@@ -1737,6 +1843,9 @@
         if (typeof parsed.view.panX !== 'number') parsed.view.panX = 0;
         if (typeof parsed.view.panY !== 'number') parsed.view.panY = 0;
         if (typeof parsed.viewInitialized !== 'boolean') parsed.viewInitialized = false;
+        if (!parsed.sorting || typeof parsed.sorting !== 'object') parsed.sorting = { currentIndex: 0, decisions: {} };
+        if (!parsed.sorting.decisions) parsed.sorting.decisions = {};
+        if (typeof parsed.sorting.currentIndex !== 'number') parsed.sorting.currentIndex = 0;
         if (isLegacy) {
           try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch (_) {}
         }
@@ -1970,10 +2079,13 @@
     function goToScreen(name) {
       appState.currentScreen = name;
       document.getElementById('setup-screen').classList.toggle('hidden', name !== 'setup');
+      document.getElementById('sorting-screen').classList.toggle('hidden', name !== 'sorting');
       document.getElementById('board-workspace').classList.toggle('hidden', name !== 'board');
       document.getElementById('workspace-screen').classList.toggle('hidden', name !== 'workspace');
       document.getElementById('artifact-screen').classList.toggle('hidden', name !== 'artifact');
-      if (name === 'board') {
+      if (name === 'sorting') {
+        renderSortingScreen();
+      } else if (name === 'board') {
         renderBoard();
         updateClusterProgressChip();
       } else if (name === 'workspace') {
@@ -2025,8 +2137,8 @@
       });
       return 1 + maxChildTier;
     }
-    const TIER_LABELS = ["Signal", "Cluster", "Supercluster", "Mega Cluster", "Giga Cluster", "Ultra Cluster"];
-    function tierLabel(t) { return TIER_LABELS[t] || "Hyper Cluster"; }
+    const TIER_LABELS = ["Signal", "Pattern", "Theme", "Super-theme", "Meta-theme", "Hyper-theme"];
+    function tierLabel(t) { return TIER_LABELS[t] || "Hyper-theme"; }
     // All leaf signals under a hub (transitive, deduped).
     function allSignalsUnderHub(hubId) {
       const seen = new Set();
@@ -2336,14 +2448,19 @@
     function renderAllNodes() {
       const layer = document.getElementById('nodes-layer');
       layer.innerHTML = '';
-      appState.items.forEach(item => layer.appendChild(buildSignalNode(item)));
+      const visibleItems = appState.items.filter(item => {
+        const status = appState.sorting.decisions[item.id];
+        return !status || status === 'signal' || status === 'super';
+      });
+      visibleItems.forEach(item => layer.appendChild(buildSignalNode(item)));
       appState.clusters.forEach(c => layer.appendChild(buildHubNode(c)));
     }
 
     function buildSignalNode(item) {
       const el = document.createElement('div');
       const parked = !parentHubId(item.id);
-      el.className = 'canvas-node signal-node' + (parked ? ' parked' : '');
+      const isSuper = appState.sorting.decisions[item.id] === 'super';
+      el.className = 'canvas-node signal-node' + (parked ? ' parked' : '') + (isSuper ? ' super-signal' : '');
       el.id = 'node-' + item.id;
       el.setAttribute('data-node-id', item.id);
       el.setAttribute('data-kind', 'signal');
@@ -2351,7 +2468,7 @@
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
       el.innerHTML = `
-        <span class="card-tag">${escapeHtml(item.tag || 'Friction Signal')}</span>
+        <span class="card-tag">${isSuper ? '★ ' : ''}${escapeHtml(item.tag || 'Signal')}</span>
         <h3>${escapeHtml(item.title)}</h3>
         <p class="summary-text">${escapeHtml(item.summary)}</p>
         <div class="connect-handle side-top"    data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
@@ -2396,14 +2513,14 @@
       // Tier-aware placeholders to nudge the user toward synthesis, not labels.
       let titlePh, descPh;
       if (tier <= 1) {
-        titlePh = 'What connects these?';
-        descPh = 'The mechanism underneath — who feels it, why it persists';
+        titlePh = 'What pattern do these signals point toward?';
+        descPh = 'The specific condition these signals are evidence of — who feels it, why it persists';
       } else if (tier === 2) {
-        titlePh = 'What system are these clusters all inside?';
-        descPh = 'The structural pattern that bridges these — name the shared infrastructure, incentive, or power dynamic';
+        titlePh = 'What theme do these patterns point toward?';
+        descPh = 'The universal that bridges human experience and structural/systemic factors';
       } else {
-        titlePh = 'What\'s the thing underneath the thing?';
-        descPh = 'The civilizational, economic, or epistemic pattern these systems rest on';
+        titlePh = 'What convergence do these themes reveal?';
+        descPh = 'The candidate frame — if this situation is approached as if it is ___, then ___';
       }
       el.innerHTML = `
         <div class="hub-tag">
@@ -2414,6 +2531,8 @@
         <textarea class="hub-desc" placeholder="${escapeHtml(descPh)}" rows="2">${escapeHtml(cluster.description || '')}</textarea>
         <div class="hub-actions">
           <button type="button" class="hub-suggest" title="Get a prompt to think through this ${escapeHtml(tierLabel(tier).toLowerCase())} with your LLM">✨ AI</button>
+${tier === 2 ? `<div class="quality-check"><em>Bridge test:</em> Does this theme describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>` : ''}
+${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situation is approached as if it is ___, then ___</div>` : ''}
           <button type="button" class="hub-delete">Remove</button>
         </div>
         <div class="connect-handle side-top"    data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
@@ -3826,18 +3945,18 @@
     // Tier-specific framing inserted into the <context> block.
     function tierFraming(tier) {
       if (tier <= 1) {
-        return 'Focus on lived human friction: who is affected, in what context, when does it happen, and what workaround do they already improvise.';
+        return 'Focus on lived human friction: who is affected, in what context, when does it happen, and what workaround do they already improvise. This is a Pattern — a specific, named condition that two or more signals point toward together.';
       }
       if (tier === 2) {
-        return 'Focus on systemic / structural patterns that bridge the child clusters: shared infrastructures, shared incentive structures, shared power asymmetries, shared regulatory gaps.';
+        return 'Focus on the deeper universal that bridges human experience and structural/systemic factors. This is a Theme — a condition or force that two or more patterns point toward. A good theme bridges the human (cultural) domain and the technical or economic realm.';
       }
-      return 'Focus on meta-themes and ideological substrates — the civilizational, economic, or epistemic pattern that these systems all rest on. The abstraction level is high; demand specificity anyway, with named mechanisms, not category labels.';
+      return 'Focus on meta-convergence — the condition where the human and the structural converge, pointing toward a new way of seeing the whole situation. This is a Super-theme that may point toward a frame: if this situation is approached as if it is [X], then [Y].';
     }
 
     // Three task / thinking / format blocks per mode. Each mode adds one rule.
     const HUB_PROMPT_MODES = {
       throughline: {
-        task: 'Help the user find the THROUGH-LINE of this {tierLabel} — the deep mechanism or shared barrier that genuinely connects everything underneath, beyond any surface topic. A through-line is not a category label; it is the underlying mechanism, power structure, missing affordance, or human experience that makes these signals belong together.',
+        task: 'Help the user find the THROUGH-LINE of this {tierLabel} — the deep mechanism or shared condition that genuinely connects everything underneath, beyond any surface topic. A through-line is not a category label; it is the underlying mechanism, power structure, missing affordance, or human experience that the constituent elements triangulate toward.',
         thinking: [
           'Read each signal. Note the specific actor, action, and barrier.',
           'Group the signals by *mechanism*, not by topic.',
@@ -3928,9 +4047,9 @@ what is implicit, and ask sharper questions so they can do the thinking.
 
 <context>
 The user is in the "Synth Sprint" phase of a problematization workshop.
-They are clustering observed friction signals from real interviews into
-defensible problem spaces. They are working on one ${label} in their
-web map.
+They are triangulating observed friction signals into defensible problem
+spaces through patterns, themes, and super-themes. They are working on
+one ${label} in their web map.
 
 ${tierFraming(tier)}
 </context>
@@ -4025,10 +4144,10 @@ what is implicit, and ask sharper questions so they can do the thinking.
 
 <context>
 The user is at the start of the "Synth Sprint" phase of a problematization
-workshop. Before they cluster these friction signals into problem spaces,
-they need to see the landscape of the data — the loudest signals, the
-unexpected throughlines, and the questions that will lead to better
-clustering than they could make alone.
+workshop. Before they triangulate these friction signals into patterns and
+themes, they need to see the landscape of the data — the loudest signals,
+the unexpected throughlines, and the questions that will lead to better
+triangulation than they could make alone.
 </context>
 
 <signals count="${appState.items.length}">
@@ -4114,11 +4233,11 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const unassigned = appState.items.filter(item => !appState.clusters.some(c => c.itemIds.includes(item.id))).length;
       const clustersWith3Plus = appState.clusters.filter(c => c.title.trim() && leafCounts.get(c.id) >= 3).length;
       const warnings = [];
-      if (usable.length === 0) warnings.push('Add at least one titled cluster with at least one signal in it.');
+      if (usable.length === 0) warnings.push('Add at least one titled pattern with at least one signal in it.');
       const untitledWithItems = appState.clusters.filter(c => !c.title.trim() && leafCounts.get(c.id) > 0);
-      if (untitledWithItems.length) warnings.push(`${untitledWithItems.length} cluster(s) have signals but no title.`);
+      if (untitledWithItems.length) warnings.push(`${untitledWithItems.length} pattern(s) have signals but no title.`);
       const titledWithoutItems = appState.clusters.filter(c => c.title.trim() && leafCounts.get(c.id) === 0);
-      if (titledWithoutItems.length) warnings.push(`${titledWithoutItems.length} titled cluster(s) are still empty.`);
+      if (titledWithoutItems.length) warnings.push(`${titledWithoutItems.length} titled pattern(s) are still empty.`);
       return { warnings, unassigned, usable: usable.length, titledClusters: titledClusters.length, populatedClusters: populatedClusters.length, clustersWith3Plus };
     }
 
@@ -4132,21 +4251,21 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const el = document.getElementById('cluster-progress');
       if (!el) return;
       const { count, meets } = getClusterProgress();
-      el.textContent = `${count} cluster${count === 1 ? '' : 's'} with 3+ signals — looking for 2–3`;
+      el.textContent = `${count} pattern${count === 1 ? '' : 's'} with 3+ signals — looking for 2–3`;
       el.classList.toggle('meets-target', meets);
       el.classList.toggle('below-target', !meets);
     }
 
     // --- AI prompt templates (reused by the workspace) ---
     function buildPromptFor(cluster, kind) {
-      const title = cluster.title || 'Untitled Cluster';
+      const title = cluster.title || 'Untitled Pattern';
       const desc = cluster.description || '(no shared barrier described yet)';
       const signals = allSignalsUnderHub(cluster.id)
         .map(id => appState.items.find(i => i.id === id))
         .filter(Boolean)
         .map(i => `- ${i.title}: ${i.summary}`)
         .join('\n');
-      const intro = `I have created a problem space cluster called: ${title}\nIt is defined by this shared barrier: ${desc}\n\nThe signals grouped under it are:\n${signals || '(none yet)'}\n\n`;
+      const intro = `I have created a pattern called: ${title}\nIt is defined by this shared condition: ${desc}\n\nThe signals grouped under it are:\n${signals || '(none yet)'}\n\n`;
       if (kind === 'stakeholder') {
         return `Act as an expert UX researcher and systems thinker.\n\n${intro}Help me build a robust Stakeholder Map for this space. Do not try to solve the problem. Instead, identify:\n1. The Primary Affected Stakeholder (Who feels the pain most directly?)\n2. Adjacent Stakeholders (Who else is impacted downstream?)\n3. Gatekeepers / Blockers (Who can constrain, slow, or prevent progress in this space?)\n4. Enablers / Intermediaries (Who has the access or trust to reach the affected stakeholders?)`;
       }
@@ -4163,7 +4282,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         const signalList = signals.map(i => `  - ${i.title}: ${i.summary}`).join('\n');
         return `${tierLabel(hubTier(c.id))}: ${c.title || 'Untitled'}\nShared barrier: ${c.description || '(no synthesis yet)'}\nSignals:\n${signalList || '  (none yet)'}`;
       }).join('\n\n');
-      return `Act as a research strategist helping me plan interviews with the people who originally reported these friction signals.\n\nI have committed to ${committed.length} problem-space cluster${committed.length === 1 ? '' : 's'}. Before I deepen them with a problematization and stakeholder map, I want to interview the contributors of each cluster to make sure I understand what they meant.\n\nFor each cluster below:\n1. Suggest a primary interview question that gets the contributor to describe the most recent time they hit this barrier.\n2. Suggest 2 follow-up probes to surface stakeholders, workarounds, and emotional stakes.\n3. Suggest one secondary-research direction (peer-reviewed or grey literature) to check that what they tell me isn't an isolated story.\n\nDo NOT propose solutions. Help me prepare a 30-minute conversation per cluster.\n\nClusters:\n\n${blocks}`;
+      return `Act as a research strategist helping me plan interviews with the people who originally reported these friction signals.\n\nI have committed to ${committed.length} pattern${committed.length === 1 ? '' : 's'}. Before I deepen them with a problematization and stakeholder map, I want to interview the contributors of each pattern to make sure I understand what they meant.\n\nFor each pattern below:\n1. Suggest a primary interview question that gets the contributor to describe the most recent time they hit this barrier.\n2. Suggest 2 follow-up probes to surface stakeholders, workarounds, and emotional stakes.\n3. Suggest one secondary-research direction (peer-reviewed or grey literature) to check that what they tell me isn't an isolated story.\n\nDo NOT propose solutions. Help me prepare a 30-minute conversation per pattern.\n\nPatterns:\n\n${blocks}`;
     }
 
     // --- Commit step ---
@@ -4203,7 +4322,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const warn = document.getElementById('commit-warning');
       const { count } = getClusterProgress();
       if (count < 2) {
-        warn.textContent = `You have ${count} cluster${count === 1 ? '' : 's'} with 3+ signals. The sweet spot is 2–3 — you can still commit, but thinner clusters are harder to defend.`;
+        warn.textContent = `You have ${count} pattern${count === 1 ? '' : 's'} with 3+ signals. The sweet spot is 2–3 — you can still commit, but thinner patterns are harder to defend.`;
         warn.classList.remove('hidden');
       } else {
         warn.classList.add('hidden');
@@ -4214,7 +4333,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const signalCountLine = document.createElement('p');
       signalCountLine.className = 'commit-signal-count';
       signalCountLine.style.cssText = 'font-size: 0.875rem; color: var(--midnight); opacity: 0.7; margin-bottom: 16px; font-style: italic;';
-      signalCountLine.textContent = `You sorted through ${appState.items.length} signals to get here. These are the ones you're standing behind.`;
+      signalCountLine.textContent = `You sorted through ${appState.items.length} signals to get here. These are the patterns you're standing behind.`;
       list.parentNode.insertBefore(signalCountLine, list);
 
       updateCommitContinueButton();
@@ -4272,7 +4391,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       if (!committed.length) {
         const empty = document.createElement('p');
         empty.style.cssText = 'background: var(--ghost-white); padding: 24px; border-radius: 12px; border: 2px solid var(--cloud); color: var(--midnight);';
-        empty.textContent = 'No clusters committed yet. Go back to the board to commit 2–3 clusters first.';
+        empty.textContent = 'No patterns committed yet. Go back to the board to commit 2–3 patterns first.';
         container.appendChild(empty);
       } else {
         // Build the jump bar first (>1 card only).
@@ -4471,7 +4590,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const charCount = appState.committedClusterIds.reduce((sum, id) =>
         sum + (appState.problematizations[id] || '').trim().length + (appState.stakeholderMaps[id] || '').trim().length, 0);
       const summary = document.getElementById('submit-modal-summary');
-      summary.textContent = `You're submitting ${committed.length} cluster${committed.length === 1 ? '' : 's'} covering ${signalCount} signal${signalCount === 1 ? '' : 's'}, with ${charCount} characters of problematization and stakeholder analysis.`;
+      summary.textContent = `You're submitting ${committed.length} pattern${committed.length === 1 ? '' : 's'} covering ${signalCount} signal${signalCount === 1 ? '' : 's'}, with ${charCount} characters of problematization and stakeholder analysis.`;
       const prior = document.getElementById('submit-modal-prior');
       if (appState.submittedAt) {
         prior.textContent = `Previously submitted on ${new Date(appState.submittedAt).toLocaleString()}. Re-submitting will replace that timestamp.`;
@@ -4549,12 +4668,12 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         <div style="background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px; padding: 28px 32px;">
           <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary-teal); margin-bottom: 8px;">Before Peer Review</div>
           <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--midnight); margin-bottom: 12px;">Can you defend this?</h3>
-          <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; line-height: 1.6; margin-bottom: 20px;">Your peers are going to challenge your framing. Before you walk in, make sure you have an answer to each of these — for every problem space you committed to.</p>
+          <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; line-height: 1.6; margin-bottom: 20px;">Your peers are going to challenge your framing. Before you walk in, make sure you have an answer to each of these — for every pattern you committed to.</p>
           <ol style="font-size: 0.9rem; color: var(--midnight); line-height: 1.8; padding-left: 20px;">
             <li style="margin-bottom: 8px;">Which signal doesn't quite fit — and why did you keep it anyway?</li>
             <li style="margin-bottom: 8px;">Whose voice is missing from your stakeholder map?</li>
             <li style="margin-bottom: 8px;">What assumption would break your framing if it turned out to be wrong?</li>
-            <li style="margin-bottom: 8px;">If you had to explain your problem space in one sentence to someone who hasn't seen any of these signals — what would you say?</li>
+            <li style="margin-bottom: 8px;">If you had to explain your pattern in one sentence to someone who hasn't seen any of these signals — what would you say?</li>
             <li style="margin-bottom: 8px;">What's the strongest argument that your clusters should have been grouped differently?</li>
           </ol>
         </div>
@@ -4589,7 +4708,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Sensemaking_Submission.md';
+      a.download = 'Triangulator_Submission.md';
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -4638,17 +4757,227 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
     }
     initProfile();
 
+    // ======================== SORTING SCREEN ========================
+
+    function startSorting() {
+      if (!appState.items.length) {
+        toast('Load some signals first.');
+        return;
+      }
+      if (!appState.settings.title) {
+        const titleEl = document.getElementById('config-title');
+        appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
+      }
+      setBoardTitleDisplay();
+      goToScreen('sorting');
+    }
+
+    function skipSortingToBoard() {
+      if (!appState.items.length) {
+        toast('Load some signals first.');
+        return;
+      }
+      appState.items.forEach(item => {
+        if (!appState.sorting.decisions[item.id]) {
+          appState.sorting.decisions[item.id] = 'signal';
+        }
+      });
+      appState.sorting.currentIndex = appState.items.length;
+      if (!appState.settings.title) {
+        const titleEl = document.getElementById('config-title');
+        appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
+      }
+      setBoardTitleDisplay();
+      ensureCanvasInitialized();
+      goToScreen('board');
+    }
+
+    function renderSortingScreen() {
+      const items = appState.items;
+      const total = items.length;
+      const idx = appState.sorting.currentIndex;
+
+      const progressFill = document.getElementById('sorting-progress-fill');
+      const counter = document.getElementById('sorting-counter');
+      const card = document.getElementById('sort-card');
+      const arena = document.getElementById('sorting-arena');
+      const actions = document.querySelector('.sorting-actions');
+      const undoBtn = document.getElementById('sorting-undo-btn');
+      const complete = document.getElementById('sorting-complete');
+
+      progressFill.style.width = total ? ((idx / total) * 100) + '%' : '0%';
+      counter.textContent = `${Math.min(idx + 1, total)} of ${total}`;
+      undoBtn.disabled = idx === 0;
+
+      if (idx >= total) {
+        card.classList.add('hidden');
+        actions.classList.add('hidden');
+        document.querySelector('.sorting-undo-row').classList.add('hidden');
+        complete.classList.remove('hidden');
+
+        const signalCount = Object.values(appState.sorting.decisions).filter(d => d === 'signal').length;
+        const superCount = Object.values(appState.sorting.decisions).filter(d => d === 'super').length;
+        const noiseCount = Object.values(appState.sorting.decisions).filter(d => d === 'noise').length;
+        document.getElementById('sorting-summary').textContent =
+          `You kept ${signalCount + superCount} signals (${superCount} super signal${superCount === 1 ? '' : 's'}). You set aside ${noiseCount} as noise.`;
+        counter.textContent = `${total} of ${total}`;
+        progressFill.style.width = '100%';
+        return;
+      }
+
+      card.classList.remove('hidden');
+      actions.classList.remove('hidden');
+      document.querySelector('.sorting-undo-row').classList.remove('hidden');
+      complete.classList.add('hidden');
+
+      const item = items[idx];
+      document.getElementById('sort-card-tag').textContent = item.tag || 'Signal';
+      document.getElementById('sort-card-title').textContent = item.title;
+      document.getElementById('sort-card-desc').textContent = item.summary;
+      document.getElementById('sort-card-number').textContent = `${idx + 1} / ${total}`;
+
+      card.className = 'sort-card';
+      card.style.transform = '';
+      card.style.opacity = '';
+
+      setupSortCardDrag(card);
+    }
+
+    function sortDecision(decision) {
+      const items = appState.items;
+      const idx = appState.sorting.currentIndex;
+      if (idx >= items.length) return;
+
+      const item = items[idx];
+      appState.sorting.decisions[item.id] = decision;
+      appState.sorting.currentIndex = idx + 1;
+
+      const card = document.getElementById('sort-card');
+      const exitClass = decision === 'noise' ? 'exit-left' : decision === 'super' ? 'exit-up' : 'exit-right';
+      const zone = decision === 'noise' ? 'sort-zone-left' : decision === 'super' ? 'sort-zone-top' : 'sort-zone-right';
+
+      document.getElementById(zone).classList.add('active');
+      card.classList.add(exitClass);
+
+      setTimeout(() => {
+        document.getElementById(zone).classList.remove('active');
+        scheduleSave();
+        renderSortingScreen();
+      }, 350);
+    }
+
+    function sortUndo() {
+      if (appState.sorting.currentIndex <= 0) return;
+      appState.sorting.currentIndex--;
+      const item = appState.items[appState.sorting.currentIndex];
+      delete appState.sorting.decisions[item.id];
+      scheduleSave();
+      renderSortingScreen();
+    }
+
+    function finishSorting() {
+      if (!appState.settings.title) {
+        const titleEl = document.getElementById('config-title');
+        appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
+      }
+      setBoardTitleDisplay();
+      ensureCanvasInitialized();
+      goToScreen('board');
+      if (!localStorage.getItem(TOUR_DONE_KEY)) {
+        _welcomeSlide = 0;
+        _applyWelcomeSlideState();
+        openModal('welcome-modal');
+      } else {
+        const helpBtn = document.getElementById('tour-help-btn');
+        if (helpBtn) helpBtn.classList.remove('hidden');
+      }
+    }
+
+    let sortDragState = null;
+
+    function setupSortCardDrag(card) {
+      card.onpointerdown = (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        card.setPointerCapture(e.pointerId);
+        card.classList.add('dragging');
+        sortDragState = { startX: e.clientX, startY: e.clientY, pointerId: e.pointerId };
+      };
+
+      card.onpointermove = (e) => {
+        if (!sortDragState) return;
+        const dx = e.clientX - sortDragState.startX;
+        const dy = e.clientY - sortDragState.startY;
+        const rotate = (dx / 400) * 8;
+        const scale = dy < -30 ? 1 + Math.min(Math.abs(dy) / 600, 0.08) : 1;
+        card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotate}deg) scale(${scale})`;
+
+        const THRESHOLD_X = 80;
+        const THRESHOLD_Y = 60;
+        document.getElementById('sort-zone-right').classList.toggle('active', dx > THRESHOLD_X);
+        document.getElementById('sort-zone-left').classList.toggle('active', dx < -THRESHOLD_X);
+        document.getElementById('sort-zone-top').classList.toggle('active', dy < -THRESHOLD_Y && Math.abs(dy) > Math.abs(dx));
+      };
+
+      card.onpointerup = (e) => {
+        if (!sortDragState) return;
+        const dx = e.clientX - sortDragState.startX;
+        const dy = e.clientY - sortDragState.startY;
+        sortDragState = null;
+        card.classList.remove('dragging');
+
+        document.getElementById('sort-zone-right').classList.remove('active');
+        document.getElementById('sort-zone-left').classList.remove('active');
+        document.getElementById('sort-zone-top').classList.remove('active');
+
+        const THRESHOLD_X = 80;
+        const THRESHOLD_Y = 60;
+
+        if (dy < -THRESHOLD_Y && Math.abs(dy) > Math.abs(dx)) {
+          sortDecision('super');
+        } else if (dx > THRESHOLD_X) {
+          sortDecision('signal');
+        } else if (dx < -THRESHOLD_X) {
+          sortDecision('noise');
+        } else {
+          card.style.transform = '';
+        }
+      };
+
+      card.onpointercancel = () => {
+        if (!sortDragState) return;
+        sortDragState = null;
+        card.classList.remove('dragging');
+        card.style.transform = '';
+        document.getElementById('sort-zone-right').classList.remove('active');
+        document.getElementById('sort-zone-left').classList.remove('active');
+        document.getElementById('sort-zone-top').classList.remove('active');
+      };
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (appState.currentScreen !== 'sorting') return;
+      if (appState.sorting.currentIndex >= appState.items.length) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); sortDecision('signal'); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); sortDecision('noise'); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); sortDecision('super'); }
+      else if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sortUndo(); }
+    });
+
     // --- Bootstrap ---
     renderConfigItems();
 
     function pickInitialScreen() {
-      // Clean any dangling committed ids before deciding.
       if (Array.isArray(appState.committedClusterIds)) {
         appState.committedClusterIds = appState.committedClusterIds.filter(id => appState.clusters.some(c => c.id === id));
       }
       if (appState.submittedAt && appState.committedClusterIds.length) return 'artifact';
       if (appState.committedClusterIds.length) return 'workspace';
       if (appState.clusters.some(c => c.itemIds.length > 0 || c.title.trim())) return 'board';
+      if (appState.currentScreen === 'sorting') return 'sorting';
+      const totalItems = appState.items.length;
+      const sortedCount = Object.keys(appState.sorting.decisions).length;
+      if (totalItems > 0 && sortedCount > 0 && sortedCount < totalItems) return 'sorting';
       return 'setup';
     }
 
@@ -4676,10 +5005,9 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         return;
       }
 
-      // For board / workspace / artifact: scaffold the board (so Back navigation works) and jump.
-      if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Clustering Board';
+      if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
       setBoardTitleDisplay();
-      ensureCanvasInitialized();
+      if (target !== 'sorting') ensureCanvasInitialized();
       goToScreen(target);
       // Show tour help button for return visitors resuming to the board
       const resumeHelpBtn = document.getElementById('tour-help-btn');
@@ -4689,8 +5017,8 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
 
     // Warn before unload if there's in-progress, unsubmitted work.
     window.addEventListener('beforeunload', (e) => {
-      const onActiveScreen = appState.currentScreen === 'board' || appState.currentScreen === 'workspace';
-      if (onActiveScreen && appState.clusters.some(c => c.itemIds.length > 0)) {
+      const onActiveScreen = appState.currentScreen === 'board' || appState.currentScreen === 'workspace' || appState.currentScreen === 'sorting';
+      if (onActiveScreen && (appState.clusters.some(c => c.itemIds.length > 0) || Object.keys(appState.sorting.decisions).length > 0)) {
         e.preventDefault();
         e.returnValue = '';
       }
