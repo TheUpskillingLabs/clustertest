@@ -2389,156 +2389,6 @@
       if (t === 2) return { w: 300, h: NODE_HUB_H };
       return { w: NODE_HUB_W, h: NODE_HUB_H };
     }
-    // Ideal orbit radius keyed on the CHILD's tier — a signal always sits
-    // at signal-distance, a cluster always at cluster-distance, regardless
-    // of how high the parent's tier is. Higher-tier children orbit further.
-    const TIER_BASE_R = [300, 450, 620, 800, 1000, 1250];
-    const TIER_STEP_R = [32,  42,  55,  72,  90,   115];
-    const TIER_RATIO  = 1.5;
-    function idealRadiusForChild(childTier, n) {
-      const t = Math.max(0, Math.min(childTier, 12));
-      const base = TIER_BASE_R[t] ?? TIER_BASE_R[5] * Math.pow(TIER_RATIO, t - 5);
-      const step = TIER_STEP_R[t] ?? TIER_STEP_R[5] * Math.pow(TIER_RATIO, t - 5);
-      return base + Math.max(0, n - 2) * step;
-    }
-    // subtreeNodeIds is defined above in the shim section — uses childrenOfNode()
-
-    // Deterministic, crossing-free radial tree layout — STABLE EDITION.
-    // Each child's wedge is centered on its CURRENT angle around its parent's
-    // current center (so existing nodes don't shuffle when a sibling is added).
-    // Fresh children (never placed, coincident with parent) are inserted at
-    // the midpoint of the widest available angular gap. Wedge half-widths come
-    // from the gaps to angular neighbors, so wedges remain disjoint and the
-    // layout stays provably planar.
-    function computeRadialTree(rootId, rootCenter) {
-      const positions = {};
-      const depth = {};
-      let boundingRadius = 0;
-      const WEDGE_SHRINK = 0.92;
-      const FRESH_THRESHOLD = 8; // px — distance below which a child is "fresh"
-
-      const childrenOf = (id) => childrenOfNode(id);
-
-      // Choose an angle for a fresh kid given the currently-assigned angles
-      // of its siblings. Returns the midpoint of the widest wrap-around gap.
-      const slotInWidestGap = (existingAngles, fallback) => {
-        const arr = existingAngles.slice().sort((a, b) => a - b);
-        if (arr.length === 0) return fallback;
-        if (arr.length === 1) return arr[0] + Math.PI;
-        let bestGap = -Infinity, bestMid = arr[0] + Math.PI;
-        for (let i = 0; i < arr.length; i++) {
-          const a = arr[i];
-          const b = (i + 1 === arr.length) ? arr[0] + Math.PI * 2 : arr[i + 1];
-          const gap = b - a;
-          if (gap > bestGap) { bestGap = gap; bestMid = (a + b) / 2; }
-        }
-        return bestMid;
-      };
-
-      const place = (id, parentCenter, angleFromParent, halfWedge, radius, dep) => {
-        const myCenter = (radius < 0.01)
-          ? { x: rootCenter.x, y: rootCenter.y }
-          : { x: parentCenter.x + Math.cos(angleFromParent) * radius,
-              y: parentCenter.y + Math.sin(angleFromParent) * radius };
-        positions[id] = myCenter;
-        depth[id] = dep;
-        const d = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
-        const br = Math.hypot(myCenter.x - rootCenter.x, myCenter.y - rootCenter.y) + Math.hypot(d.w, d.h) / 2;
-        if (br > boundingRadius) boundingRadius = br;
-
-        const kids = childrenOf(id);
-        if (!kids.length) return;
-
-        // This node owns the angular cone [angleFromParent ± halfWedge]. Every
-        // descendant must stay inside it — that disjoint-cone invariant is what
-        // makes the drawing crossing-free. The root owns the full circle.
-        const FULL = halfWedge >= Math.PI - 1e-3;
-        const coneLo = angleFromParent - halfWedge;
-        const coneHi = angleFromParent + halfWedge;
-        // Bring an arbitrary angle near angleFromParent, then clamp into cone.
-        const intoCone = (a) => {
-          if (FULL) return a;
-          let x = a;
-          while (x - angleFromParent >  Math.PI) x -= Math.PI * 2;
-          while (x - angleFromParent < -Math.PI) x += Math.PI * 2;
-          return Math.max(coneLo + 1e-3, Math.min(coneHi - 1e-3, x));
-        };
-
-        // Derive each kid's preferred angle from its CURRENT position around
-        // id's current (live) center, clamped into this node's cone. Mark
-        // "fresh" kids that haven't been placed yet.
-        const parentLive = nodeCenter(id);
-        const angles = {};
-        const curRad = {};      // each kid's CURRENT distance from this parent
-        const freshSet = new Set();
-        const fresh = [];
-        kids.forEach(k => {
-          const kc = nodeCenter(k);
-          const dx = kc.x - parentLive.x, dy = kc.y - parentLive.y;
-          const r = Math.hypot(dx, dy);
-          if (r < FRESH_THRESHOLD) { fresh.push(k); freshSet.add(k); }
-          else { angles[k] = intoCone(Math.atan2(dy, dx)); curRad[k] = r; }
-        });
-        // Slot fresh kids into the widest gap one at a time (within the cone).
-        fresh.forEach(fk => {
-          const a = slotInWidestGap(Object.values(angles), angleFromParent);
-          angles[fk] = intoCone(a);
-        });
-
-        // Sort kids by angle and allocate each a disjoint sub-wedge. Boundaries
-        // fall at the midpoints between neighbors (and at the cone edges), so
-        // sibling cones never overlap → sibling subtrees can never cross.
-        const sorted = kids.slice().sort((a, b) => angles[a] - angles[b]);
-        const n = sorted.length;
-        sorted.forEach((k, i) => {
-          const myA = angles[k];
-          let half;
-          if (FULL) {
-            const prevAraw = angles[sorted[(i - 1 + n) % n]];
-            const nextAraw = angles[sorted[(i + 1) % n]];
-            const prevA = (i === 0) ? prevAraw - Math.PI * 2 : prevAraw;
-            const nextA = (i === n - 1) ? nextAraw + Math.PI * 2 : nextAraw;
-            half = Math.min((myA - prevA) / 2, (nextA - myA) / 2);
-          } else {
-            const leftBound  = (i === 0)     ? coneLo : (angles[sorted[i - 1]] + myA) / 2;
-            const rightBound = (i === n - 1) ? coneHi : (angles[sorted[i + 1]] + myA) / 2;
-            half = Math.min(myA - leftBound, rightBound - myA);
-          }
-          half = Math.max(half, 1e-3);
-
-          const childTier = isHubId(k) ? hubTier(k) : 0;
-          const idealR = idealRadiusForChild(childTier, n);
-          const pd = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
-          const kd = nodeSize(isHubId(k) ? 'hub' : 'signal', k);
-          const kHalf = Math.max(kd.w, kd.h) / 2 + 8;
-          // Distance from a box center to its edge along angle θ (axis-aligned).
-          const boxReach = (w, h, theta) => {
-            const c = Math.abs(Math.cos(theta)), s = Math.abs(Math.sin(theta));
-            const rx = c < 1e-6 ? Infinity : (w / 2) / c;
-            const ry = s < 1e-6 ? Infinity : (h / 2) / s;
-            return Math.min(rx, ry);
-          };
-          // Radius floors: far enough that the boxes just clear along this ray,
-          // and far enough that the node's angular footprint fits inside its
-          // sub-wedge (so it can't spill into a sibling's cone).
-          const minClearR = boxReach(pd.w, pd.h, myA) + boxReach(kd.w, kd.h, myA) + 12;
-          const minFitR = kHalf / Math.sin(Math.min(half, Math.PI / 2));
-          // Keep the tree compact and scannable: a child never sits beyond its
-          // tidy ideal ring. The floors only raise the radius UP TO that ring
-          // (never past it), so cards stay close instead of exploding outward.
-          const lower = Math.min(idealR, Math.max(minClearR, minFitR));
-          // Move the child the minimum distance: keep its current radius when it
-          // already satisfies the floor, otherwise pull/push it onto the ring.
-          const desired = freshSet.has(k) ? idealR : curRad[k];
-          const gap = Math.min(Math.max(desired, lower), idealR);
-
-          place(k, myCenter, myA, half * WEDGE_SHRINK, gap, dep + 1);
-        });
-      };
-
-      place(rootId, rootCenter, 0, Math.PI, 0, 0);
-      return { positions, depth, boundingRadius };
-    }
 
     // Is targetId an ancestor of nodeId (or equal)?
     function isAncestor(targetId, nodeId) {
@@ -3116,10 +2966,9 @@
         el.setPointerCapture(pointerId);
         el.classList.add('lifted');
 
-        // Classify the node so drag behaves per the radial-layout rules:
-        //  • top-level root → moves its whole subtree rigidly
-        //  • in-tree node (has a parent) → free-drag, snaps back on release
-        //  • free signal → free-drag, stays where dropped
+        // Drag behavior (no auto-layout — everything stays where you drop it):
+        //  • top-level root → moves its whole connected network rigidly
+        //  • in-tree node or free signal → moves on its own, stays put
         const hasParent = !!parentHubId(nodeId);
         const isRoot = isHubId(nodeId) && !hasParent;
         const subIds = isRoot ? subtreeNodeIds(nodeId) : [];
@@ -3191,15 +3040,7 @@
           if (dragging) {
             dragging = false;
             scheduleSave();
-            if (hasParent) {
-              // In-tree node: re-run the radial layout so it eases back to
-              // its computed slot — crossings can never persist.
-              relaxLayoutAround(rootAnchorOf(nodeId));
-            } else if (isRoot) {
-              // Moved a whole system: let neighbors re-space via repulsion.
-              relaxLayoutAround(nodeId);
-            }
-            // Free signals: stay exactly where dropped (no relax).
+            // Nodes stay exactly where the user dropped them — no auto-layout.
           } else if (ev.pointerType !== 'mouse') {
             // Tap on touch: select node so connect handles become visible.
             document.querySelectorAll('.canvas-node.touch-selected').forEach(n => n.classList.remove('touch-selected'));
@@ -3295,7 +3136,6 @@
       if (!card) return false;
       if (card.childIds.includes(childId)) return false;
       card.childIds.push(childId);
-      placeNewChildAtWidestGap(parentId, childId);
       return true;
     }
 
@@ -3316,42 +3156,13 @@
       return card;
     }
 
-    function placeNewChildAtWidestGap(parentId, childId) {
-      if (!appState.nodes[parentId]) return;
-      const pc = nodeCenter(parentId);
-      const siblings = childrenOfNode(parentId).filter(id => id !== childId && appState.nodes[id]);
-      const angles = siblings
-        .map(id => { const sc = nodeCenter(id); return Math.atan2(sc.y - pc.y, sc.x - pc.x); })
-        .sort((a, b) => a - b);
-      let ang;
-      if (angles.length === 0) ang = Math.random() * Math.PI * 2;
-      else if (angles.length === 1) ang = angles[0] + Math.PI;
-      else {
-        let bestGap = -Infinity, bestMid = angles[0] + Math.PI;
-        for (let i = 0; i < angles.length; i++) {
-          const a = angles[i];
-          const b = (i + 1 === angles.length) ? angles[0] + Math.PI * 2 : angles[i + 1];
-          const gap = b - a;
-          if (gap > bestGap) { bestGap = gap; bestMid = (a + b) / 2; }
-        }
-        ang = bestMid;
-      }
-      const childTier = isHubId(childId) ? hubTier(childId) : 0;
-      const R = idealRadiusForChild(childTier, siblings.length + 1);
-      const cd = nodeSize(isHubId(childId) ? 'hub' : 'signal', childId);
-      const x = pc.x + Math.cos(ang) * R - cd.w / 2;
-      const y = pc.y + Math.sin(ang) * R - cd.h / 2;
-      setNodePos(childId, x, y);
-      const el = document.getElementById('node-' + childId);
-      if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
-    }
-
     function addUnderExistingParent(parentId, childId) {
       if (!addChildToParent(parentId, childId)) return;
+      // No layout: every node stays exactly where the user placed it. Only
+      // the new connection appears; the child keeps its current position.
       renderAllNodes();
       renderAllEdges();
       animateNewEdge(parentId + '__' + childId);
-      relaxLayoutAround(rootAnchorOf(parentId));
       scheduleSave();
       updateClusterProgressChip();
       const obj = findCard(parentId);
@@ -3359,10 +3170,11 @@
     }
 
     function spawnHubUI(newObj, focusRootId) {
+      // New card is placed at the midpoint of its two children (see
+      // createCardBetween); existing nodes never move.
       renderAllNodes();
       renderAllEdges();
       animateNodeSpawn(newObj.id);
-      relaxLayoutAround(focusRootId || newObj.id);
       scheduleSave();
       updateClusterProgressChip();
       setTimeout(() => {
@@ -3411,180 +3223,6 @@
       toast(`Build up one level at a time — make a ${need} first.`);
     }
 
-    // ----- Force-directed auto-spacing -----
-    let relaxAnim = null;
-    function relaxLayoutAround(focusHubId) {
-      if (relaxAnim) cancelAnimationFrame(relaxAnim);
-
-      // New model: each top-level tree is a RIGID, crossing-free radial
-      // layout (its own "sphere of influence"); separate trees and free
-      // signals REPEL each other (no gravity) so spheres never crowd. A
-      // weak containment keeps the whole composition from drifting away.
-      const dims = {};
-      appState.items.forEach(it => { if (appState.nodes[it.id]) dims[it.id] = nodeSize('signal'); });
-      appState.cards.forEach(c => { if (appState.nodes[c.id]) dims[c.id] = nodeSize('hub', c.id); });
-
-      // Build systems: top-level cards (not children of anything) are tree roots.
-      const systems = [];
-      appState.cards
-        .filter(c => appState.nodes[c.id] && !parentHubId(c.id))
-        .forEach(c => {
-          const tree = computeRadialTree(c.id, { x: 0, y: 0 });
-          const rc = nodeCenter(c.id);
-          const lc = Math.max(1, allSignalsUnderHub(c.id).length);
-          systems.push({
-            kind: 'tree', rootId: c.id,
-            offsets: tree.positions, depth: tree.depth,
-            R: Math.max(tree.boundingRadius, 1),
-            cx: rc.x, cy: rc.y, vx: 0, vy: 0,
-            mass: Math.max(1, Math.sqrt(lc))
-          });
-        });
-      appState.items
-        .filter(it => appState.nodes[it.id] && !parentHubId(it.id))
-        .forEach(it => {
-          const c = nodeCenter(it.id);
-          const d = dims[it.id];
-          systems.push({
-            kind: 'free', id: it.id,
-            R: Math.hypot(d.w, d.h) / 2,
-            cx: c.x, cy: c.y, vx: 0, vy: 0, mass: 1
-          });
-        });
-      if (!systems.length) { relaxAnim = null; return; }
-
-      const isPinned = (id) => {
-        const el = document.getElementById('node-' + id);
-        return !!(el && el.classList.contains('dragging'));
-      };
-      const sysPinId = (s) => (s.kind === 'tree' ? s.rootId : s.id);
-
-      // Tuning. Structure/no-crossings come from computeRadialTree and are
-      // independent of these — they only govern how systems space apart.
-      const MARGIN = 70;           // empty gap between two spheres of influence
-      const REPEL_SYS_K = 0.025;   // push when spheres overlap/are close
-      const CONTAIN_K = 0.0022;    // weak pull toward the group centroid
-      const DAMP = 0.84;
-      const BASE_LERP = 0.22;      // ease toward rigid target
-      const STAGGER = 2;           // frames of delay per depth → fan sweeps open
-
-      const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      const writeNode = (id, cx, cy) => {
-        const d = dims[id]; if (!d) return;
-        const x = cx - d.w / 2, y = cy - d.h / 2;
-        setNodePos(id, x, y);
-        const el = document.getElementById('node-' + id);
-        if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
-      };
-
-      // One physics step over SYSTEM CENTERS only (repulsion + containment +
-      // integrate). Returns total kinetic energy. No DOM writes.
-      const physicsStep = () => {
-        systems.forEach(s => {
-          if (isPinned(sysPinId(s))) { const c = nodeCenter(sysPinId(s)); s.cx = c.x; s.cy = c.y; s.vx = 0; s.vy = 0; }
-          s.fx = 0; s.fy = 0;
-        });
-        for (let i = 0; i < systems.length; i++) {
-          for (let j = i + 1; j < systems.length; j++) {
-            const a = systems[i], b = systems[j];
-            let dx = a.cx - b.cx, dy = a.cy - b.cy, dist = Math.hypot(dx, dy);
-            if (dist < 0.01) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; dist = Math.hypot(dx, dy) || 1; }
-            const desired = a.R + b.R + MARGIN;
-            // Continuous push that fades to exactly 0 at the desired gap, so
-            // systems settle there against weak containment (no oscillation).
-            if (dist < desired) {
-              const f = (desired - dist) * REPEL_SYS_K;
-              const ux = dx / dist, uy = dy / dist;
-              a.fx += ux * f; a.fy += uy * f; b.fx -= ux * f; b.fy -= uy * f;
-            }
-          }
-        }
-        // Weak containment toward the centroid of all system centers — only
-        // free cards are pulled (connected networks are anchored).
-        let bx = 0, by = 0;
-        systems.forEach(s => { bx += s.cx; by += s.cy; });
-        bx /= systems.length; by /= systems.length;
-        systems.forEach(s => {
-          if (s.kind !== 'free') return;
-          s.fx += (bx - s.cx) * CONTAIN_K; s.fy += (by - s.cy) * CONTAIN_K;
-        });
-        // Integrate. Connected networks ('tree') stay fixed — they act as
-        // obstacles that push free cards aside but never move themselves.
-        let kinetic = 0;
-        systems.forEach(s => {
-          if (s.kind !== 'free') return;
-          if (isPinned(sysPinId(s))) return;
-          s.vx = (s.vx + s.fx / s.mass) * DAMP;
-          s.vy = (s.vy + s.fy / s.mass) * DAMP;
-          const vmag = Math.hypot(s.vx, s.vy);
-          if (vmag > 12) { s.vx = s.vx / vmag * 12; s.vy = s.vy / vmag * 12; }
-          s.cx += s.vx; s.cy += s.vy;
-          kinetic += vmag * vmag;
-        });
-        return kinetic;
-      };
-
-      // Write every node to its target (ef=1 → exact). Used by reduced-motion.
-      const snapAll = () => {
-        systems.forEach(s => {
-          if (s.kind === 'free') { writeNode(s.id, s.cx, s.cy); return; }
-          for (const id in s.offsets) writeNode(id, s.cx + s.offsets[id].x, s.cy + s.offsets[id].y);
-        });
-        Object.keys(dims).forEach(id => updateEdgesForNode(id));
-      };
-
-      const finish = () => {
-        relaxAnim = null;
-        scheduleSave();
-        // Intentionally NO ensureHubInView pan — the user keeps their viewport.
-        // ensureHubInView is still defined for any callsite that needs it
-        // explicitly, but the relax doesn't fire it anymore.
-      };
-
-      if (reduceMotion) {
-        for (let it = 0; it < 140; it++) physicsStep();
-        snapAll();
-        finish();
-        return;
-      }
-
-      const maxFrames = 160;
-      let frame = 0, calm = 0;
-
-      const tick = () => {
-        frame++;
-        const kinetic = physicsStep();
-        // Ease every node toward its rigid target; stagger by depth so the
-        // fan visibly sweeps open instead of teleporting.
-        let maxErr = 0;
-        systems.forEach(s => {
-          const pinned = isPinned(sysPinId(s));
-          if (s.kind === 'free') { if (!pinned) writeNode(s.id, s.cx, s.cy); return; }
-          if (pinned) return; // drag handler owns this subtree right now
-          for (const id in s.offsets) {
-            const off = s.offsets[id];
-            const tx = s.cx + off.x, ty = s.cy + off.y;
-            const p = getNodePos(id), d = dims[id];
-            const ccx = p.x + d.w / 2, ccy = p.y + d.h / 2;
-            const dep = s.depth[id] || 0;
-            const ef = (frame < dep * STAGGER) ? 0 : BASE_LERP;
-            const nx = ccx + (tx - ccx) * ef;
-            const ny = ccy + (ty - ccy) * ef;
-            const err = Math.hypot(tx - nx, ty - ny);
-            if (err > maxErr) maxErr = err;
-            writeNode(id, nx, ny);
-          }
-        });
-        Object.keys(dims).forEach(id => updateEdgesForNode(id));
-
-        if (kinetic < 0.5 && maxErr < 0.6) calm++; else calm = 0;
-        const done = frame >= maxFrames || calm >= 8;
-        if (!done) relaxAnim = requestAnimationFrame(tick);
-        else { snapAll(); finish(); }
-      };
-      relaxAnim = requestAnimationFrame(tick);
-    }
 
     function ensureHubInView(hubId) {
       const viewport = document.getElementById('canvas-viewport');
