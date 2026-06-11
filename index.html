@@ -4057,6 +4057,11 @@
 
     // --- Tutorial offer (replaces the old multi-slide welcome modal) ---
     function showTutorialOffer() {
+      // Never intrude on a tutorial that's already running, or one already
+      // completed — a deferred caller (e.g. the bootstrap setTimeout) can fire
+      // after the user has launched the tutorial straight from the hero button.
+      if (tutorialMode) return;
+      if (localStorage.getItem('olos.tutorial.done')) return;
       localStorage.setItem('olos.tutorial.offered', '1');
       openModal('tutorial-offer-modal');
     }
