@@ -635,12 +635,15 @@
         radial-gradient(circle at 1px 1px, rgba(16,24,32,0.08) 1px, transparent 1px),
         var(--cloud);
       background-size: 24px 24px;
-      cursor: grab;
+      cursor: default;
       touch-action: none;
     }
+    /* Background drag = marquee select, so the idle cursor is an arrow.
+       Panning happens only with space-drag / middle-mouse → grab/grabbing. */
+    .canvas-viewport.is-marquee { cursor: default; }
+    .canvas-viewport.is-connecting,
+    .canvas-viewport.is-connecting * { cursor: crosshair !important; }
     .canvas-viewport.is-panning { cursor: grabbing; }
-    .canvas-viewport.is-marquee { cursor: crosshair; }
-    .canvas-viewport.is-connecting { cursor: crosshair; }
     .marquee-rect {
       position: absolute;
       pointer-events: none;
@@ -3348,7 +3351,9 @@
       const marqueeEl = document.getElementById('marquee-rect');
 
       viewport.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('.zoom-toolbar')) return;
+        // Ignore canvas chrome (zoom toolbar, tutorial button) so their
+        // clicks aren't swallowed by marquee/pan start + preventDefault.
+        if (e.target.closest('.zoom-toolbar, #tour-help-btn, .canvas-hint')) return;
         if (e.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) return;
         const onNode = !!e.target.closest('.canvas-node');
         const onEdge = !!(e.target.classList && e.target.classList.contains('edge-hit'));
