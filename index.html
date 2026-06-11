@@ -1423,6 +1423,20 @@
     .super-toggle { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(255,215,0,0.3); background: rgba(255,215,0,0.1); color: #f4b400; cursor: pointer; transition: all 0.15s; }
     .super-toggle:hover { background: rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.5); }
 
+    /* Card-type picker popover */
+    .card-type-picker { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; background: rgba(16,24,32,0.5); }
+    .card-type-picker.hidden { display: none; }
+    .card-type-picker-inner { background: var(--midnight); border: 2px solid var(--cloud); border-radius: 16px; padding: 20px 24px; max-width: 420px; width: 90%; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+    .card-type-picker-title { color: var(--ghost-white); font-size: 0.85rem; font-weight: 700; margin-bottom: 14px; text-align: center; }
+    .card-type-picker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .card-type-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border-radius: 10px; border: 2px solid transparent; background: rgba(255,255,255,0.06); color: var(--ghost-white); cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .card-type-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.05); }
+    .card-type-btn .ct-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .card-type-btn .ct-desc { font-size: 0.55rem; opacity: 0.6; text-align: center; line-height: 1.3; }
+    @media (max-width: 480px) {
+      .card-type-picker-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
     @media (max-width: 480px) {
       .sorting-top { padding: 12px 16px 0; }
       .sorting-back-link { left: 16px; top: 14px; }
@@ -1807,6 +1821,13 @@
           <button class="btn btn-outline" onclick="closeAIPromptModal()">Dismiss</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="card-type-picker" class="card-type-picker hidden" role="dialog" aria-label="Choose card type">
+    <div class="card-type-picker-inner">
+      <p class="card-type-picker-title">What kind of evidence is this?</p>
+      <div class="card-type-picker-grid" id="card-type-picker-grid"></div>
     </div>
   </div>
 
@@ -3397,10 +3418,9 @@
       const sLayer = nodeLayer(sourceId);
       const tLayer = nodeLayer(targetId);
 
-      // Signal + Signal → create a new card (default type: problem)
+      // Signal + Signal → show card-type picker, then create card
       if (sLayer === 'signal' && tLayer === 'signal') {
-        const newCard = createCardBetween(sourceId, targetId, 'problem');
-        spawnHubUI(newCard, newCard.id);
+        showCardTypePicker(sourceId, targetId);
         return;
       }
 
@@ -3442,6 +3462,39 @@
       }
       toast('These can\'t be connected directly.');
     }
+
+    let pendingCardTypeSignals = null;
+    function showCardTypePicker(signalA, signalB) {
+      pendingCardTypeSignals = { a: signalA, b: signalB };
+      const grid = document.getElementById('card-type-picker-grid');
+      grid.innerHTML = '';
+      CARD_TYPES.forEach(ct => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'card-type-btn';
+        btn.style.borderColor = ct.color;
+        btn.innerHTML = `<span class="ct-label" style="color: ${ct.color};">${escapeHtml(ct.label)}</span><span class="ct-desc">${escapeHtml(ct.desc)}</span>`;
+        btn.addEventListener('click', () => {
+          hideCardTypePicker();
+          if (!pendingCardTypeSignals) return;
+          const { a, b } = pendingCardTypeSignals;
+          pendingCardTypeSignals = null;
+          const newCard = createCardBetween(a, b, ct.id);
+          spawnHubUI(newCard, newCard.id);
+        });
+        grid.appendChild(btn);
+      });
+      document.getElementById('card-type-picker').classList.remove('hidden');
+    }
+    function hideCardTypePicker() {
+      document.getElementById('card-type-picker').classList.add('hidden');
+      pendingCardTypeSignals = null;
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !document.getElementById('card-type-picker').classList.contains('hidden')) {
+        hideCardTypePicker();
+      }
+    });
 
     // ----- Force-directed auto-spacing -----
     let relaxAnim = null;
