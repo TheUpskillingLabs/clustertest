@@ -1279,44 +1279,38 @@
 
 
     /* ======================== SORTING SCREEN ======================== */
-    #sorting-screen { display: flex; align-items: center; justify-content: center; height: 100vh; height: 100dvh; background: var(--midnight); }
-    .sorting-container { width: 100%; max-width: 480px; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-    .sorting-header { display: flex; align-items: flex-start; gap: 16px; width: 100%; margin-bottom: 8px; }
-    .sorting-header h2 { font-size: 1.4rem; font-weight: 700; color: var(--ghost-white); margin: 0; }
-    .sorting-subtitle { font-size: 0.85rem; color: var(--cloud); opacity: 0.8; margin-top: 4px; }
-    .sorting-subtitle strong { color: var(--ghost-white); }
-    .sorting-back-btn { flex-shrink: 0; margin-top: 2px; }
-    .sorting-progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
-    .sorting-progress-fill { height: 100%; background: var(--primary-teal); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
-    .sorting-counter { font-size: 0.8rem; color: var(--cloud); opacity: 0.7; }
-    .sorting-arena { position: relative; width: 100%; aspect-ratio: 3/4; max-height: 420px; display: flex; align-items: center; justify-content: center; }
-    .sort-zone { position: absolute; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; z-index: 0; }
+    #sorting-screen { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--midnight); overflow: hidden; }
+    .sorting-top { position: relative; padding: 16px 24px 0; flex-shrink: 0; }
+    .sorting-back-link { position: absolute; top: 18px; left: 24px; font-size: 0.75rem; color: var(--cloud); opacity: 0.5; background: none; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+    .sorting-back-link:hover { opacity: 1; }
+    .sorting-progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
+    .sorting-progress-fill { height: 100%; background: var(--primary-teal); border-radius: 2px; transition: width 0.3s ease; width: 0%; }
+    .sorting-meta { display: flex; align-items: center; justify-content: center; gap: 16px; }
+    .sorting-counter { font-size: 0.75rem; color: var(--cloud); opacity: 0.5; }
+    .sorting-undo-link { font-size: 0.7rem; color: var(--cloud); opacity: 0.35; background: none; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+    .sorting-undo-link:hover { opacity: 0.8; }
+    .sorting-undo-link:disabled { opacity: 0.15; cursor: default; }
+    .sorting-arena { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; min-height: 0; }
+    .sort-zone { position: absolute; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s ease; pointer-events: none; z-index: 0; }
     .sort-zone.active { opacity: 1; }
-    .sort-zone-left { left: 0; top: 0; bottom: 0; width: 80px; background: linear-gradient(to right, rgba(238,28,37,0.25), transparent); border-radius: 12px 0 0 12px; }
-    .sort-zone-right { right: 0; top: 0; bottom: 0; width: 80px; background: linear-gradient(to left, rgba(0,148,160,0.25), transparent); border-radius: 0 12px 12px 0; }
-    .sort-zone-top { left: 0; right: 0; top: 0; height: 80px; background: linear-gradient(to bottom, rgba(244,180,0,0.3), transparent); border-radius: 12px 12px 0 0; }
-    .sort-zone-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ghost-white); opacity: 0.9; }
-    .sort-card { position: relative; z-index: 1; width: 320px; max-width: 90%; background: var(--ghost-white); border-radius: 16px; padding: 28px 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); cursor: grab; touch-action: none; user-select: none; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease; }
-    .sort-card.dragging { cursor: grabbing; transition: none; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-    .sort-card.exit-right { transform: translateX(140%) rotate(12deg); opacity: 0; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease; pointer-events: none; }
-    .sort-card.exit-left { transform: translateX(-140%) rotate(-12deg); opacity: 0; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease; pointer-events: none; }
-    .sort-card.exit-up { transform: translateY(-140%) scale(1.08); opacity: 0; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease; pointer-events: none; }
-    .sort-card-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary-teal); margin-bottom: 8px; }
-    .sort-card-title { font-size: 1.1rem; font-weight: 700; color: var(--midnight); margin: 0 0 10px 0; line-height: 1.3; }
-    .sort-card-desc { font-size: 0.85rem; color: var(--midnight); opacity: 0.75; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
-    .sort-card-number { position: absolute; bottom: 12px; right: 16px; font-size: 0.7rem; color: var(--cloud); }
-    .sorting-actions { display: flex; gap: 12px; width: 100%; }
-    .sorting-btn { flex: 1; padding: 14px 8px; font-size: 0.85rem; font-weight: 700; border-radius: 10px; border: 2px solid; cursor: pointer; transition: all 0.15s ease; }
-    .sorting-btn-noise { background: transparent; color: var(--action-red); border-color: var(--action-red); }
-    .sorting-btn-noise:hover { background: var(--action-red); color: var(--ghost-white); }
-    .sorting-btn-signal { background: var(--primary-teal); color: var(--ghost-white); border-color: var(--primary-teal); }
-    .sorting-btn-signal:hover { filter: brightness(1.1); }
-    .sorting-btn-super { background: transparent; color: #f4b400; border-color: #f4b400; }
-    .sorting-btn-super:hover { background: #f4b400; color: var(--midnight); }
-    .sorting-undo-row { width: 100%; display: flex; justify-content: center; }
-    .sorting-undo { font-size: 0.8rem; opacity: 0.7; }
-    .sorting-undo:disabled { opacity: 0.3; cursor: not-allowed; }
-    .sorting-complete { text-align: center; width: 100%; padding: 20px 0; }
+    .sort-zone-left { left: 0; top: 0; bottom: 0; width: 120px; background: linear-gradient(to right, rgba(238,28,37,0.15), transparent); }
+    .sort-zone-right { right: 0; top: 0; bottom: 0; width: 120px; background: linear-gradient(to left, rgba(0,148,160,0.15), transparent); }
+    .sort-zone-top { left: 0; right: 0; top: 0; height: 120px; background: linear-gradient(to bottom, rgba(244,180,0,0.18), transparent); }
+    .sort-zone-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ghost-white); opacity: 0.7; }
+    .sort-card { position: relative; z-index: 1; width: min(420px, 85vw); background: var(--ghost-white); border-radius: 20px; padding: 36px 32px 48px; box-shadow: 0 16px 50px rgba(0,0,0,0.35); cursor: grab; touch-action: none; user-select: none; transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, filter 0.25s ease, opacity 0.3s ease; }
+    .sort-card.dragging { cursor: grabbing; transition: none; }
+    .sort-card.exit-right { transform: translateX(150%) rotate(14deg); opacity: 0; transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease; pointer-events: none; }
+    .sort-card.exit-left { transform: translateX(-150%) rotate(-14deg); opacity: 0; transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease; pointer-events: none; }
+    .sort-card.exit-up { transform: translateY(-150%) scale(1.12); opacity: 0; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease; pointer-events: none; }
+    .sort-card.exit-up::after { content: '\2605'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: #f4b400; animation: starburst 0.5s ease-out forwards; pointer-events: none; }
+    @keyframes starburst { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
+    .sort-card-tag { display: inline-block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary-teal); margin-bottom: 12px; }
+    .sort-card-title { font-size: 1.35rem; font-weight: 700; color: var(--midnight); margin: 0 0 14px 0; line-height: 1.3; }
+    .sort-card-desc { font-size: 0.95rem; color: var(--midnight); opacity: 0.7; line-height: 1.6; margin: 0; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; }
+    .sort-card-number { position: absolute; bottom: 16px; right: 20px; font-size: 0.65rem; color: var(--cloud); opacity: 0.6; }
+    .sorting-hint { text-align: center; padding: 20px 0 max(20px, env(safe-area-inset-bottom)); font-size: 0.7rem; color: var(--cloud); opacity: 0.3; letter-spacing: 0.15em; transition: opacity 0.6s ease; flex-shrink: 0; }
+    .sorting-hint.faded { opacity: 0; }
+    .sorting-complete { text-align: center; width: 100%; max-width: 420px; padding: 20px 24px; }
     .sorting-complete h3 { font-size: 1.3rem; color: var(--ghost-white); margin-bottom: 12px; }
     .sorting-summary { font-size: 0.95rem; color: var(--cloud); line-height: 1.6; margin-bottom: 8px; }
     .sorting-reflection { font-size: 0.85rem; color: var(--primary-teal); font-style: italic; margin-bottom: 24px; }
@@ -1328,10 +1322,9 @@
     .quality-check em { color: rgba(255,255,255,0.75); font-style: normal; font-weight: 600; }
 
     @media (max-width: 480px) {
-      .sorting-container { padding: 16px; }
-      .sort-card { width: 280px; padding: 22px 18px; }
-      .sorting-actions { gap: 8px; }
-      .sorting-btn { padding: 12px 6px; font-size: 0.8rem; }
+      .sorting-top { padding: 12px 16px 0; }
+      .sorting-back-link { left: 16px; top: 14px; }
+      .sort-card { padding: 28px 22px 40px; border-radius: 16px; }
     }
 
     @media print {
@@ -1408,42 +1401,31 @@
   </div>
 
   <div id="sorting-screen" class="hidden">
-    <div class="sorting-container">
-      <div class="sorting-header">
-        <button class="btn btn-outline sorting-back-btn" onclick="goToScreen('setup')">← Back</button>
-        <div>
-          <h2>Sort the Signals</h2>
-          <p class="sorting-subtitle">Swipe right for <strong>Signal</strong>, left for <strong>Noise</strong>, up for <strong>★ Super Signal</strong></p>
-        </div>
-      </div>
+    <div class="sorting-top">
+      <button class="sorting-back-link" onclick="goToScreen('setup')">← back</button>
       <div class="sorting-progress-bar">
         <div class="sorting-progress-fill" id="sorting-progress-fill"></div>
       </div>
-      <div class="sorting-counter" id="sorting-counter">0 of 0</div>
-      <div class="sorting-arena" id="sorting-arena">
-        <div class="sort-zone sort-zone-left" id="sort-zone-left">
-          <span class="sort-zone-label">✗ Noise</span>
-        </div>
-        <div class="sort-zone sort-zone-right" id="sort-zone-right">
-          <span class="sort-zone-label">Signal ✓</span>
-        </div>
-        <div class="sort-zone sort-zone-top" id="sort-zone-top">
-          <span class="sort-zone-label">★ Super Signal</span>
-        </div>
-        <div class="sort-card" id="sort-card">
-          <span class="sort-card-tag" id="sort-card-tag">Signal</span>
-          <h3 class="sort-card-title" id="sort-card-title"></h3>
-          <p class="sort-card-desc" id="sort-card-desc"></p>
-          <span class="sort-card-number" id="sort-card-number"></span>
-        </div>
+      <div class="sorting-meta">
+        <span class="sorting-counter" id="sorting-counter">0 of 0</span>
+        <button class="sorting-undo-link" id="sorting-undo-btn" onclick="sortUndo()" disabled>undo</button>
       </div>
-      <div class="sorting-actions">
-        <button class="btn sorting-btn sorting-btn-noise" id="btn-noise" onclick="sortDecision('noise')">✗ Noise</button>
-        <button class="btn sorting-btn sorting-btn-signal" id="btn-signal" onclick="sortDecision('signal')">✓ Signal</button>
-        <button class="btn sorting-btn sorting-btn-super" id="btn-super" onclick="sortDecision('super')">★ Super</button>
+    </div>
+    <div class="sorting-arena" id="sorting-arena">
+      <div class="sort-zone sort-zone-left" id="sort-zone-left">
+        <span class="sort-zone-label">noise</span>
       </div>
-      <div class="sorting-undo-row">
-        <button class="btn btn-outline sorting-undo" id="sorting-undo-btn" onclick="sortUndo()" disabled>↩ Undo</button>
+      <div class="sort-zone sort-zone-right" id="sort-zone-right">
+        <span class="sort-zone-label">signal</span>
+      </div>
+      <div class="sort-zone sort-zone-top" id="sort-zone-top">
+        <span class="sort-zone-label">★ super</span>
+      </div>
+      <div class="sort-card" id="sort-card">
+        <span class="sort-card-tag" id="sort-card-tag">Signal</span>
+        <h3 class="sort-card-title" id="sort-card-title"></h3>
+        <p class="sort-card-desc" id="sort-card-desc"></p>
+        <span class="sort-card-number" id="sort-card-number"></span>
       </div>
       <div class="sorting-complete hidden" id="sorting-complete">
         <h3>Sorting Complete</h3>
@@ -1452,6 +1434,7 @@
         <button class="btn btn-primary" onclick="finishSorting()" style="min-width: 200px;">Continue to Canvas →</button>
       </div>
     </div>
+    <div class="sorting-hint" id="sorting-hint">← noise · signal → · ↑ super</div>
   </div>
 
   <div id="board-workspace" class="hidden">
@@ -4130,66 +4113,176 @@ ${m.output}
       const tabs = document.getElementById('ai-mode-tabs');
       if (tabs) tabs.classList.add('hidden');
       const blurb = document.getElementById('ai-modal-blurb');
-      if (blurb) blurb.textContent = 'Start here before you cluster anything. Copy this prompt into your LLM to see the landscape. When it names patterns, ask yourself: is this what the data says, or what the model assumes? Push back on at least one thing before you move on.';
       const titleEl = document.getElementById('ai-modal-title');
-      if (titleEl) titleEl.textContent = 'Explore the full signal pool';
       const t = document.getElementById('ai-prompt-text');
-      const signalList = appState.items.map(i => `  - "${i.title}": ${i.summary}`).join('\n');
-      const p = `<role>
-You are an expert critical theorist, design researcher, and qualitative
-sensemaking partner. You are a thinking partner — you do not write
-the user's synthesis for them. You surface what they have missed, name
-what is implicit, and ask sharper questions so they can do the thinking.
+
+      const decisions = appState.sorting.decisions || {};
+      const hasSorted = Object.keys(decisions).length > 0;
+
+      const superItems = appState.items.filter(i => decisions[i.id] === 'super');
+      const signalItems = appState.items.filter(i => decisions[i.id] === 'signal' || (!decisions[i.id] && !hasSorted));
+      const noiseItems = appState.items.filter(i => decisions[i.id] === 'noise');
+      const unsortedItems = hasSorted ? appState.items.filter(i => !decisions[i.id]) : [];
+
+      const formatList = (items) => items.map(i => `  - "${i.title}": ${i.summary}`).join('\n') || '  (none)';
+
+      let p;
+      if (hasSorted) {
+        if (blurb) blurb.textContent = 'Your sorting decisions are data. This prompt uses what you kept, what you elevated, and what you discarded to help you begin triangulating. Copy it into your LLM — then push back on every pattern it names.';
+        if (titleEl) titleEl.textContent = 'Triangulate from your sorted signals';
+
+        p = `<role>
+You are an expert in Kees Dorst's Frame Creation methodology — specifically
+the Archaeology, Field, and Themes stages. You are a thinking partner who
+helps practitioners triangulate from raw signals through named patterns to
+deeper themes. You do not write the user's synthesis. You surface what they
+have missed and ask sharper questions.
 </role>
 
 <context>
-The user is at the start of the "Synth Sprint" phase of a problematization
-workshop. Before they triangulate these friction signals into patterns and
-themes, they need to see the landscape of the data — the loudest signals,
-the unexpected throughlines, and the questions that will lead to better
-triangulation than they could make alone.
+The user has completed the signal-sorting phase of a Frame Creation workshop.
+They sorted ${appState.items.length} friction signals into three categories:
+- SUPER SIGNALS (${superItems.length}): Evidence they consider most urgent or revelatory
+- SIGNALS (${signalItems.length + unsortedItems.length}): Evidence they consider meaningful and relevant
+- NOISE (${noiseItems.length}): Evidence they set aside as not relevant
+
+In Dorst's model, the next step is triangulation: grouping signals to reveal
+named patterns (specific conditions no single signal names directly), then
+grouping patterns to reveal themes (deeper universals that bridge human
+experience and structural/systemic factors).
+</context>
+
+<super_signals count="${superItems.length}">
+${formatList(superItems)}
+</super_signals>
+
+<signals count="${signalItems.length + unsortedItems.length}">
+${formatList([...signalItems, ...unsortedItems])}
+</signals>
+
+<noise count="${noiseItems.length}">
+${formatList(noiseItems)}
+</noise>
+
+<task>
+Analyze the user's sorting decisions and help them begin triangulation:
+
+1. WHAT THE SORTING REVEALS — What does the user's instinct tell us? What
+   connects the super signals? What pattern emerges from what they kept vs.
+   what they discarded? Is there signal hiding in the noise?
+
+2. CANDIDATE PATTERNS (3–5) — Name specific conditions that two or more
+   signals triangulate toward. Each pattern should name a mechanism, not a
+   topic. For each, list which signals point toward it. Prioritize super
+   signals but draw from the full kept pool.
+
+3. THE OVERLOOKED — Is there a signal in the noise pile that would
+   complicate or strengthen a candidate pattern? Name it specifically.
+
+4. TRIANGULATION QUESTIONS — Ask 2 sharp questions that force the user
+   to defend their sorting and begin grouping. These should be mechanism-
+   level, not topic-level.
+</task>
+
+<output_format>
+## What your sorting reveals
+2–3 sentences. What does your emphasis on the super signals tell us about
+your instincts? What might you be avoiding in the noise?
+
+## Candidate patterns
+For each (3–5):
+**Pattern name:** ≤ 6 words, mechanism-level
+**Signals that triangulate here:** 2–4 signal titles
+**The claim:** 1 sentence — what specific condition does this name?
+
+## Check the noise
+1–2 signals from the noise pile worth reconsidering, and why.
+
+## Two questions for triangulation
+Numbered. ≤ 30 words each. Force a defense.
+</output_format>
+
+<rules>
+- Do NOT group by topic. Group by mechanism — the underlying condition,
+  barrier, or structural force.
+- Do NOT propose solutions, products, or interventions.
+- The user's sorting is data, not error. Respect their instincts but
+  challenge their blind spots.
+- Be specific — name signals by title, not by category.
+- Preserve dissonance — if two signals seem to belong together but
+  actually point at opposed mechanisms, say so.
+</rules>`;
+      } else {
+        if (blurb) blurb.textContent = 'Copy this prompt into your LLM to see the landscape before you start triangulating. When it names patterns, ask yourself: is this what the data says, or what the model assumes?';
+        if (titleEl) titleEl.textContent = 'Explore the full signal pool';
+
+        p = `<role>
+You are an expert in Kees Dorst's Frame Creation methodology — specifically
+the Archaeology, Field, and Themes stages. You are a thinking partner who
+helps practitioners triangulate from raw signals through named patterns to
+deeper themes. You do not write the user's synthesis. You surface what they
+have missed and ask sharper questions.
+</role>
+
+<context>
+The user is beginning the triangulation phase of a Frame Creation workshop.
+They have ${appState.items.length} friction signals — raw evidence from the
+field. Their task is to find named patterns (specific conditions that two or
+more signals point toward) and then triangulate those patterns into deeper
+themes (universals that bridge human experience and structural factors).
 </context>
 
 <signals count="${appState.items.length}">
-${signalList}
+${formatList(appState.items)}
 </signals>
 
 <task>
-Read every signal and follow this 3-step process:
+Read every signal and help the user prepare for triangulation:
 
-1. UNDERSTAND THE LANDSCAPE — A concise, high-level summary of the major
-   signals represented here. Which signals are loudest, most urgent,
-   most repeated?
-2. SURFACE UNEXPECTED THROUGHLINES — Name 1–2 structural connections that
-   cross seemingly different contexts (e.g., healthcare records and
-   environmental compliance might share a "fragmented public data"
-   pattern). These should be mechanism-level, not topic-level.
-3. ASK PROVOCATIVE QUESTIONS — Ask the user 2 sharp, probing questions
-   that will help them cluster these themselves. The questions should
-   force the user to defend their groupings, not validate them.
+1. LANDSCAPE — Which signals are loudest, most urgent, most repeated?
+   Summarize the terrain in 2–4 sentences.
+
+2. CANDIDATE PATTERNS (3–5) — Name specific conditions that two or more
+   signals triangulate toward. Each pattern should name a mechanism, not
+   a topic. For each, list which signals point toward it.
+
+3. UNEXPECTED THROUGHLINES — Name 1–2 structural connections that cross
+   seemingly different contexts. These should be mechanism-level.
+
+4. TRIANGULATION QUESTIONS — Ask 2 sharp questions that force the user
+   to defend their groupings, not validate them.
 </task>
 
 <output_format>
 ## Landscape
-2–4 sentences summarizing the loudest and most urgent signals. Name the
-specific signals where useful.
+2–4 sentences naming the loudest signals and major terrain.
 
-## Throughlines (2)
-For each throughline:
+## Candidate patterns
+For each (3–5):
+**Pattern name:** ≤ 6 words, mechanism-level
+**Signals that triangulate here:** 2–4 signal titles
+**The claim:** 1 sentence — what specific condition does this name?
+
+## Unexpected throughlines
+For each (1–2):
 **Pattern:** 1 sentence naming the mechanism.
-**Signals it crosses:** 3+ signal titles that exemplify it.
+**Signals it crosses:** 3+ signal titles.
 **Why this is non-obvious:** 1 sentence.
 
 ## Two questions for the user
-Numbered. Each ≤ 30 words. Each forces a defense, not a description.
+Numbered. ≤ 30 words each. Force a defense.
 </output_format>
 
 <rules>
-- Do NOT cluster the data for the user. You name patterns; they do the clustering.
+- Do NOT group by topic. Group by mechanism — the underlying condition,
+  barrier, or structural force.
 - Do NOT propose solutions, products, or interventions.
-- Be specific — name signals by their title; avoid category labels like "the healthcare ones".
-- Preserve dissonance — if two signals seem to belong together but actually point at opposed mechanisms, say so.
+- Be specific — name signals by title, not by category.
+- Preserve dissonance — if two signals seem to belong together but
+  actually point at opposed mechanisms, say so.
 </rules>`;
+      }
+
       t.value = p;
       openModal('ai-modal');
     }
@@ -4800,10 +4893,9 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const progressFill = document.getElementById('sorting-progress-fill');
       const counter = document.getElementById('sorting-counter');
       const card = document.getElementById('sort-card');
-      const arena = document.getElementById('sorting-arena');
-      const actions = document.querySelector('.sorting-actions');
       const undoBtn = document.getElementById('sorting-undo-btn');
       const complete = document.getElementById('sorting-complete');
+      const hint = document.getElementById('sorting-hint');
 
       progressFill.style.width = total ? ((idx / total) * 100) + '%' : '0%';
       counter.textContent = `${Math.min(idx + 1, total)} of ${total}`;
@@ -4811,23 +4903,20 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
 
       if (idx >= total) {
         card.classList.add('hidden');
-        actions.classList.add('hidden');
-        document.querySelector('.sorting-undo-row').classList.add('hidden');
         complete.classList.remove('hidden');
+        if (hint) hint.classList.add('faded');
 
         const signalCount = Object.values(appState.sorting.decisions).filter(d => d === 'signal').length;
         const superCount = Object.values(appState.sorting.decisions).filter(d => d === 'super').length;
         const noiseCount = Object.values(appState.sorting.decisions).filter(d => d === 'noise').length;
         document.getElementById('sorting-summary').textContent =
-          `You kept ${signalCount + superCount} signals (${superCount} super signal${superCount === 1 ? '' : 's'}). You set aside ${noiseCount} as noise.`;
+          `You kept ${signalCount + superCount} signals (${superCount} super). You set aside ${noiseCount} as noise.`;
         counter.textContent = `${total} of ${total}`;
         progressFill.style.width = '100%';
         return;
       }
 
       card.classList.remove('hidden');
-      actions.classList.remove('hidden');
-      document.querySelector('.sorting-undo-row').classList.remove('hidden');
       complete.classList.add('hidden');
 
       const item = items[idx];
@@ -4839,6 +4928,8 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       card.className = 'sort-card';
       card.style.transform = '';
       card.style.opacity = '';
+      card.style.boxShadow = '';
+      card.style.filter = '';
 
       setupSortCardDrag(card);
     }
@@ -4857,13 +4948,18 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
       const zone = decision === 'noise' ? 'sort-zone-left' : decision === 'super' ? 'sort-zone-top' : 'sort-zone-right';
 
       document.getElementById(zone).classList.add('active');
+      card.style.filter = '';
       card.classList.add(exitClass);
 
+      const hint = document.getElementById('sorting-hint');
+      if (hint && !hint.classList.contains('faded')) hint.classList.add('faded');
+
+      const delay = decision === 'super' ? 500 : 380;
       setTimeout(() => {
         document.getElementById(zone).classList.remove('active');
         scheduleSave();
         renderSortingScreen();
-      }, 350);
+      }, delay);
     }
 
     function sortUndo() {
@@ -4895,6 +4991,15 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
 
     let sortDragState = null;
 
+    function resetSortCardStyle(card) {
+      card.style.transform = '';
+      card.style.boxShadow = '';
+      card.style.filter = '';
+      document.getElementById('sort-zone-right').classList.remove('active');
+      document.getElementById('sort-zone-left').classList.remove('active');
+      document.getElementById('sort-zone-top').classList.remove('active');
+    }
+
     function setupSortCardDrag(card) {
       card.onpointerdown = (e) => {
         if (e.button !== 0) return;
@@ -4908,21 +5013,38 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         if (!sortDragState) return;
         const dx = e.clientX - sortDragState.startX;
         const dy = e.clientY - sortDragState.startY;
-        const rotate = (dx / 400) * 8;
-        const scale = dy < -30 ? 1 + Math.min(Math.abs(dy) / 600, 0.08) : 1;
+        const absDx = Math.abs(dx), absDy = Math.abs(dy);
+        const upward = dy < 0 && absDy > absDx;
+
+        const rotate = upward ? 0 : (dx / 400) * 10;
+        const scale = upward ? 1 + Math.min(absDy / 400, 0.14) : 1;
         card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotate}deg) scale(${scale})`;
+
+        const intensity = Math.min((upward ? absDy : absDx) / 150, 1);
+        if (upward) {
+          card.style.boxShadow = `0 0 ${50 * intensity}px rgba(244,180,0,${0.4 * intensity}), 0 16px 50px rgba(0,0,0,0.35)`;
+          card.style.filter = '';
+        } else if (dx > 0) {
+          card.style.boxShadow = `0 0 ${35 * intensity}px rgba(0,148,160,${0.25 * intensity}), 0 16px 50px rgba(0,0,0,0.35)`;
+          card.style.filter = '';
+        } else {
+          card.style.boxShadow = `0 0 ${30 * intensity}px rgba(238,28,37,${0.15 * intensity}), 0 16px 50px rgba(0,0,0,0.35)`;
+          card.style.filter = `saturate(${1 - 0.5 * intensity})`;
+        }
 
         const THRESHOLD_X = 80;
         const THRESHOLD_Y = 60;
-        document.getElementById('sort-zone-right').classList.toggle('active', dx > THRESHOLD_X);
-        document.getElementById('sort-zone-left').classList.toggle('active', dx < -THRESHOLD_X);
-        document.getElementById('sort-zone-top').classList.toggle('active', dy < -THRESHOLD_Y && Math.abs(dy) > Math.abs(dx));
+        document.getElementById('sort-zone-right').classList.toggle('active', dx > THRESHOLD_X && !upward);
+        document.getElementById('sort-zone-left').classList.toggle('active', dx < -THRESHOLD_X && !upward);
+        document.getElementById('sort-zone-top').classList.toggle('active', upward && absDy > THRESHOLD_Y);
       };
 
       card.onpointerup = (e) => {
         if (!sortDragState) return;
         const dx = e.clientX - sortDragState.startX;
         const dy = e.clientY - sortDragState.startY;
+        const absDx = Math.abs(dx), absDy = Math.abs(dy);
+        const upward = dy < 0 && absDy > absDx;
         sortDragState = null;
         card.classList.remove('dragging');
 
@@ -4933,14 +5055,14 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         const THRESHOLD_X = 80;
         const THRESHOLD_Y = 60;
 
-        if (dy < -THRESHOLD_Y && Math.abs(dy) > Math.abs(dx)) {
+        if (upward && absDy > THRESHOLD_Y) {
           sortDecision('super');
         } else if (dx > THRESHOLD_X) {
           sortDecision('signal');
         } else if (dx < -THRESHOLD_X) {
           sortDecision('noise');
         } else {
-          card.style.transform = '';
+          resetSortCardStyle(card);
         }
       };
 
@@ -4948,10 +5070,7 @@ Numbered. Each ≤ 30 words. Each forces a defense, not a description.
         if (!sortDragState) return;
         sortDragState = null;
         card.classList.remove('dragging');
-        card.style.transform = '';
-        document.getElementById('sort-zone-right').classList.remove('active');
-        document.getElementById('sort-zone-left').classList.remove('active');
-        document.getElementById('sort-zone-top').classList.remove('active');
+        resetSortCardStyle(card);
       };
     }
 
