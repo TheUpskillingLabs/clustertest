@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#101820">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Triangulator">
   <title>The Triangulator-inator</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
@@ -35,6 +40,7 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
+    html, body { overscroll-behavior: none; } /* no pull-to-refresh/rubber-band under canvas gestures */
     body {
       color: var(--midnight);
       background-color: var(--cloud);
@@ -44,6 +50,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .hidden { display: none !important; }
@@ -150,67 +157,81 @@
     .upskill-banner p { font-size: 0.875rem; line-height: 1.5; }
     /* --- LANDING (editorial layout) --- */
     /* Big type hierarchy, hairline rules, indexed sections; existing fonts & palette only. */
-    #setup-screen { padding: 0 24px; }
+    /* Full-bleed editorial frame: edge-to-edge with responsive gutters, a high
+       max-width cap so it stays composed on ultra-wide displays. */
+    #setup-screen { padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
     #setup-screen .config-container {
-      background: none; border: none; max-width: 960px; padding: 88px 0 120px;
+      background: none; border: none; max-width: 1760px; margin: 0 auto;
+      padding: clamp(56px, 9vh, 140px) clamp(24px, 5.5vw, 120px) clamp(96px, 12vh, 200px);
     }
-    .landing-hero { margin-bottom: 96px; }
+    .landing-hero { margin-bottom: clamp(96px, 16vh, 200px); }
     #setup-screen .hero-eyebrow {
       display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px;
       max-width: none;
-      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.16em; color: var(--cloud); opacity: 0.75; margin-bottom: 44px;
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.18em; color: var(--cloud); opacity: 0.75; margin-bottom: clamp(48px, 8vh, 88px);
     }
     .hero-eyebrow-rule { flex: 1; min-width: 48px; height: 1px; background: rgba(255,255,255,0.25); }
+    /* The hero headline is the poster: it owns the full measure of the frame. */
     #setup-screen .config-header h1 {
-      font-size: clamp(2.6rem, 8.5vw, 5.5rem);
-      line-height: 0.98; font-weight: 700; text-transform: uppercase;
+      font-size: clamp(2.8rem, 11vw, 9.5rem);
+      line-height: 0.9; font-weight: 700; text-transform: uppercase;
       letter-spacing: var(--track-tight); color: var(--ghost-white);
-      margin-bottom: 32px;
+      margin-bottom: clamp(40px, 6vh, 72px); text-wrap: balance;
     }
     .hero-accent { color: var(--primary-teal); }
     #setup-screen .hero-lede {
-      font-size: var(--text-lg); line-height: var(--lh-body); color: var(--cloud);
-      opacity: 0.85; max-width: 56ch; margin-bottom: 40px; text-wrap: pretty;
+      font-size: clamp(1.15rem, 1.9vw, 1.6rem); line-height: 1.4; color: var(--cloud);
+      opacity: 0.85; max-width: 30ch; margin-bottom: 56px; text-wrap: pretty;
     }
-    .hero-cta { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
-    .hero-cta .btn { padding: 14px 26px; font-size: 0.9rem; }
-    .hero-cta-note { font-size: 0.8rem; color: var(--cloud); opacity: 0.6; text-decoration: none; }
+    .hero-cta { display: flex; align-items: center; flex-wrap: wrap; gap: 18px 28px; }
+    .hero-cta .btn { padding: 16px 30px; font-size: 0.9rem; }
+    .hero-cta-note { font-size: 0.82rem; color: var(--cloud); opacity: 0.6; text-decoration: none; }
     .hero-cta-note:hover { opacity: 1; text-decoration: underline; }
 
-    .landing-section { border-top: 1px solid rgba(255,255,255,0.14); padding-top: 28px; margin-bottom: 88px; }
+    /* Editorial marginalia grid: the indexed label sits in a narrow left rail,
+       the content runs wide on the right. Head → column 1, everything else →
+       column 2 (auto-stacked), so the rail's lower rows stay open as whitespace. */
+    .landing-section {
+      display: grid;
+      grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+      column-gap: clamp(40px, 6vw, 128px);
+      border-top: 1px solid rgba(255,255,255,0.14); padding-top: clamp(40px, 5vh, 64px);
+      margin-bottom: clamp(100px, 16vh, 180px);
+    }
     .landing-section:last-child { margin-bottom: 0; }
-    .landing-section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; }
+    .landing-section-head { grid-column: 1; display: flex; flex-direction: column; gap: 12px; }
+    .landing-section > :not(.landing-section-head) { grid-column: 2; }
     .landing-index {
-      font-size: 0.75rem; font-weight: 700; color: var(--primary-teal);
+      font-size: 0.82rem; font-weight: 700; color: var(--primary-teal);
       font-variant-numeric: tabular-nums; letter-spacing: 0.08em;
     }
     .landing-kicker {
       font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.16em; color: var(--cloud); opacity: 0.65;
+      letter-spacing: 0.16em; color: var(--cloud); opacity: 0.65; line-height: 1.4;
     }
     .landing-statement {
-      font-size: clamp(1.6rem, 3.6vw, 2.5rem); line-height: 1.12; font-weight: 700;
+      font-size: clamp(1.8rem, 3.4vw, 3.4rem); line-height: 1.08; font-weight: 700;
       letter-spacing: var(--track-tight); color: var(--ghost-white);
-      max-width: 24ch; text-wrap: balance; margin-bottom: 30px;
+      max-width: 18ch; text-wrap: balance; margin-bottom: clamp(36px, 5vh, 56px);
     }
-    .landing-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 48px; }
+    .landing-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 64px; max-width: 76ch; }
     .landing-cols p, .landing-intro {
-      font-size: 0.92rem; line-height: var(--lh-body); color: var(--cloud);
+      font-size: 0.98rem; line-height: var(--lh-body); color: var(--cloud);
       opacity: 0.8; text-wrap: pretty;
     }
-    .landing-intro { max-width: 56ch; margin-bottom: 36px; }
+    .landing-intro { max-width: 56ch; margin-bottom: 52px; }
 
     /* 02 — steps: hairline columns, oversized numerals in the canvas tier colors
        (teal signals → slate evidence → red patterns → purple situation). */
     .explainer-steps {
-      list-style: none; margin: 10px 0 0; padding: 0;
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px 32px;
+      list-style: none; margin: 0; padding: 0;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 48px 40px;
     }
-    .explainer-step { border-top: 1px solid rgba(255,255,255,0.18); padding-top: 18px; }
+    .explainer-step { border-top: 1px solid rgba(255,255,255,0.18); padding-top: 28px; }
     .explainer-step-num {
       display: block; font-size: 2.1rem; font-weight: 700; line-height: 1;
-      letter-spacing: var(--track-tight); margin-bottom: 14px;
+      letter-spacing: var(--track-tight); margin-bottom: 20px;
       font-variant-numeric: tabular-nums;
     }
     .explainer-step[data-step="1"] .explainer-step-num { color: var(--primary-teal); }
@@ -228,31 +249,31 @@
     }
 
     /* 03 — triad */
-    .triad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px 32px; }
-    .triad-cell { border-top: 1px solid rgba(255,255,255,0.18); padding-top: 18px; }
+    .triad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px 40px; }
+    .triad-cell { border-top: 1px solid rgba(255,255,255,0.18); padding-top: 28px; }
     .triad-cell h3 {
       font-size: 1.3rem; font-weight: 700; color: var(--ghost-white);
-      letter-spacing: var(--track-snug); line-height: var(--lh-tight); margin-bottom: 10px;
+      letter-spacing: var(--track-snug); line-height: var(--lh-tight); margin-bottom: 16px;
     }
     .triad-cell p {
       font-size: 0.82rem; color: var(--cloud); opacity: 0.75;
       line-height: 1.55; text-wrap: pretty;
     }
     .landing-footnote {
-      margin-top: 40px; padding-left: 16px; border-left: 2px solid var(--primary-teal);
+      margin-top: 64px; padding-left: 20px; border-left: 2px solid var(--primary-teal);
       font-size: 0.85rem; color: var(--cloud); opacity: 0.75;
       line-height: var(--lh-body); max-width: 64ch; text-wrap: pretty;
     }
 
-    /* 04 — setup form keeps its card chrome */
+    /* 04 — setup form keeps its card chrome (capped so inputs stay usable) */
     .setup-card {
       background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px; padding: 36px;
+      border-radius: 12px; padding: clamp(28px, 4vw, 56px); max-width: 760px;
     }
 
     /* Colophon */
     .landing-colophon {
-      border-top: 1px solid rgba(255,255,255,0.14); padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.14); padding-top: 32px;
       font-size: 0.78rem; color: var(--cloud); opacity: 0.6;
       letter-spacing: var(--track-label); text-transform: uppercase;
     }
@@ -260,11 +281,15 @@
     .landing-colophon a:hover { color: var(--ghost-white); border-bottom-color: var(--primary-teal); }
 
     @media (max-width: 900px) { .explainer-steps { grid-template-columns: 1fr 1fr; } }
+    /* Below the editorial grid's comfortable threshold, collapse the rail:
+       the label rides above its content in a single stacked column. */
+    @media (max-width: 860px) {
+      .landing-section { display: block; }
+      .landing-section > :not(.landing-section-head) { grid-column: auto; }
+      .landing-section-head { flex-direction: row; align-items: baseline; gap: 14px; margin-bottom: 28px; }
+    }
     @media (max-width: 720px) {
       .landing-cols, .triad-grid { grid-template-columns: 1fr; }
-      .landing-hero { margin-bottom: 64px; }
-      .landing-section { margin-bottom: 64px; }
-      #setup-screen .config-container { padding: 56px 0 88px; }
     }
     @media (max-width: 560px) {
       .explainer-steps { grid-template-columns: 1fr; }
@@ -695,8 +720,8 @@
     @media print { .profile-anchor { display: none !important; } }
 
     /* ============ WEB-MAP CANVAS ============ */
-    .webmap-panel { display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; background: var(--cloud); }
-    .webmap-header { gap: 12px; padding: 0 20px; height: 60px; overflow: visible; }
+    .webmap-panel { display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; background: var(--cloud); padding-top: env(safe-area-inset-top, 0px); }
+    .webmap-header { gap: 12px; padding: 0 max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px)); height: 60px; overflow: visible; }
     .webmap-header h2 { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .webmap-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0; }
     .webmap-search { min-width: 180px; max-width: 260px; }
@@ -706,7 +731,7 @@
     .btn-label-short { display: none; }
 
     @media (max-width: 1024px) {
-      .webmap-header { padding: 0 12px; height: 52px; gap: 8px; }
+      .webmap-header { padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px)); height: 52px; gap: 8px; }
       .webmap-header h2 { font-size: 0.875rem; }
       .webmap-header-actions { gap: 6px; }
       .webmap-search { min-width: 120px; max-width: 180px; }
@@ -718,9 +743,50 @@
       .webmap-header-actions .btn-label-short { display: inline; }
     }
 
+    @media (max-width: 600px) {
+      /* Keep all five header controls on one row of a phone: trim button
+         padding (min-height keeps the 44px tap target) and let search yield. */
+      .webmap-header-actions .btn { padding: 10px 12px; }
+      .webmap-search { min-width: 70px; }
+    }
     @media (max-width: 480px) {
-      .webmap-header { padding: 0 8px; gap: 6px; }
-      .webmap-search { min-width: 90px; max-width: 140px; }
+      .webmap-header { padding: 0 max(8px, env(safe-area-inset-right, 0px)) 0 max(8px, env(safe-area-inset-left, 0px)); gap: 6px; }
+      .webmap-search { min-width: 70px; max-width: 140px; }
+    }
+
+    /* --- PHONE BOARD HEADER: slim bar + drop-down control panel --- */
+    /* Collapsed (default): one 44px row — title · ready dot · Push · chevron.
+       Expanded: the full action set flows in as wrapped rows below the bar
+       (flex-wrap, no absolute positioning) and the tabs strip returns. */
+    .mobile-push, .header-expand-btn, .mobile-ready-dot { display: none; }
+    @media (max-width: 768px) {
+      .webmap-header { height: auto; min-height: 44px; flex-wrap: wrap; align-items: center; padding-top: 2px; padding-bottom: 2px; }
+      .webmap-header h2 { flex: 1; min-width: 0; }
+      .webmap-header-actions, .canvas-infobar { display: none; }
+      .mobile-ready-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cloud); flex-shrink: 0; transition: background 0.2s ease, box-shadow 0.2s ease; }
+      .mobile-ready-dot.is-ready { background: var(--primary-teal); box-shadow: 0 0 0 3px rgba(0,148,160,0.2); }
+      .mobile-push { display: inline-flex; padding: 8px 14px; min-height: 36px; flex-shrink: 0; }
+      .header-expand-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 40px; height: 40px; flex-shrink: 0;
+        border: none; background: transparent; color: var(--midnight);
+        font-size: 1.05rem; cursor: pointer; border-radius: 8px;
+        transition: transform 0.15s ease, background 0.12s ease;
+      }
+      .header-expand-btn:hover { background: var(--cloud); }
+      #board-workspace.mobile-header-open .header-expand-btn { transform: rotate(180deg); background: var(--cloud); }
+      #board-workspace.mobile-header-open .mobile-push { display: none; }
+      #board-workspace.mobile-header-open .webmap-header-actions {
+        display: flex; flex-basis: 100%; flex-wrap: wrap; gap: 10px; padding: 4px 0 12px;
+        order: 10; /* keep title · dot · chevron together on the slim bar row */
+      }
+      #board-workspace.mobile-header-open .webmap-search { flex-basis: 100%; max-width: none; min-width: 0; }
+      #board-workspace.mobile-header-open .webmap-search .search-input { padding: 10px 12px; padding-right: 32px; font-size: 0.875rem; }
+      /* The open panel has room, so full button labels come back */
+      #board-workspace.mobile-header-open .webmap-header-actions .btn-label { display: inline; }
+      #board-workspace.mobile-header-open .webmap-header-actions .btn-label-short { display: none; }
+      #board-workspace.mobile-header-open .webmap-header-actions .btn { min-height: 44px; flex: 1 1 auto; }
+      #board-workspace.mobile-header-open .canvas-infobar { display: flex; }
     }
 
     /* --- MOBILE COMPACT DENSITY --- */
@@ -730,7 +796,12 @@
       .search-container            { padding: 8px 12px; }
       .scroll-area                 { padding: 12px; }
       .ai-helper-bar               { padding: 10px 16px; }
-      .canvas-infobar              { padding: 6px 12px; font-size: 0.7rem; }
+      .canvas-infobar              { padding: 6px 12px; font-size: 0.7rem; gap: 10px; }
+      /* Level tabs scroll sideways on a phone instead of clipping */
+      .canvas-infobar .view-tabs   { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-shrink: 1; min-width: 0; }
+      .canvas-infobar .view-tabs::-webkit-scrollbar { display: none; }
+      .canvas-infobar .view-tab    { white-space: nowrap; flex-shrink: 0; }
+      .canvas-infobar #cluster-progress { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
       .item-card                   { padding: 10px 12px; margin-bottom: 8px; }
     }
 
@@ -740,7 +811,7 @@
       .modal-content  { padding: 24px; }
       .modal-header h3 { font-size: 1.1rem; }
       /* Setup screen */
-      #setup-screen     { padding: 12px; }
+      #setup-screen     { padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
       .config-container { padding: 20px; }
       .config-header h1 { font-size: 1.3rem; }
       /* Workspace screen */
@@ -797,7 +868,7 @@
     .canvas-viewport.space-pan-ready.is-panning * { cursor: grabbing !important; }
 
     /* Canvas node cursor overrides — reset the grab inherited from viewport */
-    .canvas-node { cursor: default; }
+    .canvas-node { cursor: default; -webkit-touch-callout: none; } /* no long-press callout mid-drag */
     .canvas-node input,
     .canvas-node textarea,
     .canvas-node [contenteditable="true"] { cursor: text; }
@@ -906,16 +977,27 @@
       pointer-events: none;               /* panning works over the frame */
     }
     .section-header {
-      position: absolute; left: 0; bottom: 100%; margin-bottom: 12px;
-      width: 100%; display: flex; align-items: flex-start; gap: 12px;
+      position: absolute; left: 0; bottom: 100%;
+      margin-bottom: calc(12px / var(--world-zoom, 1)); /* constant screen gap */
+      display: flex; align-items: flex-start; gap: 12px;
       pointer-events: auto;
+      /* Constant on-screen size at any canvas zoom (FigJam-style): lay out at
+         box-width × zoom, then counter-scale so title and button stay legible
+         and tappable when the lattice is zoomed far out (small screens). */
+      width: calc(100% * var(--world-zoom, 1));
+      min-width: min(340px, 92vw); /* don't cramp the title when the box is narrow on screen */
+      transform: scale(calc(1 / var(--world-zoom, 1)));
+      transform-origin: 0 100%;
     }
     .section-titles {
       flex: 1; min-width: 0; max-width: 520px;
       background: var(--midnight); border: 2px solid var(--primary-teal);
       border-radius: 12px; padding: 12px 16px; cursor: grab;
       box-shadow: 0 8px 24px rgba(16,24,32,0.18);
+      touch-action: none; /* drag the lattice by the panel on touch too */
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
     }
+    .section-title, .section-desc { user-select: text; -webkit-user-select: text; }
     .section-titles:active { cursor: grabbing; }
     .section-title {
       width: 100%; background: transparent; border: none; outline: none;
@@ -939,6 +1021,11 @@
     .section-export.hidden { display: none; }
 
     /* Card page modal */
+    @media (pointer: coarse) {
+      /* ≥16px stops iOS Safari from zooming the page when these get focus */
+      #card-page-doc { font-size: 16px !important; }
+      .section-desc { font-size: 16px; }
+    }
     .cardpage-files { display: flex; flex-direction: column; gap: 8px; }
     .cardpage-file { display: flex; align-items: center; gap: 12px; background: var(--cloud); border-radius: 8px; padding: 10px 14px; }
     .cardpage-file > span:first-child { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1334,7 +1421,7 @@
 
     .zoom-toolbar {
       position: absolute;
-      right: 20px;
+      right: calc(20px + env(safe-area-inset-right, 0px));
       bottom: calc(20px + env(safe-area-inset-bottom, 0px));
       display: flex;
       gap: 4px;
@@ -1369,8 +1456,8 @@
 
     .canvas-hint {
       position: absolute;
-      right: 16px;
-      bottom: 122px; /* above #tour-help-btn (72px + 34px + 16px gap) */
+      right: calc(16px + env(safe-area-inset-right, 0px));
+      bottom: calc(122px + env(safe-area-inset-bottom, 0px)); /* above #tour-help-btn (72px + 34px + 16px gap) */
       background: rgba(16,24,32,0.88);
       color: var(--ghost-white);
       padding: 8px 14px;
@@ -1411,8 +1498,8 @@
     /* Coach panel: docked, scrollable, rich educational copy. */
     #tutorial-coach {
       position: fixed;
-      left: 16px;
-      bottom: 16px;
+      left: calc(16px + env(safe-area-inset-left, 0px));
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       z-index: 2098;
       width: min(440px, calc(100vw - 24px));
       background: var(--ghost-white);
@@ -1479,7 +1566,7 @@
     #tutorial-offer-modal .modal-content { max-width: 480px; text-align: center; border-top: 4px solid var(--primary-teal); }
 
     @media (max-width: 600px) {
-      #tutorial-coach { left: 8px; right: 8px; bottom: 8px; width: auto; }
+      #tutorial-coach { left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: max(8px, env(safe-area-inset-bottom, 0px)); width: auto; }
       #tutorial-coach.coach-right { left: 8px; right: 8px; }
       #tutorial-coach-body { max-height: 38vh; }
     }
@@ -1527,7 +1614,9 @@
     .tour-btn-next:hover { background: #007882; transform: translateY(-1px); }
 
     #tour-help-btn {
-      position: absolute; right: 16px; bottom: 72px;
+      position: absolute;
+      right: calc(16px + env(safe-area-inset-right, 0px));
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
       width: 34px; height: 34px; border-radius: 50%;
       background: var(--ghost-white); border: 2px solid var(--cloud);
       color: var(--primary-teal); font-weight: 800; font-size: 0.95rem;
@@ -1543,7 +1632,7 @@
 
 
     /* ======================== SORTING SCREEN ======================== */
-    #sorting-screen { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--midnight); overflow: hidden; }
+    #sorting-screen { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--midnight); overflow: hidden; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
     .sorting-top { position: relative; padding: 16px 24px 0; flex-shrink: 0; }
     .sorting-back-link { position: absolute; top: 18px; left: 24px; font-size: 0.75rem; color: var(--cloud); opacity: 0.5; background: none; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
     .sorting-back-link:hover { opacity: 1; }
@@ -1743,6 +1832,59 @@
     .signal-node .summary-text { line-height: 1.5; }
     .hub-node input.hub-title { letter-spacing: var(--track-snug); }
     .quality-check { line-height: 1.55; }
+
+    /* Card-page modal microlabels (classed so the phone block below can tighten them) */
+    .cardpage-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; margin-bottom: 6px; }
+    .cardpage-label.mt { margin-top: 18px; }
+    .cardpage-sub { font-size: 0.8rem; opacity: 0.7; margin-bottom: 16px; }
+
+    /* --- PHONE DENSITY: very tight spacing at ≤768px --- */
+    /* Late in the sheet on purpose: wins over the base spacing-rhythm and the
+       earlier 1024/720/600/480 blocks at phone widths. Spacing only — no
+       color, type, or layout changes. */
+    @media (max-width: 768px) {
+      /* Landing / setup */
+      #setup-screen .config-container { padding: 24px max(20px, env(safe-area-inset-right, 0px)) 40px max(20px, env(safe-area-inset-left, 0px)); }
+      .landing-hero { margin-bottom: 24px; }
+      #setup-screen .hero-eyebrow { margin-bottom: 20px; }
+      #setup-screen .config-header h1 { margin-bottom: 20px; }
+      #setup-screen .hero-lede { margin-bottom: 20px; max-width: none; }
+      .hero-cta { gap: 12px; }
+      .hero-cta .btn { padding: 12px 18px; }
+      .landing-section { margin-bottom: 24px; padding-top: 14px; }
+      .landing-section-head { margin-bottom: 12px; }
+      .config-field { margin-bottom: 14px; }
+      .upskill-banner { padding: 12px 14px; margin-bottom: 16px; }
+      /* Sorting */
+      .sorting-top { padding: 8px 12px 0; }
+      .sort-card { padding: 20px 18px 28px; }
+      .sorting-hint { padding: 10px 0 max(10px, env(safe-area-inset-bottom)); }
+      .sorting-complete { padding: 14px 16px; }
+      /* Modals */
+      .modal-overlay { padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)); }
+      .modal-content { padding: 14px; max-height: calc(100dvh - 20px); }
+      .modal-header h3 { margin-bottom: 10px; }
+      .modal-body p { margin-bottom: 12px; }
+      .modal-body textarea { margin-bottom: 12px; }
+      .cardpage-sub { margin-bottom: 10px; }
+      .cardpage-label.mt { margin-top: 10px; }
+      /* Board chrome */
+      .toast { padding: 10px 14px; }
+      #toast-region { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+      .zoom-toolbar { right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 3px; }
+      .canvas-infobar { padding: 6px 10px; }
+    }
+
+    /* Apple HIG ~44pt touch targets. Last in the sheet so these win the
+       cascade over the base rules above at equal specificity. */
+    @media (pointer: coarse) {
+      .zoom-btn { min-width: 44px; height: 42px; }
+      .profile-btn { width: 44px; height: 44px; }
+      #tour-help-btn { width: 44px; height: 44px; }
+      .search-clear { width: 32px; height: 32px; }
+      .view-tab { padding: 10px 12px; }
+      .sorting-undo-link { padding: 12px 14px; }
+    }
   </style>
 </head>
 <body>
@@ -1923,7 +2065,7 @@
     <main class="panel-center webmap-panel">
       <div class="panel-header webmap-header">
         <h2 id="board-title-display">Your Web Map <span id="save-status" aria-live="polite"></span></h2>
-        <div class="webmap-header-actions">
+        <div class="webmap-header-actions" id="webmap-header-actions">
           <div class="search-wrap webmap-search" id="search-wrap">
             <label class="sr-only" for="search-input">Search signals</label>
             <input type="text" id="search-input" class="search-input" placeholder="Search signals..." oninput="filterItems()">
@@ -1952,6 +2094,10 @@
             </div>
           </div>
         </div>
+        <span id="mobile-ready-dot" class="mobile-ready-dot" aria-hidden="true"></span>
+        <button class="btn btn-primary mobile-push" onclick="openCommitModal()">Push</button>
+        <button id="header-expand-btn" class="header-expand-btn" type="button" onclick="toggleMobileHeader()"
+                aria-expanded="false" aria-controls="webmap-header-actions" aria-label="Show board controls">▾</button>
       </div>
       <div class="canvas-infobar">
         <div class="view-tabs" id="view-tabs">
@@ -2115,11 +2261,11 @@
     <div class="modal-content" style="max-width: 760px;">
       <div class="modal-header"><h3 id="card-page-title">Card</h3></div>
       <div class="modal-body">
-        <p id="card-page-sub" style="font-size:0.8rem; opacity:0.7; margin-bottom:16px;"></p>
+        <p id="card-page-sub" class="cardpage-sub"></p>
         <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
-        <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6; margin-bottom:6px;">Main document — notes.md</div>
-        <textarea id="card-page-doc" style="width:100%; height:240px; font-family:monospace; font-size:0.825rem; padding:14px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
-        <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6; margin:18px 0 6px;">Attached markdown files</div>
+        <div class="cardpage-label">Main document — notes.md</div>
+        <textarea id="card-page-doc" style="width:100%; height:min(240px, 38dvh); font-family:monospace; font-size:0.825rem; padding:14px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
+        <div class="cardpage-label mt">Attached markdown files</div>
         <div id="card-page-files" class="cardpage-files"></div>
         <input type="file" id="card-page-upload" accept=".md,.markdown,text/markdown,text/plain" multiple class="sr-only">
         <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
@@ -2140,7 +2286,7 @@
           <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; margin-bottom: 16px;">Load a working folder someone exported from this tool — either the <strong>.zip</strong> itself or the <strong>unzipped folder</strong>. You'll get their whole board: lattice, problem situation, card pages, and attached files.</p>
           <input type="file" id="import-zip-input" accept=".zip,application/zip" class="sr-only" onchange="handleImportZip(event)">
           <input type="file" id="import-folder-input" webkitdirectory multiple class="sr-only" onchange="handleImportFolder(event)">
-          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
             <button class="btn btn-outline" onclick="closeModal('import-modal')">Cancel</button>
             <button class="btn btn-outline" onclick="document.getElementById('import-folder-input').click()">Choose folder</button>
             <button class="btn btn-primary" onclick="document.getElementById('import-zip-input').click()" data-autofocus>Choose .zip</button>
@@ -2148,7 +2294,7 @@
         </div>
         <div id="import-confirm" class="hidden">
           <p id="import-confirm-summary" style="font-size: 0.9rem; color: var(--midnight); margin-bottom: 16px;"></p>
-          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
             <button class="btn btn-outline" onclick="closeModal('import-modal')">Cancel</button>
             <button class="btn btn-primary" onclick="confirmImport()">Replace my board</button>
           </div>
@@ -2185,6 +2331,18 @@
   <div id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
   <script>
+    // iOS Safari auto-zooms the page when an input under 16px gets focus,
+    // which wrecks the canvas view. Capping maximum-scale suppresses only
+    // that auto-zoom — iOS deliberately ignores the cap for user pinch
+    // gestures (accessibility) — and other platforms are left untouched.
+    (function () {
+      const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS desktop UA
+      if (!iOS) return;
+      const meta = document.querySelector('meta[name="viewport"]');
+      if (meta && !/maximum-scale/.test(meta.content)) meta.content += ', maximum-scale=1';
+    })();
+
     const STORAGE_KEY = 'olos.sensemaking.v2';
     const LEGACY_STORAGE_KEY = 'olos.sensemaking.v1';
     // Tour done keys are now per-screen: tourDoneKey(screen) → 'olos.tour.done.' + screen
@@ -2875,6 +3033,7 @@
       if (!world) return;
       const { panX, panY, zoom } = appState.view;
       world.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+      world.style.setProperty('--world-zoom', zoom); // section header counter-scales against this
       const viewport = document.getElementById('canvas-viewport');
       if (viewport) {
         const s = 24 * zoom;
@@ -2889,6 +3048,26 @@
       const ws = document.getElementById('board-workspace');
       const collapsed = ws.classList.toggle('header-collapsed');
       localStorage.setItem('olos.headerCollapsed', collapsed ? '1' : '');
+    }
+
+    // Phone slim-bar chevron: expand/collapse the header control panel.
+    // Not persisted — every load starts collapsed.
+    function toggleMobileHeader(open) {
+      const ws = document.getElementById('board-workspace');
+      const isOpen = typeof open === 'boolean'
+        ? ws.classList.toggle('mobile-header-open', open)
+        : ws.classList.toggle('mobile-header-open');
+      const btn = document.getElementById('header-expand-btn');
+      if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    // Tour/tutorial spotlights can target controls that live inside the
+    // collapsed phone panel — pop it open so the target is visible/measurable.
+    function ensureMobileHeaderFor(el) {
+      if (!el || !window.matchMedia('(max-width: 768px)').matches) return;
+      if (!el.closest('.webmap-header-actions, .canvas-infobar')) return;
+      const ws = document.getElementById('board-workspace');
+      if (ws && !ws.classList.contains('mobile-header-open')) toggleMobileHeader(true);
     }
 
     function zoomBy(direction, anchorClientX, anchorClientY) {
@@ -2925,16 +3104,26 @@
       });
       if (appState.situation.active && appState.situation.box) {
         const b = appState.situation.box;
-        minX = Math.min(minX, b.x); minY = Math.min(minY, b.y - 96); // header floats above
+        minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
         maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
       }
       const viewport = document.getElementById('canvas-viewport');
       const rect = viewport.getBoundingClientRect();
-      const contentW = maxX - minX, contentH = maxY - minY;
       const margin = 60;
-      const sx = (rect.width - margin * 2) / contentW;
-      const sy = (rect.height - margin * 2) / contentH;
-      const zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(sx, sy, 1)));
+      const fit = () => {
+        const sx = (rect.width - margin * 2) / (maxX - minX);
+        const sy = (rect.height - margin * 2) / (maxY - minY);
+        return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(sx, sy, 1)));
+      };
+      let zoom = fit();
+      if (appState.situation.active && appState.situation.box) {
+        // The box header is counter-scaled (constant ~110px on screen), so its
+        // world height depends on the zoom we just picked — refit once with
+        // headroom for it above the box.
+        minY = Math.min(minY, appState.situation.box.y - 116 / zoom);
+        zoom = fit();
+      }
+      const contentW = maxX - minX, contentH = maxY - minY;
       appState.view.zoom = zoom;
       appState.view.panX = (rect.width  - contentW * zoom) / 2 - minX * zoom;
       appState.view.panY = (rect.height - contentH * zoom) / 2 - minY * zoom;
@@ -3862,6 +4051,13 @@
       let marqueeJustEnded = false;
       const marqueeEl = document.getElementById('marquee-rect');
 
+      // Touching anywhere on the canvas dismisses the phone header panel.
+      // Capture phase: node/edge handlers stop propagation before bubble.
+      viewport.addEventListener('pointerdown', () => {
+        const wsEl = document.getElementById('board-workspace');
+        if (wsEl && wsEl.classList.contains('mobile-header-open')) toggleMobileHeader(false);
+      }, true);
+
       viewport.addEventListener('pointerdown', (e) => {
         // Ignore canvas chrome (zoom toolbar, tutorial button) so their
         // clicks aren't swallowed by marquee/pan start + preventDefault.
@@ -4331,9 +4527,11 @@
     }
 
     function _tourResolveTarget(step) {
-      if (step.targetId) return document.getElementById(step.targetId);
-      if (step.targetSelector) return document.querySelector(step.targetSelector);
-      return null;
+      let el = null;
+      if (step.targetId) el = document.getElementById(step.targetId);
+      else if (step.targetSelector) el = document.querySelector(step.targetSelector);
+      ensureMobileHeaderFor(el);
+      return el;
     }
 
     function _tourPositionSpotlight(el, padding) {
@@ -4926,6 +5124,7 @@
       const hl = document.getElementById('tutorial-highlight');
       const sel = typeof step.highlight === 'function' ? step.highlight() : step.highlight;
       const el = sel ? document.querySelector(sel) : null;
+      ensureMobileHeaderFor(el);
       if (!el) {
         hl.classList.add('hidden');
       } else {
@@ -5564,6 +5763,8 @@ ${AI_RULES}
           : `${v.named}/${v.total} cards named & described`;
       el.classList.toggle('meets-target', v.ready);
       el.classList.toggle('below-target', !v.ready);
+      const dot = document.getElementById('mobile-ready-dot');
+      if (dot) dot.classList.toggle('is-ready', v.ready);
     }
 
     // --- Problem Situation evidence trail + AI prompts ---
