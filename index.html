@@ -896,6 +896,56 @@
 
     .nodes-layer { position: absolute; top: 0; left: 0; }
 
+    /* Problem Situation section box (FigJam-style frame behind the lattice) */
+    #sections-layer { position: absolute; top: 0; left: 0; width: 1px; height: 1px; }
+    .section-box {
+      position: absolute;
+      border: 2px dashed rgba(0,148,160,0.55);
+      border-radius: 18px;
+      background: rgba(0,148,160,0.045);
+      pointer-events: none;               /* panning works over the frame */
+    }
+    .section-header {
+      position: absolute; left: 0; bottom: 100%; margin-bottom: 12px;
+      width: 100%; display: flex; align-items: flex-start; gap: 12px;
+      pointer-events: auto;
+    }
+    .section-titles {
+      flex: 1; min-width: 0; max-width: 520px;
+      background: var(--midnight); border: 2px solid var(--primary-teal);
+      border-radius: 12px; padding: 12px 16px; cursor: grab;
+      box-shadow: 0 8px 24px rgba(16,24,32,0.18);
+    }
+    .section-titles:active { cursor: grabbing; }
+    .section-title {
+      width: 100%; background: transparent; border: none; outline: none;
+      color: var(--ghost-white); font-family: 'Geologica', sans-serif;
+      font-weight: 700; font-size: 1.05rem; letter-spacing: var(--track-snug, -0.01em); margin-bottom: 4px;
+    }
+    .section-title::placeholder { color: rgba(255,255,255,0.5); }
+    .section-desc {
+      width: 100%; background: transparent; border: none; outline: none; resize: none;
+      color: rgba(255,255,255,0.85); font-family: 'Geologica', sans-serif; font-size: 0.8rem; line-height: 1.5;
+    }
+    .section-desc::placeholder { color: rgba(255,255,255,0.4); }
+    .section-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .section-export {
+      background: var(--primary-teal); color: var(--ghost-white); border: none;
+      padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 0.8rem;
+      cursor: pointer; font-family: 'Geologica', sans-serif; white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0,148,160,0.35);
+    }
+    .section-export:hover { background: #007882; }
+    .section-export.hidden { display: none; }
+
+    /* Card page modal */
+    .cardpage-files { display: flex; flex-direction: column; gap: 8px; }
+    .cardpage-file { display: flex; align-items: center; gap: 12px; background: var(--cloud); border-radius: 8px; padding: 10px 14px; }
+    .cardpage-file > span:first-child { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cardpage-file-size { font-size: 0.75rem; opacity: 0.6; flex-shrink: 0; }
+    .cardpage-file button { background: transparent; border: none; color: var(--action-red); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; }
+    .cardpage-empty { font-size: 0.85rem; opacity: 0.6; }
+
     .canvas-node {
       position: absolute;
       transform-origin: center center;
@@ -1096,6 +1146,13 @@
       font-family: 'Geologica', sans-serif;
     }
     .hub-node .hub-suggest:hover { background: var(--primary-teal); color: var(--midnight); }
+    .hub-node .hub-expand {
+      background: transparent; border: 1px solid rgba(255,255,255,0.3);
+      color: var(--ghost-white); font-size: 0.7rem; font-weight: 600;
+      border-radius: 6px; padding: 3px 9px; cursor: pointer; margin-right: 8px;
+      font-family: 'Geologica', sans-serif;
+    }
+    .hub-node .hub-expand:hover { background: rgba(255,255,255,0.1); }
 
     /* AI modal mode tabs */
     .ai-mode-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--cloud); padding-bottom: 0; }
@@ -1699,6 +1756,7 @@
         <div class="hero-cta">
           <button type="button" class="btn btn-primary" onclick="tutorialStart()">Take the 5-minute guided tutorial</button>
           <a href="#landing-h-start" class="hero-cta-note">or get started with your own pool ↓</a>
+          <a href="#" class="hero-cta-note" onclick="openImportModal(); return false;">or open a shared working folder</a>
         </div>
       </header>
 
@@ -1872,6 +1930,7 @@
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
           <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full signal pool with your AI thinking partner">✨ <span class="btn-label">See the whole pool</span></button>
+          <button class="btn btn-outline" onclick="openImportModal()" aria-label="Open a shared working folder"><span class="btn-label">Open shared folder</span><span class="btn-label-short">Open</span></button>
           <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Push to Problem Situation</span><span class="btn-label-short">Push</span></button>
           <div class="profile-anchor">
             <button id="profile-btn" type="button" class="profile-btn"
@@ -1903,6 +1962,7 @@
       </div>
       <div class="canvas-viewport" id="canvas-viewport" role="application" aria-label="Web map canvas">
         <div class="canvas-world" id="canvas-world">
+          <div id="sections-layer"></div>
           <svg class="edge-layer" id="edge-layer" aria-hidden="true">
             <defs>
               <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -2051,6 +2111,52 @@
     </div>
   </div>
 
+  <div id="card-page-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="card-page-title">
+    <div class="modal-content" style="max-width: 760px;">
+      <div class="modal-header"><h3 id="card-page-title">Card</h3></div>
+      <div class="modal-body">
+        <p id="card-page-sub" style="font-size:0.8rem; opacity:0.7; margin-bottom:16px;"></p>
+        <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
+        <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6; margin-bottom:6px;">Main document — notes.md</div>
+        <textarea id="card-page-doc" style="width:100%; height:240px; font-family:monospace; font-size:0.825rem; padding:14px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
+        <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6; margin:18px 0 6px;">Attached markdown files</div>
+        <div id="card-page-files" class="cardpage-files"></div>
+        <input type="file" id="card-page-upload" accept=".md,.markdown,text/markdown,text/plain" multiple class="sr-only">
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
+          <button class="btn btn-outline" onclick="document.getElementById('card-page-upload').click()">Upload markdown files</button>
+          <button class="btn btn-primary" onclick="closeModal('card-page-modal')" data-autofocus>Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="import-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="import-modal-title">Open a shared working folder</h3>
+      </div>
+      <div class="modal-body">
+        <div id="import-pick">
+          <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; margin-bottom: 16px;">Load a working folder someone exported from this tool — either the <strong>.zip</strong> itself or the <strong>unzipped folder</strong>. You'll get their whole board: lattice, problem situation, card pages, and attached files.</p>
+          <input type="file" id="import-zip-input" accept=".zip,application/zip" class="sr-only" onchange="handleImportZip(event)">
+          <input type="file" id="import-folder-input" webkitdirectory multiple class="sr-only" onchange="handleImportFolder(event)">
+          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn btn-outline" onclick="closeModal('import-modal')">Cancel</button>
+            <button class="btn btn-outline" onclick="document.getElementById('import-folder-input').click()">Choose folder</button>
+            <button class="btn btn-primary" onclick="document.getElementById('import-zip-input').click()" data-autofocus>Choose .zip</button>
+          </div>
+        </div>
+        <div id="import-confirm" class="hidden">
+          <p id="import-confirm-summary" style="font-size: 0.9rem; color: var(--midnight); margin-bottom: 16px;"></p>
+          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn btn-outline" onclick="closeModal('import-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmImport()">Replace my board</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="ai-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title">
     <div class="modal-content" style="max-width: 720px;">
       <div class="modal-header">
@@ -2169,7 +2275,7 @@
     ];
 
     function emptySituation() {
-      return { title: '', description: '', frame: '', stakeholderMap: '', problematization: '' };
+      return { title: '', description: '', frame: '', stakeholderMap: '', problematization: '', active: false, box: null };
     }
     function defaultState() {
       return {
@@ -2186,6 +2292,7 @@
         viewInitialized: false,
         canvasViewState: 'all',
         submittedAt: null,
+        exportedAt: null,
         currentScreen: 'setup',
         sorting: { currentIndex: 0, decisions: {} }
       };
@@ -2313,33 +2420,46 @@
           delete parsed.stakeholderMaps;
         }
 
-        if (!Array.isArray(parsed.cards)) parsed.cards = [];
-        parsed.cards.forEach(c => {
-          if (typeof c.tier !== 'number') c.tier = 1;
-          if (!Array.isArray(c.childIds)) c.childIds = Array.isArray(c.signalIds) ? c.signalIds.slice() : [];
-          delete c.signalIds;
-          if (c.tier === 1 && typeof c.cardType === 'undefined') c.cardType = null;
-        });
-        if (!parsed.situation || typeof parsed.situation !== 'object') parsed.situation = { title: '', description: '', frame: '', stakeholderMap: '', problematization: '' };
-        ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].forEach(k => { if (typeof parsed.situation[k] !== 'string') parsed.situation[k] = ''; });
-        if (!Array.isArray(parsed.committedCardIds)) parsed.committedCardIds = [];
-        if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
-        if (!parsed.currentScreen) parsed.currentScreen = 'setup';
-        if (!parsed.nodes || typeof parsed.nodes !== 'object') parsed.nodes = {};
-        if (!parsed.view || typeof parsed.view !== 'object') parsed.view = { zoom: 1, panX: 0, panY: 0 };
-        if (typeof parsed.view.zoom !== 'number') parsed.view.zoom = 1;
-        if (typeof parsed.view.panX !== 'number') parsed.view.panX = 0;
-        if (typeof parsed.view.panY !== 'number') parsed.view.panY = 0;
-        if (typeof parsed.viewInitialized !== 'boolean') parsed.viewInitialized = false;
-        if (!parsed.canvasViewState) parsed.canvasViewState = 'all';
-        if (!parsed.sorting || typeof parsed.sorting !== 'object') parsed.sorting = { currentIndex: 0, decisions: {} };
-        if (!parsed.sorting.decisions) parsed.sorting.decisions = {};
-        if (typeof parsed.sorting.currentIndex !== 'number') parsed.sorting.currentIndex = 0;
+        normalizeState(parsed);
         if (isLegacy) {
           try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch (_) {}
         }
         return parsed;
       } catch (e) { return null; }
+    }
+    // Fill in defaults / coerce types on a parsed state object (mutates and
+    // returns it). Shared by loadState() and the working-folder importer.
+    function normalizeState(parsed) {
+      if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.items)) return null;
+      if (!Array.isArray(parsed.cards)) parsed.cards = [];
+      parsed.cards.forEach(c => {
+        if (typeof c.tier !== 'number') c.tier = 1;
+        if (!Array.isArray(c.childIds)) c.childIds = Array.isArray(c.signalIds) ? c.signalIds.slice() : [];
+        delete c.signalIds;
+        if (c.tier === 1 && typeof c.cardType === 'undefined') c.cardType = null;
+        if (typeof c.doc !== 'string') c.doc = '';
+        if (!Array.isArray(c.files)) c.files = [];   // [{ name, content }]
+      });
+      if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
+      if (!parsed.situation || typeof parsed.situation !== 'object') parsed.situation = emptySituation();
+      ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].forEach(k => { if (typeof parsed.situation[k] !== 'string') parsed.situation[k] = ''; });
+      if (!Array.isArray(parsed.committedCardIds)) parsed.committedCardIds = [];
+      if (typeof parsed.situation.active !== 'boolean') parsed.situation.active = !!(parsed.committedCardIds && parsed.committedCardIds.length);
+      if (!parsed.situation.box || typeof parsed.situation.box !== 'object') parsed.situation.box = null;
+      if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
+      if (typeof parsed.exportedAt === 'undefined') parsed.exportedAt = null;
+      if (!parsed.currentScreen) parsed.currentScreen = 'setup';
+      if (!parsed.nodes || typeof parsed.nodes !== 'object') parsed.nodes = {};
+      if (!parsed.view || typeof parsed.view !== 'object') parsed.view = { zoom: 1, panX: 0, panY: 0 };
+      if (typeof parsed.view.zoom !== 'number') parsed.view.zoom = 1;
+      if (typeof parsed.view.panX !== 'number') parsed.view.panX = 0;
+      if (typeof parsed.view.panY !== 'number') parsed.view.panY = 0;
+      if (typeof parsed.viewInitialized !== 'boolean') parsed.viewInitialized = false;
+      if (!parsed.canvasViewState) parsed.canvasViewState = 'all';
+      if (!parsed.sorting || typeof parsed.sorting !== 'object') parsed.sorting = { currentIndex: 0, decisions: {} };
+      if (!parsed.sorting.decisions) parsed.sorting.decisions = {};
+      if (typeof parsed.sorting.currentIndex !== 'number') parsed.sorting.currentIndex = 0;
+      return parsed;
     }
     function clearSavedState() {
       try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
@@ -2803,6 +2923,11 @@
         if (p.x + w > maxX) maxX = p.x + w;
         if (p.y + h > maxY) maxY = p.y + h;
       });
+      if (appState.situation.active && appState.situation.box) {
+        const b = appState.situation.box;
+        minX = Math.min(minX, b.x); minY = Math.min(minY, b.y - 96); // header floats above
+        maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
+      }
       const viewport = document.getElementById('canvas-viewport');
       const rect = viewport.getBoundingClientRect();
       const contentW = maxX - minX, contentH = maxY - minY;
@@ -2830,6 +2955,7 @@
       }
       renderAllNodes();
       renderAllEdges();
+      renderSection();
       updateClusterProgressChip();
       filterItems();
     }
@@ -2847,6 +2973,7 @@
       applyViewState();
       buildViewTabs();
       applySelectionClasses();
+      if (appState.situation.active) refreshSectionGeometry();
     }
 
     // Distinct tiers currently present, ascending.
@@ -2961,6 +3088,11 @@
         suggest.addEventListener('pointerdown', (e) => e.stopPropagation());
         suggest.addEventListener('click', (e) => { e.stopPropagation(); openHubNamePromptModal(obj.id); });
       }
+      const expandBtn = el.querySelector('.hub-expand');
+      if (expandBtn) {
+        expandBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        expandBtn.addEventListener('click', (e) => { e.stopPropagation(); openCardPage(obj.id); });
+      }
       el.querySelectorAll('select, input[type="radio"]').forEach(ctrl => {
         ctrl.addEventListener('pointerdown', (e) => e.stopPropagation());
       });
@@ -3025,6 +3157,7 @@
         ${typePickerHtml}
         ${roleHtml}
         <div class="hub-actions">
+          <button type="button" class="hub-expand" title="Open this card's page">⤢ Open</button>
           <button type="button" class="hub-suggest" title="Get an AI prompt to help classify and name this card">✨ AI</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
@@ -3120,6 +3253,7 @@
         <p class="hub-lock-note"${locked ? '' : ' hidden'}>Name &amp; describe each ${escapeHtml(childWord)} below before editing this ${escapeHtml(label.toLowerCase())} — a higher claim rests on examined ones.</p>
         ${themeQuality}
         <div class="hub-actions">
+          <button type="button" class="hub-expand" title="Open this card's page">⤢ Open</button>
           <button type="button" class="hub-suggest" title="Get an AI prompt for this ${escapeHtml(label.toLowerCase())}">✨ AI</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
@@ -3370,6 +3504,7 @@
           if (!raf) raf = requestAnimationFrame(() => {
             raf = null;
             dragIds.forEach(id => updateEdgesForNode(id));
+            if (appState.situation.active) refreshSectionGeometry();
           });
         };
         const onUp = (ev) => {
@@ -3385,6 +3520,7 @@
           pointerId = null;
           if (dragging) {
             dragging = false;
+            if (appState.situation.active) refreshSectionGeometry();
             scheduleSave();
           } else {
             // Click (not drag): select/toggle this node
@@ -5583,9 +5719,109 @@ ${AI_RULES}
 </rules>`;
     }
 
+    // --- Problem Situation section box (FigJam-style frame behind the lattice) ---
+
+    // Every card + every signal beneath any card = the lattice.
+    function latticeNodeIds() {
+      const ids = new Set();
+      appState.cards.forEach(c => { ids.add(c.id); signalsUnder(c.id).forEach(s => ids.add(s)); });
+      return [...ids].filter(id => appState.nodes[id]);
+    }
+    function computeSectionBox() {
+      const ids = latticeNodeIds();
+      if (!ids.length) return null;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      ids.forEach(id => {
+        const p = appState.nodes[id]; const { w, h } = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
+        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x + w); maxY = Math.max(maxY, p.y + h);
+      });
+      const pad = 100;
+      return { x: minX - pad, y: minY - pad, w: (maxX - minX) + pad * 2, h: (maxY - minY) + pad * 2 };
+    }
+
+    function renderSection() {
+      const layer = document.getElementById('sections-layer');
+      if (!layer) return;
+      const s = appState.situation;
+      if (!s.active) { layer.innerHTML = ''; return; }
+      if (!s.box) s.box = computeSectionBox();
+      const box = s.box;
+      if (!box) { layer.innerHTML = ''; return; }
+      const ready = (s.title || '').trim() && (s.description || '').trim();
+      layer.innerHTML = `
+        <div class="section-box" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px;">
+          <div class="section-header">
+            <div class="section-titles" id="section-drag">
+              <input class="section-title" id="section-title" placeholder="Name the problem situation" value="${escapeHtml(s.title || '')}">
+              <textarea class="section-desc" id="section-desc" rows="2" placeholder="Describe it — the open, complex, networked condition">${escapeHtml(s.description || '')}</textarea>
+            </div>
+            <div class="section-actions">
+              <button class="section-export ${ready ? '' : 'hidden'}" id="section-export">Export folder ⤓</button>
+            </div>
+          </div>
+        </div>`;
+      wireSection();
+    }
+
+    // Resize/move the existing box div without rebuilding it (keeps input focus).
+    function refreshSectionGeometry() {
+      if (!appState.situation.active) return;
+      const box = computeSectionBox(); if (!box) return;
+      appState.situation.box = box;
+      const el = document.querySelector('.section-box');
+      if (el) { el.style.left = box.x + 'px'; el.style.top = box.y + 'px'; el.style.width = box.w + 'px'; el.style.height = box.h + 'px'; }
+    }
+
+    function toggleSectionExport() {
+      const exp = document.getElementById('section-export'); if (!exp) return;
+      const s = appState.situation;
+      exp.classList.toggle('hidden', !((s.title || '').trim() && (s.description || '').trim()));
+    }
+
+    function wireSection() {
+      const title = document.getElementById('section-title');
+      const desc  = document.getElementById('section-desc');
+      const exp   = document.getElementById('section-export');
+      const drag  = document.getElementById('section-drag');
+      if (title) { title.addEventListener('pointerdown', e => e.stopPropagation());
+        title.addEventListener('input', () => { appState.situation.title = title.value; scheduleSave(); toggleSectionExport(); }); }
+      if (desc) { desc.addEventListener('pointerdown', e => e.stopPropagation());
+        desc.addEventListener('input', () => { appState.situation.description = desc.value; autoResize(desc); scheduleSave(); toggleSectionExport(); });
+        requestAnimationFrame(() => autoResize(desc)); }
+      if (exp) { exp.addEventListener('pointerdown', e => e.stopPropagation());
+        exp.addEventListener('click', e => { e.stopPropagation(); exportWorkingFolder(); }); }
+      if (drag) attachSectionDrag(drag);
+    }
+
+    // Drag the title panel → move the whole lattice (the box follows via recompute).
+    function attachSectionDrag(handle) {
+      handle.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('input, textarea, button')) return;
+        e.stopPropagation();
+        const pid = e.pointerId; handle.setPointerCapture(pid);
+        const sx = e.clientX, sy = e.clientY;
+        const ids = latticeNodeIds();
+        const start = {}; ids.forEach(id => start[id] = { ...getNodePos(id) });
+        const onMove = (ev) => {
+          if (ev.pointerId !== pid) return;
+          const dx = (ev.clientX - sx) / appState.view.zoom, dy = (ev.clientY - sy) / appState.view.zoom;
+          ids.forEach(id => { const p = start[id]; setNodePos(id, p.x + dx, p.y + dy);
+            const el = document.getElementById('node-' + id); if (el) { el.style.left = (p.x + dx) + 'px'; el.style.top = (p.y + dy) + 'px'; } });
+          ids.forEach(updateEdgesForNode); refreshSectionGeometry();
+        };
+        const onUp = (ev) => {
+          if (ev.pointerId !== pid) return;
+          handle.removeEventListener('pointermove', onMove); handle.removeEventListener('pointerup', onUp);
+          try { handle.releasePointerCapture(pid); } catch (_) {} scheduleSave();
+        };
+        handle.addEventListener('pointermove', onMove); handle.addEventListener('pointerup', onUp);
+      });
+    }
+
     // --- Push to Problem Situation ---
-    // Gate: every card must be named AND described. Then the situation
-    // (next screen) synthesizes the whole ladder into one open condition.
+    // Gate: every card must be named AND described. Then the push frames the
+    // lattice in a section box on the canvas — no screen change.
     function openCommitModal() {
       if (tutorialMode) {
         toast('In the tutorial we stop before pushing — that step is for your real board.');
@@ -5600,9 +5836,13 @@ ${AI_RULES}
         return;
       }
       warningEl.textContent = '';
+      appState.situation.active = true;
+      appState.situation.box = computeSectionBox();
       appState.committedCardIds = topLevelCards().map(c => c.id);
+      renderSection();
+      resetView();   // zoom out to fit the lattice + box
       scheduleSave();
-      goToScreen('workspace');
+      toast('Framed. Name and describe the problem situation on the box, then export.');
     }
     // Kept as no-ops for any lingering references in the (now-unused) modal.
     function onCommitRowChange() {}
@@ -5877,6 +6117,338 @@ ${AI_RULES}
       a.download = 'Triangulator_Submission.md';
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    // ======================== WORKING-FOLDER EXPORT ========================
+
+    function sanitizeFileName(n) {
+      let s = (n || 'file').replace(/[\/\\:*?"<>|]/g, '_').trim() || 'file';
+      if (!/\.(md|markdown|txt)$/i.test(s)) s += '.md';
+      return s;
+    }
+    function folderSlug(s) {
+      const slug = (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+      return slug || 'untitled';
+    }
+
+    // Generated notes.md for a card whose page was never edited.
+    function exportCardNotes(c) {
+      const lines = [`# ${c.title || 'Untitled'}`, ''];
+      lines.push(`*${tierName(c.tier)}${c.tier === 1 ? ' · ' + cardTypeInfo(c.cardType).label : ''}${c.playerRole ? ' · ' + c.playerRole : ''}*`, '');
+      if ((c.description || '').trim()) lines.push(c.description.trim(), '');
+      const outline = formatTreeOutline(c.id, 0);
+      if (outline) lines.push('## Built from', '', outline, '');
+      return lines.join('\n');
+    }
+
+    // problem-situation.md: the box's title + description + what it was built from.
+    function exportSituationDoc() {
+      const s = appState.situation;
+      const lines = [`# ${s.title || 'Untitled Problem Situation'}`, ''];
+      if ((s.description || '').trim()) lines.push(s.description.trim(), '');
+      const tops = appState.committedCardIds.map(findCard).filter(Boolean);
+      if (tops.length) {
+        lines.push('## Built from', '');
+        tops.forEach(c => {
+          const sigs = signalsUnder(c.id).length;
+          lines.push(`- **${c.title || 'Untitled'}** — ${tierName(c.tier)} · ${sigs} signal${sigs === 1 ? '' : 's'}`);
+        });
+        lines.push('');
+      }
+      if (appState.exportedAt) lines.push(`*Exported ${appState.exportedAt}*`, '');
+      return lines.join('\n');
+    }
+
+    function buildExportFiles() {
+      const root = folderSlug(appState.situation.title) + '/';
+      const files = [];
+      const add = (path, content) => files.push({ path: root + path, content });
+
+      add('problem-situation.md', exportSituationDoc());
+
+      // Machine-readable snapshot — lets someone else open this folder in the
+      // tool and see the exact same board (cards, signals, positions, box).
+      const state = JSON.parse(JSON.stringify(appState));
+      state.currentScreen = 'board';
+      state.viewInitialized = false;
+      add('state.json', JSON.stringify({ app: 'triangulator', version: 1, exportedAt: new Date().toISOString(), state }, null, 2));
+
+      const usedCards = appState.cards.slice().sort((a, b) => (b.tier - a.tier) || (a.title || '').localeCompare(b.title || ''));
+      usedCards.forEach((c, i) => {
+        const f = 'cards/' + String(i + 1).padStart(2, '0') + '-' + folderSlug(c.title) + '/';
+        add(f + 'card.json', JSON.stringify({
+          id: c.id, title: c.title || '', description: c.description || '',
+          tier: c.tier, tierName: tierName(c.tier),
+          cardType: c.cardType ?? null, playerRole: c.playerRole ?? null,
+          childIds: c.childIds.slice(),
+          signals: signalsUnder(c.id).map(id => { const it = appState.items.find(x => x.id === id); return it ? it.title : id; })
+        }, null, 2));
+        const docText = (c.doc && c.doc.trim()) ? c.doc : exportCardNotes(c);
+        add(f + 'notes.md', docText);
+        add(f + 'deepen.md', buildHubPrompt(c.id, 'throughline'));
+        add(f + 'evidence.md', formatTreeOutline(c.id, 0) || '(no evidence beneath this card yet)');
+        (c.files || []).forEach(file => add(f + 'files/' + sanitizeFileName(file.name), file.content));
+      });
+      return files;
+    }
+
+    // --- Minimal ZIP writer (stored entries, no compression — offline, no deps) ---
+    const CRC_TABLE = (() => {
+      const t = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        t[n] = c >>> 0;
+      }
+      return t;
+    })();
+    function crc32(bytes) {
+      let c = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+    function buildZip(files) {
+      const enc = new TextEncoder();
+      const now = new Date();
+      const dosTime = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF;
+      const dosDate = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+      const chunks = [];
+      const central = [];
+      let offset = 0;
+      files.forEach(file => {
+        const name = enc.encode(file.path);
+        const data = enc.encode(file.content);
+        const crc = crc32(data);
+        const local = new DataView(new ArrayBuffer(30));
+        local.setUint32(0, 0x04034b50, true);
+        local.setUint16(4, 20, true);          // version needed
+        local.setUint16(6, 0x0800, true);      // UTF-8 names
+        local.setUint16(8, 0, true);           // method: stored
+        local.setUint16(10, dosTime, true);
+        local.setUint16(12, dosDate, true);
+        local.setUint32(14, crc, true);
+        local.setUint32(18, data.length, true);
+        local.setUint32(22, data.length, true);
+        local.setUint16(26, name.length, true);
+        local.setUint16(28, 0, true);
+        chunks.push(new Uint8Array(local.buffer), name, data);
+        const cen = new DataView(new ArrayBuffer(46));
+        cen.setUint32(0, 0x02014b50, true);
+        cen.setUint16(4, 20, true);
+        cen.setUint16(6, 20, true);
+        cen.setUint16(8, 0x0800, true);
+        cen.setUint16(10, 0, true);
+        cen.setUint16(12, dosTime, true);
+        cen.setUint16(14, dosDate, true);
+        cen.setUint32(16, crc, true);
+        cen.setUint32(20, data.length, true);
+        cen.setUint32(24, data.length, true);
+        cen.setUint16(28, name.length, true);
+        cen.setUint32(42, offset, true);
+        central.push(new Uint8Array(cen.buffer), name);
+        offset += 30 + name.length + data.length;
+      });
+      const cdSize = central.reduce((s, c) => s + c.length, 0);
+      const eocd = new DataView(new ArrayBuffer(22));
+      eocd.setUint32(0, 0x06054b50, true);
+      eocd.setUint16(8, files.length, true);
+      eocd.setUint16(10, files.length, true);
+      eocd.setUint32(12, cdSize, true);
+      eocd.setUint32(16, offset, true);
+      return new Blob([...chunks, ...central, new Uint8Array(eocd.buffer)], { type: 'application/zip' });
+    }
+
+    function exportWorkingFolder() {
+      if (tutorialMode) { toast('Exporting is for your real board — finish the tutorial first.'); return; }
+      const s = appState.situation;
+      if (!(s.title || '').trim() || !(s.description || '').trim()) {
+        toast('Name and describe the problem situation before exporting.');
+        return;
+      }
+      appState.exportedAt = new Date().toISOString();
+      const blob = buildZip(buildExportFiles());
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = folderSlug(s.title) + '.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+      scheduleSave();
+      toast('Working folder exported.');
+    }
+
+    // ======================== WORKING-FOLDER IMPORT ========================
+    // Open someone else's exported folder (the .zip or its unzipped contents):
+    // mine it for state.json and, after confirmation, replace the local board.
+
+    let stagedImportState = null;
+
+    function openImportModal() {
+      if (tutorialMode) { toast('Opening shared work is for your real board — finish the tutorial first.'); return; }
+      stagedImportState = null;
+      document.getElementById('import-pick').classList.remove('hidden');
+      document.getElementById('import-confirm').classList.add('hidden');
+      document.getElementById('import-zip-input').value = '';
+      document.getElementById('import-folder-input').value = '';
+      openModal('import-modal');
+    }
+
+    // --- Minimal ZIP reader: stored entries directly, deflate (a folder the
+    // user re-zipped with OS tools) via the native DecompressionStream. ---
+    async function readZipEntryText(view, bytes, entry) {
+      const localNameLen = view.getUint16(entry.localOffset + 26, true);
+      const localExtraLen = view.getUint16(entry.localOffset + 28, true);
+      const start = entry.localOffset + 30 + localNameLen + localExtraLen;
+      const raw = bytes.subarray(start, start + entry.compSize);
+      if (entry.method === 0) return new TextDecoder().decode(raw);
+      if (entry.method === 8) {
+        const ds = new DecompressionStream('deflate-raw');
+        const out = await new Response(new Blob([raw]).stream().pipeThrough(ds)).arrayBuffer();
+        return new TextDecoder().decode(out);
+      }
+      throw new Error('Unsupported zip compression method ' + entry.method);
+    }
+    async function readStateJsonFromZip(arrayBuffer) {
+      const bytes = new Uint8Array(arrayBuffer);
+      const view = new DataView(arrayBuffer);
+      // Find the end-of-central-directory record, scanning back over a comment.
+      let eocd = -1;
+      for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
+        if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+      }
+      if (eocd < 0) throw new Error('Not a zip file');
+      const count = view.getUint16(eocd + 10, true);
+      let p = view.getUint32(eocd + 16, true);
+      const entries = [];
+      const dec = new TextDecoder();
+      for (let i = 0; i < count; i++) {
+        if (view.getUint32(p, true) !== 0x02014b50) break;
+        const nameLen = view.getUint16(p + 28, true);
+        const extraLen = view.getUint16(p + 30, true);
+        const commentLen = view.getUint16(p + 32, true);
+        entries.push({
+          method: view.getUint16(p + 10, true),
+          compSize: view.getUint32(p + 20, true),
+          name: dec.decode(bytes.subarray(p + 46, p + 46 + nameLen)),
+          localOffset: view.getUint32(p + 42, true)
+        });
+        p += 46 + nameLen + extraLen + commentLen;
+      }
+      // Shallowest state.json wins (the root one, not something nested deeper).
+      const match = entries
+        .filter(e => /(^|\/)state\.json$/.test(e.name))
+        .sort((a, b) => a.name.split('/').length - b.name.split('/').length)[0];
+      if (!match) throw new Error('No state.json in zip');
+      return readZipEntryText(view, bytes, match);
+    }
+
+    async function handleImportZip(evt) {
+      const file = (evt.target.files || [])[0];
+      evt.target.value = '';
+      if (!file) return;
+      try {
+        stageImport(await readStateJsonFromZip(await file.arrayBuffer()));
+      } catch (e) {
+        toast("Couldn't read that zip — is it an exported working folder?");
+      }
+    }
+    async function handleImportFolder(evt) {
+      const files = [...(evt.target.files || [])];
+      evt.target.value = '';
+      if (!files.length) return;
+      const match = files
+        .filter(f => f.name === 'state.json')
+        .sort((a, b) => (a.webkitRelativePath || '').split('/').length - (b.webkitRelativePath || '').split('/').length)[0];
+      if (!match) { toast('No state.json found — pick the exported working folder.'); return; }
+      try {
+        stageImport(await match.text());
+      } catch (e) {
+        toast("Couldn't read that folder's state.json.");
+      }
+    }
+
+    function stageImport(jsonText) {
+      let parsed = null;
+      try { parsed = JSON.parse(jsonText); } catch (e) {}
+      const state = parsed && parsed.app === 'triangulator' && normalizeState(parsed.state);
+      if (!state) { toast('Not a Triangulator working folder.'); return; }
+      stagedImportState = state;
+      const sigSet = new Set();
+      state.cards.forEach(c => c.childIds.forEach(id => { if (state.items.some(i => i.id === id)) sigSet.add(id); }));
+      const title = (state.situation.title || '').trim() || state.settings.title || 'Untitled';
+      document.getElementById('import-confirm-summary').textContent =
+        `Replace your current board with “${title}” — ${state.cards.length} card${state.cards.length === 1 ? '' : 's'}, ${state.items.length} signal${state.items.length === 1 ? '' : 's'}? Your own work on this device will be overwritten.`;
+      document.getElementById('import-pick').classList.add('hidden');
+      document.getElementById('import-confirm').classList.remove('hidden');
+    }
+
+    function confirmImport() {
+      if (!stagedImportState) { closeModal('import-modal'); return; }
+      const state = stagedImportState;
+      stagedImportState = null;
+      state.currentScreen = 'board';
+      state.viewInitialized = false;
+      appState = state;
+      selectedNodeIds.clear();
+      clearTimeout(saveTimer); save();
+      closeModal('import-modal');
+      if (!appState.settings.title) appState.settings.title = 'Signal Pool';
+      setBoardTitleDisplay();
+      ensureCanvasInitialized();
+      goToScreen('board');
+      resetView();
+      toast(`Opened “${(appState.situation.title || '').trim() || 'shared'}” working folder.`);
+    }
+
+    // ======================== CARD PAGE (expand → edit notes.md + attach files) ========================
+
+    let currentCardPageId = null;
+
+    function defaultCardDoc(c) { return `# ${c.title || 'Untitled'}\n\n${c.description || ''}\n`; }
+
+    function openCardPage(cardId) {
+      const c = findCard(cardId); if (!c) return;
+      currentCardPageId = cardId;
+      document.getElementById('card-page-title').textContent = c.title || 'Untitled card';
+      const sub = (c.tier === 1)
+        ? `${tierName(c.tier)} · ${cardTypeInfo(c.cardType).label}${c.playerRole ? ' · ' + c.playerRole : ''}`
+        : tierName(c.tier);
+      document.getElementById('card-page-sub').textContent = `${sub} · ${signalsUnder(cardId).length} signal(s)`;
+      if (!Array.isArray(c.files)) c.files = []; // cards created pre-reload lack the field
+      const doc = document.getElementById('card-page-doc');
+      if (!c.doc) c.doc = defaultCardDoc(c);
+      doc.value = c.doc;
+      doc.oninput = () => { c.doc = doc.value; scheduleSave(); };
+      renderCardFiles(c);
+      const up = document.getElementById('card-page-upload');
+      up.value = ''; up.onchange = (e) => handleCardFileUpload(c, e);
+      openModal('card-page-modal');
+    }
+
+    function renderCardFiles(c) {
+      const wrap = document.getElementById('card-page-files');
+      if (!c.files || !c.files.length) { wrap.innerHTML = '<p class="cardpage-empty">No attached files yet.</p>'; return; }
+      wrap.innerHTML = c.files.map((f, i) =>
+        `<div class="cardpage-file"><span>${escapeHtml(f.name)}</span><span class="cardpage-file-size">${f.content.length} chars</span><button onclick="removeCardFile(${i})">Remove</button></div>`
+      ).join('');
+    }
+
+    function removeCardFile(i) {
+      const c = findCard(currentCardPageId); if (!c) return;
+      c.files.splice(i, 1); scheduleSave(); renderCardFiles(c);
+    }
+
+    function handleCardFileUpload(c, evt) {
+      const files = [...(evt.target.files || [])]; evt.target.value = '';
+      if (!files.length) return;
+      files.forEach(file => {
+        if (!/\.(md|markdown|txt)$/i.test(file.name)) { toast(`Skipped ${file.name} — markdown/text only.`); return; }
+        if (file.size > 500000) { toast(`Skipped ${file.name} — too large (500 KB max).`); return; }
+        const r = new FileReader();
+        r.onload = () => { c.files.push({ name: file.name, content: String(r.result || '') }); scheduleSave(); renderCardFiles(c); };
+        r.onerror = () => { toast(`Couldn't read ${file.name}.`); };
+        r.readAsText(file);
+      });
     }
 
     function startOver() {
@@ -6213,9 +6785,6 @@ ${AI_RULES}
       if (Array.isArray(appState.committedCardIds)) {
         appState.committedCardIds = appState.committedCardIds.filter(id => isCardId(id));
       }
-      const hasSituationWork = appState.committedCardIds.length || ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].some(k => (appState.situation[k] || '').trim());
-      if (appState.submittedAt && hasSituationWork) return 'artifact';
-      if (hasSituationWork) return 'workspace';
       if (appState.cards.length > 0) return 'board';
       if (appState.currentScreen === 'sorting') return 'sorting';
       const totalItems = appState.items.length;
