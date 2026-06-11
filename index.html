@@ -5381,16 +5381,19 @@ ${AI_RULES}
       toast(ok ? 'Copied.' : 'Copy failed — select and copy manually.');
     }
 
-    // --- Validation + progress (all cards must be named & described to push) ---
+    // --- Validation + progress (all cards named & described, plus at least
+    // one named & described theme, to push) ---
     function validateBoard() {
       const cards = appState.cards;
       const named = cards.filter(c => (c.title || '').trim());
       const missing = cards.filter(c => !(c.title || '').trim() || !(c.description || '').trim());
       const tops = topLevelCards();
+      const hasTheme = cards.some(c => c.tier >= 3 && (c.title || '').trim() && (c.description || '').trim());
       const warnings = [];
       if (!cards.length) warnings.push('Connect signals into evidence cards first.');
       else if (missing.length) warnings.push(`${missing.length} card${missing.length === 1 ? '' : 's'} still need a name and a description.`);
-      return { warnings, total: cards.length, named: named.length, missing, tops: tops.length, ready: cards.length > 0 && missing.length === 0 };
+      else if (!hasTheme) warnings.push('Climb to at least one theme — and name and describe it — before pushing.');
+      return { warnings, total: cards.length, named: named.length, missing, tops: tops.length, hasTheme, ready: cards.length > 0 && missing.length === 0 && hasTheme };
     }
 
     function getClusterProgress() {
@@ -5404,7 +5407,9 @@ ${AI_RULES}
       const v = validateBoard();
       el.textContent = v.ready
         ? `Ready to push — ${v.total} card${v.total === 1 ? '' : 's'} named & described`
-        : `${v.named}/${v.total} cards named & described`;
+        : (!v.missing.length && v.total && !v.hasTheme)
+          ? 'Climb to a named & described theme to push'
+          : `${v.named}/${v.total} cards named & described`;
       el.classList.toggle('meets-target', v.ready);
       el.classList.toggle('below-target', !v.ready);
     }
