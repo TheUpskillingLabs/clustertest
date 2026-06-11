@@ -932,6 +932,10 @@
     }
     .hub-node input.hub-title::placeholder,
     .hub-node textarea.hub-desc::placeholder { color: rgba(255,255,255,0.5); }
+    /* Locked higher-tier hub: children must be named & described before editing */
+    .hub-node.hub-locked input.hub-title,
+    .hub-node.hub-locked textarea.hub-desc { opacity: 0.4; cursor: not-allowed; }
+    .hub-lock-note { font-size: 0.62rem; color: rgba(255,255,255,0.55); line-height: var(--lh-snug); margin: 0 0 6px; }
     .hub-node textarea.hub-desc {
       font-size: 0.78rem;
       line-height: 1.45;
@@ -2738,7 +2742,7 @@
       const titleInput = el.querySelector('.hub-title');
       if (titleInput) {
         titleInput.addEventListener('input', () => {
-          obj.title = titleInput.value; scheduleSave(); updateClusterProgressChip();
+          obj.title = titleInput.value; scheduleSave(); updateClusterProgressChip(); refreshParentLocks(obj.id);
           tutorialNotify('card-edited', { id: obj.id, title: obj.title || '', description: obj.description || '' });
         });
         titleInput.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -2746,7 +2750,7 @@
       const desc = el.querySelector('.hub-desc');
       if (desc) {
         desc.addEventListener('input', () => {
-          obj.description = desc.value; autoResize(desc); scheduleSave();
+          obj.description = desc.value; autoResize(desc); scheduleSave(); refreshParentLocks(obj.id);
           tutorialNotify('card-edited', { id: obj.id, title: obj.title || '', description: obj.description || '' });
         });
         desc.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -2866,12 +2870,32 @@
     }
 
     // Higher-tier cards (pattern, theme, super-theme, mega-theme, …).
+    // A higher-tier hub is locked for editing until every lower-tier hub it is
+    // built from has been named and described — claims rest on examined claims.
+    function isNamedAndDescribed(c) { return !!(c && (c.title || '').trim() && (c.description || '').trim()); }
+    function hubLocked(card) {
+      if (!card || card.tier < 2) return false;
+      return card.childIds.map(findCard).filter(Boolean).some(ch => !isNamedAndDescribed(ch));
+    }
+    function refreshParentLocks(childId) {
+      parentsOf(childId).forEach(p => {
+        if (p.tier < 2) return;
+        const el = document.getElementById('node-' + p.id);
+        if (!el) return;
+        const locked = hubLocked(p);
+        el.classList.toggle('hub-locked', locked);
+        const t = el.querySelector('input.hub-title'); if (t) t.disabled = locked;
+        const d = el.querySelector('textarea.hub-desc'); if (d) d.disabled = locked;
+        const n = el.querySelector('.hub-lock-note'); if (n) n.hidden = !locked;
+      });
+    }
     function buildHigherCardNode(card) {
       const el = document.createElement('div');
       const color = cardColor(card);
       const label = tierName(card.tier);
       const childWord = tierName(card.tier - 1).toLowerCase();
-      el.className = 'canvas-node hub-node card-node tiernode-' + card.tier;
+      const locked = hubLocked(card);
+      el.className = 'canvas-node hub-node card-node tiernode-' + card.tier + (locked ? ' hub-locked' : '');
       el.id = 'node-' + card.id;
       el.setAttribute('data-node-id', card.id);
       el.setAttribute('data-kind', 'hub');
@@ -2896,8 +2920,9 @@
           <span class="hub-tag-label"><span class="type-name">${escapeHtml(label)}</span></span>
           <span class="hub-count" style="background:${color}; color:${lightText ? 'var(--midnight)' : 'var(--ghost-white)'};">${childCount} ${escapeHtml(childWord)}${childCount === 1 ? '' : 's'} · ${sigCount} signal${sigCount === 1 ? '' : 's'}</span>
         </div>
-        <input type="text" class="hub-title" placeholder="Name this ${escapeHtml(label.toLowerCase())}" value="${escapeHtml(card.title || '')}" />
-        <textarea class="hub-desc" placeholder="What deeper condition do these ${escapeHtml(childWord)}s point toward?" rows="2">${escapeHtml(card.description || '')}</textarea>
+        <input type="text" class="hub-title" placeholder="Name this ${escapeHtml(label.toLowerCase())}" value="${escapeHtml(card.title || '')}" ${locked ? 'disabled' : ''} />
+        <textarea class="hub-desc" placeholder="What deeper condition do these ${escapeHtml(childWord)}s point toward?" rows="2" ${locked ? 'disabled' : ''}>${escapeHtml(card.description || '')}</textarea>
+        <p class="hub-lock-note"${locked ? '' : ' hidden'}>Name &amp; describe each ${escapeHtml(childWord)} below before editing this ${escapeHtml(label.toLowerCase())} — a higher claim rests on examined ones.</p>
         ${themeQuality}
         <div class="hub-actions">
           <button type="button" class="hub-suggest" title="Get an AI prompt for this ${escapeHtml(label.toLowerCase())}">✨ AI</button>
