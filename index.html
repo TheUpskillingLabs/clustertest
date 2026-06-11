@@ -3072,18 +3072,58 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       appState.items.forEach(it => { if (appState.nodes[it.id]) dims[it.id] = nodeSize('signal'); });
       appState.clusters.forEach(c => { if (appState.nodes[c.id]) dims[c.id] = nodeSize('hub', c.id); });
 
+      // Gentle intra-tree overlap resolution: after computeRadialTree places
+      // nodes, nudge any overlapping siblings/cousins apart so no cards sit
+      // on top of each other within the same connected network.
+      const resolveTreeOverlaps = (positions, rootId) => {
+        const ids = Object.keys(positions).filter(id => id !== rootId);
+        if (ids.length < 2) return;
+        const PAD = 16;
+        const PUSH = 0.35;
+        const ITERS = 5;
+        for (let iter = 0; iter < ITERS; iter++) {
+          for (let i = 0; i < ids.length; i++) {
+            for (let j = i + 1; j < ids.length; j++) {
+              const a = ids[i], b = ids[j];
+              const da = dims[a], db = dims[b];
+              if (!da || !db) continue;
+              const pa = positions[a], pb = positions[b];
+              let dx = pa.x - pb.x, dy = pa.y - pb.y;
+              const overlapX = (da.w + db.w) / 2 + PAD - Math.abs(dx);
+              const overlapY = (da.h + db.h) / 2 + PAD - Math.abs(dy);
+              if (overlapX <= 0 || overlapY <= 0) continue;
+              const dist = Math.hypot(dx, dy);
+              if (dist < 0.01) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; }
+              const len = Math.hypot(dx, dy) || 1;
+              const push = Math.min(overlapX, overlapY) * PUSH;
+              const ux = dx / len, uy = dy / len;
+              pa.x += ux * push; pa.y += uy * push;
+              pb.x -= ux * push; pb.y -= uy * push;
+            }
+          }
+        }
+      };
+
       // Build systems.
       const systems = [];
       appState.clusters
         .filter(c => appState.nodes[c.id] && !parentHubId(c.id))
         .forEach(c => {
           const tree = computeRadialTree(c.id, { x: 0, y: 0 });
+          resolveTreeOverlaps(tree.positions, c.id);
+          let br = tree.boundingRadius;
+          for (const id in tree.positions) {
+            const p = tree.positions[id], d = dims[id];
+            if (!d) continue;
+            const r = Math.hypot(p.x, p.y) + Math.hypot(d.w, d.h) / 2;
+            if (r > br) br = r;
+          }
           const rc = nodeCenter(c.id);
           const lc = Math.max(1, allSignalsUnderHub(c.id).length);
           systems.push({
             kind: 'tree', rootId: c.id,
             offsets: tree.positions, depth: tree.depth,
-            R: Math.max(tree.boundingRadius, 1),
+            R: Math.max(br, 1),
             cx: rc.x, cy: rc.y, vx: 0, vy: 0,
             mass: Math.max(1, Math.sqrt(lc))
           });
