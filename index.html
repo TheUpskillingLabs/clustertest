@@ -2227,8 +2227,24 @@
         const kids = childrenOf(id);
         if (!kids.length) return;
 
+        // This node owns the angular cone [angleFromParent ± halfWedge]. Every
+        // descendant must stay inside it — that disjoint-cone invariant is what
+        // makes the drawing crossing-free. The root owns the full circle.
+        const FULL = halfWedge >= Math.PI - 1e-3;
+        const coneLo = angleFromParent - halfWedge;
+        const coneHi = angleFromParent + halfWedge;
+        // Bring an arbitrary angle near angleFromParent, then clamp into cone.
+        const intoCone = (a) => {
+          if (FULL) return a;
+          let x = a;
+          while (x - angleFromParent >  Math.PI) x -= Math.PI * 2;
+          while (x - angleFromParent < -Math.PI) x += Math.PI * 2;
+          return Math.max(coneLo + 1e-3, Math.min(coneHi - 1e-3, x));
+        };
+
         // Derive each kid's preferred angle from its CURRENT position around
-        // id's current (live) center. Mark "fresh" kids that haven't been placed.
+        // id's current (live) center, clamped into this node's cone. Mark
+        // "fresh" kids that haven't been placed yet.
         const parentLive = nodeCenter(id);
         const angles = {};
         const curRad = {};      // each kid's CURRENT distance from this parent
@@ -2239,40 +2255,59 @@
           const dx = kc.x - parentLive.x, dy = kc.y - parentLive.y;
           const r = Math.hypot(dx, dy);
           if (r < FRESH_THRESHOLD) { fresh.push(k); freshSet.add(k); }
-          else { angles[k] = Math.atan2(dy, dx); curRad[k] = r; }
+          else { angles[k] = intoCone(Math.atan2(dy, dx)); curRad[k] = r; }
         });
-        // Slot fresh kids into the widest gap one at a time.
+        // Slot fresh kids into the widest gap one at a time (within the cone).
         fresh.forEach(fk => {
-          angles[fk] = slotInWidestGap(Object.values(angles), angleFromParent);
+          const a = slotInWidestGap(Object.values(angles), angleFromParent);
+          angles[fk] = intoCone(a);
         });
 
-        // Sort kids by angle and allocate each a sub-wedge from neighbor gaps.
+        // Sort kids by angle and allocate each a disjoint sub-wedge. Boundaries
+        // fall at the midpoints between neighbors (and at the cone edges), so
+        // sibling cones never overlap → sibling subtrees can never cross.
         const sorted = kids.slice().sort((a, b) => angles[a] - angles[b]);
         const n = sorted.length;
         sorted.forEach((k, i) => {
           const myA = angles[k];
-          const prevAraw = angles[sorted[(i - 1 + n) % n]];
-          const nextAraw = angles[sorted[(i + 1) % n]];
-          // Unwrap so prev < my < next.
-          const prevA = (i === 0) ? prevAraw - Math.PI * 2 : prevAraw;
-          const nextA = (i === n - 1) ? nextAraw + Math.PI * 2 : nextAraw;
-          const half = Math.min((myA - prevA) / 2, (nextA - myA) / 2);
+          let half;
+          if (FULL) {
+            const prevAraw = angles[sorted[(i - 1 + n) % n]];
+            const nextAraw = angles[sorted[(i + 1) % n]];
+            const prevA = (i === 0) ? prevAraw - Math.PI * 2 : prevAraw;
+            const nextA = (i === n - 1) ? nextAraw + Math.PI * 2 : nextAraw;
+            half = Math.min((myA - prevA) / 2, (nextA - myA) / 2);
+          } else {
+            const leftBound  = (i === 0)     ? coneLo : (angles[sorted[i - 1]] + myA) / 2;
+            const rightBound = (i === n - 1) ? coneHi : (angles[sorted[i + 1]] + myA) / 2;
+            half = Math.min(myA - leftBound, rightBound - myA);
+          }
+          half = Math.max(half, 1e-3);
+
           const childTier = isHubId(k) ? hubTier(k) : 0;
           const idealR = idealRadiusForChild(childTier, n);
-          // Radius rule: move the child the MINIMUM distance. A fresh kid
-          // (just dragged on, coincident with parent) lands on the ideal
-          // orbit. An existing kid keeps its current distance, clamped so it
-          // never overlaps the parent and never sits beyond the ideal orbit —
-          // i.e. the closest point within the hub's radius from where it is.
-          let gap;
-          if (freshSet.has(k)) {
-            gap = idealR;
-          } else {
-            const pd = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
-            const kd = nodeSize(isHubId(k) ? 'hub' : 'signal', k);
-            const minR = Math.hypot(pd.w, pd.h) / 2 + Math.hypot(kd.w, kd.h) / 2 + 24;
-            gap = Math.max(minR, Math.min(curRad[k], idealR));
-          }
+          const pd = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
+          const kd = nodeSize(isHubId(k) ? 'hub' : 'signal', k);
+          const kHalf = Math.max(kd.w, kd.h) / 2 + 8;
+          // Distance from a box center to its edge along angle θ (axis-aligned).
+          const boxReach = (w, h, theta) => {
+            const c = Math.abs(Math.cos(theta)), s = Math.abs(Math.sin(theta));
+            const rx = c < 1e-6 ? Infinity : (w / 2) / c;
+            const ry = s < 1e-6 ? Infinity : (h / 2) / s;
+            return Math.min(rx, ry);
+          };
+          // Radius floors: far enough that the boxes just clear along this ray,
+          // and far enough that the node's angular footprint fits inside its
+          // sub-wedge (so it can't spill into a sibling's cone).
+          const minClearR = boxReach(pd.w, pd.h, myA) + boxReach(kd.w, kd.h, myA) + 12;
+          const minFitR = kHalf / Math.sin(Math.min(half, Math.PI / 2));
+          const lower = Math.max(minClearR, minFitR);
+          const upper = Math.max(idealR, lower);
+          // Move the child the minimum distance: keep its current radius when it
+          // already satisfies the floors, otherwise push it just far enough out.
+          const desired = freshSet.has(k) ? idealR : curRad[k];
+          const gap = Math.min(Math.max(desired, lower), upper);
+
           place(k, myCenter, myA, half * WEDGE_SHRINK, gap, dep + 1);
         });
       };
@@ -3072,58 +3107,18 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       appState.items.forEach(it => { if (appState.nodes[it.id]) dims[it.id] = nodeSize('signal'); });
       appState.clusters.forEach(c => { if (appState.nodes[c.id]) dims[c.id] = nodeSize('hub', c.id); });
 
-      // Gentle intra-tree overlap resolution: after computeRadialTree places
-      // nodes, nudge any overlapping siblings/cousins apart so no cards sit
-      // on top of each other within the same connected network.
-      const resolveTreeOverlaps = (positions, rootId) => {
-        const ids = Object.keys(positions).filter(id => id !== rootId);
-        if (ids.length < 2) return;
-        const PAD = 16;
-        const PUSH = 0.35;
-        const ITERS = 5;
-        for (let iter = 0; iter < ITERS; iter++) {
-          for (let i = 0; i < ids.length; i++) {
-            for (let j = i + 1; j < ids.length; j++) {
-              const a = ids[i], b = ids[j];
-              const da = dims[a], db = dims[b];
-              if (!da || !db) continue;
-              const pa = positions[a], pb = positions[b];
-              let dx = pa.x - pb.x, dy = pa.y - pb.y;
-              const overlapX = (da.w + db.w) / 2 + PAD - Math.abs(dx);
-              const overlapY = (da.h + db.h) / 2 + PAD - Math.abs(dy);
-              if (overlapX <= 0 || overlapY <= 0) continue;
-              const dist = Math.hypot(dx, dy);
-              if (dist < 0.01) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; }
-              const len = Math.hypot(dx, dy) || 1;
-              const push = Math.min(overlapX, overlapY) * PUSH;
-              const ux = dx / len, uy = dy / len;
-              pa.x += ux * push; pa.y += uy * push;
-              pb.x -= ux * push; pb.y -= uy * push;
-            }
-          }
-        }
-      };
-
       // Build systems.
       const systems = [];
       appState.clusters
         .filter(c => appState.nodes[c.id] && !parentHubId(c.id))
         .forEach(c => {
           const tree = computeRadialTree(c.id, { x: 0, y: 0 });
-          resolveTreeOverlaps(tree.positions, c.id);
-          let br = tree.boundingRadius;
-          for (const id in tree.positions) {
-            const p = tree.positions[id], d = dims[id];
-            if (!d) continue;
-            const r = Math.hypot(p.x, p.y) + Math.hypot(d.w, d.h) / 2;
-            if (r > br) br = r;
-          }
           const rc = nodeCenter(c.id);
           const lc = Math.max(1, allSignalsUnderHub(c.id).length);
           systems.push({
             kind: 'tree', rootId: c.id,
             offsets: tree.positions, depth: tree.depth,
-            R: Math.max(br, 1),
+            R: Math.max(tree.boundingRadius, 1),
             cx: rc.x, cy: rc.y, vx: 0, vy: 0,
             mass: Math.max(1, Math.sqrt(lc))
           });
