@@ -175,7 +175,8 @@
     }
     .hero-cta { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
     .hero-cta .btn { padding: 14px 26px; font-size: 0.9rem; }
-    .hero-cta-note { font-size: 0.8rem; color: var(--cloud); opacity: 0.6; }
+    .hero-cta-note { font-size: 0.8rem; color: var(--cloud); opacity: 0.6; text-decoration: none; }
+    .hero-cta-note:hover { opacity: 1; text-decoration: underline; }
 
     .landing-section { border-top: 1px solid rgba(255,255,255,0.14); padding-top: 28px; margin-bottom: 88px; }
     .landing-section:last-child { margin-bottom: 0; }
@@ -1688,7 +1689,7 @@
         <p class="hero-lede">Some people find a better answer. Others find a better question — and change everything. You're about to become the second kind.</p>
         <div class="hero-cta">
           <button type="button" class="btn btn-primary" onclick="tutorialStart()">Take the 5-minute guided tutorial</button>
-          <span class="hero-cta-note">or load your own observation pool below</span>
+          <a href="#landing-h-start" class="hero-cta-note">or get started with your own pool ↓</a>
         </div>
       </header>
 
