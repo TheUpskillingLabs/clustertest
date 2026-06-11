@@ -1836,7 +1836,7 @@
   <script>
     const STORAGE_KEY = 'olos.sensemaking.v2';
     const LEGACY_STORAGE_KEY = 'olos.sensemaking.v1';
-    const TOUR_DONE_KEY = 'olos.tour.done';
+    // Tour done keys are now per-screen: tourDoneKey(screen) → 'olos.tour.done.' + screen
     const NODE_SIGNAL_W = 240, NODE_SIGNAL_H = 110;
     const NODE_HUB_W = 280, NODE_HUB_H = 150;
     const MIN_ZOOM = 0.05, MAX_ZOOM = 2.5;
@@ -2226,7 +2226,7 @@
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
-      if (!localStorage.getItem(TOUR_DONE_KEY)) {
+      if (!localStorage.getItem(tourDoneKey('board'))) {
         _welcomeSlide = 0;
         _applyWelcomeSlideState();
         openModal('welcome-modal');
@@ -2269,6 +2269,7 @@
         renderSubmittedArtifact();
       }
       scheduleSave();
+      if (typeof maybeShowTour === 'function') maybeShowTour(name);
     }
 
     function backToBoard() { goToScreen('board'); }
@@ -4065,8 +4066,8 @@
     function closeWelcomeModal() {
       closeModal('welcome-modal');
       _welcomeSlide = 0;
-      if (!localStorage.getItem(TOUR_DONE_KEY)) {
-        setTimeout(tourStart, 320);
+      if (!localStorage.getItem(tourDoneKey('board'))) {
+        setTimeout(() => tourStartForScreen('board'), 320);
       }
     }
 
@@ -4095,41 +4096,48 @@
       if (nextBtn) setTimeout(() => nextBtn.focus(), 50);
     }
 
-    // ---- Spotlight Tour ----
-    const TOUR_STEPS = [
-      {
-        targetId: 'canvas-viewport',
-        title: 'The Canvas',
-        body: 'Your signals are already laid out here. Drag empty space to pan, use the toolbar or Cmd/Ctrl-scroll to zoom, and drag any signal card to reposition it.',
-        tooltipPlacement: 'bottom-right',
-        spotlightPadding: 0
-      },
-      {
-        targetSelector: '.signal-node',
-        title: 'Signal Cards',
-        body: 'Hover a signal to reveal teal dots on its edges. Drag from any dot onto another signal to connect them — a hub cluster node appears automatically between them.',
-        tooltipPlacement: 'bottom-right',
-        spotlightPadding: 8
-      },
-      {
-        targetSelector: '.btn-ai-prompt',
-        title: '✨ AI Prompt — Whole Pool',
-        body: "Start here. Copy this prompt into your LLM and read what comes back — but don't take it at face value. Look for patterns it names that surprise you, then ask it to defend the ones that feel too neat.",
-        tooltipPlacement: 'bottom-left',
-        spotlightPadding: 6
-      },
-      {
-        targetSelector: 'button[onclick="openCommitModal()"]',
-        title: 'Commit to Clusters',
-        body: 'When you have 2–3 clusters with clear through-lines, commit them here to move into the deep-dive workspace. Quality over quantity — defend your groupings.',
-        tooltipPlacement: 'bottom-left',
-        spotlightPadding: 6
-      }
-    ];
+    // ---- Spotlight Tour (per-screen) ----
+    const SCREEN_TOURS = {
+      setup: [
+        { targetId: 'config-title', title: 'Name your project', body: 'Give your signal pool a descriptive title. This carries through to the workspace and artifact.', tooltipPlacement: 'bottom-left', spotlightPadding: 8 },
+        { targetSelector: '.sample-data-btn', title: 'Load signals', body: 'Start with the 44 sample signals, upload a CSV of your own, or add signals manually below. You need raw evidence from the world.', tooltipPlacement: 'bottom-left', spotlightPadding: 8 },
+        { targetSelector: 'button[onclick="startSorting()"]', title: 'Start sorting', body: 'Once you have signals loaded, sorting forces you to make fast decisions: keep, discard, or mark as a super-signal. The binary commitment is the point.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
+      ],
+      sorting: [
+        { targetSelector: '.sorting-card-container', title: 'Swipe to sort', body: 'Swipe right (or press →) to keep as signal. Swipe left (or press ←) to discard as noise. Swipe up (or press ↑) to mark as a super-signal.', tooltipPlacement: 'bottom-right', spotlightPadding: 16 },
+        { targetSelector: '.sorting-status', title: 'Progress tracker', body: 'Watch your progress here. Super-signals are your strongest evidence. The AI will use what you kept vs. discarded to challenge your instincts later.', tooltipPlacement: 'bottom-left', spotlightPadding: 8 }
+      ],
+      board: [
+        { targetId: 'canvas-viewport', title: 'The Canvas', body: 'Your signals are laid out here. Drag empty space to pan, scroll to zoom, and drag any signal card to reposition it.', tooltipPlacement: 'bottom-right', spotlightPadding: 0 },
+        { targetSelector: '.signal-node', title: 'Signal Cards', body: 'Hover a signal to reveal dots on its edges. Drag from any dot onto another signal to connect them — a card-type picker appears so you can classify the evidence.', tooltipPlacement: 'bottom-right', spotlightPadding: 8 },
+        { targetSelector: '#view-tabs', title: 'View states', body: 'Switch between views: Signals, Cards, Themes, and Situations. Each view highlights one layer and fades the others, letting you focus on one level of abstraction.', tooltipPlacement: 'bottom-left', spotlightPadding: 4 },
+        { targetSelector: '.btn-ai-prompt', title: '✨ AI Prompt', body: "Copy this prompt into your LLM. Look for patterns it names that surprise you, then ask it to defend the ones that feel too neat.", tooltipPlacement: 'bottom-left', spotlightPadding: 6 },
+        { targetSelector: 'button[onclick="openCommitModal()"]', title: 'Commit to themes', body: 'When you have 2–3 themes with clear through-lines, commit them to move into the deep-dive workspace.', tooltipPlacement: 'bottom-left', spotlightPadding: 6 }
+      ],
+      workspace: [
+        { targetSelector: '.workspace-cluster-card', title: 'Your committed themes', body: 'Each card represents a theme you committed to. Below it you\'ll find prompts to map stakeholders and pressure-test your framing.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '.prompt-cta', title: 'AI thinking partner', body: 'Copy these prompts into your LLM. Talk back to it. Write your answers in your own words — this is about YOUR thinking, not the AI\'s output.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '#submit-for-voting-btn', title: 'Submit', body: 'Complete every section for every committed theme, then submit to generate your artifact.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
+      ],
+      artifact: [
+        { targetSelector: '.submission-cluster', title: 'Your artifact', body: 'A structured summary of your committed themes, stakeholder maps, and problematizations — ready for peer review.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '.peer-review-section', title: 'Peer review prep', body: 'Use this checklist before your review. Can you defend every decision? Whose voice is missing?', tooltipPlacement: 'top-right', spotlightPadding: 8 }
+      ]
+    };
+
+    const TOUR_STEPS = SCREEN_TOURS.board;
 
     let _tourStep = 0, _tourActive = false, _tourResizeObserver = null;
+    let _currentTourSteps = TOUR_STEPS;
+    let _currentTourScreen = 'board';
 
-    function tourStart() {
+    function tourDoneKey(screen) { return 'olos.tour.done.' + (screen || _currentTourScreen); }
+
+    function tourStartForScreen(screen) {
+      const steps = SCREEN_TOURS[screen];
+      if (!steps || !steps.length) return;
+      _currentTourSteps = steps;
+      _currentTourScreen = screen;
       _tourStep = 0;
       _tourActive = true;
       const overlay = document.getElementById('tour-overlay');
@@ -4140,30 +4148,38 @@
       _tourAttachResizeObserver();
     }
 
+    function tourStart() { tourStartForScreen('board'); }
+
     function tourNext() {
-      if (_tourStep < TOUR_STEPS.length - 1) { _tourStep++; _tourRenderStep(); }
+      if (_tourStep < _currentTourSteps.length - 1) { _tourStep++; _tourRenderStep(); }
       else tourComplete();
     }
 
     function tourSkip() { tourComplete(); }
 
     function tourRestart() {
-      localStorage.removeItem(TOUR_DONE_KEY);
-      _tourStep = 0;
-      tourStart();
+      const screen = appState.currentScreen || 'board';
+      localStorage.removeItem(tourDoneKey(screen));
+      tourStartForScreen(screen);
     }
 
     function tourComplete() {
       _tourActive = false;
-      localStorage.setItem(TOUR_DONE_KEY, '1');
+      localStorage.setItem(tourDoneKey(_currentTourScreen), '1');
       document.getElementById('tour-overlay').classList.add('hidden');
       _tourDetachObservers();
       const helpBtn = document.getElementById('tour-help-btn');
       if (helpBtn) helpBtn.classList.remove('hidden');
     }
 
+    function maybeShowTour(screen) {
+      if (!SCREEN_TOURS[screen] || !SCREEN_TOURS[screen].length) return;
+      if (localStorage.getItem(tourDoneKey(screen))) return;
+      setTimeout(() => tourStartForScreen(screen), 400);
+    }
+
     function _tourRenderStep() {
-      const step = TOUR_STEPS[_tourStep];
+      const step = _currentTourSteps[_tourStep];
       let target = _tourResolveTarget(step);
 
       if (!target) {
@@ -4171,19 +4187,19 @@
           setTimeout(() => { if (_tourActive) _tourRenderStep(); }, 500);
           return;
         }
-        const remaining = TOUR_STEPS.slice(_tourStep + 1);
+        const remaining = _currentTourSteps.slice(_tourStep + 1);
         const nextValidIdx = remaining.findIndex(s => _tourResolveTarget(s));
         if (nextValidIdx >= 0) { _tourStep = _tourStep + 1 + nextValidIdx; _tourRenderStep(); }
         else tourComplete();
         return;
       }
 
-      document.getElementById('tour-step-label').textContent = `Step ${_tourStep + 1} of ${TOUR_STEPS.length}`;
+      document.getElementById('tour-step-label').textContent = `Step ${_tourStep + 1} of ${_currentTourSteps.length}`;
       document.getElementById('tour-tooltip-title').textContent = step.title;
       document.getElementById('tour-tooltip-body').textContent = step.body;
-      document.getElementById('tour-step-count').textContent = `${_tourStep + 1}/${TOUR_STEPS.length}`;
+      document.getElementById('tour-step-count').textContent = `${_tourStep + 1}/${_currentTourSteps.length}`;
       const nextBtn = document.getElementById('tour-btn-next');
-      if (nextBtn) nextBtn.textContent = _tourStep === TOUR_STEPS.length - 1 ? 'Done ✓' : 'Next →';
+      if (nextBtn) nextBtn.textContent = _tourStep === _currentTourSteps.length - 1 ? 'Done ✓' : 'Next →';
 
       _tourPositionSpotlight(target, step.spotlightPadding || 0);
       _tourPositionTooltip(target, step.tooltipPlacement);
@@ -4246,7 +4262,7 @@
       if (window.ResizeObserver) {
         _tourResizeObserver = new ResizeObserver(() => {
           if (!_tourActive) return;
-          const step = TOUR_STEPS[_tourStep];
+          const step = _currentTourSteps[_tourStep];
           const target = _tourResolveTarget(step);
           if (target) {
             _tourPositionSpotlight(target, step.spotlightPadding || 0);
@@ -5424,7 +5440,7 @@ Numbered. ≤ 30 words each. Force a defense.
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
-      if (!localStorage.getItem(TOUR_DONE_KEY)) {
+      if (!localStorage.getItem(tourDoneKey('board'))) {
         _welcomeSlide = 0;
         _applyWelcomeSlideState();
         openModal('welcome-modal');
