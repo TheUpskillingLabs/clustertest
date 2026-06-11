@@ -148,6 +148,9 @@
     }
     .upskill-banner h3 { font-size: 0.95rem; margin-bottom: 6px; color: var(--primary-teal); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
     .upskill-banner p { font-size: 0.875rem; line-height: 1.5; }
+    .banner-points { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .banner-points li { font-size: 0.875rem; line-height: 1.5; padding-left: 14px; position: relative; }
+    .banner-points li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; background: var(--primary-teal); }
 
     /* --- LANDING EXPLAINER (how-it-works steps) --- */
     /* Step badges follow the canvas ladder: teal signals → slate evidence →
@@ -1610,8 +1613,13 @@
     <div class="config-container">
       <div class="config-header">
         <h1>The Triangulator-inator</h1>
-        <p>Sort the noise. Find the signal. Then triangulate your way up a ladder of evidence — patterns, themes, super-themes — until a frame-ready problem situation emerges. Built on Kees Dorst's Frame Creation method: every claim at the top stays traceable to the raw signals at the bottom.</p>
+        <p>Hard problems rarely fail for lack of solutions — they fail because everyone keeps solving the same framing of them. The Triangulator-inator is a canvas for problem framing: sort a pool of real-world friction signals, triangulate them into evidence you can defend, and climb to the deeper themes a genuinely new frame can grow from.</p>
         <button type="button" class="btn btn-outline" onclick="tutorialStart()" style="margin-top: 12px;">🎓 New here? Take the 5-minute guided tutorial</button>
+      </div>
+
+      <div class="upskill-banner">
+        <h3>Why problem framing?</h3>
+        <p>When a problem keeps swallowing solutions, the most powerful move isn't a better answer — it's a better question. Kees Dorst's Frame Creation method showed how expert designers do this: excavate the problem's history and hard limits, map the wider field of players and values, and surface the themes underneath, until the situation can be approached <em>as if</em> it were a different problem entirely. A good frame makes previously unthinkable solutions feel obvious.</p>
       </div>
 
       <h2 class="explainer-title">How it works</h2>
@@ -1647,9 +1655,14 @@
       </ol>
 
       <div class="upskill-banner">
-        <h3>Synth Sprint — Lab Day 1</h3>
-        <p>The AI here is a thinking partner — but you drive the conversation. Every card has a ✨ AI button that generates a prompt grounded in where you are in the method. Copy it, paste it into your LLM of choice, and push back on every answer until you believe it. The AI's job is to surface what you missed. Your job is to decide what matters.</p>
-        <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.85; font-style: italic;">Prototype note: In a live cycle, these signals would be pre-loaded from your cycle's research and industry advisors. The pool below is sample data — upload a fresh batch via CSV if you have one.</p>
+        <h3>An innovation on Frame Creation</h3>
+        <p>Frame Creation was built for expert design studios on long engagements. This tool re-engineers it for <strong>citizen-builders</strong> — people close to a problem who want to act on it:</p>
+        <ul class="banner-points">
+          <li><strong>Discover &amp; align</strong> — sorting and triangulating real signals takes a group from a pile of anecdotes to shared, evidence-backed ground in one sitting.</li>
+          <li><strong>Reframe</strong> — the seven evidence types and the theme ladder push thinking past the obvious problem toward framings no one arrived with.</li>
+          <li><strong>Express</strong> — a solution built from your own frame carries your signature, and the evidence trail behind it lets you stand behind every word.</li>
+        </ul>
+        <p style="margin-top: 10px;">The ✨ AI button on every card generates a method-grounded prompt for your LLM of choice — a thinking partner that surfaces what you missed, while you decide what matters.</p>
       </div>
 
       <div class="config-field">
@@ -1658,7 +1671,7 @@
       </div>
 
       <div class="config-field">
-        <label id="pool-label">Signal pool — <span id="config-pool-count">0</span> friction signals <span style="opacity: 0.7; font-weight: 400;">(sample data — in a live cycle, these come from your industry's research and advisory network)</span></label>
+        <label id="pool-label">Signal pool — <span id="config-pool-count">0</span> friction signals <span style="opacity: 0.7; font-weight: 400;">(sample data — replace it with signals from your own community or research via CSV)</span></label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
         <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()" style="margin-bottom: 12px;">Load 44 sample signals</button>
 
@@ -1917,7 +1930,7 @@
       <div class="modal-body">
         <p id="submit-modal-summary"></p>
         <p id="submit-modal-prior" class="hidden" style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;"></p>
-        <p style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;">In a live cycle, this queues your work for community review. In this prototype, it timestamps your submission and produces a read-only artifact.</p>
+        <p style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;">In a live deployment, this queues your work for community review. In this prototype, it timestamps your submission and produces a read-only artifact.</p>
         <div style="display: flex; gap: 12px; justify-content: flex-end;">
           <button class="btn btn-outline" onclick="closeModal('submit-modal')">Cancel</button>
           <button class="btn btn-primary" id="submit-modal-confirm-btn" onclick="confirmSubmit()" data-autofocus>Submit</button>
