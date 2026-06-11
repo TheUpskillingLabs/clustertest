@@ -968,6 +968,90 @@
       background: #b18dff; box-shadow: 0 2px 6px rgba(138,79,255,0.55);
     }
 
+    /* Card-type color overrides (applied via data-card-type attribute) */
+    .hub-node[data-card-type="history"]        { border-color: #4a6fa5; }
+    .hub-node[data-card-type="history"] .hub-tag { color: #4a6fa5; }
+    .hub-node[data-card-type="history"] .hub-count { background: #4a6fa5; }
+    .hub-node[data-card-type="history"] .connect-handle { background: #4a6fa5; box-shadow: 0 2px 6px rgba(74,111,165,0.55); }
+
+    .hub-node[data-card-type="counterfactual"]  { border-color: #7b5ea7; }
+    .hub-node[data-card-type="counterfactual"] .hub-tag { color: #7b5ea7; }
+    .hub-node[data-card-type="counterfactual"] .hub-count { background: #7b5ea7; }
+    .hub-node[data-card-type="counterfactual"] .connect-handle { background: #7b5ea7; box-shadow: 0 2px 6px rgba(123,94,167,0.55); }
+
+    .hub-node[data-card-type="boundary"]       { border-color: #c0392b; }
+    .hub-node[data-card-type="boundary"] .hub-tag { color: #c0392b; }
+    .hub-node[data-card-type="boundary"] .hub-count { background: #c0392b; }
+    .hub-node[data-card-type="boundary"] .connect-handle { background: #c0392b; box-shadow: 0 2px 6px rgba(192,57,43,0.55); }
+
+    .hub-node[data-card-type="flux"]           { border-color: #d4a017; }
+    .hub-node[data-card-type="flux"] .hub-tag { color: #d4a017; }
+    .hub-node[data-card-type="flux"] .hub-count { background: #d4a017; color: var(--midnight); }
+    .hub-node[data-card-type="flux"] .connect-handle { background: #d4a017; box-shadow: 0 2px 6px rgba(212,160,23,0.55); }
+
+    .hub-node[data-card-type="player"]         { border-color: #0094a0; }
+    .hub-node[data-card-type="player"] .hub-tag { color: #0094a0; }
+    .hub-node[data-card-type="player"] .hub-count { background: #0094a0; }
+    .hub-node[data-card-type="player"] .connect-handle { background: #0094a0; box-shadow: 0 2px 6px rgba(0,148,160,0.55); }
+
+    .hub-node[data-card-type="value"]          { border-color: #27ae60; }
+    .hub-node[data-card-type="value"] .hub-tag { color: #27ae60; }
+    .hub-node[data-card-type="value"] .hub-count { background: #27ae60; }
+    .hub-node[data-card-type="value"] .connect-handle { background: #27ae60; box-shadow: 0 2px 6px rgba(39,174,96,0.55); }
+
+    .hub-node[data-card-type="problem"]        { border-color: #e67e22; }
+    .hub-node[data-card-type="problem"] .hub-tag { color: #e67e22; }
+    .hub-node[data-card-type="problem"] .hub-count { background: #e67e22; }
+    .hub-node[data-card-type="problem"] .connect-handle { background: #e67e22; box-shadow: 0 2px 6px rgba(230,126,34,0.55); }
+
+    /* Theme nodes */
+    .hub-node[data-layer="theme"]              { border-color: #f4b400; width: 320px; }
+    .hub-node[data-layer="theme"] .hub-tag     { color: #f4b400; }
+    .hub-node[data-layer="theme"] .hub-count   { background: #f4b400; color: var(--midnight); }
+    .hub-node[data-layer="theme"] .connect-handle { background: #f4b400; box-shadow: 0 2px 6px rgba(244,180,0,0.55); }
+    .hub-node[data-layer="theme"].is-super     { border-color: #ffd700; box-shadow: 0 0 18px rgba(255,215,0,0.3); }
+
+    /* Situation nodes */
+    .hub-node[data-layer="situation"]           { border-color: #8a4fff; width: 400px; }
+    .hub-node[data-layer="situation"] .hub-tag  { color: #b18dff; }
+    .hub-node[data-layer="situation"] .hub-count { background: #8a4fff; color: var(--ghost-white); }
+    .hub-node[data-layer="situation"] .connect-handle { background: #b18dff; box-shadow: 0 2px 6px rgba(138,79,255,0.55); }
+
+    /* Player role badge */
+    .player-role-badge { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 6px; background: rgba(0,148,160,0.2); color: #0094a0; margin-top: 4px; display: inline-block; }
+
+    /* View-state tab bar */
+    .view-tabs { display: flex; gap: 2px; }
+    .view-tab { background: none; border: none; color: var(--cloud); opacity: 0.5; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 12px; border-radius: 4px; cursor: pointer; transition: opacity 0.15s, background 0.15s; }
+    .view-tab:hover { opacity: 0.8; background: rgba(255,255,255,0.08); }
+    .view-tab.is-active { opacity: 1; background: rgba(255,255,255,0.12); }
+
+    /* View-state visibility: secondary nodes are faded + non-interactive */
+    .nodes-layer.view-signals .hub-node[data-layer="card"],
+    .nodes-layer.view-signals .hub-node[data-layer="theme"],
+    .nodes-layer.view-signals .hub-node[data-layer="situation"] {
+      opacity: 0.25; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-cards .canvas-node.signal-node {
+      opacity: 0.35; transform: scale(0.75); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-cards .hub-node[data-layer="theme"],
+    .nodes-layer.view-cards .hub-node[data-layer="situation"] {
+      opacity: 0.25; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-themes .canvas-node.signal-node,
+    .nodes-layer.view-themes .hub-node[data-layer="card"] {
+      opacity: 0.3; transform: scale(0.7); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-themes .hub-node[data-layer="situation"] {
+      opacity: 0.25; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-situations .canvas-node.signal-node,
+    .nodes-layer.view-situations .hub-node[data-layer="card"],
+    .nodes-layer.view-situations .hub-node[data-layer="theme"] {
+      opacity: 0.3; transform: scale(0.7); transition: opacity 0.3s, transform 0.3s;
+    }
+
     /* Connection handles — one on each side */
     .connect-handle {
       position: absolute;
@@ -1330,6 +1414,15 @@
     .quality-check { font-size: 0.65rem; color: rgba(255,255,255,0.55); line-height: 1.5; padding: 6px 8px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); }
     .quality-check em { color: rgba(255,255,255,0.75); font-style: normal; font-weight: 600; }
 
+    .player-role-picker { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+    .role-pill { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.15s; background: none; }
+    .role-pill:hover { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.8); }
+    .role-pill.active, .role-pill:has(input:checked) { background: rgba(0,148,160,0.3); border-color: #0094a0; color: #0094a0; }
+    .role-pill input[type="radio"] { display: none; }
+
+    .super-toggle { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(255,215,0,0.3); background: rgba(255,215,0,0.1); color: #f4b400; cursor: pointer; transition: all 0.15s; }
+    .super-toggle:hover { background: rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.5); }
+
     @media (max-width: 480px) {
       .sorting-top { padding: 12px 16px 0; }
       .sorting-back-link { left: 16px; top: 14px; }
@@ -1480,7 +1573,12 @@
         </div>
       </div>
       <div class="canvas-infobar">
-        <span style="opacity: 0.6;">Triangulate signals → patterns → themes</span>
+        <div class="view-tabs" id="view-tabs">
+          <button class="view-tab is-active" data-view="signals" onclick="setCanvasView('signals')">Signals</button>
+          <button class="view-tab" data-view="cards" onclick="setCanvasView('cards')">Cards</button>
+          <button class="view-tab" data-view="themes" onclick="setCanvasView('themes')">Themes</button>
+          <button class="view-tab" data-view="situations" onclick="setCanvasView('situations')">Situations</button>
+        </div>
         <span id="validation-warning" style="color: var(--action-red);"></span>
         <span id="cluster-progress" aria-live="polite"></span>
       </div>
@@ -2602,6 +2700,16 @@
       appState.situations.forEach(s => layer.appendChild(buildSituationNode(s)));
     }
 
+    function setCanvasView(view) {
+      appState.canvasViewState = view;
+      const layer = document.getElementById('nodes-layer');
+      if (layer) layer.className = 'nodes-layer view-' + view;
+      document.querySelectorAll('#view-tabs .view-tab').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-view') === view);
+      });
+      scheduleSave();
+    }
+
     function buildSignalNode(item) {
       const el = document.createElement('div');
       const parked = !parentHubId(item.id);
@@ -2672,6 +2780,7 @@
       el.setAttribute('data-node-id', card.id);
       el.setAttribute('data-kind', 'hub');
       el.setAttribute('data-layer', 'card');
+      el.setAttribute('data-card-type', card.cardType);
       const pos = getNodePos(card.id);
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
@@ -2709,7 +2818,7 @@
 
     function buildThemeNode(theme) {
       const el = document.createElement('div');
-      el.className = 'canvas-node hub-node theme-node' + (theme.isSuper ? ' super-theme' : '');
+      el.className = 'canvas-node hub-node theme-node' + (theme.isSuper ? ' super-theme is-super' : '');
       el.id = 'node-' + theme.id;
       el.setAttribute('data-node-id', theme.id);
       el.setAttribute('data-kind', 'hub');
