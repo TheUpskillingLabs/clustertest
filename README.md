@@ -1,31 +1,33 @@
 # The Triangulator-inator
 
-A thinking instrument for Kees Dorst's Frame Creation model — sort friction signals, triangulate through seven evidence types, build themes, and surface a Problem Situation worth framing.
+A thinking instrument for Kees Dorst's Frame Creation model — sort friction signals, triangulate them up a ladder of cards, and synthesize a Problem Situation worth framing.
 
 ## What it does
 
-You start with a pool of **friction signals**: raw evidence from the world — articles, datasets, observations, interview fragments, policies, statistics. Your job is to triangulate the patterns hiding inside them — sort the noise, classify the evidence, then go deeper to find the themes that bridge human experience and structural forces.
+You start with a pool of **friction signals**: raw evidence from the world — articles, datasets, observations, interview fragments, policies, statistics. Your job is to triangulate the patterns hiding inside them — sort the noise, classify the evidence, then build upward, level by level, until you can name the open condition underneath it all.
 
 The tool walks you through four stages:
 
 1. **Sort the signals** — swipe through each signal card to classify it as **noise** (swipe left), **signal** (swipe right), or **★ super signal** (swipe up). The binary forces intellectual commitment. Super signals mark the evidence you consider most urgent or revelatory. Your sorting decisions become analytical data — the AI uses what you kept vs. discarded to challenge your instincts.
 
-2. **Triangulate on the canvas** — drag surviving signals onto a web map and connect them. Connecting two signals creates a plain **evidence card** — keep adding signals to it, then classify it into one of seven types (History, Counterfactual, Boundary, Flux, Player, Value, or Problem) once the pattern is clear; the ✨ AI button can help you decide. Connect two cards to create a **Theme**. Connect two themes to create a **Problem Situation**. Signals can belong to multiple cards — this is a **many-to-many lattice**, not a tree.
+2. **Triangulate on the canvas** — drag surviving signals onto a web map and connect them up a ladder of cards. Connecting two of anything one level up creates the next level: two **signals** → an **evidence card**; two evidence cards → a **pattern**; two patterns → a **theme**; two themes → a **super-theme**; and on up (mega-theme, …). Evidence cards start plain — keep adding signals, then classify each into one of seven types (History, Counterfactual, Boundary, Flux, Player, Value, or Problem) when the pattern is clear; the ✨ AI button can help. Nodes can have multiple parents — this is a **many-to-many lattice**, not a strict tree.
 
-3. **Map & pressure-test** — for each committed theme, map who's affected and pressure-test your framing, with AI prompts grounded in Dorst's methodology as thinking partners.
+3. **Push to the Problem Situation** — once every card is named and described, push to the next screen and synthesize the whole ladder into a single **Problem Situation**: name it, frame it, map its stakeholders, and pressure-test it — with AI prompts grounded in Dorst's methodology as thinking partners.
 
-4. **Artifact** — a structured summary of your committed themes and their evidence trails, with a peer review preparation checklist.
+4. **Artifact** — your framed Problem Situation with its full evidence trail, plus a peer-review preparation checklist.
 
-## The lattice
+## The ladder
 
-| Object | What it is | Created by |
+| Level | What it is | Created by |
 |---|---|---|
 | **Signal** | Raw evidence — a pattern of action or behavior, not an opinion | Imported from CSV, sample data, or manual entry |
-| **Card** | An intermediate evidence card — created plain, then classified into one of seven types (see below) | Connecting two signals on the canvas |
-| **Theme** | A deeper universal that 2+ cards triangulate toward — bridges human experience and structural/systemic factors | Connecting two cards |
-| **Problem Situation** | An open, complex, networked, dynamic condition — not a bounded problem but a situation worth framing | Connecting two themes |
+| **Evidence** | An intermediate evidence card — created plain, then classified into one of seven types (see below) | Connecting two signals |
+| **Pattern** | A specific, named condition that 2+ evidence cards point toward together | Connecting two evidence cards |
+| **Theme** | A deeper universal that 2+ patterns triangulate toward — bridges human experience and structural/systemic factors | Connecting two patterns |
+| **Super-theme / Mega-theme / …** | Higher convergences where the human and structural meet, pointing toward a frame | Connecting two of the level below |
+| **Problem Situation** | The apex — an open, complex, networked, dynamic condition synthesized on the next screen, not a node on the canvas | Pushing once every card is named & described |
 
-### The seven card types
+### The seven evidence types
 
 | Type | Color | What it captures |
 |---|---|---|
@@ -79,33 +81,35 @@ The sorting screen is a pure gesture interface:
 | Switch view state | Click tabs in the infobar | Same |
 | Hide header chrome | `↕` button in zoom toolbar | Same |
 
-## Building the lattice
+## Building the ladder
 
 1. Hover any signal card to reveal **dots** on its edges.
 2. Drag from a dot to another signal — a plain **evidence card** appears at the midpoint. The signals stay where you placed them; connecting never reshuffles your layout.
-3. Drag more signals onto the card to grow it — signals can belong to multiple cards (many-to-many). When the pattern is clear, classify the card using the inline type chips (or the ✨ AI button for help). You can re-classify any time via "Change type".
-4. Connect two cards to create a **Theme**. Themes show quality-check prompts:
-   - *Bridge test:* Does this theme describe both a structural condition AND a human experience?
+3. Drag more signals onto the card to grow it — nodes can have multiple parents (many-to-many). When the pattern is clear, classify the evidence card using the inline type chips (or the ✨ AI button for help). You can re-classify any time via "Change type".
+4. Connect two of anything to climb a level: evidence + evidence → **Pattern**, pattern + pattern → **Theme**, theme + theme → **Super-theme**, and on up. You always build one level at a time.
+5. **Theme** cards show quality-check prompts:
+   - *Bridge test:* Does this describe both a structural condition AND a human experience?
    - *Depth test:* Is this hidden beneath the surface of everyday professional life?
-5. Connect two themes to create a **Problem Situation** with a frame prompt: "If this situation is approached as if it is ___, then ___"
-6. Nodes are color-coded by type and layer.
+6. Nodes are color-coded by level (and, for evidence cards, by type).
 
-### View states
+### Levels view
 
-The tab bar at the top of the canvas lets you switch between **All** and four focused views: **Signals**, **Cards**, **Themes**, and **Situations**. **All** shows every node at full size; each focused view highlights one layer and fades the others, letting you focus on one level of abstraction at a time.
+The tab bar at the top of the canvas lets you switch between **All**, **Signals**, and one tab per level that exists (Evidence, Pattern, Theme, …). **All** shows everything at full size; each level view highlights its cards and fades the rest, so you can focus on one rung of the ladder at a time.
 
 ### AI prompts
 
 The **✨ See the whole pool** button generates an AI prompt grounded in Dorst's Frame Creation methodology. If you've sorted your signals, it partitions them by your decisions (super/signal/noise) and asks what your sorting instincts reveal.
 
-Each card/theme/situation node has a **✨ AI** button with three modes: through-line discovery, name & describe, and stress-test. The prompts are card-type-aware — a History card gets different framing than a Boundary card.
+Every card has a **✨ AI** button with three modes: through-line discovery, name & describe, and stress-test. The prompts are level-aware — an unclassified evidence card gets a "which of the seven types is this?" prompt, while a theme gets a bridge-the-domains prompt.
 
-## Committing and deepening
+## Push to the Problem Situation
 
-When you have 2–3 themes you're willing to stand behind, click **Commit**. This opens the **Workspace**, where you:
+Once **every card on the board is named and described**, the **Push to Problem Situation** button takes you to the next screen — a single synthesized **Problem Situation** drawing on your whole ladder. There you:
 
-- **Map who's affected** — stakeholders, gatekeepers, enablers
-- **Pressure-test your framing** — hidden assumptions, structural biases, who benefits from the status quo
+- **Name & describe** the open condition
+- **Frame it** — "If this situation is approached as if it is ___, then ___"
+- **Map its stakeholders** — inner-circle, wider-field, owners/clients, gatekeepers
+- **Pressure-test the framing** — hidden assumptions, structural biases, who benefits from the status quo
 
 Each section has an AI prompt you take to your own AI tool — think with it, then come back and write in your own words. Once all sections are complete, you can submit.
 
@@ -121,8 +125,8 @@ From the Artifact screen you can:
 - Single HTML file — all CSS and JavaScript are inline
 - No frameworks or build tools
 - State persists to `localStorage` (key: `olos.sensemaking.v2`)
-- Many-to-many lattice data model: `cards[]`, `themes[]`, `situations[]` with cross-referencing ID arrays
-- Old tree-based state (pre-lattice) is auto-migrated on load
+- Unified tiered data model: a single `cards[]` array where each card has a `tier` (1 = evidence … up) and a `childIds` array; the Problem Situation is one synthesized object
+- Older state shapes (clusters, and the cards/themes/situations lattice) are auto-migrated on load
 - Per-screen onboarding tours with spotlight engine
 - Works offline after first load
 - Tested on Chrome, Safari, Firefox — desktop and mobile

@@ -446,6 +446,8 @@
     .workspace-section .field-hint { font-size: 0.825rem; color: var(--midnight); opacity: 0.7; margin-bottom: 14px; line-height: 1.5; }
     .workspace-section textarea { width: 100%; min-height: 120px; padding: 14px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--ghost-white); color: var(--midnight); font-size: 0.875rem; line-height: 1.6; resize: vertical; outline: none; font-family: 'Geologica', sans-serif; transition: border-color 0.2s; }
     .workspace-section textarea:focus { border-color: var(--primary-teal); }
+    .ws-text-input { width: 100%; padding: 12px 14px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--ghost-white); color: var(--midnight); font-size: 0.95rem; font-weight: 600; outline: none; font-family: 'Geologica', sans-serif; transition: border-color 0.2s; }
+    .ws-text-input:focus { border-color: var(--primary-teal); }
 
     /* --- Prompt CTA: prominent, always-visible "copy this prompt" block --- */
     .prompt-cta { background: rgba(0,148,160,0.06); border: 2px solid var(--primary-teal); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
@@ -1026,31 +1028,8 @@
     .view-tab:hover { opacity: 0.8; background: rgba(255,255,255,0.08); }
     .view-tab.is-active { opacity: 1; background: rgba(255,255,255,0.12); }
 
-    /* View-state visibility: secondary nodes are faded + non-interactive */
-    .nodes-layer.view-signals .hub-node[data-layer="card"],
-    .nodes-layer.view-signals .hub-node[data-layer="theme"],
-    .nodes-layer.view-signals .hub-node[data-layer="situation"] {
-      opacity: 0.25; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s;
-    }
-    .nodes-layer.view-cards .canvas-node.signal-node {
-      opacity: 0.35; transform: scale(0.75); transition: opacity 0.3s, transform 0.3s;
-    }
-    .nodes-layer.view-cards .hub-node[data-layer="theme"],
-    .nodes-layer.view-cards .hub-node[data-layer="situation"] {
-      opacity: 0.25; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s;
-    }
-    .nodes-layer.view-themes .canvas-node.signal-node,
-    .nodes-layer.view-themes .hub-node[data-layer="card"] {
-      opacity: 0.3; transform: scale(0.7); transition: opacity 0.3s, transform 0.3s;
-    }
-    .nodes-layer.view-themes .hub-node[data-layer="situation"] {
-      opacity: 0.25; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s;
-    }
-    .nodes-layer.view-situations .canvas-node.signal-node,
-    .nodes-layer.view-situations .hub-node[data-layer="card"],
-    .nodes-layer.view-situations .hub-node[data-layer="theme"] {
-      opacity: 0.3; transform: scale(0.7); transition: opacity 0.3s, transform 0.3s;
-    }
+    /* "Levels" view: nodes outside the active level fade + go non-interactive */
+    .canvas-node.view-dim { opacity: 0.22; pointer-events: none; transform: scale(0.78); transition: opacity 0.3s, transform 0.3s; }
 
     /* Connection handles — one on each side */
     .connect-handle {
@@ -1439,6 +1418,12 @@
     .hub-node[data-card-type="evidence"] .hub-count { background: #8a93a3; }
     .hub-node[data-card-type="evidence"] .connect-handle { background: #8a93a3; box-shadow: 0 2px 6px rgba(138,147,163,0.55); }
 
+    /* Higher tiers get progressively wider cards. */
+    .hub-node.tiernode-2 { width: 300px; }
+    .hub-node.tiernode-3 { width: 340px; }
+    .hub-node.tiernode-4, .hub-node.tiernode-5, .hub-node.tiernode-6 { width: 400px; }
+    .hub-node[data-tier="4"], .hub-node[data-tier="5"], .hub-node[data-tier="6"] { width: 400px; }
+
     @media (max-width: 480px) {
       .sorting-top { padding: 12px 16px 0; }
       .sorting-back-link { left: 16px; top: 14px; }
@@ -1566,7 +1551,7 @@
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
           <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full signal pool with your AI thinking partner">✨ <span class="btn-label">See the whole pool</span></button>
-          <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Commit to Patterns</span><span class="btn-label-short">Commit</span></button>
+          <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Push to Problem Situation</span><span class="btn-label-short">Push</span></button>
           <div class="profile-anchor">
             <button id="profile-btn" type="button" class="profile-btn"
                     aria-haspopup="dialog" aria-expanded="false" aria-controls="profile-popover"
@@ -1591,10 +1576,6 @@
       <div class="canvas-infobar">
         <div class="view-tabs" id="view-tabs">
           <button class="view-tab is-active" data-view="all" onclick="setCanvasView('all')">All</button>
-          <button class="view-tab" data-view="signals" onclick="setCanvasView('signals')">Signals</button>
-          <button class="view-tab" data-view="cards" onclick="setCanvasView('cards')">Cards</button>
-          <button class="view-tab" data-view="themes" onclick="setCanvasView('themes')">Themes</button>
-          <button class="view-tab" data-view="situations" onclick="setCanvasView('situations')">Situations</button>
         </div>
         <span id="validation-warning" style="color: var(--action-red);"></span>
         <span id="cluster-progress" aria-live="polite"></span>
@@ -1911,20 +1892,23 @@
       { id: 'owner-client',  label: 'Owner/Client',  desc: 'Could own this problem situation or buy its resolution' }
     ];
 
+    function emptySituation() {
+      return { title: '', description: '', frame: '', stakeholderMap: '', problematization: '' };
+    }
     function defaultState() {
       return {
         settings: { title: '' },
         items: [],
+        // Unified tiered cards. tier 1 = evidence (childIds = signal ids, has
+        // cardType ∈ 7 types); tier 2 = pattern; 3 = theme; 4 = super-theme;
+        // 5 = mega-theme; 6+ extensible. childIds reference lower-tier nodes.
         cards: [],
-        themes: [],
-        situations: [],
+        situation: emptySituation(),   // the single Problem Situation (next screen)
+        committedCardIds: [],          // top-tier cards pushed into the situation
         nodes: {},
         view: { zoom: 1, panX: 0, panY: 0 },
         viewInitialized: false,
         canvasViewState: 'all',
-        committedThemeIds: [],
-        problematizations: {},
-        stakeholderMaps: {},
         submittedAt: null,
         currentScreen: 'setup',
         sorting: { currentIndex: 0, decisions: {} }
@@ -2003,12 +1987,60 @@
           delete parsed.committedClusterIds;
         }
 
+        // --- Unify cards/themes/situations → single tiered cards[] + situation ---
+        const needsUnify = (Array.isArray(parsed.cards) && parsed.cards.some(c => Array.isArray(c.signalIds)))
+          || Array.isArray(parsed.themes) || Array.isArray(parsed.situations);
+        if (needsUnify) {
+          const unified = [];
+          (parsed.cards || []).forEach(c => {
+            unified.push({
+              id: c.id, title: c.title || '', description: c.description || '', tier: 1,
+              childIds: Array.isArray(c.signalIds) ? c.signalIds.slice() : (Array.isArray(c.childIds) ? c.childIds.slice() : []),
+              cardType: (c.cardType ?? null), playerRole: (c.playerRole ?? null)
+            });
+          });
+          (parsed.themes || []).forEach(t => {
+            unified.push({
+              id: t.id, title: t.title || '', description: t.description || '', tier: t.isSuper ? 4 : 3,
+              childIds: Array.isArray(t.cardIds) ? t.cardIds.slice() : (Array.isArray(t.childIds) ? t.childIds.slice() : [])
+            });
+          });
+          const sit = { title: '', description: '', frame: '', stakeholderMap: '', problematization: '' };
+          const committed = [];
+          (parsed.situations || []).forEach(s => {
+            if (!sit.title && s.title) sit.title = s.title;
+            if (!sit.description && s.description) sit.description = s.description;
+            (s.themeIds || []).forEach(tid => { if (!committed.includes(tid)) committed.push(tid); });
+          });
+          if (parsed.problematizations && typeof parsed.problematizations === 'object') {
+            const vals = Object.values(parsed.problematizations).map(v => (v || '').trim()).filter(Boolean);
+            if (vals.length) sit.problematization = vals.join('\n\n');
+          }
+          if (parsed.stakeholderMaps && typeof parsed.stakeholderMaps === 'object') {
+            const vals = Object.values(parsed.stakeholderMaps).map(v => (v || '').trim()).filter(Boolean);
+            if (vals.length) sit.stakeholderMap = vals.join('\n\n');
+          }
+          parsed.cards = unified;
+          parsed.situation = sit;
+          parsed.committedCardIds = (Array.isArray(parsed.committedThemeIds) && parsed.committedThemeIds.length)
+            ? parsed.committedThemeIds.slice() : committed;
+          delete parsed.themes;
+          delete parsed.situations;
+          delete parsed.committedThemeIds;
+          delete parsed.problematizations;
+          delete parsed.stakeholderMaps;
+        }
+
         if (!Array.isArray(parsed.cards)) parsed.cards = [];
-        if (!Array.isArray(parsed.themes)) parsed.themes = [];
-        if (!Array.isArray(parsed.situations)) parsed.situations = [];
-        if (!Array.isArray(parsed.committedThemeIds)) parsed.committedThemeIds = [];
-        if (!parsed.problematizations || typeof parsed.problematizations !== 'object') parsed.problematizations = {};
-        if (!parsed.stakeholderMaps || typeof parsed.stakeholderMaps !== 'object') parsed.stakeholderMaps = {};
+        parsed.cards.forEach(c => {
+          if (typeof c.tier !== 'number') c.tier = 1;
+          if (!Array.isArray(c.childIds)) c.childIds = Array.isArray(c.signalIds) ? c.signalIds.slice() : [];
+          delete c.signalIds;
+          if (c.tier === 1 && typeof c.cardType === 'undefined') c.cardType = null;
+        });
+        if (!parsed.situation || typeof parsed.situation !== 'object') parsed.situation = { title: '', description: '', frame: '', stakeholderMap: '', problematization: '' };
+        ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].forEach(k => { if (typeof parsed.situation[k] !== 'string') parsed.situation[k] = ''; });
+        if (!Array.isArray(parsed.committedCardIds)) parsed.committedCardIds = [];
         if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
         if (!parsed.currentScreen) parsed.currentScreen = 'setup';
         if (!parsed.nodes || typeof parsed.nodes !== 'object') parsed.nodes = {};
@@ -2165,7 +2197,7 @@
           const mode = modeEl ? modeEl.value : 'append';
           if (mode === 'replace') {
             appState.items = newItems;
-            appState.cards.forEach(c => { c.signalIds = []; });
+            appState.cards.forEach(c => { if (c.tier === 1) c.childIds = []; });
           } else {
             appState.items = appState.items.concat(newItems);
           }
@@ -2206,7 +2238,7 @@
       const removed = appState.items.find(i => i.id === id);
       appState.items = appState.items.filter(i => i.id !== id);
       // Also remove from any clusters
-      appState.cards.forEach(c => { c.signalIds = c.signalIds.filter(x => x !== id); });
+      appState.cards.forEach(c => { c.childIds = c.childIds.filter(x => x !== id); });
       renderConfigItems();
       scheduleSave();
       if (removed) {
@@ -2277,91 +2309,62 @@
 
     // ======================== WEB-MAP CANVAS ========================
 
-    // --- Layer-aware helpers for the lattice model ---
+    // --- Tiered card model helpers ---
+    // A "node" is either a signal (tier 0) or a card (tier ≥ 1). Cards form an
+    // extensible ladder: evidence(1) → pattern(2) → theme(3) → super-theme(4)
+    // → mega-theme(5) → … Connecting two tier-N nodes creates a tier-(N+1) card.
     function isCardId(id) { return appState.cards.some(c => c.id === id); }
-    function isThemeId(id) { return appState.themes.some(t => t.id === id); }
-    function isSituationId(id) { return appState.situations.some(s => s.id === id); }
     function isSignalId(id) { return appState.items.some(i => i.id === id); }
-    function nodeLayer(id) {
-      if (isCardId(id)) return 'card';
-      if (isThemeId(id)) return 'theme';
-      if (isSituationId(id)) return 'situation';
-      return 'signal';
-    }
     function findCard(id) { return appState.cards.find(c => c.id === id); }
-    function findTheme(id) { return appState.themes.find(t => t.id === id); }
-    function findSituation(id) { return appState.situations.find(s => s.id === id); }
-    function findAnyObj(id) { return findCard(id) || findTheme(id) || findSituation(id); }
-    function allObjects() { return [...appState.cards, ...appState.themes, ...appState.situations]; }
+    function findAnyObj(id) { return findCard(id); }
+    function allObjects() { return appState.cards.slice(); }
+    function nodeTier(id) { const c = findCard(id); return c ? c.tier : 0; }
 
-    function signalsForCard(cardId) {
-      const c = findCard(cardId);
-      return c ? c.signalIds.slice() : [];
+    const TIER_NAMES = { 0: 'Signal', 1: 'Evidence', 2: 'Pattern', 3: 'Theme', 4: 'Super-theme', 5: 'Mega-theme', 6: 'Meta-theme' };
+    function tierName(t) { return TIER_NAMES[t] || ('Level-' + t + ' theme'); }
+    const TIER_COLORS = { 1: '#8a93a3', 2: '#e74c3c', 3: '#f4b400', 4: '#8a4fff', 5: '#6231cf', 6: '#4b2fa0' };
+    function tierColor(t) { return TIER_COLORS[t] || '#3a2580'; }
+    // Color for a card: tier-1 evidence uses its 7-type color; higher tiers use the tier color.
+    function cardColor(card) {
+      if (!card) return '#8a93a3';
+      if (card.tier === 1) return cardTypeInfo(card.cardType).color;
+      return tierColor(card.tier);
     }
-    function signalsForTheme(themeId) {
-      const t = findTheme(themeId);
-      if (!t) return [];
+
+    function childrenOfNode(id) {
+      const c = findCard(id);
+      if (!c) return [];
+      return c.childIds.filter(k => appState.nodes[k]);
+    }
+    function cardChildrenAll(id) { const c = findCard(id); return c ? c.childIds.slice() : []; }
+    // All tier-1 signals beneath a node (recurse down the ladder).
+    function signalsUnder(id) {
+      if (isSignalId(id)) return [id];
+      const c = findCard(id);
+      if (!c) return [];
       const seen = new Set();
-      t.cardIds.forEach(cid => {
-        signalsForCard(cid).forEach(sid => seen.add(sid));
-      });
+      c.childIds.forEach(kid => signalsUnder(kid).forEach(s => seen.add(s)));
       return [...seen];
     }
-    function signalsForSituation(sitId) {
-      const s = findSituation(sitId);
-      if (!s) return [];
-      const seen = new Set();
-      s.themeIds.forEach(tid => {
-        signalsForTheme(tid).forEach(sid => seen.add(sid));
-      });
-      return [...seen];
-    }
-    function cardsForTheme(themeId) {
-      const t = findTheme(themeId);
-      return t ? t.cardIds.slice() : [];
-    }
-    function themesForSituation(sitId) {
-      const s = findSituation(sitId);
-      return s ? s.themeIds.slice() : [];
-    }
+    function parentsOf(id) { return appState.cards.filter(c => c.childIds.includes(id)); }
+    function topLevelCards() { return appState.cards.filter(c => parentsOf(c.id).length === 0); }
     function nodeLabel(id) {
-      const layer = nodeLayer(id);
-      if (layer === 'card') { const c = findCard(id); return cardTypeInfo(c.cardType).label; }
-      if (layer === 'theme') { const t = findTheme(id); return t.isSuper ? '★ Super-theme' : 'Theme'; }
-      if (layer === 'situation') return 'Problem Situation';
-      return 'Signal';
+      if (isSignalId(id)) return 'Signal';
+      const c = findCard(id);
+      if (!c) return 'Signal';
+      if (c.tier === 1) return cardTypeInfo(c.cardType).label;
+      return tierName(c.tier);
     }
 
-    // --- Backward-compat shims (used by callers being migrated) ---
-    function isHubId(id) { return isCardId(id) || isThemeId(id) || isSituationId(id); }
-    function hubTier(id) {
-      const layer = nodeLayer(id);
-      if (layer === 'card') return 1;
-      if (layer === 'theme') { const t = findTheme(id); return t && t.isSuper ? 3 : 2; }
-      if (layer === 'situation') return 4;
-      return 0;
-    }
-    const TIER_LABELS = ['Signal', 'Card', 'Theme', 'Super-theme', 'Situation', 'Situation'];
-    function tierLabel(t) { return TIER_LABELS[t] || 'Situation'; }
-    function allSignalsUnderHub(id) {
-      const layer = nodeLayer(id);
-      if (layer === 'card') return signalsForCard(id);
-      if (layer === 'theme') return signalsForTheme(id);
-      if (layer === 'situation') return signalsForSituation(id);
-      return [];
-    }
-    function parentHubId(nodeId) {
-      const card = appState.cards.find(c => c.signalIds.includes(nodeId));
-      if (card) return card.id;
-      const theme = appState.themes.find(t => t.cardIds.includes(nodeId));
-      if (theme) return theme.id;
-      const sit = appState.situations.find(s => s.themeIds.includes(nodeId));
-      if (sit) return sit.id;
-      return null;
-    }
+    // --- Backward-compat shims (names used throughout the rest of the file) ---
+    function isHubId(id) { return isCardId(id); }
+    function hubTier(id) { return nodeTier(id); }
+    function tierLabel(t) { return tierName(t); }
+    function allSignalsUnderHub(id) { return signalsUnder(id); }
+    function parentHubId(id) { const p = parentsOf(id); return p.length ? p[0].id : null; }
     function rootAnchorOf(nodeId) {
       let cur = nodeId;
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 20; i++) {
         const p = parentHubId(cur);
         if (!p) return cur;
         cur = p;
@@ -2371,30 +2374,19 @@
     function subtreeNodeIds(rootId) {
       const out = [];
       const walk = (id) => {
-        const kids = childrenOfNode(id);
-        kids.forEach(k => { if (appState.nodes[k]) { out.push(k); walk(k); } });
+        childrenOfNode(id).forEach(k => { if (appState.nodes[k]) { out.push(k); walk(k); } });
       };
       walk(rootId);
       return out;
     }
-    function childrenOfNode(id) {
-      const c = findCard(id); if (c) return c.signalIds.filter(sid => appState.nodes[sid]);
-      const t = findTheme(id); if (t) return t.cardIds.filter(cid => appState.nodes[cid]);
-      const s = findSituation(id); if (s) return s.themeIds.filter(tid => appState.nodes[tid]);
-      return [];
-    }
-    function hubMembers(id) {
-      const c = findCard(id); if (c) return c.signalIds.slice();
-      const t = findTheme(id); if (t) return t.cardIds.slice();
-      const s = findSituation(id); if (s) return s.themeIds.slice();
-      return [];
-    }
+    function hubMembers(id) { return cardChildrenAll(id); }
 
     function nodeSize(kind, nodeId) {
       if (kind === 'signal' || kind !== 'hub') return { w: NODE_SIGNAL_W, h: NODE_SIGNAL_H };
-      const layer = nodeLayer(nodeId);
-      if (layer === 'situation') return { w: 400, h: NODE_HUB_H };
-      if (layer === 'theme') return { w: 320, h: NODE_HUB_H };
+      const t = nodeTier(nodeId);
+      if (t >= 4) return { w: 400, h: NODE_HUB_H };
+      if (t === 3) return { w: 340, h: NODE_HUB_H };
+      if (t === 2) return { w: 300, h: NODE_HUB_H };
       return { w: NODE_HUB_W, h: NODE_HUB_H };
     }
     // Ideal orbit radius keyed on the CHILD's tier — a signal always sits
@@ -2593,13 +2585,13 @@
         placed.add(item.id);
         k++;
       });
-      // Cards, themes, situations: position at their members' centroid if possible,
-      // else continue the phyllotaxis pattern further out.
-      const allHubs = [
-        ...appState.cards.map(c => ({ id: c.id, members: c.signalIds })),
-        ...appState.themes.map(t => ({ id: t.id, members: t.cardIds })),
-        ...appState.situations.map(s => ({ id: s.id, members: s.themeIds }))
-      ];
+      // Cards (all tiers): position at their members' centroid if possible,
+      // else continue the phyllotaxis pattern further out. Lower tiers first
+      // so higher tiers can settle on their children's centroid.
+      const allHubs = appState.cards
+        .slice()
+        .sort((a, b) => a.tier - b.tier)
+        .map(c => ({ id: c.id, members: c.childIds }));
       allHubs.forEach(hub => {
         if (placed.has(hub.id)) return;
         const hubDims = nodeSize('hub', hub.id);
@@ -2710,26 +2702,64 @@
     function renderAllNodes() {
       const layer = document.getElementById('nodes-layer');
       layer.innerHTML = '';
-      const vs = appState.canvasViewState;
-      layer.className = 'nodes-layer view-' + vs;
+      layer.className = 'nodes-layer';
       const visibleItems = appState.items.filter(item => {
         const status = appState.sorting.decisions[item.id];
         return !status || status === 'signal' || status === 'super';
       });
       visibleItems.forEach(item => layer.appendChild(buildSignalNode(item)));
       appState.cards.forEach(c => layer.appendChild(buildCardNode(c)));
-      appState.themes.forEach(t => layer.appendChild(buildThemeNode(t)));
-      appState.situations.forEach(s => layer.appendChild(buildSituationNode(s)));
+      applyViewState();
+      buildViewTabs();
+    }
+
+    // Distinct tiers currently present, ascending.
+    function existingTiers() {
+      return [...new Set(appState.cards.map(c => c.tier))].sort((a, b) => a - b);
+    }
+    // Resolve the active view to something that still exists, else 'all'.
+    function normalizedView() {
+      const vs = appState.canvasViewState || 'all';
+      if (vs === 'all' || vs === 'signals') return vs;
+      if (vs.startsWith('tier-')) {
+        const t = parseInt(vs.slice(5), 10);
+        if (appState.cards.some(c => c.tier === t)) return vs;
+      }
+      return 'all';
+    }
+    // "Levels" view: All, Signals, then one tab per tier that exists.
+    function buildViewTabs() {
+      const tabs = document.getElementById('view-tabs');
+      if (!tabs) return;
+      const vs = normalizedView();
+      let html = `<button class="view-tab${vs === 'all' ? ' is-active' : ''}" data-view="all" onclick="setCanvasView('all')">All</button>`;
+      html += `<button class="view-tab${vs === 'signals' ? ' is-active' : ''}" data-view="signals" onclick="setCanvasView('signals')">Signals</button>`;
+      existingTiers().forEach(t => {
+        const key = 'tier-' + t;
+        html += `<button class="view-tab${vs === key ? ' is-active' : ''}" data-view="${key}" onclick="setCanvasView('${key}')">${escapeHtml(tierName(t))}</button>`;
+      });
+      tabs.innerHTML = html;
     }
 
     function setCanvasView(view) {
       appState.canvasViewState = view;
-      const layer = document.getElementById('nodes-layer');
-      if (layer) layer.className = 'nodes-layer view-' + view;
-      document.querySelectorAll('#view-tabs .view-tab').forEach(btn => {
-        btn.classList.toggle('is-active', btn.getAttribute('data-view') === view);
-      });
+      applyViewState();
+      buildViewTabs();
       scheduleSave();
+    }
+
+    // Dim every node that isn't part of the active level.
+    function applyViewState() {
+      const vs = normalizedView();
+      const layer = document.getElementById('nodes-layer');
+      if (!layer) return;
+      layer.querySelectorAll('.canvas-node').forEach(el => {
+        const id = el.getAttribute('data-node-id');
+        let active = true;
+        if (vs === 'signals') active = isSignalId(id);
+        else if (vs.startsWith('tier-')) active = nodeTier(id) === parseInt(vs.slice(5), 10);
+        el.classList.toggle('view-dim', !active);
+      });
     }
 
     function buildSignalNode(item) {
@@ -2795,6 +2825,7 @@
     }
 
     function buildCardNode(card) {
+      if (card.tier >= 2) return buildHigherCardNode(card);
       const el = document.createElement('div');
       const ct = cardTypeInfo(card.cardType);
       const undefinedType = !card.cardType;
@@ -2802,13 +2833,13 @@
       el.id = 'node-' + card.id;
       el.setAttribute('data-node-id', card.id);
       el.setAttribute('data-kind', 'hub');
-      el.setAttribute('data-layer', 'card');
+      el.setAttribute('data-tier', '1');
       el.setAttribute('data-card-type', card.cardType || 'evidence');
       const pos = getNodePos(card.id);
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
       el.style.borderColor = ct.color;
-      const count = card.signalIds.length;
+      const count = card.childIds.length;
       const roleHtml = card.cardType === 'player' ? `
         <div class="player-role-picker">
           ${PLAYER_ROLES.map(r => `<label class="role-pill${card.playerRole === r.id ? ' active' : ''}">
@@ -2877,71 +2908,43 @@
       return el;
     }
 
-    function buildThemeNode(theme) {
+    // Higher-tier cards (pattern, theme, super-theme, mega-theme, …).
+    function buildHigherCardNode(card) {
       const el = document.createElement('div');
-      el.className = 'canvas-node hub-node theme-node' + (theme.isSuper ? ' super-theme is-super' : '');
-      el.id = 'node-' + theme.id;
-      el.setAttribute('data-node-id', theme.id);
+      const color = cardColor(card);
+      const label = tierName(card.tier);
+      const childWord = tierName(card.tier - 1).toLowerCase();
+      el.className = 'canvas-node hub-node card-node tiernode-' + card.tier;
+      el.id = 'node-' + card.id;
+      el.setAttribute('data-node-id', card.id);
       el.setAttribute('data-kind', 'hub');
-      el.setAttribute('data-layer', 'theme');
-      const pos = getNodePos(theme.id);
+      el.setAttribute('data-tier', String(card.tier));
+      const pos = getNodePos(card.id);
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
-      const cardCount = theme.cardIds.length;
-      const sigCount = signalsForTheme(theme.id).length;
+      el.style.borderColor = color;
+      const childCount = card.childIds.length;
+      const sigCount = signalsUnder(card.id).length;
+      const lightText = (card.tier === 3); // amber theme reads better with dark text
+      const themeQuality = card.tier === 3
+        ? `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`
+        : '';
       el.innerHTML = `
-        <div class="hub-tag" style="color: ${theme.isSuper ? '#b07b00' : '#d4a017'};">
-          <span>${theme.isSuper ? '★ Super-theme' : 'Theme'}</span>
-          <span class="hub-count">${cardCount} card${cardCount === 1 ? '' : 's'} · ${sigCount} signal${sigCount === 1 ? '' : 's'}</span>
+        <div class="hub-tag" style="color: ${color};">
+          <span>${escapeHtml(label)}</span>
+          <span class="hub-count" style="background:${color}; color:${lightText ? 'var(--midnight)' : 'var(--ghost-white)'};">${childCount} ${escapeHtml(childWord)}${childCount === 1 ? '' : 's'} · ${sigCount} signal${sigCount === 1 ? '' : 's'}</span>
         </div>
-        <input type="text" class="hub-title" placeholder="What theme do these cards point toward?" value="${escapeHtml(theme.title || '')}" />
-        <textarea class="hub-desc" placeholder="The universal that bridges human experience and structural/systemic factors" rows="2">${escapeHtml(theme.description || '')}</textarea>
-        <div class="quality-check"><em>Bridge test:</em> Does this theme describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>
+        <input type="text" class="hub-title" placeholder="Name this ${escapeHtml(label.toLowerCase())}" value="${escapeHtml(card.title || '')}" />
+        <textarea class="hub-desc" placeholder="What deeper condition do these ${escapeHtml(childWord)}s point toward?" rows="2">${escapeHtml(card.description || '')}</textarea>
+        ${themeQuality}
         <div class="hub-actions">
-          <button type="button" class="hub-suggest" title="Get an AI prompt for this theme">✨ AI</button>
-          <button type="button" class="super-toggle">${theme.isSuper ? 'Unmark super' : 'Mark as Super-theme'}</button>
+          <button type="button" class="hub-suggest" title="Get an AI prompt for this ${escapeHtml(label.toLowerCase())}">✨ AI</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
-        ${connectHandlesHtml(theme.id)}
+        ${connectHandlesHtml(card.id)}
       `;
-      const superBtn = el.querySelector('.super-toggle');
-      if (superBtn) {
-        superBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
-        superBtn.addEventListener('click', (e) => { e.stopPropagation(); theme.isSuper = !theme.isSuper; scheduleSave(); renderAllNodes(); renderAllEdges(); });
-      }
-      wireNodeEditing(el, theme, () => deleteTheme(theme.id));
-      attachNodeDrag(el, theme.id);
-      return el;
-    }
-
-    function buildSituationNode(situation) {
-      const el = document.createElement('div');
-      el.className = 'canvas-node hub-node situation-node';
-      el.id = 'node-' + situation.id;
-      el.setAttribute('data-node-id', situation.id);
-      el.setAttribute('data-kind', 'hub');
-      el.setAttribute('data-layer', 'situation');
-      const pos = getNodePos(situation.id);
-      el.style.left = pos.x + 'px';
-      el.style.top = pos.y + 'px';
-      const themeCount = situation.themeIds.length;
-      const ownerCount = situation.ownerClientIds.length;
-      el.innerHTML = `
-        <div class="hub-tag" style="color: #6231cf;">
-          <span>Problem Situation</span>
-          <span class="hub-count">${themeCount} theme${themeCount === 1 ? '' : 's'}${ownerCount ? ' · ' + ownerCount + ' owner' + (ownerCount === 1 ? '' : 's') : ''}</span>
-        </div>
-        <input type="text" class="hub-title" placeholder="The open, complex, networked condition" value="${escapeHtml(situation.title || '')}" />
-        <textarea class="hub-desc" placeholder="This is an open condition, not a bounded problem because ___" rows="2">${escapeHtml(situation.description || '')}</textarea>
-        <div class="quality-check"><em>Frame prompt:</em> If this situation is approached as if it is ___, then ___</div>
-        <div class="hub-actions">
-          <button type="button" class="hub-suggest" title="Get an AI prompt for this problem situation">✨ AI</button>
-          <button type="button" class="hub-delete">Remove</button>
-        </div>
-        ${connectHandlesHtml(situation.id)}
-      `;
-      wireNodeEditing(el, situation, () => deleteSituation(situation.id));
-      attachNodeDrag(el, situation.id);
+      wireNodeEditing(el, card, () => deleteCard(card.id));
+      attachNodeDrag(el, card.id);
       return el;
     }
 
@@ -2949,48 +2952,17 @@
       const idx = appState.cards.findIndex(c => c.id === id);
       if (idx < 0) return;
       appState.cards.splice(idx, 1);
-      appState.themes.forEach(t => { t.cardIds = t.cardIds.filter(x => x !== id); });
-      appState.committedThemeIds = appState.committedThemeIds.filter(x => x !== id);
-      delete appState.problematizations[id];
-      delete appState.stakeholderMaps[id];
+      appState.cards.forEach(c => { c.childIds = c.childIds.filter(x => x !== id); });
+      appState.committedCardIds = appState.committedCardIds.filter(x => x !== id);
       delete appState.nodes[id];
       renderAllNodes(); renderAllEdges(); updateClusterProgressChip(); scheduleSave();
       toast('Card removed.');
-    }
-    function deleteTheme(id) {
-      const idx = appState.themes.findIndex(t => t.id === id);
-      if (idx < 0) return;
-      appState.themes.splice(idx, 1);
-      appState.situations.forEach(s => { s.themeIds = s.themeIds.filter(x => x !== id); });
-      appState.committedThemeIds = appState.committedThemeIds.filter(x => x !== id);
-      delete appState.problematizations[id];
-      delete appState.stakeholderMaps[id];
-      delete appState.nodes[id];
-      renderAllNodes(); renderAllEdges(); updateClusterProgressChip(); scheduleSave();
-      toast('Theme removed.');
-    }
-    function deleteSituation(id) {
-      const idx = appState.situations.findIndex(s => s.id === id);
-      if (idx < 0) return;
-      appState.situations.splice(idx, 1);
-      appState.committedThemeIds = appState.committedThemeIds.filter(x => x !== id);
-      delete appState.problematizations[id];
-      delete appState.stakeholderMaps[id];
-      delete appState.nodes[id];
-      renderAllNodes(); renderAllEdges(); updateClusterProgressChip(); scheduleSave();
-      toast('Problem Situation removed.');
     }
 
     function edgesFromState() {
       const out = [];
       appState.cards.forEach(c => {
-        c.signalIds.forEach(sid => out.push({ id: c.id + '__' + sid, from: c.id, to: sid, layer: 'card-signal' }));
-      });
-      appState.themes.forEach(t => {
-        t.cardIds.forEach(cid => out.push({ id: t.id + '__' + cid, from: t.id, to: cid, layer: 'theme-card' }));
-      });
-      appState.situations.forEach(s => {
-        s.themeIds.forEach(tid => out.push({ id: s.id + '__' + tid, from: s.id, to: tid, layer: 'situation-theme' }));
+        c.childIds.forEach(kid => out.push({ id: c.id + '__' + kid, from: c.id, to: kid, layer: 'tier-' + c.tier }));
       });
       return out;
     }
@@ -3092,7 +3064,7 @@
           matches.add(item.id);
         }
       });
-      [...appState.cards, ...appState.themes, ...appState.situations].forEach(c => {
+      appState.cards.forEach(c => {
         if ((c.title || '').toLowerCase().includes(query) || (c.description || '').toLowerCase().includes(query)) {
           matches.add(c.id);
         }
@@ -3312,72 +3284,36 @@
       });
     }
 
-    // ----- Connection rules (lattice-aware) -----
+    // ----- Connection rules (tiered ladder) -----
     function removeChildFromParent(parentId, childId) {
       const card = findCard(parentId);
-      if (card) { card.signalIds = card.signalIds.filter(x => x !== childId); return; }
-      const theme = findTheme(parentId);
-      if (theme) { theme.cardIds = theme.cardIds.filter(x => x !== childId); return; }
-      const sit = findSituation(parentId);
-      if (sit) { sit.themeIds = sit.themeIds.filter(x => x !== childId); return; }
+      if (card) card.childIds = card.childIds.filter(x => x !== childId);
     }
 
     function addChildToParent(parentId, childId) {
       const card = findCard(parentId);
-      if (card) {
-        if (card.signalIds.includes(childId)) return false;
-        card.signalIds.push(childId);
-        placeNewChildAtWidestGap(parentId, childId);
-        return true;
-      }
-      const theme = findTheme(parentId);
-      if (theme) {
-        if (theme.cardIds.includes(childId)) return false;
-        theme.cardIds.push(childId);
-        placeNewChildAtWidestGap(parentId, childId);
-        return true;
-      }
-      const sit = findSituation(parentId);
-      if (sit) {
-        if (sit.themeIds.includes(childId)) return false;
-        sit.themeIds.push(childId);
-        placeNewChildAtWidestGap(parentId, childId);
-        return true;
-      }
-      return false;
+      if (!card) return false;
+      if (card.childIds.includes(childId)) return false;
+      card.childIds.push(childId);
+      placeNewChildAtWidestGap(parentId, childId);
+      return true;
     }
 
-    function createCardBetween(signalA, signalB, cardType) {
-      const a = nodeCenter(signalA);
-      const b = nodeCenter(signalB);
+    // Create a tier-(childTier+1) card whose children are A and B.
+    function createCardBetween(childA, childB, opts) {
+      const a = nodeCenter(childA);
+      const b = nodeCenter(childB);
       const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
       const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
-      const newCard = { id: uid('card'), title: '', description: '', cardType: cardType || null, signalIds: [signalA, signalB] };
-      appState.cards.push(newCard);
-      setNodePos(newCard.id, midX, midY);
-      return newCard;
-    }
-
-    function createThemeBetween(cardA, cardB) {
-      const a = nodeCenter(cardA);
-      const b = nodeCenter(cardB);
-      const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
-      const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
-      const newTheme = { id: uid('theme'), title: '', description: '', isSuper: false, cardIds: [cardA, cardB] };
-      appState.themes.push(newTheme);
-      setNodePos(newTheme.id, midX, midY);
-      return newTheme;
-    }
-
-    function createSituationBetween(themeA, themeB) {
-      const a = nodeCenter(themeA);
-      const b = nodeCenter(themeB);
-      const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
-      const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
-      const newSit = { id: uid('situation'), title: '', description: '', themeIds: [themeA, themeB], ownerClientIds: [] };
-      appState.situations.push(newSit);
-      setNodePos(newSit.id, midX, midY);
-      return newSit;
+      const childTier = nodeTier(childA); // A and B are the same tier here
+      const card = {
+        id: uid('card'), title: '', description: '',
+        tier: childTier + 1, childIds: [childA, childB]
+      };
+      if (card.tier === 1) { card.cardType = (opts && opts.cardType) || null; card.playerRole = null; }
+      appState.cards.push(card);
+      setNodePos(card.id, midX, midY);
+      return card;
     }
 
     function placeNewChildAtWidestGap(parentId, childId) {
@@ -3418,9 +3354,8 @@
       relaxLayoutAround(rootAnchorOf(parentId));
       scheduleSave();
       updateClusterProgressChip();
-      const label = nodeLabel(parentId);
-      const obj = findCard(parentId) || findTheme(parentId) || findSituation(parentId);
-      toast(`Added to "${(obj && obj.title) || label}".`);
+      const obj = findCard(parentId);
+      toast(`Added to "${(obj && obj.title) || nodeLabel(parentId)}".`);
     }
 
     function spawnHubUI(newObj, focusRootId) {
@@ -3439,69 +3374,41 @@
     function warnIfUnderpopulated(hubId) {
       const kids = childrenOfNode(hubId);
       if (kids.length < 2) {
-        const obj = findCard(hubId) || findTheme(hubId) || findSituation(hubId);
-        const label = obj ? (obj.title || nodeLabel(hubId)) : 'Hub';
+        const obj = findCard(hubId);
+        const label = obj ? (obj.title || nodeLabel(hubId)) : 'Card';
         toast(`${nodeLabel(hubId)} "${label}" now has fewer than 2 members.`, {
           actionLabel: 'Delete',
           duration: 6000,
-          onAction: () => {
-            if (isCardId(hubId)) deleteCard(hubId);
-            else if (isThemeId(hubId)) deleteTheme(hubId);
-            else if (isSituationId(hubId)) deleteSituation(hubId);
-          }
+          onAction: () => { if (isCardId(hubId)) deleteCard(hubId); }
         });
       }
     }
 
+    // Tiered ladder: connecting two tier-N nodes makes a tier-(N+1) card;
+    // connecting a node to an existing tier-(N+1) card adds it as a child.
     function connectNodes(sourceId, targetId) {
       if (sourceId === targetId) return;
-      const sLayer = nodeLayer(sourceId);
-      const tLayer = nodeLayer(targetId);
+      const sT = nodeTier(sourceId);
+      const tT = nodeTier(targetId);
 
-      // Signal + Signal → create a plain evidence card (classify it later)
-      if (sLayer === 'signal' && tLayer === 'signal') {
-        const newCard = createCardBetween(sourceId, targetId, null);
-        spawnHubUI(newCard, newCard.id);
+      // Same tier → create the next tier up. (Two signals → a plain evidence card.)
+      if (sT === tT) {
+        const card = createCardBetween(sourceId, targetId, null);
+        spawnHubUI(card, card.id);
         return;
       }
 
-      // Signal + Card → add signal to card
-      if (sLayer === 'signal' && tLayer === 'card') { addUnderExistingParent(targetId, sourceId); return; }
-      if (sLayer === 'card' && tLayer === 'signal') { addUnderExistingParent(sourceId, targetId); return; }
-
-      // Card + Card → create a new theme
-      if (sLayer === 'card' && tLayer === 'card') {
-        const newTheme = createThemeBetween(sourceId, targetId);
-        spawnHubUI(newTheme, newTheme.id);
+      // Adjacent tiers → add the lower node into the higher card.
+      const lower = sT < tT ? sourceId : targetId;
+      const higher = sT < tT ? targetId : sourceId;
+      if (nodeTier(higher) === nodeTier(lower) + 1) {
+        addUnderExistingParent(higher, lower);
         return;
       }
 
-      // Card + Theme → add card to theme
-      if (sLayer === 'card' && tLayer === 'theme') { addUnderExistingParent(targetId, sourceId); return; }
-      if (sLayer === 'theme' && tLayer === 'card') { addUnderExistingParent(sourceId, targetId); return; }
-
-      // Theme + Theme → create a new situation
-      if (sLayer === 'theme' && tLayer === 'theme') {
-        const newSit = createSituationBetween(sourceId, targetId);
-        spawnHubUI(newSit, newSit.id);
-        return;
-      }
-
-      // Theme + Situation → add theme to situation
-      if (sLayer === 'theme' && tLayer === 'situation') { addUnderExistingParent(targetId, sourceId); return; }
-      if (sLayer === 'situation' && tLayer === 'theme') { addUnderExistingParent(sourceId, targetId); return; }
-
-      // Invalid connections
-      if (sLayer === 'signal' && (tLayer === 'theme' || tLayer === 'situation')) {
-        toast('Connect signals to cards first.'); return;
-      }
-      if (tLayer === 'signal' && (sLayer === 'theme' || sLayer === 'situation')) {
-        toast('Connect signals to cards first.'); return;
-      }
-      if ((sLayer === 'card' && tLayer === 'situation') || (sLayer === 'situation' && tLayer === 'card')) {
-        toast('Connect cards to themes first.'); return;
-      }
-      toast('These can\'t be connected directly.');
+      // Non-adjacent tiers can't connect directly.
+      const need = tierName(Math.min(sT, tT) + 1).toLowerCase();
+      toast(`Build up one level at a time — make a ${need} first.`);
     }
 
     // ----- Force-directed auto-spacing -----
@@ -3515,12 +3422,11 @@
       // weak containment keeps the whole composition from drifting away.
       const dims = {};
       appState.items.forEach(it => { if (appState.nodes[it.id]) dims[it.id] = nodeSize('signal'); });
-      [...appState.cards, ...appState.themes, ...appState.situations].forEach(c => { if (appState.nodes[c.id]) dims[c.id] = nodeSize('hub', c.id); });
+      appState.cards.forEach(c => { if (appState.nodes[c.id]) dims[c.id] = nodeSize('hub', c.id); });
 
-      // Build systems: top-level hubs (not children of anything) are tree roots.
+      // Build systems: top-level cards (not children of anything) are tree roots.
       const systems = [];
-      const allHubs = [...appState.cards, ...appState.themes, ...appState.situations];
-      allHubs
+      appState.cards
         .filter(c => appState.nodes[c.id] && !parentHubId(c.id))
         .forEach(c => {
           const tree = computeRadialTree(c.id, { x: 0, y: 0 });
@@ -3735,11 +3641,7 @@
     }
 
     // ----- Node deletion (delegates to layer-specific delete) -----
-    function deleteCluster(id) {
-      if (isCardId(id)) deleteCard(id);
-      else if (isThemeId(id)) deleteTheme(id);
-      else if (isSituationId(id)) deleteSituation(id);
-    }
+    function deleteCluster(id) { if (isCardId(id)) deleteCard(id); }
 
     // Edge selection + delete
     function setupEdgeInteractions() {
@@ -4117,17 +4019,17 @@
       board: [
         { targetId: 'canvas-viewport', title: 'The Canvas', body: 'Your signals are laid out here. Drag empty space to pan, scroll to zoom, and drag any signal card to reposition it.', tooltipPlacement: 'bottom-right', spotlightPadding: 0 },
         { targetSelector: '.signal-node', title: 'Signal Cards', body: 'Hover a signal to reveal dots on its edges. Drag from any dot onto another signal to connect them — a plain evidence card appears. Keep adding signals, then classify the card into one of the seven types when the pattern is clear.', tooltipPlacement: 'bottom-right', spotlightPadding: 8 },
-        { targetSelector: '#view-tabs', title: 'View states', body: 'Switch between views: Signals, Cards, Themes, and Situations. Each view highlights one layer and fades the others, letting you focus on one level of abstraction.', tooltipPlacement: 'bottom-left', spotlightPadding: 4 },
+        { targetSelector: '#view-tabs', title: 'Levels', body: 'Jump between levels of the ladder: All, Signals, then Evidence, Pattern, Theme, and up. Each level highlights its cards and fades the rest.', tooltipPlacement: 'bottom-left', spotlightPadding: 4 },
         { targetSelector: '.btn-ai-prompt', title: '✨ AI Prompt', body: "Copy this prompt into your LLM. Look for patterns it names that surprise you, then ask it to defend the ones that feel too neat.", tooltipPlacement: 'bottom-left', spotlightPadding: 6 },
-        { targetSelector: 'button[onclick="openCommitModal()"]', title: 'Commit to themes', body: 'When you have 2–3 themes with clear through-lines, commit them to move into the deep-dive workspace.', tooltipPlacement: 'bottom-left', spotlightPadding: 6 }
+        { targetSelector: 'button[onclick="openCommitModal()"]', title: 'Push to Problem Situation', body: 'Once every card is named and described, push to the Problem Situation — the next screen where you synthesize it all into one open condition.', tooltipPlacement: 'bottom-left', spotlightPadding: 6 }
       ],
       workspace: [
-        { targetSelector: '.workspace-cluster-card', title: 'Your committed themes', body: 'Each card represents a theme you committed to. Below it you\'ll find prompts to map stakeholders and pressure-test your framing.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '.workspace-cluster-card', title: 'The Problem Situation', body: 'One open, complex condition synthesized from your whole ladder. Name it, describe it, and frame it.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
         { targetSelector: '.prompt-cta', title: 'AI thinking partner', body: 'Copy these prompts into your LLM. Talk back to it. Write your answers in your own words — this is about YOUR thinking, not the AI\'s output.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
-        { targetSelector: '#submit-for-voting-btn', title: 'Submit', body: 'Complete every section for every committed theme, then submit to generate your artifact.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
+        { targetSelector: '#submit-for-voting-btn', title: 'Submit', body: 'Complete every section — name, description, frame, stakeholders, problematization — then submit to generate your artifact.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
       ],
       artifact: [
-        { targetSelector: '.submission-cluster', title: 'Your artifact', body: 'A structured summary of your committed themes, stakeholder maps, and problematizations — ready for peer review.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '.submission-cluster', title: 'Your artifact', body: 'Your framed Problem Situation with its full evidence trail — ready for peer review.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
         { targetSelector: '.peer-review-section', title: 'Peer review prep', body: 'Use this checklist before your review. Can you defend every decision? Whose voice is missing?', tooltipPlacement: 'top-right', spotlightPadding: 8 }
       ]
     };
@@ -4329,7 +4231,7 @@
           lines.push(`${indent}• Signal "${item.title}" — ${item.summary}`);
           return;
         }
-        const obj = findCard(kid) || findTheme(kid) || findSituation(kid);
+        const obj = findCard(kid);
         if (!obj) return;
         const desc = obj.description ? ` — ${obj.description}` : '';
         lines.push(`${indent}• ${nodeLabel(kid)} "${obj.title || 'Untitled'}"${desc}`);
@@ -4345,23 +4247,23 @@
     }
 
     function tierFraming(tier, hubId) {
-      const layer = hubId ? nodeLayer(hubId) : null;
-      if (layer === 'card') {
+      const t = hubId ? nodeTier(hubId) : tier;
+      if (t === 1) {
         const c = findCard(hubId);
         if (c && !c.cardType) {
-          const typeList = CARD_TYPES.map(t => `${t.label} (${t.desc})`).join('; ');
+          const typeList = CARD_TYPES.map(ct => `${ct.label} (${ct.desc})`).join('; ');
           return `This is an unclassified evidence card. Your most useful job here is to help the user classify it into ONE of the seven Frame Creation evidence types and then name it. The seven types are: ${typeList}. Read the constituent signals, decide which type best fits what they triangulate toward, and explain why. If two types are plausible, say so and explain the trade-off.`;
         }
         const ct = c ? (CARD_TYPE_MAP[c.cardType] || {}) : {};
-        return `This is a ${ct.label || 'Card'} — ${ct.desc || 'an intermediate evidence card'}. Focus on what the constituent signals, when triangulated, reveal about this specific kind of evidence. Who is affected, in what context, and what mechanism or condition do they point toward together?`;
+        return `This is a ${ct.label || 'Evidence card'} — ${ct.desc || 'an intermediate evidence card'}. Focus on what the constituent signals, when triangulated, reveal about this specific kind of evidence. Who is affected, in what context, and what mechanism or condition do they point toward together?`;
       }
-      if (layer === 'theme' || tier === 2) {
-        return 'Focus on the deeper universal that bridges human experience and structural/systemic factors. This is a Theme — a condition or force that two or more cards point toward. A good theme bridges the human (cultural) domain and the technical or economic realm.';
+      if (t === 2) {
+        return 'This is a Pattern — a specific, named condition that two or more evidence cards point toward together. Focus on the shared mechanism behind the evidence: who is affected, in what context, and what makes the friction recur.';
       }
-      if (layer === 'situation' || tier >= 3) {
-        return 'This is a Problem Situation — an open, complex, networked, dynamic condition (not a bounded problem). Focus on what makes this genuinely open and irreducible. If this situation is approached as if it is [X], then [Y].';
+      if (t === 3) {
+        return 'This is a Theme — a deeper universal that two or more patterns triangulate toward. A good theme bridges the human (cultural) domain and the technical or economic realm. Focus on the condition or force hidden beneath the surface of everyday professional life.';
       }
-      return 'Focus on lived human friction: who is affected, in what context, when does it happen, and what workaround do they already improvise.';
+      return `This is a ${tierName(t)} — a high-level convergence where the human and the structural meet, pointing toward how the whole situation might be framed. If this situation is approached as if it is [X], then [Y].`;
     }
 
     // Three task / thinking / format blocks per mode. Each mode adds one rule.
@@ -4441,7 +4343,7 @@ A single question the user must be able to answer to defend the current framing 
     };
 
     function buildHubPrompt(hubId, mode) {
-      const c = findCard(hubId) || findTheme(hubId) || findSituation(hubId);
+      const c = findCard(hubId);
       if (!c) return '';
       const tier = hubTier(hubId);
       const label = tierLabel(tier);
@@ -4499,7 +4401,7 @@ ${m.output}
     let currentAIMode = 'throughline';
 
     function openHubAIModal(hubId, mode) {
-      const c = findCard(hubId) || findTheme(hubId) || findSituation(hubId);
+      const c = findCard(hubId);
       if (!c) return;
       currentAIHubId = hubId;
       currentAIMode = mode || 'throughline';
@@ -4744,336 +4646,216 @@ Numbered. ≤ 30 words each. Force a defense.
       toast(ok ? 'Copied.' : 'Copy failed — select and copy manually.');
     }
 
-    // --- Validation + cluster progress ---
+    // --- Validation + progress (all cards must be named & described to push) ---
     function validateBoard() {
-      const allObjs = [...appState.cards, ...appState.themes, ...appState.situations];
-      const leafCounts = new Map();
-      allObjs.forEach(c => leafCounts.set(c.id, allSignalsUnderHub(c.id).length));
-      const titledClusters = allObjs.filter(c => c.title.trim().length > 0);
-      const populatedClusters = allObjs.filter(c => leafCounts.get(c.id) > 0);
-      const usable = allObjs.filter(c => c.title.trim() && leafCounts.get(c.id) > 0);
-      const unassigned = appState.items.filter(item => !appState.cards.some(c => c.signalIds.includes(item.id))).length;
-      const clustersWith3Plus = allObjs.filter(c => c.title.trim() && leafCounts.get(c.id) >= 3).length;
+      const cards = appState.cards;
+      const named = cards.filter(c => (c.title || '').trim());
+      const missing = cards.filter(c => !(c.title || '').trim() || !(c.description || '').trim());
+      const tops = topLevelCards();
       const warnings = [];
-      if (usable.length === 0) warnings.push('Add at least one titled card with at least one signal in it.');
-      const untitledWithItems = allObjs.filter(c => !c.title.trim() && leafCounts.get(c.id) > 0);
-      if (untitledWithItems.length) warnings.push(`${untitledWithItems.length} card(s) have signals but no title.`);
-      const titledWithoutItems = allObjs.filter(c => c.title.trim() && leafCounts.get(c.id) === 0);
-      if (titledWithoutItems.length) warnings.push(`${titledWithoutItems.length} titled card(s) are still empty.`);
-      return { warnings, unassigned, usable: usable.length, titledClusters: titledClusters.length, populatedClusters: populatedClusters.length, clustersWith3Plus };
+      if (!cards.length) warnings.push('Connect signals into evidence cards first.');
+      else if (missing.length) warnings.push(`${missing.length} card${missing.length === 1 ? '' : 's'} still need a name and a description.`);
+      return { warnings, total: cards.length, named: named.length, missing, tops: tops.length, ready: cards.length > 0 && missing.length === 0 };
     }
 
     function getClusterProgress() {
       const v = validateBoard();
-      const meets = v.clustersWith3Plus >= 2 && v.clustersWith3Plus <= 3;
-      return { count: v.clustersWith3Plus, meets };
+      return { count: v.named, meets: v.ready };
     }
 
     function updateClusterProgressChip() {
       const el = document.getElementById('cluster-progress');
       if (!el) return;
-      const { count, meets } = getClusterProgress();
-      el.textContent = `${count} pattern${count === 1 ? '' : 's'} with 3+ signals — looking for 2–3`;
-      el.classList.toggle('meets-target', meets);
-      el.classList.toggle('below-target', !meets);
+      const v = validateBoard();
+      el.textContent = v.ready
+        ? `Ready to push — ${v.total} card${v.total === 1 ? '' : 's'} named & described`
+        : `${v.named}/${v.total} cards named & described`;
+      el.classList.toggle('meets-target', v.ready);
+      el.classList.toggle('below-target', !v.ready);
     }
 
-    // --- AI prompt templates (reused by the workspace) ---
-    function buildPromptFor(cluster, kind) {
-      const title = cluster.title || 'Untitled Pattern';
-      const desc = cluster.description || '(no shared barrier described yet)';
-      const signals = allSignalsUnderHub(cluster.id)
-        .map(id => appState.items.find(i => i.id === id))
-        .filter(Boolean)
-        .map(i => `- ${i.title}: ${i.summary}`)
-        .join('\n');
-      const intro = `I have created a pattern called: ${title}\nIt is defined by this shared condition: ${desc}\n\nThe signals grouped under it are:\n${signals || '(none yet)'}\n\n`;
+    // --- Problem Situation evidence trail + AI prompts ---
+    // Compact outline of the whole ladder (top-level cards → … → signals).
+    function formatCardOutline(id, depth) {
+      const c = findCard(id);
+      if (!c) return '';
+      const indent = '  '.repeat(depth);
+      const lines = [`${indent}• ${nodeLabel(id)}: ${c.title || 'Untitled'}${c.description ? ' — ' + c.description : ''}`];
+      c.childIds.forEach(kid => {
+        if (isSignalId(kid)) {
+          const it = appState.items.find(i => i.id === kid);
+          if (it) lines.push(`${indent}    - Signal "${it.title}": ${it.summary}`);
+        } else {
+          const sub = formatCardOutline(kid, depth + 1);
+          if (sub) lines.push(sub);
+        }
+      });
+      return lines.join('\n');
+    }
+    function situationEvidenceText() {
+      const tops = topLevelCards().filter(c => (c.title || '').trim() || c.childIds.length);
+      if (!tops.length) return '(no cards yet)';
+      return tops.map(c => formatCardOutline(c.id, 0)).join('\n');
+    }
+
+    function buildSituationPrompt(kind) {
+      const s = appState.situation;
+      const title = s.title || appState.settings.title || 'this problem situation';
+      const evidence = situationEvidenceText();
+      const intro = `I am framing a PROBLEM SITUATION — an open, complex, networked, dynamic condition (in Kees Dorst's Frame Creation sense), not a bounded problem.\n\nWorking title: ${title}\nMy current description: ${s.description || '(none yet)'}\n\nI built it by triangulating friction signals up a ladder of cards (evidence → pattern → theme → …). The full evidence trail:\n\n${evidence}\n\n`;
       if (kind === 'stakeholder') {
-        return `Act as an expert UX researcher and systems thinker.\n\n${intro}Help me build a robust Stakeholder Map for this space. Do not try to solve the problem. Instead, identify:\n1. The Primary Affected Stakeholder (Who feels the pain most directly?)\n2. Adjacent Stakeholders (Who else is impacted downstream?)\n3. Gatekeepers / Blockers (Who can constrain, slow, or prevent progress in this space?)\n4. Enablers / Intermediaries (Who has the access or trust to reach the affected stakeholders?)`;
+        return `Act as an expert design researcher and systems thinker.\n\n${intro}Help me build a robust Stakeholder Map for this whole situation. Do not try to solve it. Identify, across all the evidence above:\n1. Inner-circle players — already involved, necessary to any resolution.\n2. Wider-field players — not yet involved but with potential influence.\n3. Possible owners/clients — who could own this situation or buy its resolution.\n4. Gatekeepers / blockers and the enablers who can reach the affected.`;
       }
       if (kind === 'problematize') {
-        return `Act as a critical theorist and problem-space analyst.\n\n${intro}Help me problematize this space. Your goal is to complicate my understanding and look for systemic roots.\n1. What are the hidden assumptions baked into how I have defined this problem?\n2. If this problem persists, who currently benefits from the status quo?\n3. Are there any structural biases (economic, racial, geographic) embedded in how this problem is framed?`;
+        return `Act as a critical theorist and problem-space analyst.\n\n${intro}Help me problematize this situation. Complicate my understanding and look for systemic roots:\n1. What hidden assumptions are baked into how I've framed this?\n2. If this situation persists, who benefits from the status quo?\n3. What structural biases (economic, geographic, demographic, technological) are embedded here?\n4. Where is my evidence thin or one-sided?`;
       }
-      return `Act as a research strategist helping me prepare for primary and secondary research on this problem space.\n\n${intro}My FIRST and most important step is to interview the people who reported these friction signals — they have ground truth I cannot guess at. Help me with:\n1. Interview Plan: For each signal above, suggest one open-ended question I should ask the contributor to surface what they actually meant, the stakeholders involved, and any workaround they're already using. Phrase questions for a 30-minute conversation.\n2. Complicating Factors: What edge cases, missing voices, or contrarian data might prove my framing wrong or incomplete?\n3. Secondary Research: What specific academic fields, peer-reviewed topics, or existing literature should I quickly search to ground this in established evidence — to triangulate what the interviews surface?`;
+      if (kind === 'frame') {
+        return `Act as a Frame Creation facilitator grounded in Kees Dorst's methodology.\n\n${intro}Help me articulate a FRAME for this situation. A frame is a proposed new way of seeing: "If this situation is approached AS IF it is [X], then [Y] follows." \n1. Propose 2–3 candidate frames ([X]) that reorganize the evidence in a non-obvious way — each is a metaphor or analogy from another domain, not a restatement.\n2. For each, spell out what [Y] would follow — what becomes thinkable or actionable.\n3. Note which frame is most generative and why. Do NOT propose solutions; propose ways of seeing.`;
+      }
+      return `Act as a research strategist helping me prepare to investigate this situation.\n\n${intro}My first step is to interview the people behind these signals — they have ground truth I can't guess. Help me with:\n1. Interview Plan: for the most load-bearing signals, one open-ended question each to surface what the contributor actually meant.\n2. Complicating Factors: edge cases, missing voices, or contrarian data that might break my framing.\n3. Secondary Research: fields or literature to ground this in established evidence.`;
     }
 
-    function buildInterviewPromptForCommitted(committed) {
-      if (!committed.length) return '';
-      const blocks = committed.map(c => {
-        const signals = allSignalsUnderHub(c.id).map(id => appState.items.find(i => i.id === id)).filter(Boolean);
-        const signalList = signals.map(i => `  - ${i.title}: ${i.summary}`).join('\n');
-        return `${tierLabel(hubTier(c.id))}: ${c.title || 'Untitled'}\nShared barrier: ${c.description || '(no synthesis yet)'}\nSignals:\n${signalList || '  (none yet)'}`;
-      }).join('\n\n');
-      return `Act as a research strategist helping me plan interviews with the people who originally reported these friction signals.\n\nI have committed to ${committed.length} pattern${committed.length === 1 ? '' : 's'}. Before I deepen them with a problematization and stakeholder map, I want to interview the contributors of each pattern to make sure I understand what they meant.\n\nFor each pattern below:\n1. Suggest a primary interview question that gets the contributor to describe the most recent time they hit this barrier.\n2. Suggest 2 follow-up probes to surface stakeholders, workarounds, and emotional stakes.\n3. Suggest one secondary-research direction (peer-reviewed or grey literature) to check that what they tell me isn't an isolated story.\n\nDo NOT propose solutions. Help me prepare a 30-minute conversation per pattern.\n\nPatterns:\n\n${blocks}`;
-    }
-
-    // --- Commit step ---
+    // --- Push to Problem Situation ---
+    // Gate: every card must be named AND described. Then the situation
+    // (next screen) synthesizes the whole ladder into one open condition.
     function openCommitModal() {
       const v = validateBoard();
       const warningEl = document.getElementById('validation-warning');
-      if (v.usable === 0) {
-        const msg = v.warnings[0] || 'Add a titled cluster with at least one signal.';
+      if (!v.ready) {
+        const msg = v.warnings[0] || 'Name and describe every card before pushing.';
         warningEl.textContent = msg;
-        toast('Can\'t commit yet: ' + msg);
+        toast(msg);
         return;
       }
       warningEl.textContent = '';
-
-      const eligible = [...appState.cards, ...appState.themes, ...appState.situations].filter(c => c.title.trim());
-      const list = document.getElementById('commit-cluster-list');
-      list.innerHTML = '';
-      eligible.forEach(c => {
-        const id = `commit-row-${c.id}`;
-        const checked = appState.committedThemeIds.includes(c.id);
-        const row = document.createElement('label');
-        row.className = 'commit-cluster-row' + (checked ? ' checked' : '');
-        row.setAttribute('for', id);
-        const leafCount = allSignalsUnderHub(c.id).length;
-        const under3 = leafCount < 3;
-        const tier = hubTier(c.id);
-        row.innerHTML = `
-          <input type="checkbox" id="${id}" data-cluster-id="${escapeHtml(c.id)}" ${checked ? 'checked' : ''} onchange="onCommitRowChange(this)">
-          <div class="cluster-meta">
-            <h4>${escapeHtml(c.title)} <span style="font-size:0.7rem; color:var(--primary-teal); font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">${escapeHtml(tierLabel(tier))}</span></h4>
-            <p>${leafCount} signal${leafCount === 1 ? '' : 's'}${under3 ? ' — under the 3+ target' : ''}</p>
-          </div>
-        `;
-        list.appendChild(row);
-      });
-
-      const warn = document.getElementById('commit-warning');
-      const { count } = getClusterProgress();
-      if (count < 2) {
-        warn.textContent = `You have ${count} pattern${count === 1 ? '' : 's'} with 3+ signals. The sweet spot is 2–3 — you can still commit, but thinner patterns are harder to defend.`;
-        warn.classList.remove('hidden');
-      } else {
-        warn.classList.add('hidden');
-      }
-
-      const prevCountLine = list.parentNode.querySelector('.commit-signal-count');
-      if (prevCountLine) prevCountLine.remove();
-      const signalCountLine = document.createElement('p');
-      signalCountLine.className = 'commit-signal-count';
-      signalCountLine.style.cssText = 'font-size: 0.875rem; color: var(--midnight); opacity: 0.7; margin-bottom: 16px; font-style: italic;';
-      signalCountLine.textContent = `You sorted through ${appState.items.length} signals to get here. These are the patterns you're standing behind.`;
-      list.parentNode.insertBefore(signalCountLine, list);
-
-      updateCommitContinueButton();
-      openModal('commit-modal');
+      appState.committedCardIds = topLevelCards().map(c => c.id);
+      scheduleSave();
+      goToScreen('workspace');
     }
-
-    function onCommitRowChange(checkbox) {
-      const row = checkbox.closest('.commit-cluster-row');
-      if (row) row.classList.toggle('checked', checkbox.checked);
-      updateCommitContinueButton();
-    }
-
-    function getCheckedCommitIds() {
-      return Array.from(document.querySelectorAll('#commit-cluster-list input[type="checkbox"]:checked'))
-        .map(cb => cb.getAttribute('data-cluster-id'));
-    }
-
-    function updateCommitContinueButton() {
-      const btn = document.getElementById('commit-continue-btn');
-      if (!btn) return;
-      const checked = getCheckedCommitIds();
-      btn.disabled = !(checked.length >= 2 && checked.length <= 3);
-    }
-
+    // Kept as no-ops for any lingering references in the (now-unused) modal.
+    function onCommitRowChange() {}
+    function getCheckedCommitIds() { return []; }
+    function updateCommitContinueButton() {}
     function confirmCommit() {
-      const checked = getCheckedCommitIds();
-      if (!(checked.length >= 2 && checked.length <= 3)) return;
-      appState.committedThemeIds = checked;
+      appState.committedCardIds = topLevelCards().map(c => c.id);
       closeModal('commit-modal');
       scheduleSave();
       goToScreen('workspace');
     }
 
     // --- Workspace (per-committed-cluster deepening) ---
+    // --- Workspace = the single Problem Situation ---
     function renderWorkspace() {
       const titleEl = document.getElementById('workspace-title');
       if (titleEl) titleEl.textContent = appState.settings.title
-        ? `Build the case: ${appState.settings.title}`
-        : 'Build the case';
-
-      // Clean any committed ids that no longer point to a real cluster.
-      appState.committedThemeIds = appState.committedThemeIds.filter(id => allObjects().some(c => c.id === id));
-
-      const committed = appState.committedThemeIds
-        .map(id => findAnyObj(id))
-        .filter(Boolean);
+        ? `Problem Situation: ${appState.settings.title}`
+        : 'Frame the Problem Situation';
 
       const interviewEl = document.getElementById('workspace-interview-prompt');
-      if (interviewEl) interviewEl.textContent = buildInterviewPromptForCommitted(committed);
+      if (interviewEl) interviewEl.textContent = buildSituationPrompt('interview');
 
       const container = document.getElementById('workspace-cards-container');
       const jumpBar = document.getElementById('workspace-jump-bar');
-      container.innerHTML = '';
       if (jumpBar) jumpBar.innerHTML = '';
-      if (!committed.length) {
+      container.innerHTML = '';
+
+      const tops = topLevelCards();
+      if (!tops.length) {
         const empty = document.createElement('p');
         empty.style.cssText = 'background: var(--ghost-white); padding: 24px; border-radius: 12px; border: 2px solid var(--cloud); color: var(--midnight);';
-        empty.textContent = 'No patterns committed yet. Go back to the board to commit 2–3 patterns first.';
+        empty.textContent = 'No cards yet. Go back to the board, build at least one card, name and describe it, then push to the Problem Situation.';
         container.appendChild(empty);
-      } else {
-        // Build the jump bar first (>1 card only).
-        if (jumpBar && committed.length > 1) {
-          const label = document.createElement('span');
-          label.className = 'ws-jump-label';
-          label.textContent = 'Jump to:';
-          jumpBar.appendChild(label);
-          committed.forEach((cluster, idx) => {
-            const tier = hubTier(cluster.id);
-            const chip = document.createElement('button');
-            chip.type = 'button';
-            chip.className = 'workspace-jump-chip tier-' + Math.min(tier, 6);
-            chip.setAttribute('data-cluster-id', cluster.id);
-            chip.innerHTML = `<span class="ws-jump-tier">${escapeHtml(tierLabel(tier))}</span><span>${escapeHtml(cluster.title || 'Untitled')}</span>`;
-            chip.addEventListener('click', () => {
-              const card = document.getElementById('ws-card-' + cluster.id);
-              if (!card) return;
-              card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              const firstField = card.querySelector('textarea');
-              if (firstField) setTimeout(() => firstField.focus({ preventScroll: true }), 320);
-            });
-            if (idx === 0) chip.classList.add('is-active');
-            jumpBar.appendChild(chip);
-          });
-        }
-        committed.forEach(cluster => container.appendChild(renderCommittedClusterCard(cluster)));
-        // Wire focus highlight + IntersectionObserver for the jump bar.
-        setupWorkspaceFocusTracking(committed);
+        recomputeSubmitButton();
+        return;
       }
-
+      container.appendChild(renderSituationEditor(tops));
       recomputeSubmitButton();
     }
 
-    let workspaceObserver = null;
-    function setupWorkspaceFocusTracking(committed) {
-      const container = document.getElementById('workspace-cards-container');
-      // Focus highlight via delegated focusin/focusout.
-      container.onfocusin = (e) => {
-        const card = e.target.closest('.workspace-cluster-card');
-        if (!card) return;
-        document.querySelectorAll('.workspace-cluster-card.is-focused').forEach(el => el.classList.remove('is-focused'));
-        card.classList.add('is-focused');
-        // Sync the jump-bar active chip.
-        const id = card.id.replace('ws-card-', '');
-        document.querySelectorAll('.workspace-jump-chip').forEach(c => {
-          c.classList.toggle('is-active', c.getAttribute('data-cluster-id') === id);
-        });
-      };
-      container.onfocusout = (e) => {
-        // Don't clear if focus is moving within the same card.
-        const card = e.target.closest('.workspace-cluster-card');
-        const next = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.workspace-cluster-card');
-        if (card && card !== next) card.classList.remove('is-focused');
-      };
-      // IntersectionObserver: as the user scrolls without focus, still highlight the chip of the most-visible card.
-      if (workspaceObserver) workspaceObserver.disconnect();
-      if (!('IntersectionObserver' in window)) return;
-      const screenEl = document.getElementById('workspace-screen');
-      workspaceObserver = new IntersectionObserver((entries) => {
-        // Only update if no textarea is currently focused (focusin path wins).
-        if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') return;
-        entries.forEach(entry => {
-          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
-            const id = entry.target.id.replace('ws-card-', '');
-            document.querySelectorAll('.workspace-jump-chip').forEach(c => {
-              c.classList.toggle('is-active', c.getAttribute('data-cluster-id') === id);
-            });
-          }
-        });
-      }, { root: screenEl, threshold: [0.5] });
-      committed.forEach(cluster => {
-        const card = document.getElementById('ws-card-' + cluster.id);
-        if (card) workspaceObserver.observe(card);
-      });
-    }
-
-    function renderCommittedClusterCard(cluster) {
+    function renderSituationEditor(tops) {
+      const s = appState.situation;
       const card = document.createElement('article');
       card.className = 'workspace-cluster-card';
-      card.setAttribute('data-cluster-id', cluster.id);
 
-      const signals = allSignalsUnderHub(cluster.id)
-        .map(id => appState.items.find(i => i.id === id))
-        .filter(Boolean);
+      const trail = tops.map(c => `<li><strong>${escapeHtml(c.title || 'Untitled')}</strong> <span class="ws-card-tier">${escapeHtml(nodeLabel(c.id))}</span> — ${signalsUnder(c.id).length} signal${signalsUnder(c.id).length === 1 ? '' : 's'}</li>`).join('');
 
-      const problemId = `problematize-${cluster.id}`;
-      const stakeholderId = `stakeholder-${cluster.id}`;
-      const problemPromptId = `problematize-prompt-${cluster.id}`;
-      const stakeholderPromptId = `stakeholder-prompt-${cluster.id}`;
-
-      const tier = hubTier(cluster.id);
-      card.id = 'ws-card-' + cluster.id;
-      card.setAttribute('data-tier', String(tier));
       card.innerHTML = `
         <header>
           <div class="ws-card-titlerow">
-            <span class="ws-card-tier tier-${Math.min(tier, 6)}">${escapeHtml(tierLabel(tier))}</span>
-            <h3>${escapeHtml(cluster.title || 'Untitled')}</h3>
+            <span class="ws-card-tier" style="background:#8a4fff;color:#fff;">Problem Situation</span>
           </div>
-          ${cluster.description ? `<p class="cluster-desc">${escapeHtml(cluster.description)}</p>` : ''}
-          <ul class="signal-chips">
-            ${signals.map(s => `<li>${escapeHtml(s.title)}</li>`).join('')}
-          </ul>
+          <p class="field-hint">An open, complex, networked condition synthesized from everything you built. This is not a problem to solve yet — it's a situation to frame.</p>
+          <ul class="signal-chips">${trail}</ul>
         </header>
+
         <section class="workspace-section">
-          <label for="${stakeholderId}">Stakeholder Map</label>
-          <p class="field-hint">Who's most affected, who else is impacted, who's blocking, who has access — grounded in what you heard in Step 1.</p>
-          <div class="prompt-cta">
-            <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Step 2 — Map who's affected</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('${stakeholderPromptId}')">Copy this prompt</button>
-            </div>
-            <div class="prompt-text" id="${stakeholderPromptId}"></div>
-            <p class="copy-hint">Paste into your LLM. When it lists stakeholders, ask "who did you leave out and why?" Write your map from what you learned, not what it said.</p>
-          </div>
-          <textarea id="${stakeholderId}" oninput="updateStakeholderMap('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="After talking to the AI and the people — who's most affected, who's blocking, who has access? Your words."></textarea>
+          <label for="sit-title">Name the situation</label>
+          <input type="text" id="sit-title" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('title', this.value)">
+          <label for="sit-desc" style="margin-top:12px;">Describe it</label>
+          <textarea id="sit-desc" placeholder="This is an open condition, not a bounded problem, because ___" oninput="updateSituationField('description', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.description || '')}</textarea>
         </section>
+
         <section class="workspace-section">
-          <label for="${problemId}">Pressure-test this space</label>
-          <p class="field-hint">Hidden assumptions, structural biases, who benefits from things staying broken — complicate your own framing before someone else does.</p>
+          <label for="sit-frame">Frame it</label>
+          <p class="field-hint">A frame is a new way of seeing — a metaphor that reorganizes the evidence.</p>
           <div class="prompt-cta">
             <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Step 3 — Pressure-test your framing</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('${problemPromptId}')">Copy this prompt</button>
+              <div class="prompt-cta-label">✨ Help me find a frame</div>
+              <button class="btn btn-primary copy-btn" onclick="copyText('sit-frame-prompt')">Copy this prompt</button>
             </div>
-            <div class="prompt-text" id="${problemPromptId}"></div>
-            <p class="copy-hint">Paste into your LLM. If the response confirms your framing, ask it to break it. Your problematization should be harder to write after this conversation, not easier.</p>
+            <div class="prompt-text" id="sit-frame-prompt"></div>
+            <p class="copy-hint">Paste into your LLM. Push for non-obvious metaphors, then write the frame in your own words.</p>
           </div>
-          <textarea id="${problemId}" oninput="updateProblematization('${cluster.id}', this.value); autoResize(this); recomputeSubmitButton();" placeholder="After the AI challenged your framing — what's assumed, what's missing, who benefits? Your words."></textarea>
+          <textarea id="sit-frame" placeholder="If this situation is approached as if it is ___, then ___" oninput="updateSituationField('frame', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.frame || '')}</textarea>
+        </section>
+
+        <section class="workspace-section">
+          <label for="sit-stake">Stakeholder Map</label>
+          <p class="field-hint">Inner-circle, wider-field, owners/clients, gatekeepers — across the whole situation.</p>
+          <div class="prompt-cta">
+            <div class="prompt-cta-header">
+              <div class="prompt-cta-label">✨ Map who's involved</div>
+              <button class="btn btn-primary copy-btn" onclick="copyText('sit-stake-prompt')">Copy this prompt</button>
+            </div>
+            <div class="prompt-text" id="sit-stake-prompt"></div>
+            <p class="copy-hint">Paste into your LLM. Ask "who did you leave out and why?" Write your map from what you learned.</p>
+          </div>
+          <textarea id="sit-stake" placeholder="Who's in the inner circle, the wider field, who could own this? Your words." oninput="updateSituationField('stakeholderMap', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.stakeholderMap || '')}</textarea>
+        </section>
+
+        <section class="workspace-section">
+          <label for="sit-problem">Pressure-test the framing</label>
+          <p class="field-hint">Hidden assumptions, structural biases, who benefits from things staying as they are.</p>
+          <div class="prompt-cta">
+            <div class="prompt-cta-header">
+              <div class="prompt-cta-label">✨ Problematize this situation</div>
+              <button class="btn btn-primary copy-btn" onclick="copyText('sit-problem-prompt')">Copy this prompt</button>
+            </div>
+            <div class="prompt-text" id="sit-problem-prompt"></div>
+            <p class="copy-hint">If the response confirms your framing, ask it to break it.</p>
+          </div>
+          <textarea id="sit-problem" placeholder="After the AI challenged you — what's assumed, what's missing, who benefits? Your words." oninput="updateSituationField('problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
         </section>
       `;
 
-      const pTa = card.querySelector(`#${problemId}`);
-      pTa.value = appState.problematizations[cluster.id] || '';
-      const sTa = card.querySelector(`#${stakeholderId}`);
-      sTa.value = appState.stakeholderMaps[cluster.id] || '';
-      card.querySelector(`#${problemPromptId}`).textContent = buildPromptFor(cluster, 'problematize');
-      card.querySelector(`#${stakeholderPromptId}`).textContent = buildPromptFor(cluster, 'stakeholder');
-      requestAnimationFrame(() => { autoResize(pTa); autoResize(sTa); });
-
+      card.querySelector('#sit-frame-prompt').textContent = buildSituationPrompt('frame');
+      card.querySelector('#sit-stake-prompt').textContent = buildSituationPrompt('stakeholder');
+      card.querySelector('#sit-problem-prompt').textContent = buildSituationPrompt('problematize');
+      requestAnimationFrame(() => {
+        ['sit-desc', 'sit-frame', 'sit-stake', 'sit-problem'].forEach(id => { const t = card.querySelector('#' + id); if (t) autoResize(t); });
+      });
       return card;
     }
 
-    function updateProblematization(clusterId, value) {
-      appState.problematizations[clusterId] = value;
-      scheduleSave();
-    }
-    function updateStakeholderMap(clusterId, value) {
-      appState.stakeholderMaps[clusterId] = value;
+    function updateSituationField(key, value) {
+      appState.situation[key] = value;
       scheduleSave();
     }
 
     function workspaceIsComplete() {
-      if (!appState.committedThemeIds.length) return false;
-      return appState.committedThemeIds.every(id => {
-        const p = (appState.problematizations[id] || '').trim();
-        const s = (appState.stakeholderMaps[id] || '').trim();
-        return p && s;
-      });
+      if (!topLevelCards().length) return false;
+      const s = appState.situation;
+      return ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].every(k => (s[k] || '').trim());
     }
 
     function recomputeSubmitButton() {
@@ -5105,14 +4887,13 @@ Numbered. ≤ 30 words each. Force a defense.
         toast('Complete every section to submit.');
         return;
       }
-      const committed = appState.committedThemeIds
-        .map(id => findAnyObj(id))
-        .filter(Boolean);
-      const signalCount = committed.reduce((sum, c) => sum + allSignalsUnderHub(c.id).length, 0);
-      const charCount = appState.committedThemeIds.reduce((sum, id) =>
-        sum + (appState.problematizations[id] || '').trim().length + (appState.stakeholderMaps[id] || '').trim().length, 0);
+      const tops = topLevelCards();
+      const signalSet = new Set();
+      tops.forEach(c => signalsUnder(c.id).forEach(id => signalSet.add(id)));
+      const s = appState.situation;
+      const charCount = ['description', 'frame', 'stakeholderMap', 'problematization'].reduce((sum, k) => sum + (s[k] || '').trim().length, 0);
       const summary = document.getElementById('submit-modal-summary');
-      summary.textContent = `You're submitting ${committed.length} pattern${committed.length === 1 ? '' : 's'} covering ${signalCount} signal${signalCount === 1 ? '' : 's'}, with ${charCount} characters of problematization and stakeholder analysis.`;
+      summary.textContent = `You're submitting one Problem Situation — "${s.title || 'Untitled'}" — built from ${tops.length} top-level card${tops.length === 1 ? '' : 's'} covering ${signalSet.size} signal${signalSet.size === 1 ? '' : 's'}, with ${charCount} characters of framing, stakeholder, and problematization analysis.`;
       const prior = document.getElementById('submit-modal-prior');
       if (appState.submittedAt) {
         prior.textContent = `Previously submitted on ${new Date(appState.submittedAt).toLocaleString()}. Re-submitting will replace that timestamp.`;
@@ -5154,33 +4935,31 @@ Numbered. ≤ 30 words each. Force a defense.
       const wrap = document.createElement('div');
       wrap.style.width = '100%';
       wrap.style.maxWidth = '840px';
-      const committed = appState.committedThemeIds
-        .map(id => findAnyObj(id))
-        .filter(Boolean);
-      committed.forEach(cluster => {
-        const signals = allSignalsUnderHub(cluster.id).map(id => appState.items.find(i => i.id === id)).filter(Boolean);
-        const article = document.createElement('article');
-        article.className = 'submission-cluster';
-        const probAns = (appState.problematizations[cluster.id] || '').trim() || '(empty)';
-        const stakeAns = (appState.stakeholderMaps[cluster.id] || '').trim() || '(empty)';
-        const tier = hubTier(cluster.id);
-        article.innerHTML = `
-          <h3>${escapeHtml(cluster.title || 'Untitled')} <span style="font-size:0.7rem; color:var(--primary-teal); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:6px;">${escapeHtml(tierLabel(tier))}</span></h3>
-          ${cluster.description ? `<p class="cluster-desc">${escapeHtml(cluster.description)}</p>` : ''}
-          <ul class="signal-chips">
-            ${signals.map(s => `<li>${escapeHtml(s.title)}</li>`).join('')}
-          </ul>
-          <div class="submission-answer">
-            <h4>Stakeholder Map</h4>
-            <div class="answer-body">${escapeHtml(stakeAns)}</div>
-          </div>
-          <div class="submission-answer">
-            <h4>Problematization</h4>
-            <div class="answer-body">${escapeHtml(probAns)}</div>
-          </div>
-        `;
-        wrap.appendChild(article);
-      });
+
+      const s = appState.situation;
+      const tops = topLevelCards();
+      const article = document.createElement('article');
+      article.className = 'submission-cluster';
+      article.innerHTML = `
+        <h3>${escapeHtml(s.title || 'Untitled Problem Situation')} <span style="font-size:0.7rem; color:#8a4fff; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:6px;">Problem Situation</span></h3>
+        ${s.description ? `<p class="cluster-desc">${escapeHtml(s.description)}</p>` : ''}
+        <ul class="signal-chips">
+          ${tops.map(c => `<li>${escapeHtml(c.title || 'Untitled')} (${escapeHtml(nodeLabel(c.id))})</li>`).join('')}
+        </ul>
+        <div class="submission-answer">
+          <h4>Frame</h4>
+          <div class="answer-body">${escapeHtml((s.frame || '').trim() || '(empty)')}</div>
+        </div>
+        <div class="submission-answer">
+          <h4>Stakeholder Map</h4>
+          <div class="answer-body">${escapeHtml((s.stakeholderMap || '').trim() || '(empty)')}</div>
+        </div>
+        <div class="submission-answer">
+          <h4>Problematization</h4>
+          <div class="answer-body">${escapeHtml((s.problematization || '').trim() || '(empty)')}</div>
+        </div>
+      `;
+      wrap.appendChild(article);
       body.appendChild(wrap);
 
       const peerReview = document.createElement('div');
@@ -5190,13 +4969,13 @@ Numbered. ≤ 30 words each. Force a defense.
         <div style="background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px; padding: 28px 32px;">
           <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary-teal); margin-bottom: 8px;">Before Peer Review</div>
           <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--midnight); margin-bottom: 12px;">Can you defend this?</h3>
-          <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; line-height: 1.6; margin-bottom: 20px;">Your peers are going to challenge your framing. Before you walk in, make sure you have an answer to each of these — for every pattern you committed to.</p>
+          <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; line-height: 1.6; margin-bottom: 20px;">Your peers are going to challenge your framing. Before you walk in, make sure you have an answer to each of these.</p>
           <ol style="font-size: 0.9rem; color: var(--midnight); line-height: 1.8; padding-left: 20px;">
             <li style="margin-bottom: 8px;">Which signal doesn't quite fit — and why did you keep it anyway?</li>
             <li style="margin-bottom: 8px;">Whose voice is missing from your stakeholder map?</li>
             <li style="margin-bottom: 8px;">What assumption would break your framing if it turned out to be wrong?</li>
-            <li style="margin-bottom: 8px;">If you had to explain your pattern in one sentence to someone who hasn't seen any of these signals — what would you say?</li>
-            <li style="margin-bottom: 8px;">What's the strongest argument that your clusters should have been grouped differently?</li>
+            <li style="margin-bottom: 8px;">Why is this an open situation and not a bounded problem?</li>
+            <li style="margin-bottom: 8px;">What's the strongest argument that the evidence should have been organized differently?</li>
           </ol>
         </div>
       `;
@@ -5204,27 +4983,20 @@ Numbered. ≤ 30 words each. Force a defense.
     }
 
     function downloadMarkdown() {
-      const committed = appState.committedThemeIds
-        .map(id => findAnyObj(id))
-        .filter(Boolean);
-      let md = `# ${appState.settings.title || 'Sensemaking Submission'}\n`;
+      const s = appState.situation;
+      const tops = topLevelCards();
+      let md = `# ${appState.settings.title || 'Problem Situation'}\n`;
       md += appState.submittedAt
         ? `*Submitted on ${new Date(appState.submittedAt).toLocaleString()}*\n\n`
         : `*Draft — not yet submitted*\n\n`;
+      md += `---\n\n## Problem Situation: ${s.title || 'Untitled'}\n\n`;
+      if (s.description) md += `${s.description}\n\n`;
+      md += `### Frame\n${(s.frame || '(empty)').trim()}\n\n`;
+      md += `### Stakeholder Map\n${(s.stakeholderMap || '(empty)').trim()}\n\n`;
+      md += `### Problematization\n${(s.problematization || '(empty)').trim()}\n\n`;
+      md += `---\n\n## Evidence trail\n\n`;
+      tops.forEach(c => { md += formatCardOutline(c.id, 0) + '\n\n'; });
       md += `---\n\n`;
-      committed.forEach(c => {
-        const tier = hubTier(c.id);
-        md += `## ${c.title || 'Untitled Group'} *(${tierLabel(tier)})*\n\n`;
-        if (c.description) md += `> **Shared Barrier:** ${c.description}\n\n`;
-        md += `### Signals\n`;
-        allSignalsUnderHub(c.id).forEach(id => {
-          const item = appState.items.find(i => i.id === id);
-          if (item) md += `- **${item.title}** — ${item.summary}\n`;
-        });
-        md += `\n### Stakeholder Map\n${(appState.stakeholderMaps[c.id] || '(empty)').trim()}\n\n`;
-        md += `### Problematization\n${(appState.problematizations[c.id] || '(empty)').trim()}\n\n`;
-        md += `---\n\n`;
-      });
 
       const blob = new Blob([md], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
@@ -5559,12 +5331,13 @@ Numbered. ≤ 30 words each. Force a defense.
     renderConfigItems();
 
     function pickInitialScreen() {
-      if (Array.isArray(appState.committedThemeIds)) {
-        appState.committedThemeIds = appState.committedThemeIds.filter(id => allObjects().some(c => c.id === id));
+      if (Array.isArray(appState.committedCardIds)) {
+        appState.committedCardIds = appState.committedCardIds.filter(id => isCardId(id));
       }
-      if (appState.submittedAt && appState.committedThemeIds.length) return 'artifact';
-      if (appState.committedThemeIds.length) return 'workspace';
-      if (appState.cards.some(c => c.signalIds.length > 0 || c.title.trim()) || appState.themes.length > 0 || appState.situations.length > 0) return 'board';
+      const hasSituationWork = appState.committedCardIds.length || ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].some(k => (appState.situation[k] || '').trim());
+      if (appState.submittedAt && hasSituationWork) return 'artifact';
+      if (hasSituationWork) return 'workspace';
+      if (appState.cards.length > 0) return 'board';
       if (appState.currentScreen === 'sorting') return 'sorting';
       const totalItems = appState.items.length;
       const sortedCount = Object.keys(appState.sorting.decisions).length;
@@ -5609,7 +5382,7 @@ Numbered. ≤ 30 words each. Force a defense.
     // Warn before unload if there's in-progress, unsubmitted work.
     window.addEventListener('beforeunload', (e) => {
       const onActiveScreen = appState.currentScreen === 'board' || appState.currentScreen === 'workspace' || appState.currentScreen === 'sorting';
-      if (onActiveScreen && (appState.cards.some(c => c.signalIds.length > 0) || appState.themes.length > 0 || Object.keys(appState.sorting.decisions).length > 0)) {
+      if (onActiveScreen && (appState.cards.length > 0 || Object.keys(appState.sorting.decisions).length > 0)) {
         e.preventDefault();
         e.returnValue = '';
       }
