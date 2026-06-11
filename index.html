@@ -4321,15 +4321,20 @@
       return lines.join('\n');
     }
 
-    // Tier-specific framing inserted into the <context> block.
-    function tierFraming(tier) {
-      if (tier <= 1) {
-        return 'Focus on lived human friction: who is affected, in what context, when does it happen, and what workaround do they already improvise. This is a Pattern — a specific, named condition that two or more signals point toward together.';
+    function tierFraming(tier, hubId) {
+      const layer = hubId ? nodeLayer(hubId) : null;
+      if (layer === 'card') {
+        const c = findCard(hubId);
+        const ct = c ? (CARD_TYPE_MAP[c.cardType] || {}) : {};
+        return `This is a ${ct.label || 'Card'} — ${ct.desc || 'an intermediate evidence card'}. Focus on what the constituent signals, when triangulated, reveal about this specific kind of evidence. Who is affected, in what context, and what mechanism or condition do they point toward together?`;
       }
-      if (tier === 2) {
-        return 'Focus on the deeper universal that bridges human experience and structural/systemic factors. This is a Theme — a condition or force that two or more patterns point toward. A good theme bridges the human (cultural) domain and the technical or economic realm.';
+      if (layer === 'theme' || tier === 2) {
+        return 'Focus on the deeper universal that bridges human experience and structural/systemic factors. This is a Theme — a condition or force that two or more cards point toward. A good theme bridges the human (cultural) domain and the technical or economic realm.';
       }
-      return 'Focus on meta-convergence — the condition where the human and the structural converge, pointing toward a new way of seeing the whole situation. This is a Super-theme that may point toward a frame: if this situation is approached as if it is [X], then [Y].';
+      if (layer === 'situation' || tier >= 3) {
+        return 'This is a Problem Situation — an open, complex, networked, dynamic condition (not a bounded problem). Focus on what makes this genuinely open and irreducible. If this situation is approached as if it is [X], then [Y].';
+      }
+      return 'Focus on lived human friction: who is affected, in what context, when does it happen, and what workaround do they already improvise.';
     }
 
     // Three task / thinking / format blocks per mode. Each mode adds one rule.
@@ -4430,7 +4435,7 @@ They are triangulating observed friction signals into defensible problem
 spaces through patterns, themes, and super-themes. They are working on
 one ${label} in their web map.
 
-${tierFraming(tier)}
+${tierFraming(tier, hubId)}
 </context>
 
 <cluster>
