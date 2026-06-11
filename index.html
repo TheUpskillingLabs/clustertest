@@ -968,6 +968,90 @@
       background: #b18dff; box-shadow: 0 2px 6px rgba(138,79,255,0.55);
     }
 
+    /* Card-type color overrides (applied via data-card-type attribute) */
+    .hub-node[data-card-type="history"]        { border-color: #4a6fa5; }
+    .hub-node[data-card-type="history"] .hub-tag { color: #4a6fa5; }
+    .hub-node[data-card-type="history"] .hub-count { background: #4a6fa5; }
+    .hub-node[data-card-type="history"] .connect-handle { background: #4a6fa5; box-shadow: 0 2px 6px rgba(74,111,165,0.55); }
+
+    .hub-node[data-card-type="counterfactual"]  { border-color: #7b5ea7; }
+    .hub-node[data-card-type="counterfactual"] .hub-tag { color: #7b5ea7; }
+    .hub-node[data-card-type="counterfactual"] .hub-count { background: #7b5ea7; }
+    .hub-node[data-card-type="counterfactual"] .connect-handle { background: #7b5ea7; box-shadow: 0 2px 6px rgba(123,94,167,0.55); }
+
+    .hub-node[data-card-type="boundary"]       { border-color: #c0392b; }
+    .hub-node[data-card-type="boundary"] .hub-tag { color: #c0392b; }
+    .hub-node[data-card-type="boundary"] .hub-count { background: #c0392b; }
+    .hub-node[data-card-type="boundary"] .connect-handle { background: #c0392b; box-shadow: 0 2px 6px rgba(192,57,43,0.55); }
+
+    .hub-node[data-card-type="flux"]           { border-color: #d4a017; }
+    .hub-node[data-card-type="flux"] .hub-tag { color: #d4a017; }
+    .hub-node[data-card-type="flux"] .hub-count { background: #d4a017; color: var(--midnight); }
+    .hub-node[data-card-type="flux"] .connect-handle { background: #d4a017; box-shadow: 0 2px 6px rgba(212,160,23,0.55); }
+
+    .hub-node[data-card-type="player"]         { border-color: #0094a0; }
+    .hub-node[data-card-type="player"] .hub-tag { color: #0094a0; }
+    .hub-node[data-card-type="player"] .hub-count { background: #0094a0; }
+    .hub-node[data-card-type="player"] .connect-handle { background: #0094a0; box-shadow: 0 2px 6px rgba(0,148,160,0.55); }
+
+    .hub-node[data-card-type="value"]          { border-color: #27ae60; }
+    .hub-node[data-card-type="value"] .hub-tag { color: #27ae60; }
+    .hub-node[data-card-type="value"] .hub-count { background: #27ae60; }
+    .hub-node[data-card-type="value"] .connect-handle { background: #27ae60; box-shadow: 0 2px 6px rgba(39,174,96,0.55); }
+
+    .hub-node[data-card-type="problem"]        { border-color: #e67e22; }
+    .hub-node[data-card-type="problem"] .hub-tag { color: #e67e22; }
+    .hub-node[data-card-type="problem"] .hub-count { background: #e67e22; }
+    .hub-node[data-card-type="problem"] .connect-handle { background: #e67e22; box-shadow: 0 2px 6px rgba(230,126,34,0.55); }
+
+    /* Theme nodes */
+    .hub-node[data-layer="theme"]              { border-color: #f4b400; width: 320px; }
+    .hub-node[data-layer="theme"] .hub-tag     { color: #f4b400; }
+    .hub-node[data-layer="theme"] .hub-count   { background: #f4b400; color: var(--midnight); }
+    .hub-node[data-layer="theme"] .connect-handle { background: #f4b400; box-shadow: 0 2px 6px rgba(244,180,0,0.55); }
+    .hub-node[data-layer="theme"].is-super     { border-color: #ffd700; box-shadow: 0 0 18px rgba(255,215,0,0.3); }
+
+    /* Situation nodes */
+    .hub-node[data-layer="situation"]           { border-color: #8a4fff; width: 400px; }
+    .hub-node[data-layer="situation"] .hub-tag  { color: #b18dff; }
+    .hub-node[data-layer="situation"] .hub-count { background: #8a4fff; color: var(--ghost-white); }
+    .hub-node[data-layer="situation"] .connect-handle { background: #b18dff; box-shadow: 0 2px 6px rgba(138,79,255,0.55); }
+
+    /* Player role badge */
+    .player-role-badge { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 6px; background: rgba(0,148,160,0.2); color: #0094a0; margin-top: 4px; display: inline-block; }
+
+    /* View-state tab bar */
+    .view-tabs { display: flex; gap: 2px; }
+    .view-tab { background: none; border: none; color: var(--cloud); opacity: 0.5; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 12px; border-radius: 4px; cursor: pointer; transition: opacity 0.15s, background 0.15s; }
+    .view-tab:hover { opacity: 0.8; background: rgba(255,255,255,0.08); }
+    .view-tab.is-active { opacity: 1; background: rgba(255,255,255,0.12); }
+
+    /* View-state visibility: secondary nodes are faded + non-interactive */
+    .nodes-layer.view-signals .hub-node[data-layer="card"],
+    .nodes-layer.view-signals .hub-node[data-layer="theme"],
+    .nodes-layer.view-signals .hub-node[data-layer="situation"] {
+      opacity: 0.25; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-cards .canvas-node.signal-node {
+      opacity: 0.35; transform: scale(0.75); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-cards .hub-node[data-layer="theme"],
+    .nodes-layer.view-cards .hub-node[data-layer="situation"] {
+      opacity: 0.25; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-themes .canvas-node.signal-node,
+    .nodes-layer.view-themes .hub-node[data-layer="card"] {
+      opacity: 0.3; transform: scale(0.7); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-themes .hub-node[data-layer="situation"] {
+      opacity: 0.25; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s;
+    }
+    .nodes-layer.view-situations .canvas-node.signal-node,
+    .nodes-layer.view-situations .hub-node[data-layer="card"],
+    .nodes-layer.view-situations .hub-node[data-layer="theme"] {
+      opacity: 0.3; transform: scale(0.7); transition: opacity 0.3s, transform 0.3s;
+    }
+
     /* Connection handles — one on each side */
     .connect-handle {
       position: absolute;
@@ -1330,6 +1414,29 @@
     .quality-check { font-size: 0.65rem; color: rgba(255,255,255,0.55); line-height: 1.5; padding: 6px 8px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); }
     .quality-check em { color: rgba(255,255,255,0.75); font-style: normal; font-weight: 600; }
 
+    .player-role-picker { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+    .role-pill { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.15s; background: none; }
+    .role-pill:hover { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.8); }
+    .role-pill.active, .role-pill:has(input:checked) { background: rgba(0,148,160,0.3); border-color: #0094a0; color: #0094a0; }
+    .role-pill input[type="radio"] { display: none; }
+
+    .super-toggle { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(255,215,0,0.3); background: rgba(255,215,0,0.1); color: #f4b400; cursor: pointer; transition: all 0.15s; }
+    .super-toggle:hover { background: rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.5); }
+
+    /* Card-type picker popover */
+    .card-type-picker { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; background: rgba(16,24,32,0.5); }
+    .card-type-picker.hidden { display: none; }
+    .card-type-picker-inner { background: var(--midnight); border: 2px solid var(--cloud); border-radius: 16px; padding: 20px 24px; max-width: 420px; width: 90%; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+    .card-type-picker-title { color: var(--ghost-white); font-size: 0.85rem; font-weight: 700; margin-bottom: 14px; text-align: center; }
+    .card-type-picker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .card-type-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border-radius: 10px; border: 2px solid transparent; background: rgba(255,255,255,0.06); color: var(--ghost-white); cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .card-type-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.05); }
+    .card-type-btn .ct-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .card-type-btn .ct-desc { font-size: 0.55rem; opacity: 0.6; text-align: center; line-height: 1.3; }
+    @media (max-width: 480px) {
+      .card-type-picker-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
     @media (max-width: 480px) {
       .sorting-top { padding: 12px 16px 0; }
       .sorting-back-link { left: 16px; top: 14px; }
@@ -1480,7 +1587,12 @@
         </div>
       </div>
       <div class="canvas-infobar">
-        <span style="opacity: 0.6;">Triangulate signals → patterns → themes</span>
+        <div class="view-tabs" id="view-tabs">
+          <button class="view-tab is-active" data-view="signals" onclick="setCanvasView('signals')">Signals</button>
+          <button class="view-tab" data-view="cards" onclick="setCanvasView('cards')">Cards</button>
+          <button class="view-tab" data-view="themes" onclick="setCanvasView('themes')">Themes</button>
+          <button class="view-tab" data-view="situations" onclick="setCanvasView('situations')">Situations</button>
+        </div>
         <span id="validation-warning" style="color: var(--action-red);"></span>
         <span id="cluster-progress" aria-live="polite"></span>
       </div>
@@ -1712,12 +1824,19 @@
     </div>
   </div>
 
+  <div id="card-type-picker" class="card-type-picker hidden" role="dialog" aria-label="Choose card type">
+    <div class="card-type-picker-inner">
+      <p class="card-type-picker-title">What kind of evidence is this?</p>
+      <div class="card-type-picker-grid" id="card-type-picker-grid"></div>
+    </div>
+  </div>
+
   <div id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
   <script>
     const STORAGE_KEY = 'olos.sensemaking.v2';
     const LEGACY_STORAGE_KEY = 'olos.sensemaking.v1';
-    const TOUR_DONE_KEY = 'olos.tour.done';
+    // Tour done keys are now per-screen: tourDoneKey(screen) → 'olos.tour.done.' + screen
     const NODE_SIGNAL_W = 240, NODE_SIGNAL_H = 110;
     const NODE_HUB_W = 280, NODE_HUB_H = 150;
     const MIN_ZOOM = 0.05, MAX_ZOOM = 2.5;
@@ -1775,15 +1894,35 @@
       return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     }
 
+    // --- Card type constants ---
+    const CARD_TYPES = [
+      { id: 'history',        label: 'History',        color: '#4a6fa5', desc: 'What happened / what was done' },
+      { id: 'counterfactual', label: 'Counterfactual', color: '#7b5ea7', desc: 'The path not taken' },
+      { id: 'boundary',       label: 'Boundary',       color: '#c0392b', desc: 'A "they will never…" nonnegotiable' },
+      { id: 'flux',           label: 'Flux',           color: '#d4a017', desc: 'A point of movement or potential change' },
+      { id: 'player',         label: 'Player',         color: '#0094a0', desc: 'A stakeholder, by practices & currency' },
+      { id: 'value',          label: 'Value',          color: '#27ae60', desc: 'A deeper or universal value from the field' },
+      { id: 'problem',        label: 'Problem',        color: '#e67e22', desc: 'A bounded difficulty, solvable conventionally' }
+    ];
+    const CARD_TYPE_MAP = Object.fromEntries(CARD_TYPES.map(t => [t.id, t]));
+    const PLAYER_ROLES = [
+      { id: 'inner-circle',  label: 'Inner-circle',  desc: 'Already involved, necessary to any solution' },
+      { id: 'wider-field',   label: 'Wider-field',   desc: 'Not yet involved but with potential influence' },
+      { id: 'owner-client',  label: 'Owner/Client',  desc: 'Could own this problem situation or buy its resolution' }
+    ];
+
     function defaultState() {
       return {
-        settings: { title: "" },
+        settings: { title: '' },
         items: [],
-        clusters: [],
+        cards: [],
+        themes: [],
+        situations: [],
         nodes: {},
         view: { zoom: 1, panX: 0, panY: 0 },
         viewInitialized: false,
-        committedClusterIds: [],
+        canvasViewState: 'signals',
+        committedThemeIds: [],
         problematizations: {},
         stakeholderMaps: {},
         submittedAt: null,
@@ -1818,13 +1957,56 @@
           isLegacy = true;
         }
         const parsed = JSON.parse(raw);
-        if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.clusters)) return null;
-        // Ensure every cluster has a hubIds[] field for nested-cluster support.
-        parsed.clusters.forEach(c => {
-          if (!Array.isArray(c.itemIds)) c.itemIds = [];
-          if (!Array.isArray(c.hubIds)) c.hubIds = [];
-        });
-        if (!Array.isArray(parsed.committedClusterIds)) parsed.committedClusterIds = [];
+        if (!parsed || !Array.isArray(parsed.items)) return null;
+
+        // --- Migrate from old clusters[] model to cards/themes/situations ---
+        if (Array.isArray(parsed.clusters) && !Array.isArray(parsed.cards)) {
+          parsed.cards = [];
+          parsed.themes = [];
+          parsed.situations = [];
+          parsed.clusters.forEach(c => {
+            if (!Array.isArray(c.itemIds)) c.itemIds = [];
+            if (!Array.isArray(c.hubIds)) c.hubIds = [];
+          });
+          const tierOf = (id) => {
+            const c = parsed.clusters.find(x => x.id === id);
+            if (!c) return 0;
+            const kids = [...c.itemIds, ...(c.hubIds || [])];
+            const childHubs = kids.filter(kid => parsed.clusters.some(x => x.id === kid));
+            if (!childHubs.length) return 1;
+            return 1 + Math.max(...childHubs.map(tierOf));
+          };
+          parsed.clusters.forEach(c => {
+            const t = tierOf(c.id);
+            if (t <= 1) {
+              parsed.cards.push({
+                id: c.id, title: c.title || '', description: c.description || '',
+                cardType: 'problem', playerRole: null,
+                signalIds: [...c.itemIds]
+              });
+            } else if (t === 2) {
+              parsed.themes.push({
+                id: c.id, title: c.title || '', description: c.description || '',
+                isSuper: false,
+                cardIds: [...(c.hubIds || []), ...c.itemIds]
+              });
+            } else {
+              parsed.themes.push({
+                id: c.id, title: c.title || '', description: c.description || '',
+                isSuper: true,
+                cardIds: [...(c.hubIds || []), ...c.itemIds]
+              });
+            }
+          });
+          parsed.committedThemeIds = (parsed.committedClusterIds || []).slice();
+          delete parsed.clusters;
+          delete parsed.committedClusterIds;
+        }
+
+        if (!Array.isArray(parsed.cards)) parsed.cards = [];
+        if (!Array.isArray(parsed.themes)) parsed.themes = [];
+        if (!Array.isArray(parsed.situations)) parsed.situations = [];
+        if (!Array.isArray(parsed.committedThemeIds)) parsed.committedThemeIds = [];
         if (!parsed.problematizations || typeof parsed.problematizations !== 'object') parsed.problematizations = {};
         if (!parsed.stakeholderMaps || typeof parsed.stakeholderMaps !== 'object') parsed.stakeholderMaps = {};
         if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
@@ -1835,6 +2017,7 @@
         if (typeof parsed.view.panX !== 'number') parsed.view.panX = 0;
         if (typeof parsed.view.panY !== 'number') parsed.view.panY = 0;
         if (typeof parsed.viewInitialized !== 'boolean') parsed.viewInitialized = false;
+        if (!parsed.canvasViewState) parsed.canvasViewState = 'signals';
         if (!parsed.sorting || typeof parsed.sorting !== 'object') parsed.sorting = { currentIndex: 0, decisions: {} };
         if (!parsed.sorting.decisions) parsed.sorting.decisions = {};
         if (typeof parsed.sorting.currentIndex !== 'number') parsed.sorting.currentIndex = 0;
@@ -1982,7 +2165,7 @@
           const mode = modeEl ? modeEl.value : 'append';
           if (mode === 'replace') {
             appState.items = newItems;
-            appState.clusters.forEach(c => { c.itemIds = []; });
+            appState.cards.forEach(c => { c.signalIds = []; });
           } else {
             appState.items = appState.items.concat(newItems);
           }
@@ -2023,7 +2206,7 @@
       const removed = appState.items.find(i => i.id === id);
       appState.items = appState.items.filter(i => i.id !== id);
       // Also remove from any clusters
-      appState.clusters.forEach(c => { c.itemIds = c.itemIds.filter(x => x !== id); });
+      appState.cards.forEach(c => { c.signalIds = c.signalIds.filter(x => x !== id); });
       renderConfigItems();
       scheduleSave();
       if (removed) {
@@ -2043,7 +2226,7 @@
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
-      if (!localStorage.getItem(TOUR_DONE_KEY)) {
+      if (!localStorage.getItem(tourDoneKey('board'))) {
         _welcomeSlide = 0;
         _applyWelcomeSlideState();
         openModal('welcome-modal');
@@ -2086,70 +2269,133 @@
         renderSubmittedArtifact();
       }
       scheduleSave();
+      if (typeof maybeShowTour === 'function') maybeShowTour(name);
     }
 
     function backToBoard() { goToScreen('board'); }
     function backToWorkspaceFromArtifact() { goToScreen('workspace'); }
 
     // ======================== WEB-MAP CANVAS ========================
-    function nodeSize(kind, nodeId) {
-      if (kind !== 'hub') return { w: NODE_SIGNAL_W, h: NODE_SIGNAL_H };
-      // Tier-aware width to match CSS .tier-N rules so layout + edges align.
-      const t = nodeId ? hubTier(nodeId) : 1;
-      if (t >= 4) return { w: 400, h: NODE_HUB_H };
-      if (t === 3) return { w: 360, h: NODE_HUB_H };
-      if (t === 2) return { w: 320, h: NODE_HUB_H };
-      return { w: NODE_HUB_W, h: NODE_HUB_H };
+
+    // --- Layer-aware helpers for the lattice model ---
+    function isCardId(id) { return appState.cards.some(c => c.id === id); }
+    function isThemeId(id) { return appState.themes.some(t => t.id === id); }
+    function isSituationId(id) { return appState.situations.some(s => s.id === id); }
+    function isSignalId(id) { return appState.items.some(i => i.id === id); }
+    function nodeLayer(id) {
+      if (isCardId(id)) return 'card';
+      if (isThemeId(id)) return 'theme';
+      if (isSituationId(id)) return 'situation';
+      return 'signal';
+    }
+    function findCard(id) { return appState.cards.find(c => c.id === id); }
+    function findTheme(id) { return appState.themes.find(t => t.id === id); }
+    function findSituation(id) { return appState.situations.find(s => s.id === id); }
+    function findAnyObj(id) { return findCard(id) || findTheme(id) || findSituation(id); }
+    function allObjects() { return [...appState.cards, ...appState.themes, ...appState.situations]; }
+
+    function signalsForCard(cardId) {
+      const c = findCard(cardId);
+      return c ? c.signalIds.slice() : [];
+    }
+    function signalsForTheme(themeId) {
+      const t = findTheme(themeId);
+      if (!t) return [];
+      const seen = new Set();
+      t.cardIds.forEach(cid => {
+        signalsForCard(cid).forEach(sid => seen.add(sid));
+      });
+      return [...seen];
+    }
+    function signalsForSituation(sitId) {
+      const s = findSituation(sitId);
+      if (!s) return [];
+      const seen = new Set();
+      s.themeIds.forEach(tid => {
+        signalsForTheme(tid).forEach(sid => seen.add(sid));
+      });
+      return [...seen];
+    }
+    function cardsForTheme(themeId) {
+      const t = findTheme(themeId);
+      return t ? t.cardIds.slice() : [];
+    }
+    function themesForSituation(sitId) {
+      const s = findSituation(sitId);
+      return s ? s.themeIds.slice() : [];
+    }
+    function nodeLabel(id) {
+      const layer = nodeLayer(id);
+      if (layer === 'card') { const c = findCard(id); return CARD_TYPE_MAP[c.cardType]?.label || 'Card'; }
+      if (layer === 'theme') { const t = findTheme(id); return t.isSuper ? '★ Super-theme' : 'Theme'; }
+      if (layer === 'situation') return 'Problem Situation';
+      return 'Signal';
     }
 
-    function isHubId(id) { return appState.clusters.some(c => c.id === id); }
-    function signalHubId(itemId) {
-      const c = appState.clusters.find(c => c.itemIds.includes(itemId));
-      return c ? c.id : null;
+    // --- Backward-compat shims (used by callers being migrated) ---
+    function isHubId(id) { return isCardId(id) || isThemeId(id) || isSituationId(id); }
+    function hubTier(id) {
+      const layer = nodeLayer(id);
+      if (layer === 'card') return 1;
+      if (layer === 'theme') { const t = findTheme(id); return t && t.isSuper ? 3 : 2; }
+      if (layer === 'situation') return 4;
+      return 0;
     }
-    // Find the parent hub (if any) of a node (signal or hub).
+    const TIER_LABELS = ['Signal', 'Card', 'Theme', 'Super-theme', 'Situation', 'Situation'];
+    function tierLabel(t) { return TIER_LABELS[t] || 'Situation'; }
+    function allSignalsUnderHub(id) {
+      const layer = nodeLayer(id);
+      if (layer === 'card') return signalsForCard(id);
+      if (layer === 'theme') return signalsForTheme(id);
+      if (layer === 'situation') return signalsForSituation(id);
+      return [];
+    }
     function parentHubId(nodeId) {
-      const c = appState.clusters.find(c => c.itemIds.includes(nodeId) || (c.hubIds || []).includes(nodeId));
-      return c ? c.id : null;
+      const card = appState.cards.find(c => c.signalIds.includes(nodeId));
+      if (card) return card.id;
+      const theme = appState.themes.find(t => t.cardIds.includes(nodeId));
+      if (theme) return theme.id;
+      const sit = appState.situations.find(s => s.themeIds.includes(nodeId));
+      if (sit) return sit.id;
+      return null;
     }
-    function hubMembers(hubId) {
-      const c = appState.clusters.find(c => c.id === hubId);
-      if (!c) return [];
-      return [...c.itemIds, ...(c.hubIds || [])];
-    }
-    // Tier: 0 = signal, 1 = cluster of signals (or empty hub), 2 = supercluster, 3 = mega, ...
-    function hubTier(hubId) {
-      const c = appState.clusters.find(c => c.id === hubId);
-      if (!c) return 0;
-      let maxChildTier = 0;
-      if (c.itemIds.length) maxChildTier = Math.max(maxChildTier, 0); // signals are tier 0
-      (c.hubIds || []).forEach(childId => {
-        const t = hubTier(childId);
-        if (t > maxChildTier) maxChildTier = t;
-      });
-      return 1 + maxChildTier;
-    }
-    const TIER_LABELS = ["Signal", "Pattern", "Theme", "Super-theme", "Meta-theme", "Hyper-theme"];
-    function tierLabel(t) { return TIER_LABELS[t] || "Hyper-theme"; }
-    // All leaf signals under a hub (transitive, deduped).
-    function allSignalsUnderHub(hubId) {
-      const seen = new Set();
-      const out = [];
-      const walk = (id) => {
-        const c = appState.clusters.find(c => c.id === id);
-        if (!c) return;
-        c.itemIds.forEach(sid => { if (!seen.has(sid)) { seen.add(sid); out.push(sid); } });
-        (c.hubIds || []).forEach(walk);
-      };
-      walk(hubId);
-      return out;
-    }
-    // Walk up the parent chain to the topmost ancestor (or self if top-level).
     function rootAnchorOf(nodeId) {
       let cur = nodeId;
-      let parent = parentHubId(cur);
-      while (parent) { cur = parent; parent = parentHubId(cur); }
+      for (let i = 0; i < 10; i++) {
+        const p = parentHubId(cur);
+        if (!p) return cur;
+        cur = p;
+      }
       return cur;
+    }
+    function subtreeNodeIds(rootId) {
+      const out = [];
+      const walk = (id) => {
+        const kids = childrenOfNode(id);
+        kids.forEach(k => { if (appState.nodes[k]) { out.push(k); walk(k); } });
+      };
+      walk(rootId);
+      return out;
+    }
+    function childrenOfNode(id) {
+      const c = findCard(id); if (c) return c.signalIds.filter(sid => appState.nodes[sid]);
+      const t = findTheme(id); if (t) return t.cardIds.filter(cid => appState.nodes[cid]);
+      const s = findSituation(id); if (s) return s.themeIds.filter(tid => appState.nodes[tid]);
+      return [];
+    }
+    function hubMembers(id) {
+      const c = findCard(id); if (c) return c.signalIds.slice();
+      const t = findTheme(id); if (t) return t.cardIds.slice();
+      const s = findSituation(id); if (s) return s.themeIds.slice();
+      return [];
+    }
+
+    function nodeSize(kind, nodeId) {
+      if (kind === 'signal' || kind !== 'hub') return { w: NODE_SIGNAL_W, h: NODE_SIGNAL_H };
+      const layer = nodeLayer(nodeId);
+      if (layer === 'situation') return { w: 400, h: NODE_HUB_H };
+      if (layer === 'theme') return { w: 320, h: NODE_HUB_H };
+      return { w: NODE_HUB_W, h: NODE_HUB_H };
     }
     // Ideal orbit radius keyed on the CHILD's tier — a signal always sits
     // at signal-distance, a cluster always at cluster-distance, regardless
@@ -2163,19 +2409,7 @@
       const step = TIER_STEP_R[t] ?? TIER_STEP_R[5] * Math.pow(TIER_RATIO, t - 5);
       return base + Math.max(0, n - 2) * step;
     }
-    // All descendant node ids under a root (excludes the root), DFS order.
-    function subtreeNodeIds(rootId) {
-      const out = [];
-      const walk = (id) => {
-        const c = appState.clusters.find(c => c.id === id);
-        if (!c) return;
-        [...c.itemIds, ...(c.hubIds || [])].forEach(k => {
-          if (appState.nodes[k]) { out.push(k); walk(k); }
-        });
-      };
-      walk(rootId);
-      return out;
-    }
+    // subtreeNodeIds is defined above in the shim section — uses childrenOfNode()
 
     // Deterministic, crossing-free radial tree layout — STABLE EDITION.
     // Each child's wedge is centered on its CURRENT angle around its parent's
@@ -2191,11 +2425,7 @@
       const WEDGE_SHRINK = 0.92;
       const FRESH_THRESHOLD = 8; // px — distance below which a child is "fresh"
 
-      const childrenOf = (id) => {
-        const c = appState.clusters.find(c => c.id === id);
-        if (!c) return [];
-        return [...c.itemIds, ...(c.hubIds || [])].filter(k => appState.nodes[k]);
-      };
+      const childrenOf = (id) => childrenOfNode(id);
 
       // Choose an angle for a fresh kid given the currently-assigned angles
       // of its siblings. Returns the midpoint of the widest wrap-around gap.
@@ -2363,28 +2593,32 @@
         placed.add(item.id);
         k++;
       });
-      // Clusters: position at their members' centroid if possible, else
-      // continue the phyllotaxis pattern further out.
-      appState.clusters.forEach(c => {
-        if (placed.has(c.id)) return;
-        const hubDims = nodeSize('hub', c.id);
-        const memberIds = [...c.itemIds, ...(c.hubIds || [])];
-        if (memberIds.length) {
+      // Cards, themes, situations: position at their members' centroid if possible,
+      // else continue the phyllotaxis pattern further out.
+      const allHubs = [
+        ...appState.cards.map(c => ({ id: c.id, members: c.signalIds })),
+        ...appState.themes.map(t => ({ id: t.id, members: t.cardIds })),
+        ...appState.situations.map(s => ({ id: s.id, members: s.themeIds }))
+      ];
+      allHubs.forEach(hub => {
+        if (placed.has(hub.id)) return;
+        const hubDims = nodeSize('hub', hub.id);
+        if (hub.members.length) {
           let sx = 0, sy = 0, n = 0;
-          memberIds.forEach(mid => {
+          hub.members.forEach(mid => {
             const p = appState.nodes[mid];
             if (p) { sx += p.x; sy += p.y; n++; }
           });
           if (n > 0) {
-            setNodePos(c.id, (sx / n) + 20, (sy / n) - 80);
-            placed.add(c.id);
+            setNodePos(hub.id, (sx / n) + 20, (sy / n) - 80);
+            placed.add(hub.id);
             return;
           }
         }
         const r = C * Math.sqrt(k + 1);
         const ang = baseAng + k * GOLDEN;
-        setNodePos(c.id, CENTER_X + Math.cos(ang) * r - hubDims.w / 2, CENTER_Y + Math.sin(ang) * r - hubDims.h / 2);
-        placed.add(c.id);
+        setNodePos(hub.id, CENTER_X + Math.cos(ang) * r - hubDims.w / 2, CENTER_Y + Math.sin(ang) * r - hubDims.h / 2);
+        placed.add(hub.id);
         k++;
       });
     }
@@ -2476,12 +2710,26 @@
     function renderAllNodes() {
       const layer = document.getElementById('nodes-layer');
       layer.innerHTML = '';
+      const vs = appState.canvasViewState;
+      layer.className = 'nodes-layer view-' + vs;
       const visibleItems = appState.items.filter(item => {
         const status = appState.sorting.decisions[item.id];
         return !status || status === 'signal' || status === 'super';
       });
       visibleItems.forEach(item => layer.appendChild(buildSignalNode(item)));
-      appState.clusters.forEach(c => layer.appendChild(buildHubNode(c)));
+      appState.cards.forEach(c => layer.appendChild(buildCardNode(c)));
+      appState.themes.forEach(t => layer.appendChild(buildThemeNode(t)));
+      appState.situations.forEach(s => layer.appendChild(buildSituationNode(s)));
+    }
+
+    function setCanvasView(view) {
+      appState.canvasViewState = view;
+      const layer = document.getElementById('nodes-layer');
+      if (layer) layer.className = 'nodes-layer view-' + view;
+      document.querySelectorAll('#view-tabs .view-tab').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-view') === view);
+      });
+      scheduleSave();
     }
 
     function buildSignalNode(item) {
@@ -2512,90 +2760,198 @@
       return el;
     }
 
-    function buildHubNode(cluster) {
-      const el = document.createElement('div');
-      const tier = hubTier(cluster.id);
-      const tierClass = 'tier-' + Math.min(tier, 6);
-      el.className = 'canvas-node hub-node ' + tierClass;
-      el.id = 'node-' + cluster.id;
-      el.setAttribute('data-node-id', cluster.id);
-      el.setAttribute('data-kind', 'hub');
-      // Compare to last-rendered tier; if it grew, schedule a one-shot pulse class.
-      const prevTier = parseInt(hubLastTier.get(cluster.id) || '0', 10);
-      el.setAttribute('data-tier', String(tier));
-      hubLastTier.set(cluster.id, String(tier));
-      if (tier > prevTier && prevTier > 0) {
-        requestAnimationFrame(() => {
-          el.classList.add('tier-up');
-          el.addEventListener('animationend', () => el.classList.remove('tier-up'), { once: true });
-        });
-      }
-      const pos = getNodePos(cluster.id);
-      el.style.left = pos.x + 'px';
-      el.style.top = pos.y + 'px';
-      const memberCount = cluster.itemIds.length + (cluster.hubIds || []).length;
-      const leafCount = allSignalsUnderHub(cluster.id).length;
-      const countText = tier >= 2
-        ? `${memberCount} item${memberCount === 1 ? '' : 's'} · ${leafCount} signal${leafCount === 1 ? '' : 's'}`
-        : `${memberCount} signal${memberCount === 1 ? '' : 's'}`;
-      // Tier-aware placeholders to nudge the user toward synthesis, not labels.
-      let titlePh, descPh;
-      if (tier <= 1) {
-        titlePh = 'What pattern do these signals point toward?';
-        descPh = 'The specific condition these signals are evidence of — who feels it, why it persists';
-      } else if (tier === 2) {
-        titlePh = 'What theme do these patterns point toward?';
-        descPh = 'The universal that bridges human experience and structural/systemic factors';
-      } else {
-        titlePh = 'What convergence do these themes reveal?';
-        descPh = 'The candidate frame — if this situation is approached as if it is ___, then ___';
-      }
-      el.innerHTML = `
-        <div class="hub-tag">
-          <span>${escapeHtml(tierLabel(tier))}</span>
-          <span class="hub-count">${countText}</span>
-        </div>
-        <input type="text" class="hub-title" placeholder="${escapeHtml(titlePh)}" value="${escapeHtml(cluster.title || '')}" />
-        <textarea class="hub-desc" placeholder="${escapeHtml(descPh)}" rows="2">${escapeHtml(cluster.description || '')}</textarea>
-        <div class="hub-actions">
-          <button type="button" class="hub-suggest" title="Get a prompt to think through this ${escapeHtml(tierLabel(tier).toLowerCase())} with your LLM">✨ AI</button>
-${tier === 2 ? `<div class="quality-check"><em>Bridge test:</em> Does this theme describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>` : ''}
-${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situation is approached as if it is ___, then ___</div>` : ''}
-          <button type="button" class="hub-delete">Remove</button>
-        </div>
-        <div class="connect-handle side-top"    data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
-        <div class="connect-handle side-right"  data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
-        <div class="connect-handle side-bottom" data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
-        <div class="connect-handle side-left"   data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
-        <div class="connect-handle side-tl"     data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
-        <div class="connect-handle side-tr"     data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
-        <div class="connect-handle side-bl"     data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
-        <div class="connect-handle side-br"     data-connect-from="${escapeHtml(cluster.id)}" aria-label="Drag to connect"></div>
-      `;
+    function connectHandlesHtml(id) {
+      const eid = escapeHtml(id);
+      return ['top','right','bottom','left','tl','tr','bl','br'].map(s =>
+        `<div class="connect-handle side-${s}" data-connect-from="${eid}" aria-label="Drag to connect"></div>`
+      ).join('\n');
+    }
+
+    function wireNodeEditing(el, obj, deleteObj) {
       const titleInput = el.querySelector('.hub-title');
-      titleInput.addEventListener('input', () => { cluster.title = titleInput.value; scheduleSave(); updateClusterProgressChip(); });
-      titleInput.addEventListener('pointerdown', (e) => e.stopPropagation());
+      if (titleInput) {
+        titleInput.addEventListener('input', () => { obj.title = titleInput.value; scheduleSave(); updateClusterProgressChip(); });
+        titleInput.addEventListener('pointerdown', (e) => e.stopPropagation());
+      }
       const desc = el.querySelector('.hub-desc');
-      desc.addEventListener('input', () => { cluster.description = desc.value; autoResize(desc); scheduleSave(); });
-      desc.addEventListener('pointerdown', (e) => e.stopPropagation());
-      requestAnimationFrame(() => autoResize(desc));
+      if (desc) {
+        desc.addEventListener('input', () => { obj.description = desc.value; autoResize(desc); scheduleSave(); });
+        desc.addEventListener('pointerdown', (e) => e.stopPropagation());
+        requestAnimationFrame(() => autoResize(desc));
+      }
       const del = el.querySelector('.hub-delete');
-      del.addEventListener('pointerdown', (e) => e.stopPropagation());
-      del.addEventListener('click', (e) => { e.stopPropagation(); deleteCluster(cluster.id); });
+      if (del) {
+        del.addEventListener('pointerdown', (e) => e.stopPropagation());
+        del.addEventListener('click', (e) => { e.stopPropagation(); deleteObj(); });
+      }
       const suggest = el.querySelector('.hub-suggest');
       if (suggest) {
         suggest.addEventListener('pointerdown', (e) => e.stopPropagation());
-        suggest.addEventListener('click', (e) => { e.stopPropagation(); openHubNamePromptModal(cluster.id); });
+        suggest.addEventListener('click', (e) => { e.stopPropagation(); openHubNamePromptModal(obj.id); });
       }
-      attachNodeDrag(el, cluster.id);
+      el.querySelectorAll('select, input[type="radio"]').forEach(ctrl => {
+        ctrl.addEventListener('pointerdown', (e) => e.stopPropagation());
+      });
+    }
+
+    function buildCardNode(card) {
+      const el = document.createElement('div');
+      const ct = CARD_TYPE_MAP[card.cardType] || CARD_TYPES[0];
+      el.className = 'canvas-node hub-node card-node card-type-' + card.cardType;
+      el.id = 'node-' + card.id;
+      el.setAttribute('data-node-id', card.id);
+      el.setAttribute('data-kind', 'hub');
+      el.setAttribute('data-layer', 'card');
+      el.setAttribute('data-card-type', card.cardType);
+      const pos = getNodePos(card.id);
+      el.style.left = pos.x + 'px';
+      el.style.top = pos.y + 'px';
+      el.style.borderColor = ct.color;
+      const count = card.signalIds.length;
+      const roleHtml = card.cardType === 'player' ? `
+        <div class="player-role-picker">
+          ${PLAYER_ROLES.map(r => `<label class="role-pill${card.playerRole === r.id ? ' active' : ''}">
+            <input type="radio" name="role-${escapeHtml(card.id)}" value="${r.id}" ${card.playerRole === r.id ? 'checked' : ''}> ${escapeHtml(r.label)}
+          </label>`).join('')}
+        </div>` : '';
+      el.innerHTML = `
+        <div class="hub-tag" style="color: ${ct.color};">
+          <span>${escapeHtml(ct.label)}</span>
+          <span class="hub-count">${count} signal${count === 1 ? '' : 's'}</span>
+        </div>
+        <input type="text" class="hub-title" placeholder="${escapeHtml(ct.desc)}" value="${escapeHtml(card.title || '')}" />
+        <textarea class="hub-desc" placeholder="What does this evidence constitute?" rows="2">${escapeHtml(card.description || '')}</textarea>
+        ${roleHtml}
+        <div class="hub-actions">
+          <button type="button" class="hub-suggest" title="Get an AI prompt for this ${escapeHtml(ct.label.toLowerCase())}">✨ AI</button>
+          <button type="button" class="hub-delete">Remove</button>
+        </div>
+        ${connectHandlesHtml(card.id)}
+      `;
+      if (card.cardType === 'player') {
+        el.querySelectorAll('input[type="radio"]').forEach(radio => {
+          radio.addEventListener('change', () => { card.playerRole = radio.value; scheduleSave(); renderAllNodes(); renderAllEdges(); });
+        });
+      }
+      wireNodeEditing(el, card, () => deleteCard(card.id));
+      attachNodeDrag(el, card.id);
       return el;
+    }
+
+    function buildThemeNode(theme) {
+      const el = document.createElement('div');
+      el.className = 'canvas-node hub-node theme-node' + (theme.isSuper ? ' super-theme is-super' : '');
+      el.id = 'node-' + theme.id;
+      el.setAttribute('data-node-id', theme.id);
+      el.setAttribute('data-kind', 'hub');
+      el.setAttribute('data-layer', 'theme');
+      const pos = getNodePos(theme.id);
+      el.style.left = pos.x + 'px';
+      el.style.top = pos.y + 'px';
+      const cardCount = theme.cardIds.length;
+      const sigCount = signalsForTheme(theme.id).length;
+      el.innerHTML = `
+        <div class="hub-tag" style="color: ${theme.isSuper ? '#b07b00' : '#d4a017'};">
+          <span>${theme.isSuper ? '★ Super-theme' : 'Theme'}</span>
+          <span class="hub-count">${cardCount} card${cardCount === 1 ? '' : 's'} · ${sigCount} signal${sigCount === 1 ? '' : 's'}</span>
+        </div>
+        <input type="text" class="hub-title" placeholder="What theme do these cards point toward?" value="${escapeHtml(theme.title || '')}" />
+        <textarea class="hub-desc" placeholder="The universal that bridges human experience and structural/systemic factors" rows="2">${escapeHtml(theme.description || '')}</textarea>
+        <div class="quality-check"><em>Bridge test:</em> Does this theme describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>
+        <div class="hub-actions">
+          <button type="button" class="hub-suggest" title="Get an AI prompt for this theme">✨ AI</button>
+          <button type="button" class="super-toggle">${theme.isSuper ? 'Unmark super' : 'Mark as Super-theme'}</button>
+          <button type="button" class="hub-delete">Remove</button>
+        </div>
+        ${connectHandlesHtml(theme.id)}
+      `;
+      const superBtn = el.querySelector('.super-toggle');
+      if (superBtn) {
+        superBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        superBtn.addEventListener('click', (e) => { e.stopPropagation(); theme.isSuper = !theme.isSuper; scheduleSave(); renderAllNodes(); renderAllEdges(); });
+      }
+      wireNodeEditing(el, theme, () => deleteTheme(theme.id));
+      attachNodeDrag(el, theme.id);
+      return el;
+    }
+
+    function buildSituationNode(situation) {
+      const el = document.createElement('div');
+      el.className = 'canvas-node hub-node situation-node';
+      el.id = 'node-' + situation.id;
+      el.setAttribute('data-node-id', situation.id);
+      el.setAttribute('data-kind', 'hub');
+      el.setAttribute('data-layer', 'situation');
+      const pos = getNodePos(situation.id);
+      el.style.left = pos.x + 'px';
+      el.style.top = pos.y + 'px';
+      const themeCount = situation.themeIds.length;
+      const ownerCount = situation.ownerClientIds.length;
+      el.innerHTML = `
+        <div class="hub-tag" style="color: #6231cf;">
+          <span>Problem Situation</span>
+          <span class="hub-count">${themeCount} theme${themeCount === 1 ? '' : 's'}${ownerCount ? ' · ' + ownerCount + ' owner' + (ownerCount === 1 ? '' : 's') : ''}</span>
+        </div>
+        <input type="text" class="hub-title" placeholder="The open, complex, networked condition" value="${escapeHtml(situation.title || '')}" />
+        <textarea class="hub-desc" placeholder="This is an open condition, not a bounded problem because ___" rows="2">${escapeHtml(situation.description || '')}</textarea>
+        <div class="quality-check"><em>Frame prompt:</em> If this situation is approached as if it is ___, then ___</div>
+        <div class="hub-actions">
+          <button type="button" class="hub-suggest" title="Get an AI prompt for this problem situation">✨ AI</button>
+          <button type="button" class="hub-delete">Remove</button>
+        </div>
+        ${connectHandlesHtml(situation.id)}
+      `;
+      wireNodeEditing(el, situation, () => deleteSituation(situation.id));
+      attachNodeDrag(el, situation.id);
+      return el;
+    }
+
+    function deleteCard(id) {
+      const idx = appState.cards.findIndex(c => c.id === id);
+      if (idx < 0) return;
+      appState.cards.splice(idx, 1);
+      appState.themes.forEach(t => { t.cardIds = t.cardIds.filter(x => x !== id); });
+      appState.committedThemeIds = appState.committedThemeIds.filter(x => x !== id);
+      delete appState.problematizations[id];
+      delete appState.stakeholderMaps[id];
+      delete appState.nodes[id];
+      renderAllNodes(); renderAllEdges(); updateClusterProgressChip(); scheduleSave();
+      toast('Card removed.');
+    }
+    function deleteTheme(id) {
+      const idx = appState.themes.findIndex(t => t.id === id);
+      if (idx < 0) return;
+      appState.themes.splice(idx, 1);
+      appState.situations.forEach(s => { s.themeIds = s.themeIds.filter(x => x !== id); });
+      appState.committedThemeIds = appState.committedThemeIds.filter(x => x !== id);
+      delete appState.problematizations[id];
+      delete appState.stakeholderMaps[id];
+      delete appState.nodes[id];
+      renderAllNodes(); renderAllEdges(); updateClusterProgressChip(); scheduleSave();
+      toast('Theme removed.');
+    }
+    function deleteSituation(id) {
+      const idx = appState.situations.findIndex(s => s.id === id);
+      if (idx < 0) return;
+      appState.situations.splice(idx, 1);
+      appState.committedThemeIds = appState.committedThemeIds.filter(x => x !== id);
+      delete appState.problematizations[id];
+      delete appState.stakeholderMaps[id];
+      delete appState.nodes[id];
+      renderAllNodes(); renderAllEdges(); updateClusterProgressChip(); scheduleSave();
+      toast('Problem Situation removed.');
     }
 
     function edgesFromState() {
       const out = [];
-      appState.clusters.forEach(c => {
-        c.itemIds.forEach(iid => out.push({ id: c.id + '__' + iid, from: c.id, to: iid }));
-        (c.hubIds || []).forEach(hid => out.push({ id: c.id + '__' + hid, from: c.id, to: hid }));
+      appState.cards.forEach(c => {
+        c.signalIds.forEach(sid => out.push({ id: c.id + '__' + sid, from: c.id, to: sid, layer: 'card-signal' }));
+      });
+      appState.themes.forEach(t => {
+        t.cardIds.forEach(cid => out.push({ id: t.id + '__' + cid, from: t.id, to: cid, layer: 'theme-card' }));
+      });
+      appState.situations.forEach(s => {
+        s.themeIds.forEach(tid => out.push({ id: s.id + '__' + tid, from: s.id, to: tid, layer: 'situation-theme' }));
       });
       return out;
     }
@@ -2697,7 +3053,7 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
           matches.add(item.id);
         }
       });
-      appState.clusters.forEach(c => {
+      [...appState.cards, ...appState.themes, ...appState.situations].forEach(c => {
         if ((c.title || '').toLowerCase().includes(query) || (c.description || '').toLowerCase().includes(query)) {
           matches.add(c.id);
         }
@@ -2917,65 +3273,80 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       });
     }
 
-    // ----- Connection rules / auto-hub creation (uniform across tiers) -----
-    function removeChildFromHub(parentId, childId) {
-      const cluster = appState.clusters.find(c => c.id === parentId);
-      if (!cluster) return;
-      cluster.itemIds = cluster.itemIds.filter(x => x !== childId);
-      cluster.hubIds = (cluster.hubIds || []).filter(x => x !== childId);
+    // ----- Connection rules (lattice-aware) -----
+    function removeChildFromParent(parentId, childId) {
+      const card = findCard(parentId);
+      if (card) { card.signalIds = card.signalIds.filter(x => x !== childId); return; }
+      const theme = findTheme(parentId);
+      if (theme) { theme.cardIds = theme.cardIds.filter(x => x !== childId); return; }
+      const sit = findSituation(parentId);
+      if (sit) { sit.themeIds = sit.themeIds.filter(x => x !== childId); return; }
     }
 
-    function createHubBetween(childA, childB) {
-      const a = nodeCenter(childA);
-      const b = nodeCenter(childB);
+    function addChildToParent(parentId, childId) {
+      const card = findCard(parentId);
+      if (card) {
+        if (card.signalIds.includes(childId)) return false;
+        card.signalIds.push(childId);
+        placeNewChildAtWidestGap(parentId, childId);
+        return true;
+      }
+      const theme = findTheme(parentId);
+      if (theme) {
+        if (theme.cardIds.includes(childId)) return false;
+        theme.cardIds.push(childId);
+        placeNewChildAtWidestGap(parentId, childId);
+        return true;
+      }
+      const sit = findSituation(parentId);
+      if (sit) {
+        if (sit.themeIds.includes(childId)) return false;
+        sit.themeIds.push(childId);
+        placeNewChildAtWidestGap(parentId, childId);
+        return true;
+      }
+      return false;
+    }
+
+    function createCardBetween(signalA, signalB, cardType) {
+      const a = nodeCenter(signalA);
+      const b = nodeCenter(signalB);
       const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
       const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
-      const newHub = { id: uid('cluster'), title: '', description: '', itemIds: [], hubIds: [] };
-      [childA, childB].forEach(id => {
-        if (isHubId(id)) newHub.hubIds.push(id);
-        else newHub.itemIds.push(id);
-      });
-      appState.clusters.push(newHub);
-      setNodePos(newHub.id, midX, midY);
-      return newHub;
+      const newCard = { id: uid('card'), title: '', description: '', cardType: cardType || 'problem', signalIds: [signalA, signalB] };
+      appState.cards.push(newCard);
+      setNodePos(newCard.id, midX, midY);
+      return newCard;
     }
 
-    function addChildToHub(parentId, childId) {
-      const parent = appState.clusters.find(c => c.id === parentId);
-      if (!parent) return false;
-      // Cycle guard: child must not be an ancestor of parent.
-      if (isHubId(childId) && isAncestor(childId, parentId)) {
-        toast('That would create a loop.');
-        return false;
-      }
-      if (isHubId(childId)) {
-        if (!parent.hubIds) parent.hubIds = [];
-        if (parent.hubIds.includes(childId)) return false;
-        parent.hubIds.push(childId);
-      } else {
-        if (parent.itemIds.includes(childId)) return false;
-        parent.itemIds.push(childId);
-      }
-      // Pre-place the new child at the widest angular gap around its parent
-      // at the correct child-tier radius. This means the stable radial relax
-      // can keep every other node in place — only the new child eases in.
-      placeNewChildAtWidestGap(parentId, childId);
-      return true;
+    function createThemeBetween(cardA, cardB) {
+      const a = nodeCenter(cardA);
+      const b = nodeCenter(cardB);
+      const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
+      const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
+      const newTheme = { id: uid('theme'), title: '', description: '', isSuper: false, cardIds: [cardA, cardB] };
+      appState.themes.push(newTheme);
+      setNodePos(newTheme.id, midX, midY);
+      return newTheme;
     }
 
-    // Position childId at the midpoint of the widest empty angular gap around
-    // parentId, at the appropriate child-tier orbit. Operates on live state.
+    function createSituationBetween(themeA, themeB) {
+      const a = nodeCenter(themeA);
+      const b = nodeCenter(themeB);
+      const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
+      const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
+      const newSit = { id: uid('situation'), title: '', description: '', themeIds: [themeA, themeB], ownerClientIds: [] };
+      appState.situations.push(newSit);
+      setNodePos(newSit.id, midX, midY);
+      return newSit;
+    }
+
     function placeNewChildAtWidestGap(parentId, childId) {
-      const cluster = appState.clusters.find(c => c.id === parentId);
-      if (!cluster || !appState.nodes[parentId]) return;
+      if (!appState.nodes[parentId]) return;
       const pc = nodeCenter(parentId);
-      const siblings = [...cluster.itemIds, ...(cluster.hubIds || [])]
-        .filter(id => id !== childId && appState.nodes[id]);
+      const siblings = childrenOfNode(parentId).filter(id => id !== childId && appState.nodes[id]);
       const angles = siblings
-        .map(id => {
-          const sc = nodeCenter(id);
-          return Math.atan2(sc.y - pc.y, sc.x - pc.x);
-        })
+        .map(id => { const sc = nodeCenter(id); return Math.atan2(sc.y - pc.y, sc.x - pc.x); })
         .sort((a, b) => a - b);
       let ang;
       if (angles.length === 0) ang = Math.random() * Math.PI * 2;
@@ -3000,101 +3371,131 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
     }
 
-    function addUnderExistingParent(parentId, childId, source) {
-      if (!addChildToHub(parentId, childId)) return;
+    function addUnderExistingParent(parentId, childId) {
+      if (!addChildToParent(parentId, childId)) return;
       renderAllNodes();
       renderAllEdges();
       animateNewEdge(parentId + '__' + childId);
-      // The deterministic radial relax eases the new child from its current
-      // spot into its correct, crossing-free wedge — no pre-placement needed.
       relaxLayoutAround(rootAnchorOf(parentId));
       scheduleSave();
       updateClusterProgressChip();
-      const parent = appState.clusters.find(c => c.id === parentId);
-      toast(`Added to "${parent.title || tierLabel(hubTier(parentId))}".`);
+      const label = nodeLabel(parentId);
+      const obj = findCard(parentId) || findTheme(parentId) || findSituation(parentId);
+      toast(`Added to "${(obj && obj.title) || label}".`);
     }
 
-    function spawnHubUI(newHub, focusRootId) {
+    function spawnHubUI(newObj, focusRootId) {
       renderAllNodes();
       renderAllEdges();
-      animateNodeSpawn(newHub.id);
-      relaxLayoutAround(focusRootId || newHub.id);
+      animateNodeSpawn(newObj.id);
+      relaxLayoutAround(focusRootId || newObj.id);
       scheduleSave();
       updateClusterProgressChip();
       setTimeout(() => {
-        const el = document.getElementById('node-' + newHub.id);
+        const el = document.getElementById('node-' + newObj.id);
         if (el) { const ti = el.querySelector('.hub-title'); if (ti) ti.focus(); }
       }, 280);
     }
 
     function warnIfUnderpopulated(hubId) {
-      const cluster = appState.clusters.find(c => c.id === hubId);
-      if (!cluster) return;
-      const remaining = cluster.itemIds.length + (cluster.hubIds || []).length;
-      if (remaining < 2) {
-        toast(`${tierLabel(hubTier(cluster.id))} "${cluster.title || 'Untitled'}" now has fewer than 2 members.`, {
-          actionLabel: 'Delete hub',
+      const kids = childrenOfNode(hubId);
+      if (kids.length < 2) {
+        const obj = findCard(hubId) || findTheme(hubId) || findSituation(hubId);
+        const label = obj ? (obj.title || nodeLabel(hubId)) : 'Hub';
+        toast(`${nodeLabel(hubId)} "${label}" now has fewer than 2 members.`, {
+          actionLabel: 'Delete',
           duration: 6000,
-          onAction: () => deleteCluster(cluster.id)
+          onAction: () => {
+            if (isCardId(hubId)) deleteCard(hubId);
+            else if (isThemeId(hubId)) deleteTheme(hubId);
+            else if (isSituationId(hubId)) deleteSituation(hubId);
+          }
         });
       }
     }
 
     function connectNodes(sourceId, targetId) {
       if (sourceId === targetId) return;
-      if (isHubId(sourceId) && isAncestor(sourceId, targetId)) { toast('That would create a loop.'); return; }
-      if (isHubId(targetId) && isAncestor(targetId, sourceId)) { toast('That would create a loop.'); return; }
+      const sLayer = nodeLayer(sourceId);
+      const tLayer = nodeLayer(targetId);
 
-      const pa = parentHubId(sourceId);
-      const pb = parentHubId(targetId);
-      if (pa && pb && pa === pb) return; // already siblings — no-op
-
-      const sourceIsHub = isHubId(sourceId);
-      const targetIsHub = isHubId(targetId);
-
-      // ── Signal + Signal → always create a new cluster ────────────────────
-      if (!sourceIsHub && !targetIsHub) {
-        if (pa) removeChildFromHub(pa, sourceId);
-        if (pb) removeChildFromHub(pb, targetId);
-        const newHub = createHubBetween(sourceId, targetId);
-        if (pa) addChildToHub(pa, newHub.id);
-        else if (pb) addChildToHub(pb, newHub.id);
-        spawnHubUI(newHub, pa ? rootAnchorOf(pa) : pb ? rootAnchorOf(pb) : newHub.id);
-        if (pa && pb && pa !== pb) warnIfUnderpopulated(pb);
+      // Signal + Signal → show card-type picker, then create card
+      if (sLayer === 'signal' && tLayer === 'signal') {
+        showCardTypePicker(sourceId, targetId);
         return;
       }
 
-      // ── Hub + Hub, same tier → create a new higher-tier hub for both ─────
-      if (sourceIsHub && targetIsHub) {
-        const sTier = hubTier(sourceId);
-        const tTier = hubTier(targetId);
-        if (sTier === tTier) {
-          if (pa) removeChildFromHub(pa, sourceId);
-          if (pb) removeChildFromHub(pb, targetId);
-          const newHub = createHubBetween(sourceId, targetId);
-          if (pa) addChildToHub(pa, newHub.id);
-          else if (pb) addChildToHub(pb, newHub.id);
-          spawnHubUI(newHub, pa ? rootAnchorOf(pa) : pb ? rootAnchorOf(pb) : newHub.id);
-          if (pa && pb && pa !== pb) warnIfUnderpopulated(pb);
-          return;
-        }
-        // Different tiers: add lower-tier hub into higher-tier hub
-        const hubId   = (sTier > tTier) ? sourceId : targetId;
-        const childId = (sTier > tTier) ? targetId : sourceId;
-        const oldParent = parentHubId(childId);
-        if (oldParent && oldParent !== hubId) { removeChildFromHub(oldParent, childId); warnIfUnderpopulated(oldParent); }
-        addUnderExistingParent(hubId, childId);
+      // Signal + Card → add signal to card
+      if (sLayer === 'signal' && tLayer === 'card') { addUnderExistingParent(targetId, sourceId); return; }
+      if (sLayer === 'card' && tLayer === 'signal') { addUnderExistingParent(sourceId, targetId); return; }
+
+      // Card + Card → create a new theme
+      if (sLayer === 'card' && tLayer === 'card') {
+        const newTheme = createThemeBetween(sourceId, targetId);
+        spawnHubUI(newTheme, newTheme.id);
         return;
       }
 
-      // ── Signal + Hub (either direction) → add signal into hub ────────────
-      const hubId   = sourceIsHub ? sourceId : targetId;
-      const childId = sourceIsHub ? targetId : sourceId;
-      if (isHubId(childId) && isAncestor(childId, hubId)) { toast('That would create a loop.'); return; }
-      const oldParent = parentHubId(childId);
-      if (oldParent && oldParent !== hubId) { removeChildFromHub(oldParent, childId); warnIfUnderpopulated(oldParent); }
-      addUnderExistingParent(hubId, childId);
+      // Card + Theme → add card to theme
+      if (sLayer === 'card' && tLayer === 'theme') { addUnderExistingParent(targetId, sourceId); return; }
+      if (sLayer === 'theme' && tLayer === 'card') { addUnderExistingParent(sourceId, targetId); return; }
+
+      // Theme + Theme → create a new situation
+      if (sLayer === 'theme' && tLayer === 'theme') {
+        const newSit = createSituationBetween(sourceId, targetId);
+        spawnHubUI(newSit, newSit.id);
+        return;
+      }
+
+      // Theme + Situation → add theme to situation
+      if (sLayer === 'theme' && tLayer === 'situation') { addUnderExistingParent(targetId, sourceId); return; }
+      if (sLayer === 'situation' && tLayer === 'theme') { addUnderExistingParent(sourceId, targetId); return; }
+
+      // Invalid connections
+      if (sLayer === 'signal' && (tLayer === 'theme' || tLayer === 'situation')) {
+        toast('Connect signals to cards first.'); return;
+      }
+      if (tLayer === 'signal' && (sLayer === 'theme' || sLayer === 'situation')) {
+        toast('Connect signals to cards first.'); return;
+      }
+      if ((sLayer === 'card' && tLayer === 'situation') || (sLayer === 'situation' && tLayer === 'card')) {
+        toast('Connect cards to themes first.'); return;
+      }
+      toast('These can\'t be connected directly.');
     }
+
+    let pendingCardTypeSignals = null;
+    function showCardTypePicker(signalA, signalB) {
+      pendingCardTypeSignals = { a: signalA, b: signalB };
+      const grid = document.getElementById('card-type-picker-grid');
+      grid.innerHTML = '';
+      CARD_TYPES.forEach(ct => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'card-type-btn';
+        btn.style.borderColor = ct.color;
+        btn.innerHTML = `<span class="ct-label" style="color: ${ct.color};">${escapeHtml(ct.label)}</span><span class="ct-desc">${escapeHtml(ct.desc)}</span>`;
+        btn.addEventListener('click', () => {
+          hideCardTypePicker();
+          if (!pendingCardTypeSignals) return;
+          const { a, b } = pendingCardTypeSignals;
+          pendingCardTypeSignals = null;
+          const newCard = createCardBetween(a, b, ct.id);
+          spawnHubUI(newCard, newCard.id);
+        });
+        grid.appendChild(btn);
+      });
+      document.getElementById('card-type-picker').classList.remove('hidden');
+    }
+    function hideCardTypePicker() {
+      document.getElementById('card-type-picker').classList.add('hidden');
+      pendingCardTypeSignals = null;
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !document.getElementById('card-type-picker').classList.contains('hidden')) {
+        hideCardTypePicker();
+      }
+    });
 
     // ----- Force-directed auto-spacing -----
     let relaxAnim = null;
@@ -3107,11 +3508,12 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       // weak containment keeps the whole composition from drifting away.
       const dims = {};
       appState.items.forEach(it => { if (appState.nodes[it.id]) dims[it.id] = nodeSize('signal'); });
-      appState.clusters.forEach(c => { if (appState.nodes[c.id]) dims[c.id] = nodeSize('hub', c.id); });
+      [...appState.cards, ...appState.themes, ...appState.situations].forEach(c => { if (appState.nodes[c.id]) dims[c.id] = nodeSize('hub', c.id); });
 
-      // Build systems.
+      // Build systems: top-level hubs (not children of anything) are tree roots.
       const systems = [];
-      appState.clusters
+      const allHubs = [...appState.cards, ...appState.themes, ...appState.situations];
+      allHubs
         .filter(c => appState.nodes[c.id] && !parentHubId(c.id))
         .forEach(c => {
           const tree = computeRadialTree(c.id, { x: 0, y: 0 });
@@ -3325,59 +3727,11 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       }, { once: true });
     }
 
-    // ----- Cluster management (keep existing API) -----
+    // ----- Node deletion (delegates to layer-specific delete) -----
     function deleteCluster(id) {
-      const idx = appState.clusters.findIndex(c => c.id === id);
-      if (idx < 0) return;
-      const removed = appState.clusters[idx];
-      const removedPos = appState.nodes[id];
-      const wasCommitted = appState.committedClusterIds.includes(id);
-      const removedProblematization = appState.problematizations[id];
-      const removedStakeholder = appState.stakeholderMaps[id];
-      // Detach this hub from any parent so children orphan to top-level.
-      const parentSnapshots = [];
-      appState.clusters.forEach(c => {
-        if ((c.hubIds || []).includes(id)) {
-          parentSnapshots.push({ parentId: c.id, idx: c.hubIds.indexOf(id) });
-          c.hubIds = c.hubIds.filter(x => x !== id);
-        }
-      });
-      appState.clusters.splice(idx, 1);
-      delete appState.nodes[id];
-      if (wasCommitted) {
-        appState.committedClusterIds = appState.committedClusterIds.filter(x => x !== id);
-        delete appState.problematizations[id];
-        delete appState.stakeholderMaps[id];
-      }
-      renderAllNodes();
-      renderAllEdges();
-      updateClusterProgressChip();
-      scheduleSave();
-      const label = tierLabel(hubTier(id)); // hubTier returns 0 now (deleted); fallback ok
-      toast(removed.title ? `Removed "${removed.title}".` : 'Hub removed.', {
-        actionLabel: 'Undo',
-        duration: 5000,
-        onAction: () => {
-          appState.clusters.splice(idx, 0, removed);
-          if (removedPos) appState.nodes[id] = removedPos;
-          parentSnapshots.forEach(ps => {
-            const p = appState.clusters.find(c => c.id === ps.parentId);
-            if (p) {
-              if (!p.hubIds) p.hubIds = [];
-              p.hubIds.splice(ps.idx, 0, id);
-            }
-          });
-          if (wasCommitted) {
-            appState.committedClusterIds.push(id);
-            if (removedProblematization !== undefined) appState.problematizations[id] = removedProblematization;
-            if (removedStakeholder !== undefined) appState.stakeholderMaps[id] = removedStakeholder;
-          }
-          renderAllNodes();
-          renderAllEdges();
-          updateClusterProgressChip();
-          scheduleSave();
-        }
-      });
+      if (isCardId(id)) deleteCard(id);
+      else if (isThemeId(id)) deleteTheme(id);
+      else if (isSituationId(id)) deleteSituation(id);
     }
 
     // Edge selection + delete
@@ -3413,9 +3767,7 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       const parts = edgeId.split('__');
       if (parts.length !== 2) return;
       const [parentId, childId] = parts;
-      const cluster = appState.clusters.find(c => c.id === parentId);
-      if (!cluster) return;
-      removeChildFromHub(parentId, childId);
+      removeChildFromParent(parentId, childId);
       selectedEdgeId = null;
       renderAllNodes();
       renderAllEdges();
@@ -3714,8 +4066,8 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
     function closeWelcomeModal() {
       closeModal('welcome-modal');
       _welcomeSlide = 0;
-      if (!localStorage.getItem(TOUR_DONE_KEY)) {
-        setTimeout(tourStart, 320);
+      if (!localStorage.getItem(tourDoneKey('board'))) {
+        setTimeout(() => tourStartForScreen('board'), 320);
       }
     }
 
@@ -3744,41 +4096,48 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       if (nextBtn) setTimeout(() => nextBtn.focus(), 50);
     }
 
-    // ---- Spotlight Tour ----
-    const TOUR_STEPS = [
-      {
-        targetId: 'canvas-viewport',
-        title: 'The Canvas',
-        body: 'Your signals are already laid out here. Drag empty space to pan, use the toolbar or Cmd/Ctrl-scroll to zoom, and drag any signal card to reposition it.',
-        tooltipPlacement: 'bottom-right',
-        spotlightPadding: 0
-      },
-      {
-        targetSelector: '.signal-node',
-        title: 'Signal Cards',
-        body: 'Hover a signal to reveal teal dots on its edges. Drag from any dot onto another signal to connect them — a hub cluster node appears automatically between them.',
-        tooltipPlacement: 'bottom-right',
-        spotlightPadding: 8
-      },
-      {
-        targetSelector: '.btn-ai-prompt',
-        title: '✨ AI Prompt — Whole Pool',
-        body: "Start here. Copy this prompt into your LLM and read what comes back — but don't take it at face value. Look for patterns it names that surprise you, then ask it to defend the ones that feel too neat.",
-        tooltipPlacement: 'bottom-left',
-        spotlightPadding: 6
-      },
-      {
-        targetSelector: 'button[onclick="openCommitModal()"]',
-        title: 'Commit to Clusters',
-        body: 'When you have 2–3 clusters with clear through-lines, commit them here to move into the deep-dive workspace. Quality over quantity — defend your groupings.',
-        tooltipPlacement: 'bottom-left',
-        spotlightPadding: 6
-      }
-    ];
+    // ---- Spotlight Tour (per-screen) ----
+    const SCREEN_TOURS = {
+      setup: [
+        { targetId: 'config-title', title: 'Name your project', body: 'Give your signal pool a descriptive title. This carries through to the workspace and artifact.', tooltipPlacement: 'bottom-left', spotlightPadding: 8 },
+        { targetSelector: '.sample-data-btn', title: 'Load signals', body: 'Start with the 44 sample signals, upload a CSV of your own, or add signals manually below. You need raw evidence from the world.', tooltipPlacement: 'bottom-left', spotlightPadding: 8 },
+        { targetSelector: 'button[onclick="startSorting()"]', title: 'Start sorting', body: 'Once you have signals loaded, sorting forces you to make fast decisions: keep, discard, or mark as a super-signal. The binary commitment is the point.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
+      ],
+      sorting: [
+        { targetSelector: '.sorting-card-container', title: 'Swipe to sort', body: 'Swipe right (or press →) to keep as signal. Swipe left (or press ←) to discard as noise. Swipe up (or press ↑) to mark as a super-signal.', tooltipPlacement: 'bottom-right', spotlightPadding: 16 },
+        { targetSelector: '.sorting-status', title: 'Progress tracker', body: 'Watch your progress here. Super-signals are your strongest evidence. The AI will use what you kept vs. discarded to challenge your instincts later.', tooltipPlacement: 'bottom-left', spotlightPadding: 8 }
+      ],
+      board: [
+        { targetId: 'canvas-viewport', title: 'The Canvas', body: 'Your signals are laid out here. Drag empty space to pan, scroll to zoom, and drag any signal card to reposition it.', tooltipPlacement: 'bottom-right', spotlightPadding: 0 },
+        { targetSelector: '.signal-node', title: 'Signal Cards', body: 'Hover a signal to reveal dots on its edges. Drag from any dot onto another signal to connect them — a card-type picker appears so you can classify the evidence.', tooltipPlacement: 'bottom-right', spotlightPadding: 8 },
+        { targetSelector: '#view-tabs', title: 'View states', body: 'Switch between views: Signals, Cards, Themes, and Situations. Each view highlights one layer and fades the others, letting you focus on one level of abstraction.', tooltipPlacement: 'bottom-left', spotlightPadding: 4 },
+        { targetSelector: '.btn-ai-prompt', title: '✨ AI Prompt', body: "Copy this prompt into your LLM. Look for patterns it names that surprise you, then ask it to defend the ones that feel too neat.", tooltipPlacement: 'bottom-left', spotlightPadding: 6 },
+        { targetSelector: 'button[onclick="openCommitModal()"]', title: 'Commit to themes', body: 'When you have 2–3 themes with clear through-lines, commit them to move into the deep-dive workspace.', tooltipPlacement: 'bottom-left', spotlightPadding: 6 }
+      ],
+      workspace: [
+        { targetSelector: '.workspace-cluster-card', title: 'Your committed themes', body: 'Each card represents a theme you committed to. Below it you\'ll find prompts to map stakeholders and pressure-test your framing.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '.prompt-cta', title: 'AI thinking partner', body: 'Copy these prompts into your LLM. Talk back to it. Write your answers in your own words — this is about YOUR thinking, not the AI\'s output.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '#submit-for-voting-btn', title: 'Submit', body: 'Complete every section for every committed theme, then submit to generate your artifact.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
+      ],
+      artifact: [
+        { targetSelector: '.submission-cluster', title: 'Your artifact', body: 'A structured summary of your committed themes, stakeholder maps, and problematizations — ready for peer review.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '.peer-review-section', title: 'Peer review prep', body: 'Use this checklist before your review. Can you defend every decision? Whose voice is missing?', tooltipPlacement: 'top-right', spotlightPadding: 8 }
+      ]
+    };
+
+    const TOUR_STEPS = SCREEN_TOURS.board;
 
     let _tourStep = 0, _tourActive = false, _tourResizeObserver = null;
+    let _currentTourSteps = TOUR_STEPS;
+    let _currentTourScreen = 'board';
 
-    function tourStart() {
+    function tourDoneKey(screen) { return 'olos.tour.done.' + (screen || _currentTourScreen); }
+
+    function tourStartForScreen(screen) {
+      const steps = SCREEN_TOURS[screen];
+      if (!steps || !steps.length) return;
+      _currentTourSteps = steps;
+      _currentTourScreen = screen;
       _tourStep = 0;
       _tourActive = true;
       const overlay = document.getElementById('tour-overlay');
@@ -3789,30 +4148,38 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       _tourAttachResizeObserver();
     }
 
+    function tourStart() { tourStartForScreen('board'); }
+
     function tourNext() {
-      if (_tourStep < TOUR_STEPS.length - 1) { _tourStep++; _tourRenderStep(); }
+      if (_tourStep < _currentTourSteps.length - 1) { _tourStep++; _tourRenderStep(); }
       else tourComplete();
     }
 
     function tourSkip() { tourComplete(); }
 
     function tourRestart() {
-      localStorage.removeItem(TOUR_DONE_KEY);
-      _tourStep = 0;
-      tourStart();
+      const screen = appState.currentScreen || 'board';
+      localStorage.removeItem(tourDoneKey(screen));
+      tourStartForScreen(screen);
     }
 
     function tourComplete() {
       _tourActive = false;
-      localStorage.setItem(TOUR_DONE_KEY, '1');
+      localStorage.setItem(tourDoneKey(_currentTourScreen), '1');
       document.getElementById('tour-overlay').classList.add('hidden');
       _tourDetachObservers();
       const helpBtn = document.getElementById('tour-help-btn');
       if (helpBtn) helpBtn.classList.remove('hidden');
     }
 
+    function maybeShowTour(screen) {
+      if (!SCREEN_TOURS[screen] || !SCREEN_TOURS[screen].length) return;
+      if (localStorage.getItem(tourDoneKey(screen))) return;
+      setTimeout(() => tourStartForScreen(screen), 400);
+    }
+
     function _tourRenderStep() {
-      const step = TOUR_STEPS[_tourStep];
+      const step = _currentTourSteps[_tourStep];
       let target = _tourResolveTarget(step);
 
       if (!target) {
@@ -3820,19 +4187,19 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
           setTimeout(() => { if (_tourActive) _tourRenderStep(); }, 500);
           return;
         }
-        const remaining = TOUR_STEPS.slice(_tourStep + 1);
+        const remaining = _currentTourSteps.slice(_tourStep + 1);
         const nextValidIdx = remaining.findIndex(s => _tourResolveTarget(s));
         if (nextValidIdx >= 0) { _tourStep = _tourStep + 1 + nextValidIdx; _tourRenderStep(); }
         else tourComplete();
         return;
       }
 
-      document.getElementById('tour-step-label').textContent = `Step ${_tourStep + 1} of ${TOUR_STEPS.length}`;
+      document.getElementById('tour-step-label').textContent = `Step ${_tourStep + 1} of ${_currentTourSteps.length}`;
       document.getElementById('tour-tooltip-title').textContent = step.title;
       document.getElementById('tour-tooltip-body').textContent = step.body;
-      document.getElementById('tour-step-count').textContent = `${_tourStep + 1}/${TOUR_STEPS.length}`;
+      document.getElementById('tour-step-count').textContent = `${_tourStep + 1}/${_currentTourSteps.length}`;
       const nextBtn = document.getElementById('tour-btn-next');
-      if (nextBtn) nextBtn.textContent = _tourStep === TOUR_STEPS.length - 1 ? 'Done ✓' : 'Next →';
+      if (nextBtn) nextBtn.textContent = _tourStep === _currentTourSteps.length - 1 ? 'Done ✓' : 'Next →';
 
       _tourPositionSpotlight(target, step.spotlightPadding || 0);
       _tourPositionTooltip(target, step.tooltipPlacement);
@@ -3895,7 +4262,7 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
       if (window.ResizeObserver) {
         _tourResizeObserver = new ResizeObserver(() => {
           if (!_tourActive) return;
-          const step = TOUR_STEPS[_tourStep];
+          const step = _currentTourSteps[_tourStep];
           const target = _tourResolveTarget(step);
           if (target) {
             _tourPositionSpotlight(target, step.spotlightPadding || 0);
@@ -3946,40 +4313,44 @@ ${tier >= 3 ? `<div class="quality-check"><em>Frame prompt:</em> If this situati
     });
 
     function formatHubForPrompt(hubId, depth, maxDepth) {
-      const c = appState.clusters.find(c => c.id === hubId);
-      if (!c) return '';
       const indent = '  '.repeat(depth);
       const lines = [];
-      c.itemIds.forEach(iid => {
-        const it = appState.items.find(i => i.id === iid);
-        if (it) lines.push(`${indent}• Signal "${it.title}" — ${it.summary}`);
-      });
-      (c.hubIds || []).forEach(hid => {
-        const child = appState.clusters.find(c => c.id === hid);
-        if (!child) return;
-        const childTier = hubTier(hid);
-        const desc = child.description ? ` — ${child.description}` : '';
-        lines.push(`${indent}• ${tierLabel(childTier)} "${child.title || 'Untitled'}"${desc}`);
+      const kids = childrenOfNode(hubId);
+      kids.forEach(kid => {
+        const item = appState.items.find(i => i.id === kid);
+        if (item) {
+          lines.push(`${indent}• Signal "${item.title}" — ${item.summary}`);
+          return;
+        }
+        const obj = findCard(kid) || findTheme(kid) || findSituation(kid);
+        if (!obj) return;
+        const desc = obj.description ? ` — ${obj.description}` : '';
+        lines.push(`${indent}• ${nodeLabel(kid)} "${obj.title || 'Untitled'}"${desc}`);
         if (depth < maxDepth) {
-          const sub = formatHubForPrompt(hid, depth + 1, maxDepth);
+          const sub = formatHubForPrompt(kid, depth + 1, maxDepth);
           if (sub) lines.push(sub);
         } else {
-          const leaves = allSignalsUnderHub(hid).length;
+          const leaves = allSignalsUnderHub(kid).length;
           lines.push(`${indent}  (… ${leaves} signal${leaves === 1 ? '' : 's'} deeper)`);
         }
       });
       return lines.join('\n');
     }
 
-    // Tier-specific framing inserted into the <context> block.
-    function tierFraming(tier) {
-      if (tier <= 1) {
-        return 'Focus on lived human friction: who is affected, in what context, when does it happen, and what workaround do they already improvise. This is a Pattern — a specific, named condition that two or more signals point toward together.';
+    function tierFraming(tier, hubId) {
+      const layer = hubId ? nodeLayer(hubId) : null;
+      if (layer === 'card') {
+        const c = findCard(hubId);
+        const ct = c ? (CARD_TYPE_MAP[c.cardType] || {}) : {};
+        return `This is a ${ct.label || 'Card'} — ${ct.desc || 'an intermediate evidence card'}. Focus on what the constituent signals, when triangulated, reveal about this specific kind of evidence. Who is affected, in what context, and what mechanism or condition do they point toward together?`;
       }
-      if (tier === 2) {
-        return 'Focus on the deeper universal that bridges human experience and structural/systemic factors. This is a Theme — a condition or force that two or more patterns point toward. A good theme bridges the human (cultural) domain and the technical or economic realm.';
+      if (layer === 'theme' || tier === 2) {
+        return 'Focus on the deeper universal that bridges human experience and structural/systemic factors. This is a Theme — a condition or force that two or more cards point toward. A good theme bridges the human (cultural) domain and the technical or economic realm.';
       }
-      return 'Focus on meta-convergence — the condition where the human and the structural converge, pointing toward a new way of seeing the whole situation. This is a Super-theme that may point toward a frame: if this situation is approached as if it is [X], then [Y].';
+      if (layer === 'situation' || tier >= 3) {
+        return 'This is a Problem Situation — an open, complex, networked, dynamic condition (not a bounded problem). Focus on what makes this genuinely open and irreducible. If this situation is approached as if it is [X], then [Y].';
+      }
+      return 'Focus on lived human friction: who is affected, in what context, when does it happen, and what workaround do they already improvise.';
     }
 
     // Three task / thinking / format blocks per mode. Each mode adds one rule.
@@ -4059,7 +4430,7 @@ A single question the user must be able to answer to defend the current framing 
     };
 
     function buildHubPrompt(hubId, mode) {
-      const c = appState.clusters.find(c => c.id === hubId);
+      const c = findCard(hubId) || findTheme(hubId) || findSituation(hubId);
       if (!c) return '';
       const tier = hubTier(hubId);
       const label = tierLabel(tier);
@@ -4080,7 +4451,7 @@ They are triangulating observed friction signals into defensible problem
 spaces through patterns, themes, and super-themes. They are working on
 one ${label} in their web map.
 
-${tierFraming(tier)}
+${tierFraming(tier, hubId)}
 </context>
 
 <cluster>
@@ -4117,7 +4488,7 @@ ${m.output}
     let currentAIMode = 'throughline';
 
     function openHubAIModal(hubId, mode) {
-      const c = appState.clusters.find(c => c.id === hubId);
+      const c = findCard(hubId) || findTheme(hubId) || findSituation(hubId);
       if (!c) return;
       currentAIHubId = hubId;
       currentAIMode = mode || 'throughline';
@@ -4364,19 +4735,20 @@ Numbered. ≤ 30 words each. Force a defense.
 
     // --- Validation + cluster progress ---
     function validateBoard() {
+      const allObjs = [...appState.cards, ...appState.themes, ...appState.situations];
       const leafCounts = new Map();
-      appState.clusters.forEach(c => leafCounts.set(c.id, allSignalsUnderHub(c.id).length));
-      const titledClusters = appState.clusters.filter(c => c.title.trim().length > 0);
-      const populatedClusters = appState.clusters.filter(c => leafCounts.get(c.id) > 0);
-      const usable = appState.clusters.filter(c => c.title.trim() && leafCounts.get(c.id) > 0);
-      const unassigned = appState.items.filter(item => !appState.clusters.some(c => c.itemIds.includes(item.id))).length;
-      const clustersWith3Plus = appState.clusters.filter(c => c.title.trim() && leafCounts.get(c.id) >= 3).length;
+      allObjs.forEach(c => leafCounts.set(c.id, allSignalsUnderHub(c.id).length));
+      const titledClusters = allObjs.filter(c => c.title.trim().length > 0);
+      const populatedClusters = allObjs.filter(c => leafCounts.get(c.id) > 0);
+      const usable = allObjs.filter(c => c.title.trim() && leafCounts.get(c.id) > 0);
+      const unassigned = appState.items.filter(item => !appState.cards.some(c => c.signalIds.includes(item.id))).length;
+      const clustersWith3Plus = allObjs.filter(c => c.title.trim() && leafCounts.get(c.id) >= 3).length;
       const warnings = [];
-      if (usable.length === 0) warnings.push('Add at least one titled pattern with at least one signal in it.');
-      const untitledWithItems = appState.clusters.filter(c => !c.title.trim() && leafCounts.get(c.id) > 0);
-      if (untitledWithItems.length) warnings.push(`${untitledWithItems.length} pattern(s) have signals but no title.`);
-      const titledWithoutItems = appState.clusters.filter(c => c.title.trim() && leafCounts.get(c.id) === 0);
-      if (titledWithoutItems.length) warnings.push(`${titledWithoutItems.length} titled pattern(s) are still empty.`);
+      if (usable.length === 0) warnings.push('Add at least one titled card with at least one signal in it.');
+      const untitledWithItems = allObjs.filter(c => !c.title.trim() && leafCounts.get(c.id) > 0);
+      if (untitledWithItems.length) warnings.push(`${untitledWithItems.length} card(s) have signals but no title.`);
+      const titledWithoutItems = allObjs.filter(c => c.title.trim() && leafCounts.get(c.id) === 0);
+      if (titledWithoutItems.length) warnings.push(`${titledWithoutItems.length} titled card(s) are still empty.`);
       return { warnings, unassigned, usable: usable.length, titledClusters: titledClusters.length, populatedClusters: populatedClusters.length, clustersWith3Plus };
     }
 
@@ -4436,12 +4808,12 @@ Numbered. ≤ 30 words each. Force a defense.
       }
       warningEl.textContent = '';
 
-      const eligible = appState.clusters.filter(c => c.title.trim());
+      const eligible = [...appState.cards, ...appState.themes, ...appState.situations].filter(c => c.title.trim());
       const list = document.getElementById('commit-cluster-list');
       list.innerHTML = '';
       eligible.forEach(c => {
         const id = `commit-row-${c.id}`;
-        const checked = appState.committedClusterIds.includes(c.id);
+        const checked = appState.committedThemeIds.includes(c.id);
         const row = document.createElement('label');
         row.className = 'commit-cluster-row' + (checked ? ' checked' : '');
         row.setAttribute('for', id);
@@ -4500,7 +4872,7 @@ Numbered. ≤ 30 words each. Force a defense.
     function confirmCommit() {
       const checked = getCheckedCommitIds();
       if (!(checked.length >= 2 && checked.length <= 3)) return;
-      appState.committedClusterIds = checked;
+      appState.committedThemeIds = checked;
       closeModal('commit-modal');
       scheduleSave();
       goToScreen('workspace');
@@ -4514,10 +4886,10 @@ Numbered. ≤ 30 words each. Force a defense.
         : 'Build the case';
 
       // Clean any committed ids that no longer point to a real cluster.
-      appState.committedClusterIds = appState.committedClusterIds.filter(id => appState.clusters.some(c => c.id === id));
+      appState.committedThemeIds = appState.committedThemeIds.filter(id => allObjects().some(c => c.id === id));
 
-      const committed = appState.committedClusterIds
-        .map(id => appState.clusters.find(c => c.id === id))
+      const committed = appState.committedThemeIds
+        .map(id => findAnyObj(id))
         .filter(Boolean);
 
       const interviewEl = document.getElementById('workspace-interview-prompt');
@@ -4685,8 +5057,8 @@ Numbered. ≤ 30 words each. Force a defense.
     }
 
     function workspaceIsComplete() {
-      if (!appState.committedClusterIds.length) return false;
-      return appState.committedClusterIds.every(id => {
+      if (!appState.committedThemeIds.length) return false;
+      return appState.committedThemeIds.every(id => {
         const p = (appState.problematizations[id] || '').trim();
         const s = (appState.stakeholderMaps[id] || '').trim();
         return p && s;
@@ -4722,11 +5094,11 @@ Numbered. ≤ 30 words each. Force a defense.
         toast('Complete every section to submit.');
         return;
       }
-      const committed = appState.committedClusterIds
-        .map(id => appState.clusters.find(c => c.id === id))
+      const committed = appState.committedThemeIds
+        .map(id => findAnyObj(id))
         .filter(Boolean);
-      const signalCount = committed.reduce((sum, c) => sum + c.itemIds.length, 0);
-      const charCount = appState.committedClusterIds.reduce((sum, id) =>
+      const signalCount = committed.reduce((sum, c) => sum + allSignalsUnderHub(c.id).length, 0);
+      const charCount = appState.committedThemeIds.reduce((sum, id) =>
         sum + (appState.problematizations[id] || '').trim().length + (appState.stakeholderMaps[id] || '').trim().length, 0);
       const summary = document.getElementById('submit-modal-summary');
       summary.textContent = `You're submitting ${committed.length} pattern${committed.length === 1 ? '' : 's'} covering ${signalCount} signal${signalCount === 1 ? '' : 's'}, with ${charCount} characters of problematization and stakeholder analysis.`;
@@ -4771,8 +5143,8 @@ Numbered. ≤ 30 words each. Force a defense.
       const wrap = document.createElement('div');
       wrap.style.width = '100%';
       wrap.style.maxWidth = '840px';
-      const committed = appState.committedClusterIds
-        .map(id => appState.clusters.find(c => c.id === id))
+      const committed = appState.committedThemeIds
+        .map(id => findAnyObj(id))
         .filter(Boolean);
       committed.forEach(cluster => {
         const signals = allSignalsUnderHub(cluster.id).map(id => appState.items.find(i => i.id === id)).filter(Boolean);
@@ -4821,8 +5193,8 @@ Numbered. ≤ 30 words each. Force a defense.
     }
 
     function downloadMarkdown() {
-      const committed = appState.committedClusterIds
-        .map(id => appState.clusters.find(c => c.id === id))
+      const committed = appState.committedThemeIds
+        .map(id => findAnyObj(id))
         .filter(Boolean);
       let md = `# ${appState.settings.title || 'Sensemaking Submission'}\n`;
       md += appState.submittedAt
@@ -5068,7 +5440,7 @@ Numbered. ≤ 30 words each. Force a defense.
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
-      if (!localStorage.getItem(TOUR_DONE_KEY)) {
+      if (!localStorage.getItem(tourDoneKey('board'))) {
         _welcomeSlide = 0;
         _applyWelcomeSlideState();
         openModal('welcome-modal');
@@ -5176,12 +5548,12 @@ Numbered. ≤ 30 words each. Force a defense.
     renderConfigItems();
 
     function pickInitialScreen() {
-      if (Array.isArray(appState.committedClusterIds)) {
-        appState.committedClusterIds = appState.committedClusterIds.filter(id => appState.clusters.some(c => c.id === id));
+      if (Array.isArray(appState.committedThemeIds)) {
+        appState.committedThemeIds = appState.committedThemeIds.filter(id => allObjects().some(c => c.id === id));
       }
-      if (appState.submittedAt && appState.committedClusterIds.length) return 'artifact';
-      if (appState.committedClusterIds.length) return 'workspace';
-      if (appState.clusters.some(c => c.itemIds.length > 0 || c.title.trim())) return 'board';
+      if (appState.submittedAt && appState.committedThemeIds.length) return 'artifact';
+      if (appState.committedThemeIds.length) return 'workspace';
+      if (appState.cards.some(c => c.signalIds.length > 0 || c.title.trim()) || appState.themes.length > 0 || appState.situations.length > 0) return 'board';
       if (appState.currentScreen === 'sorting') return 'sorting';
       const totalItems = appState.items.length;
       const sortedCount = Object.keys(appState.sorting.decisions).length;
@@ -5226,7 +5598,7 @@ Numbered. ≤ 30 words each. Force a defense.
     // Warn before unload if there's in-progress, unsubmitted work.
     window.addEventListener('beforeunload', (e) => {
       const onActiveScreen = appState.currentScreen === 'board' || appState.currentScreen === 'workspace' || appState.currentScreen === 'sorting';
-      if (onActiveScreen && (appState.clusters.some(c => c.itemIds.length > 0) || Object.keys(appState.sorting.decisions).length > 0)) {
+      if (onActiveScreen && (appState.cards.some(c => c.signalIds.length > 0) || appState.themes.length > 0 || Object.keys(appState.sorting.decisions).length > 0)) {
         e.preventDefault();
         e.returnValue = '';
       }
