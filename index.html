@@ -14,19 +14,31 @@
       --midnight: #101820;
       --ghost-white: #ffffff;
       --cloud: #e6e6e6;
+      /* Type scale, tracking, leading, spacing rhythm */
+      --text-xs: 0.6875rem; --text-sm: 0.8125rem; --text-base: 0.9375rem;
+      --text-lg: 1.0625rem; --text-xl: 1.3125rem; --text-2xl: 1.6875rem;
+      --track-tight: -0.02em; --track-snug: -0.01em; --track-label: 0.08em;
+      --lh-tight: 1.25; --lh-snug: 1.4; --lh-body: 1.6;
+      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+      --space-5: 20px; --space-6: 24px; --space-7: 32px; --space-8: 48px;
+      --measure: 66ch;
     }
 
     * { 
       box-sizing: border-box; 
       margin: 0; 
       padding: 0; 
-      font-family: 'Geologica', sans-serif; 
+      font-family: 'Geologica', sans-serif;
       -webkit-font-smoothing: antialiased;
+      font-optical-sizing: auto;
+      text-rendering: optimizeLegibility;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    body { 
+    body {
       color: var(--midnight);
       background-color: var(--cloud);
+      line-height: var(--lh-snug);
       height: 100vh; height: 100dvh;
       width: 100vw;
       overflow: hidden;
@@ -136,6 +148,118 @@
     }
     .upskill-banner h3 { font-size: 0.95rem; margin-bottom: 6px; color: var(--primary-teal); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
     .upskill-banner p { font-size: 0.875rem; line-height: 1.5; }
+    /* --- LANDING (editorial layout) --- */
+    /* Big type hierarchy, hairline rules, indexed sections; existing fonts & palette only. */
+    #setup-screen { padding: 0 24px; }
+    #setup-screen .config-container {
+      background: none; border: none; max-width: 960px; padding: 88px 0 120px;
+    }
+    .landing-hero { margin-bottom: 96px; }
+    #setup-screen .hero-eyebrow {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px;
+      max-width: none;
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.16em; color: var(--cloud); opacity: 0.75; margin-bottom: 44px;
+    }
+    .hero-eyebrow-rule { flex: 1; min-width: 48px; height: 1px; background: rgba(255,255,255,0.25); }
+    #setup-screen .config-header h1 {
+      font-size: clamp(2.6rem, 8.5vw, 5.5rem);
+      line-height: 0.98; font-weight: 700; text-transform: uppercase;
+      letter-spacing: var(--track-tight); color: var(--ghost-white);
+      margin-bottom: 32px;
+    }
+    .hero-accent { color: var(--primary-teal); }
+    #setup-screen .hero-lede {
+      font-size: var(--text-lg); line-height: var(--lh-body); color: var(--cloud);
+      opacity: 0.85; max-width: 56ch; margin-bottom: 40px; text-wrap: pretty;
+    }
+    .hero-cta { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
+    .hero-cta .btn { padding: 14px 26px; font-size: 0.9rem; }
+    .hero-cta-note { font-size: 0.8rem; color: var(--cloud); opacity: 0.6; }
+
+    .landing-section { border-top: 1px solid rgba(255,255,255,0.14); padding-top: 28px; margin-bottom: 88px; }
+    .landing-section:last-child { margin-bottom: 0; }
+    .landing-section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; }
+    .landing-index {
+      font-size: 0.75rem; font-weight: 700; color: var(--primary-teal);
+      font-variant-numeric: tabular-nums; letter-spacing: 0.08em;
+    }
+    .landing-kicker {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.16em; color: var(--cloud); opacity: 0.65;
+    }
+    .landing-statement {
+      font-size: clamp(1.6rem, 3.6vw, 2.5rem); line-height: 1.12; font-weight: 700;
+      letter-spacing: var(--track-tight); color: var(--ghost-white);
+      max-width: 24ch; text-wrap: balance; margin-bottom: 30px;
+    }
+    .landing-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 48px; }
+    .landing-cols p, .landing-intro {
+      font-size: 0.92rem; line-height: var(--lh-body); color: var(--cloud);
+      opacity: 0.8; text-wrap: pretty;
+    }
+    .landing-intro { max-width: 56ch; margin-bottom: 36px; }
+
+    /* 02 — steps: hairline columns, oversized numerals in the canvas tier colors
+       (teal signals → slate evidence → red patterns → purple situation). */
+    .explainer-steps {
+      list-style: none; margin: 10px 0 0; padding: 0;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px 32px;
+    }
+    .explainer-step { border-top: 1px solid rgba(255,255,255,0.18); padding-top: 18px; }
+    .explainer-step-num {
+      display: block; font-size: 2.1rem; font-weight: 700; line-height: 1;
+      letter-spacing: var(--track-tight); margin-bottom: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    .explainer-step[data-step="1"] .explainer-step-num { color: var(--primary-teal); }
+    .explainer-step[data-step="2"] .explainer-step-num { color: #8a93a3; }
+    .explainer-step[data-step="3"] .explainer-step-num { color: #e74c3c; }
+    .explainer-step[data-step="4"] .explainer-step-num { color: #8a4fff; }
+    .explainer-step h3 {
+      font-size: 0.72rem; font-weight: 700; color: var(--ghost-white);
+      text-transform: uppercase; letter-spacing: var(--track-label);
+      margin-bottom: 8px; text-wrap: balance;
+    }
+    .explainer-step p {
+      font-size: 0.82rem; color: var(--cloud); opacity: 0.75;
+      line-height: 1.55; text-wrap: pretty;
+    }
+
+    /* 03 — triad */
+    .triad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px 32px; }
+    .triad-cell { border-top: 1px solid rgba(255,255,255,0.18); padding-top: 18px; }
+    .triad-cell h3 {
+      font-size: 1.3rem; font-weight: 700; color: var(--ghost-white);
+      letter-spacing: var(--track-snug); line-height: var(--lh-tight); margin-bottom: 10px;
+    }
+    .triad-cell p {
+      font-size: 0.82rem; color: var(--cloud); opacity: 0.75;
+      line-height: 1.55; text-wrap: pretty;
+    }
+    .landing-footnote {
+      margin-top: 40px; padding-left: 16px; border-left: 2px solid var(--primary-teal);
+      font-size: 0.85rem; color: var(--cloud); opacity: 0.75;
+      line-height: var(--lh-body); max-width: 64ch; text-wrap: pretty;
+    }
+
+    /* 04 — setup form keeps its card chrome */
+    .setup-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 36px;
+    }
+
+    @media (max-width: 900px) { .explainer-steps { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 720px) {
+      .landing-cols, .triad-grid { grid-template-columns: 1fr; }
+      .landing-hero { margin-bottom: 64px; }
+      .landing-section { margin-bottom: 64px; }
+      #setup-screen .config-container { padding: 56px 0 88px; }
+    }
+    @media (max-width: 560px) {
+      .explainer-steps { grid-template-columns: 1fr; }
+      .setup-card { padding: 22px 18px; }
+    }
 
     /* --- VIEW 2: APPLICATION WORKSPACE --- */
     #board-workspace { display: flex; flex-direction: row; width: 100vw; height: 100vh; height: 100dvh; flex: 1; min-height: 0; }
@@ -890,6 +1014,14 @@
       border-radius: 10px;
       font-size: 0.65rem;
     }
+    /* Type glyphs: a redundant shape channel so type identity never rests on hue alone */
+    .type-glyph { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .type-glyph svg { width: 13px; height: 13px; display: block; }
+    .hub-tag-label { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+    .hub-tag-label .type-name {
+      color: var(--ghost-white);                 /* always legible on the dark node */
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .hub-node input.hub-title,
     .hub-node textarea.hub-desc {
       width: 100%;
@@ -912,6 +1044,10 @@
     }
     .hub-node input.hub-title::placeholder,
     .hub-node textarea.hub-desc::placeholder { color: rgba(255,255,255,0.5); }
+    /* Locked higher-tier hub: children must be named & described before editing */
+    .hub-node.hub-locked input.hub-title,
+    .hub-node.hub-locked textarea.hub-desc { opacity: 0.4; cursor: not-allowed; }
+    .hub-lock-note { font-size: 0.62rem; color: rgba(255,255,255,0.55); line-height: var(--lh-snug); margin: 0 0 6px; }
     .hub-node textarea.hub-desc {
       font-size: 0.78rem;
       line-height: 1.45;
@@ -1038,6 +1174,18 @@
     .hub-node[data-card-type="problem"] .hub-tag { color: #e67e22; }
     .hub-node[data-card-type="problem"] .hub-count { background: #e67e22; }
     .hub-node[data-card-type="problem"] .connect-handle { background: #e67e22; box-shadow: 0 2px 6px rgba(230,126,34,0.55); }
+
+    /* Tier lightness: evidence (tier-1) cards sit lighter than the pattern/theme
+       cards above them, and a classified card carries a tint of its own type hue
+       (same hexes, mixed into the body — lightness does the work, not new colors). */
+    .hub-node[data-tier="1"] { background: color-mix(in srgb, var(--midnight) 86%, var(--ghost-white)); }
+    .hub-node[data-card-type="history"]        { background: color-mix(in srgb, #4a6fa5 22%, var(--midnight)); }
+    .hub-node[data-card-type="counterfactual"] { background: color-mix(in srgb, #7b5ea7 22%, var(--midnight)); }
+    .hub-node[data-card-type="boundary"]       { background: color-mix(in srgb, #c0392b 22%, var(--midnight)); }
+    .hub-node[data-card-type="flux"]           { background: color-mix(in srgb, #d4a017 22%, var(--midnight)); }
+    .hub-node[data-card-type="player"]         { background: color-mix(in srgb, #0094a0 22%, var(--midnight)); }
+    .hub-node[data-card-type="value"]          { background: color-mix(in srgb, #27ae60 22%, var(--midnight)); }
+    .hub-node[data-card-type="problem"]        { background: color-mix(in srgb, #e67e22 22%, var(--midnight)); }
 
     /* Theme nodes */
     .hub-node[data-layer="theme"]              { border-color: #f4b400; width: 320px; }
@@ -1398,11 +1546,61 @@
     .card-type-reclassify { font-size: 0.58rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: none; color: rgba(255,255,255,0.55); cursor: pointer; margin-bottom: 4px; }
     .card-type-reclassify:hover { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.4); }
 
+    /* Phase-grouped picker: light = Archaeology & Context, dark = Field mapping */
+    .card-type-groups { display: flex; flex-direction: column; gap: 8px; }
+    .card-type-groups[hidden] { display: none; }
+    .card-type-group { display: flex; flex-direction: column; gap: 5px; padding: 7px 9px; border-radius: 8px; }
+    .card-type-group-label {
+      font-size: 0.56rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: var(--track-label, 0.08em);
+    }
+    .card-type-group.phase-arch   { background: rgba(255,255,255,0.06); }   /* light section */
+    .card-type-group.phase-field  { background: rgba(0,0,0,0.30); }         /* dark section */
+    .card-type-group.phase-arch  .card-type-group-label { color: rgba(255,255,255,0.85); }
+    .card-type-group.phase-field .card-type-group-label { color: rgba(255,255,255,0.6); }
+
+    .card-type-chip { display: inline-flex; align-items: center; gap: 5px; }
+    .card-type-chip .type-glyph { color: var(--chip-color); }              /* glyph always shows the hue */
+    .card-type-chip .type-glyph svg { width: 11px; height: 11px; }
+
+    /* Light chips — Archaeology & Context */
+    .card-type-chip[data-phase="arch"]  { background: var(--ghost-white); color: var(--midnight);   border-color: var(--chip-color); }
+    /* Dark chips — Field mapping */
+    .card-type-chip[data-phase="field"] { background: var(--midnight);    color: var(--ghost-white); border-color: var(--chip-color); }
+
+    /* Hover/active: fill with the true hue, glyph follows the (AA-correct) text color */
+    .card-type-chip:hover, .card-type-chip.active { background: var(--chip-color); }
+    .card-type-chip:hover .type-glyph, .card-type-chip.active .type-glyph { color: inherit; }
+    /* dark hues → white text on fill */
+    .card-type-chip[data-type="history"]:hover,        .card-type-chip[data-type="history"].active,
+    .card-type-chip[data-type="counterfactual"]:hover, .card-type-chip[data-type="counterfactual"].active,
+    .card-type-chip[data-type="boundary"]:hover,       .card-type-chip[data-type="boundary"].active { color: var(--ghost-white); }
+    /* light hues → midnight text on fill */
+    .card-type-chip[data-type="flux"]:hover,    .card-type-chip[data-type="flux"].active,
+    .card-type-chip[data-type="player"]:hover,  .card-type-chip[data-type="player"].active,
+    .card-type-chip[data-type="value"]:hover,   .card-type-chip[data-type="value"].active,
+    .card-type-chip[data-type="problem"]:hover, .card-type-chip[data-type="problem"].active { color: var(--midnight); }
+
     /* Undefined evidence card — neutral slate with a subtle dashed border */
     .hub-node.card-undefined { border-color: #8a93a3; border-style: dashed; }
     .hub-node[data-card-type="evidence"] .hub-tag { color: #8a93a3; }
     .hub-node[data-card-type="evidence"] .hub-count { background: #8a93a3; }
     .hub-node[data-card-type="evidence"] .connect-handle { background: #8a93a3; box-shadow: 0 2px 6px rgba(138,147,163,0.55); }
+
+    /* Count-pill text colors, measured for WCAG AA against each type fill */
+    .hub-node[data-card-type="history"] .hub-count,
+    .hub-node[data-card-type="counterfactual"] .hub-count,
+    .hub-node[data-card-type="boundary"] .hub-count { color: var(--ghost-white); }
+    .hub-node[data-card-type="flux"] .hub-count,
+    .hub-node[data-card-type="player"] .hub-count,
+    .hub-node[data-card-type="value"] .hub-count,
+    .hub-node[data-card-type="problem"] .hub-count,
+    .hub-node[data-card-type="evidence"] .hub-count { color: var(--midnight); }
+
+    @media (prefers-contrast: more) {
+      .hub-node, .signal-node { border-width: 3px; }
+      .card-type-chip { border-width: 2px; }
+    }
 
     /* Higher tiers get progressively wider cards. */
     .hub-node.tiernode-2 { width: 300px; }
@@ -1425,37 +1623,157 @@
       .submission-header { border: none; padding: 0 0 16px 0; }
       .submission-cluster { border: none; padding: 0; margin-bottom: 32px; }
     }
+
+    /* --- TYPOGRAPHY & SPACING POLISH --- */
+    /* Headings: tracking + balance */
+    .config-header h1 { letter-spacing: var(--track-tight); text-wrap: balance; line-height: var(--lh-tight); }
+    .panel-header h2, .webmap-header h2,
+    .workspace-title-row h2, .submission-header h2,
+    .submission-cluster h3, .doc-cluster h2 { letter-spacing: var(--track-snug); text-wrap: balance; }
+    .modal-header h3, .workspace-cluster-card h3 { letter-spacing: var(--track-snug); text-wrap: balance; line-height: var(--lh-tight); }
+
+    /* Microlabels: one consistent uppercase tracking */
+    .upskill-banner h3, .card-tag, .cluster-actions button, .ws-card-tier, .ws-jump-label,
+    .tour-tooltip-step, .tut-coach-title, .sort-card-tag, .sort-zone-label, .view-tab,
+    .prompt-cta-label, .interview-helper .step-label, .profile-popover .profile-id .label,
+    .card-type-group-label { letter-spacing: var(--track-label); }
+
+    /* Reading blocks: leading, pretty wrapping, measure */
+    .upskill-banner p, .modal-body p, .workspace-intro, .interview-helper .helper-desc,
+    .field-hint, .workspace-section .field-hint, .tour-tooltip p,
+    .card-type-hint { line-height: var(--lh-body); text-wrap: pretty; }
+    .submission-answer .answer-body, .doc-item-box { line-height: var(--lh-body); text-wrap: pretty; max-width: var(--measure); }
+    .config-header p { line-height: var(--lh-body); max-width: 52ch; text-wrap: pretty; }
+
+    /* Tabular numbers: no width jitter as digits change */
+    .sorting-counter, #sort-card-number, .zoom-btn.zoom-level, #tutorial-coach-step,
+    .tour-step-count, .hub-count, #cluster-progress {
+      font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+    }
+
+    .btn { letter-spacing: 0.005em; }
+
+    /* Spacing rhythm: setup / modal / workspace / artifact */
+    .config-container { padding: var(--space-8); }
+    @media (max-width: 600px) { .config-container { padding: var(--space-6); } .modal-content { padding: var(--space-6); } }
+    .config-field { margin-bottom: var(--space-6); }
+    .config-field label, .workspace-section > label { letter-spacing: var(--track-snug); }
+    .upskill-banner { padding: var(--space-5) var(--space-6); margin-bottom: var(--space-7); }
+    .upskill-banner h3 { margin-bottom: var(--space-2); }
+    .modal-content { padding: var(--space-8); }
+    .modal-header h3 { margin-bottom: var(--space-5); }
+    .modal-body p { margin-bottom: var(--space-5); }
+    .workspace-section { margin-bottom: var(--space-7); }
+    .workspace-section .field-hint { margin-bottom: var(--space-4); }
+    .submission-answer { margin-bottom: var(--space-5); }
+    .submission-answer h4 { margin-bottom: var(--space-2); letter-spacing: var(--track-snug); }
+    .prompt-text, .prompt-cta .prompt-text { line-height: var(--lh-body); }
+
+    /* Sort card + node-internal type (type only — never node geometry) */
+    .sort-card-title { letter-spacing: var(--track-tight); line-height: var(--lh-tight); text-wrap: balance; }
+    .sort-card-desc { line-height: var(--lh-body); text-wrap: pretty; }
+    .signal-node h3 { letter-spacing: var(--track-snug); line-height: 1.3; }
+    .signal-node .summary-text { line-height: 1.5; }
+    .hub-node input.hub-title { letter-spacing: var(--track-snug); }
+    .quality-check { line-height: 1.55; }
   </style>
 </head>
 <body>
 
   <div id="setup-screen">
     <div class="config-container">
-      <div class="config-header">
-        <h1>The Triangulator-inator</h1>
-        <p>Sort the noise. Find the signal. Triangulate patterns, themes, and super-themes.</p>
-        <button type="button" class="btn btn-outline" onclick="tutorialStart()" style="margin-top: 12px;">🎓 New here? Take the 5-minute guided tutorial</button>
-      </div>
+      <header class="config-header landing-hero">
+        <p class="hero-eyebrow"><span>A problem&#8209;framing canvas</span><span class="hero-eyebrow-rule" aria-hidden="true"></span><span>After Kees Dorst's Frame Creation</span></p>
+        <h1>The<br>Triangulator<span class="hero-accent">-inator</span></h1>
+        <p class="hero-lede">Some people find a better answer. Others find a better question — and change everything. You're about to become the second kind.</p>
+        <div class="hero-cta">
+          <button type="button" class="btn btn-primary" onclick="tutorialStart()">Take the 5-minute guided tutorial</button>
+          <span class="hero-cta-note">or load your own observation pool below</span>
+        </div>
+      </header>
 
-      <div class="upskill-banner">
-        <h3>Synth Sprint — Lab Day 1</h3>
-        <p>You're about to sort through a pool of friction signals and triangulate your way to defensible patterns, themes, and super-themes. The AI here is a thinking partner — but you drive the conversation. Copy the prompts this tool generates, paste them into your LLM of choice, and push back on every answer until you believe it. The AI's job is to surface what you missed. Your job is to decide what matters.</p>
-        <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.85; font-style: italic;">Prototype note: In a live cycle, these signals would be pre-loaded from your cycle's research and industry advisors. The pool below is sample data — upload a fresh batch via CSV if you have one.</p>
-      </div>
-      
+      <section class="landing-section" aria-labelledby="landing-h-why">
+        <div class="landing-section-head"><span class="landing-index">01</span><span class="landing-kicker">Why it matters</span></div>
+        <h2 class="landing-statement" id="landing-h-why">The most powerful move isn't a better solution. It's a better question.</h2>
+        <div class="landing-cols">
+          <p>When a problem keeps swallowing solutions, the answer isn't to try harder. It's to look differently. Every unsolvable challenge is stuck inside a frame — an unexamined way of seeing that everyone inherited and no one questioned. Crack it open, and solutions you couldn't have imagined start to feel inevitable.</p>
+          <p>This is the move that separates people who manage problems from people who solve them. Kees Dorst called it Frame Creation. You're about to do it.</p>
+        </div>
+      </section>
+
+      <section class="landing-section" aria-labelledby="landing-h-how">
+        <div class="landing-section-head"><span class="landing-index">02</span><span class="landing-kicker">How it works</span></div>
+        <h2 class="landing-statement" id="landing-h-how">See what others miss. Say what no one else could.</h2>
+        <ol class="explainer-steps">
+        <li class="explainer-step" data-step="1">
+          <span class="explainer-step-num" aria-hidden="true">01</span>
+          <div>
+            <h3>Sort the pool</h3>
+            <p>Work through your observations one at a time. Keep what's real, discard the noise, flag the ones that might shift everything. Fast and instinctive — trust your gut, revisit later.</p>
+          </div>
+        </li>
+        <li class="explainer-step" data-step="2">
+          <span class="explainer-step-num" aria-hidden="true">02</span>
+          <div>
+            <h3>Triangulate evidence</h3>
+            <p>Two signals pointing at the same thing? That's evidence. Connect them on the canvas, classify the claim using Dorst's seven types, and name what you've found. Now you can defend it.</p>
+          </div>
+        </li>
+        <li class="explainer-step" data-step="3">
+          <span class="explainer-step-num" aria-hidden="true">03</span>
+          <div>
+            <h3>Climb the ladder</h3>
+            <p>Evidence into <strong>pattern</strong>. Pattern into <strong>theme</strong>. Each step, the real problem comes into focus. Each tier unlocks only when the level below is named — because every claim should rest on examined ones.</p>
+          </div>
+        </li>
+        <li class="explainer-step" data-step="4">
+          <span class="explainer-step-num" aria-hidden="true">04</span>
+          <div>
+            <h3>Name the situation</h3>
+            <p>When the map is complete, push it forward. Synthesize the open condition your frame will come from. This is where your breakthrough lives — and the evidence trail makes every word of it yours to stand behind.</p>
+          </div>
+        </li>
+      </ol>
+      </section>
+
+      <section class="landing-section" aria-labelledby="landing-h-who">
+        <div class="landing-section-head"><span class="landing-index">03</span><span class="landing-kicker">Built for people like you</span></div>
+        <h2 class="landing-statement" id="landing-h-who">You already have what it takes.</h2>
+        <p class="landing-intro">Frame Creation was designed for expert studios with months to spare. We rebuilt it for people who live the problem — and have the most at stake in solving it. One session. Real evidence. Your frame.</p>
+        <div class="triad-grid">
+          <div class="triad-cell">
+            <h3>Discover<br>&amp; align</h3>
+            <p>Stop debating opinions. Start building on evidence. Move a room of people from anecdote to shared, defensible ground — in a single sitting.</p>
+          </div>
+          <div class="triad-cell">
+            <h3>Reframe</h3>
+            <p>See the problem from an angle you didn't know existed. The seven evidence types and the theme ladder take you somewhere you wouldn't have gone alone.</p>
+          </div>
+          <div class="triad-cell">
+            <h3>Express</h3>
+            <p>When your solution comes from your evidence and your frame, it's unmistakably yours. Stand behind every word — because you built what it stands on.</p>
+          </div>
+        </div>
+        <p class="landing-footnote">The ✨ AI button on every card generates a method-grounded prompt for the LLM of your choice — a thinking partner that surfaces what you missed, while you stay in control of what matters.</p>
+      </section>
+
+      <section class="landing-section" aria-labelledby="landing-h-start">
+        <div class="landing-section-head"><span class="landing-index">04</span><span class="landing-kicker">Start here</span></div>
+        <h2 class="landing-statement" id="landing-h-start">Start with what you know.</h2>
+        <div class="setup-card">
       <div class="config-field">
         <label for="config-title">Name your web map</label>
         <input type="text" id="config-title" class="config-input" value="Upskilling Labs: Signal Pool">
       </div>
 
       <div class="config-field">
-        <label id="pool-label">Signal pool — <span id="config-pool-count">0</span> friction signals <span style="opacity: 0.7; font-weight: 400;">(sample data — in a live cycle, these come from your industry's research and advisory network)</span></label>
+        <label id="pool-label">Observation pool — <span id="config-pool-count">0</span> observations <span style="opacity: 0.7; font-weight: 400;">(sample data — replace it with observations from your own community or research via CSV)</span></label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
-        <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()" style="margin-bottom: 12px;">Load 44 sample signals</button>
+        <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()" style="margin-bottom: 12px;">Load 44 sample observations</button>
 
         <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
           <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px;">
-            <strong style="color: var(--ghost-white); font-size: 0.875rem;">Load your own signals</strong>
+            <strong style="color: var(--ghost-white); font-size: 0.875rem;">Load your own observations</strong>
             <span style="font-size: 0.75rem; color: var(--cloud); opacity: 0.7;">Columns: <code>title,summary</code> (header row required)</span>
           </div>
           <div style="display: flex; flex-wrap: wrap; gap: 16px 20px; align-items: center;">
@@ -1475,9 +1793,9 @@
         </div>
 
         <div class="add-item-bar">
-          <label class="sr-only" for="new-item-title">New signal short label</label>
-          <input type="text" id="new-item-title" class="config-input" placeholder="Signal title..." style="flex:1;">
-          <label class="sr-only" for="new-item-summary">New signal description</label>
+          <label class="sr-only" for="new-item-title">New observation short label</label>
+          <input type="text" id="new-item-title" class="config-input" placeholder="Observation title..." style="flex:1;">
+          <label class="sr-only" for="new-item-summary">New observation description</label>
           <input type="text" id="new-item-summary" class="config-input" placeholder="What's the friction? Who feels it?..." style="flex:2;">
           <button class="btn btn-primary" onclick="addConfigItem()">Add Signal</button>
         </div>
@@ -1487,6 +1805,8 @@
         <button class="btn btn-outline" onclick="skipSortingToBoard()" style="min-width: 120px;">Skip to Canvas</button>
         <button class="btn btn-primary" onclick="startSorting()" style="min-width: 160px;">Start Sorting</button>
       </div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -1600,7 +1920,7 @@
     <div class="modal-content">
       <div style="font-size: 2rem; margin: 6px 0 2px;">🎓</div>
       <h3 id="tutorial-offer-title" style="font-size: 1.25rem; font-weight: 700; color: var(--midnight); margin-bottom: 10px;">Learn problem framing in 5 minutes</h3>
-      <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.8; line-height: 1.6; margin-bottom: 6px;">A hands-on walkthrough with example data: practice sorting real signals from noise, then build evidence on the canvas and climb to your first theme — learning <em>why</em> each step matters along the way.</p>
+      <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.8; line-height: 1.6; margin-bottom: 6px;">A hands-on walkthrough with example data: practice sorting real observations into signals and noise, then build evidence on the canvas and climb to your first theme — learning <em>why</em> each step matters along the way.</p>
       <p style="font-size: 0.8rem; color: var(--midnight); opacity: 0.6; margin-bottom: 18px;">Nothing in the tutorial touches your own work.</p>
       <div style="display: flex; gap: 10px; justify-content: center;">
         <button class="btn btn-outline" onclick="declineTutorialOffer()">Skip for now</button>
@@ -1708,7 +2028,7 @@
       <div class="modal-body">
         <p id="submit-modal-summary"></p>
         <p id="submit-modal-prior" class="hidden" style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;"></p>
-        <p style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;">In a live cycle, this queues your work for community review. In this prototype, it timestamps your submission and produces a read-only artifact.</p>
+        <p style="font-size: 0.85rem; color: var(--midnight); opacity: 0.7;">In a live deployment, this queues your work for community review. In this prototype, it timestamps your submission and produces a read-only artifact.</p>
         <div style="display: flex; gap: 12px; justify-content: flex-end;">
           <button class="btn btn-outline" onclick="closeModal('submit-modal')">Cancel</button>
           <button class="btn btn-primary" id="submit-modal-confirm-btn" onclick="confirmSubmit()" data-autofocus>Submit</button>
@@ -1807,17 +2127,25 @@
 
     // --- Card type constants ---
     const CARD_TYPES = [
-      { id: 'history',        label: 'History',        color: '#4a6fa5', desc: 'What happened / what was done' },
-      { id: 'counterfactual', label: 'Counterfactual', color: '#7b5ea7', desc: 'The path not taken' },
-      { id: 'boundary',       label: 'Boundary',       color: '#c0392b', desc: 'A "they will never…" nonnegotiable' },
-      { id: 'flux',           label: 'Flux',           color: '#d4a017', desc: 'A point of movement or potential change' },
-      { id: 'player',         label: 'Player',         color: '#0094a0', desc: 'A stakeholder, by practices & currency' },
-      { id: 'value',          label: 'Value',          color: '#27ae60', desc: 'A deeper or universal value from the field' },
-      { id: 'problem',        label: 'Problem',        color: '#e67e22', desc: 'A bounded difficulty, solvable conventionally' }
+      { id: 'history',        label: 'History',        color: '#4a6fa5', phase: 'arch',  desc: 'What happened / what was done',
+        icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><path d="M8 4.8V8l2.4 1.6"/></svg>' },
+      { id: 'counterfactual', label: 'Counterfactual', color: '#7b5ea7', phase: 'arch',  desc: 'The path not taken',
+        icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 14V8.5"/><path d="M8 8.5 3.6 2.6"/><path d="M8 8.5 12.4 2.6" stroke-dasharray="2.2 1.8"/></svg>' },
+      { id: 'boundary',       label: 'Boundary',       color: '#c0392b', phase: 'arch',  desc: 'A "they will never…" nonnegotiable',
+        icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.5"/><path d="M4.2 8h7.6" stroke-linecap="round"/></svg>' },
+      { id: 'flux',           label: 'Flux',           color: '#d4a017', phase: 'arch',  desc: 'A point of movement or potential change',
+        icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.8 9q2-4.4 4 0t4 0 4 0"/></svg>' },
+      { id: 'player',         label: 'Player',         color: '#0094a0', phase: 'field', desc: 'A stakeholder, by practices & currency',
+        icon: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="5" r="2.7"/><path d="M2.8 13.6c0-3 2.3-4.7 5.2-4.7s5.2 1.7 5.2 4.7z"/></svg>' },
+      { id: 'value',          label: 'Value',          color: '#27ae60', phase: 'field', desc: 'A deeper or universal value from the field',
+        icon: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2.2 13.2 6 8 13.8 2.8 6z"/></svg>' },
+      { id: 'problem',        label: 'Problem',        color: '#e67e22', phase: 'arch',  desc: 'A bounded difficulty, solvable conventionally',
+        icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.7" y="2.7" width="10.6" height="10.6" rx="2.6"/><path d="M8 5v4" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.95" fill="currentColor" stroke="none"/></svg>' }
     ];
     // Plain/undefined evidence card — created when two signals are first
     // connected, before the user classifies it into one of the seven types.
-    const EVIDENCE_TYPE = { id: null, label: 'Evidence', color: '#8a93a3', desc: 'Raw evidence — classify it once the pattern is clear' };
+    const EVIDENCE_TYPE = { id: null, label: 'Evidence', color: '#8a93a3', phase: null, desc: 'Raw evidence — classify it once the pattern is clear',
+        icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5" stroke-dasharray="2 2"/></svg>' };
     const CARD_TYPE_MAP = Object.fromEntries(CARD_TYPES.map(t => [t.id, t]));
     function cardTypeInfo(cardType) { return CARD_TYPE_MAP[cardType] || EVIDENCE_TYPE; }
     const PLAYER_ROLES = [
@@ -2595,7 +2923,7 @@
       const titleInput = el.querySelector('.hub-title');
       if (titleInput) {
         titleInput.addEventListener('input', () => {
-          obj.title = titleInput.value; scheduleSave(); updateClusterProgressChip();
+          obj.title = titleInput.value; scheduleSave(); updateClusterProgressChip(); refreshParentLocks(obj.id);
           tutorialNotify('card-edited', { id: obj.id, title: obj.title || '', description: obj.description || '' });
         });
         titleInput.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -2603,7 +2931,7 @@
       const desc = el.querySelector('.hub-desc');
       if (desc) {
         desc.addEventListener('input', () => {
-          obj.description = desc.value; autoResize(desc); scheduleSave();
+          obj.description = desc.value; autoResize(desc); scheduleSave(); refreshParentLocks(obj.id);
           tutorialNotify('card-edited', { id: obj.id, title: obj.title || '', description: obj.description || '' });
         });
         desc.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -2648,21 +2976,34 @@
         </div>` : '';
       // Type picker: shown expanded on undefined cards, collapsed (re-classify)
       // behind a small link on cards that already have a type.
-      const typeChips = CARD_TYPES.map(t =>
-        `<button type="button" class="card-type-chip${card.cardType === t.id ? ' active' : ''}" data-type="${t.id}" style="--chip-color: ${t.color};" title="${escapeHtml(t.desc)}">${escapeHtml(t.label)}</button>`
-      ).join('');
+      const chipHtml = (t) =>
+        `<button type="button" class="card-type-chip${card.cardType === t.id ? ' active' : ''}" data-type="${t.id}" data-phase="${t.phase}" style="--chip-color: ${t.color};" title="${escapeHtml(t.desc)}"><span class="type-glyph" aria-hidden="true">${t.icon}</span><span class="chip-label">${escapeHtml(t.label)}</span></button>`;
+      const archChips  = CARD_TYPES.filter(t => t.phase === 'arch').map(chipHtml).join('');
+      const fieldChips = CARD_TYPES.filter(t => t.phase === 'field').map(chipHtml).join('');
+      const groupedChips =
+        `<div class="card-type-group phase-arch">
+           <span class="card-type-group-label">Archaeology &amp; Context</span>
+           <div class="card-type-chips">${archChips}</div>
+         </div>
+         <div class="card-type-group phase-field">
+           <span class="card-type-group-label">Field mapping</span>
+           <div class="card-type-chips">${fieldChips}</div>
+         </div>`;
       const typePickerHtml = undefinedType
         ? `<div class="card-type-inline" data-expanded="1">
-             <p class="card-type-hint">What kind of evidence is this? Connect more signals first, or classify it now${' '}— the ✨ AI button can help.</p>
-             <div class="card-type-chips">${typeChips}</div>
+             <p class="card-type-hint">What kind of evidence is this? Decide the movement first — are you excavating the known problem (<strong>Archaeology &amp; Context</strong>) or widening to the players and values of the field (<strong>Field mapping</strong>)? The ✨ AI button can help.</p>
+             <div class="card-type-groups">${groupedChips}</div>
            </div>`
         : `<div class="card-type-inline" data-expanded="0">
              <button type="button" class="card-type-reclassify">Change type ▾</button>
-             <div class="card-type-chips" hidden>${typeChips}</div>
+             <div class="card-type-groups" hidden>${groupedChips}</div>
            </div>`;
       el.innerHTML = `
-        <div class="hub-tag" style="color: ${ct.color};">
-          <span>${escapeHtml(ct.label)}</span>
+        <div class="hub-tag">
+          <span class="hub-tag-label">
+            <span class="type-glyph" style="color: ${ct.color};" aria-hidden="true">${ct.icon}</span>
+            <span class="type-name">${escapeHtml(ct.label)}</span>
+          </span>
           <span class="hub-count">${count} signal${count === 1 ? '' : 's'}</span>
         </div>
         <input type="text" class="hub-title" placeholder="${escapeHtml(ct.desc)}" value="${escapeHtml(card.title || '')}" />
@@ -2686,8 +3027,8 @@
         reclassifyBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
         reclassifyBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const chips = el.querySelector('.card-type-chips');
-          if (chips) chips.hidden = !chips.hidden;
+          const groups = el.querySelector('.card-type-groups');
+          if (groups) groups.hidden = !groups.hidden;
         });
       }
       // Type chip selection.
@@ -2710,12 +3051,32 @@
     }
 
     // Higher-tier cards (pattern, theme, super-theme, mega-theme, …).
+    // A higher-tier hub is locked for editing until every lower-tier hub it is
+    // built from has been named and described — claims rest on examined claims.
+    function isNamedAndDescribed(c) { return !!(c && (c.title || '').trim() && (c.description || '').trim()); }
+    function hubLocked(card) {
+      if (!card || card.tier < 2) return false;
+      return card.childIds.map(findCard).filter(Boolean).some(ch => !isNamedAndDescribed(ch));
+    }
+    function refreshParentLocks(childId) {
+      parentsOf(childId).forEach(p => {
+        if (p.tier < 2) return;
+        const el = document.getElementById('node-' + p.id);
+        if (!el) return;
+        const locked = hubLocked(p);
+        el.classList.toggle('hub-locked', locked);
+        const t = el.querySelector('input.hub-title'); if (t) t.disabled = locked;
+        const d = el.querySelector('textarea.hub-desc'); if (d) d.disabled = locked;
+        const n = el.querySelector('.hub-lock-note'); if (n) n.hidden = !locked;
+      });
+    }
     function buildHigherCardNode(card) {
       const el = document.createElement('div');
       const color = cardColor(card);
       const label = tierName(card.tier);
       const childWord = tierName(card.tier - 1).toLowerCase();
-      el.className = 'canvas-node hub-node card-node tiernode-' + card.tier;
+      const locked = hubLocked(card);
+      el.className = 'canvas-node hub-node card-node tiernode-' + card.tier + (locked ? ' hub-locked' : '');
       el.id = 'node-' + card.id;
       el.setAttribute('data-node-id', card.id);
       el.setAttribute('data-kind', 'hub');
@@ -2726,7 +3087,7 @@
       el.style.borderColor = color;
       const childCount = card.childIds.length;
       const sigCount = signalsUnder(card.id).length;
-      const lightText = (card.tier === 3); // amber theme reads better with dark text
+      const lightText = (card.tier === 2 || card.tier === 3); // red + amber pills need dark text for AA
       let themeQuality = '';
       if (card.tier === 3) {
         themeQuality = `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`;
@@ -2737,11 +3098,12 @@
       }
       el.innerHTML = `
         <div class="hub-tag" style="color: ${color};">
-          <span>${escapeHtml(label)}</span>
+          <span class="hub-tag-label"><span class="type-name">${escapeHtml(label)}</span></span>
           <span class="hub-count" style="background:${color}; color:${lightText ? 'var(--midnight)' : 'var(--ghost-white)'};">${childCount} ${escapeHtml(childWord)}${childCount === 1 ? '' : 's'} · ${sigCount} signal${sigCount === 1 ? '' : 's'}</span>
         </div>
-        <input type="text" class="hub-title" placeholder="Name this ${escapeHtml(label.toLowerCase())}" value="${escapeHtml(card.title || '')}" />
-        <textarea class="hub-desc" placeholder="What deeper condition do these ${escapeHtml(childWord)}s point toward?" rows="2">${escapeHtml(card.description || '')}</textarea>
+        <input type="text" class="hub-title" placeholder="Name this ${escapeHtml(label.toLowerCase())}" value="${escapeHtml(card.title || '')}" ${locked ? 'disabled' : ''} />
+        <textarea class="hub-desc" placeholder="What deeper condition do these ${escapeHtml(childWord)}s point toward?" rows="2" ${locked ? 'disabled' : ''}>${escapeHtml(card.description || '')}</textarea>
+        <p class="hub-lock-note"${locked ? '' : ' hidden'}>Name &amp; describe each ${escapeHtml(childWord)} below before editing this ${escapeHtml(label.toLowerCase())} — a higher claim rests on examined ones.</p>
         ${themeQuality}
         <div class="hub-actions">
           <button type="button" class="hub-suggest" title="Get an AI prompt for this ${escapeHtml(label.toLowerCase())}">✨ AI</button>
@@ -4101,7 +4463,7 @@
       {
         screen: 'board',
         highlight: () => _tutCreated[1] ? '#node-' + _tutCreated[1] : null, pad: 10,
-        mode: 'action-continue',
+        mode: 'action-continue', coachRight: true, // phase-grouped picker is tall; keep the coach off the card
         waitFor: {
           event: 'card-typed',
           match: d => !!d.type,
@@ -4489,16 +4851,27 @@
       return lines.join('\n');
     }
 
+    const CARD_TYPE_FRAMING = {
+      history:        'This is HISTORY (Archaeology). Investigate the apparent problem and earlier attempts to solve it in depth: the succession of actions that led here, who did what and what drove them. Stay on documented deeds, not stated intentions. What does the history reveal about how people have been framing this all along?',
+      counterfactual: 'This is a COUNTERFACTUAL (Archaeology). Examine a path NOT taken — without it we risk "having our own perceptions caught in the same trap that led to the initial problem definition." What alternative was available, why was it rejected, and what does its foreclosure expose about the hidden logic and real constraints of the situation?',
+      boundary:       'This is a BOUNDARY (Archaeology) — a hard "they will never…" nonnegotiable that will limit which future frames can ever be adopted. Pressure-test it: is it genuinely fixed or only assumed? What is it anchored in, who enforces it, and what would it cost them if it moved?',
+      flux:           'This is FLUX (Archaeology) — a point of movement or potentiality. Map where the situation is already shifting (as opposed to the fixed boundaries): what is in motion, what drives it, who benefits and who resists, and what working WITH that momentum would imply.',
+      player:         'This is a PLAYER (Field mapping). Map the stakeholder by their PRACTICES and "currency" (the cultural, economic, social, symbolic assets they trade in), plus power, interests, and the frames they bring — what they DO, not what they say. Suspend judgment: understand behavior, do not assign blame.',
+      value:          'This is a VALUE (Field mapping) — a deep, shared value surfaced by widening to the field, hidden beneath the surface of everyday professional life. Name the universal underneath: who across the field shares it, and could it bridge the human and the structural (describe both a felt human experience AND a systemic condition)? This is theme-feeding work.',
+      problem:        'This is a PROBLEM — a bounded difficulty conventionally solvable. Be honest about whether it is genuinely bounded or a symptom of the larger open situation that only looks solvable. What does reaching for the conventional fix assume, and what does this point toward if you do not solve it in isolation?'
+    };
+
     function tierFraming(tier, hubId) {
       const t = hubId ? nodeTier(hubId) : tier;
       if (t === 1) {
         const c = findCard(hubId);
         if (c && !c.cardType) {
-          const typeList = CARD_TYPES.map(ct => `${ct.label} (${ct.desc})`).join('; ');
-          return `This is an unclassified evidence card. Your most useful job here is to help the user classify it into ONE of the seven Frame Creation evidence types and then name it. The seven types are: ${typeList}. Read the constituent signals, decide which type best fits what they triangulate toward, and explain why. If two types are plausible, say so and explain the trade-off.`;
+          const archList  = CARD_TYPES.filter(x => x.phase === 'arch').map(x => x.label).join(', ');
+          const fieldList = CARD_TYPES.filter(x => x.phase === 'field').map(x => x.label).join(', ');
+          const typeList  = CARD_TYPES.map(ct => `${ct.label} (${ct.desc})`).join('; ');
+          return `This is an unclassified evidence card. Help the user classify it into ONE of the seven Frame Creation evidence types, and name it. Orient first by analytical movement: ARCHAEOLOGY & CONTEXT — excavating the known problem and its as-is situation (${archList}); versus FIELD MAPPING — widening to the players in the broader field and the universal values they share (${fieldList}). The seven types: ${typeList}. Read the constituent signals, decide the movement and then the type that best fits what they triangulate toward, and explain why. If two types are plausible, name the trade-off. Do not decide for the user — help them decide.`;
         }
-        const ct = c ? (CARD_TYPE_MAP[c.cardType] || {}) : {};
-        return `This is a ${ct.label || 'Evidence card'} — ${ct.desc || 'an intermediate evidence card'}. Focus on what the constituent signals, when triangulated, reveal about this specific kind of evidence. Who is affected, in what context, and what mechanism or condition do they point toward together?`;
+        return (c && CARD_TYPE_FRAMING[c.cardType]) || 'This is an evidence card. Focus on what the constituent signals, triangulated, reveal together.';
       }
       if (t === 2) {
         return 'This is a Pattern — a specific, named condition that two or more evidence cards point toward together. Focus on the shared mechanism behind the evidence: who is affected, in what context, and what makes the friction recur.';
