@@ -736,6 +736,41 @@
       .webmap-search { min-width: 70px; max-width: 140px; }
     }
 
+    /* --- PHONE BOARD HEADER: slim bar + drop-down control panel --- */
+    /* Collapsed (default): one 44px row — title · ready dot · Push · chevron.
+       Expanded: the full action set flows in as wrapped rows below the bar
+       (flex-wrap, no absolute positioning) and the tabs strip returns. */
+    .mobile-push, .header-expand-btn, .mobile-ready-dot { display: none; }
+    @media (max-width: 768px) {
+      .webmap-header { height: auto; min-height: 44px; flex-wrap: wrap; align-items: center; padding-top: 2px; padding-bottom: 2px; }
+      .webmap-header h2 { flex: 1; min-width: 0; }
+      .webmap-header-actions, .canvas-infobar { display: none; }
+      .mobile-ready-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cloud); flex-shrink: 0; transition: background 0.2s ease, box-shadow 0.2s ease; }
+      .mobile-ready-dot.is-ready { background: var(--primary-teal); box-shadow: 0 0 0 3px rgba(0,148,160,0.2); }
+      .mobile-push { display: inline-flex; padding: 8px 14px; min-height: 36px; flex-shrink: 0; }
+      .header-expand-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 40px; height: 40px; flex-shrink: 0;
+        border: none; background: transparent; color: var(--midnight);
+        font-size: 1.05rem; cursor: pointer; border-radius: 8px;
+        transition: transform 0.15s ease, background 0.12s ease;
+      }
+      .header-expand-btn:hover { background: var(--cloud); }
+      #board-workspace.mobile-header-open .header-expand-btn { transform: rotate(180deg); background: var(--cloud); }
+      #board-workspace.mobile-header-open .mobile-push { display: none; }
+      #board-workspace.mobile-header-open .webmap-header-actions {
+        display: flex; flex-basis: 100%; flex-wrap: wrap; gap: 10px; padding: 4px 0 12px;
+        order: 10; /* keep title · dot · chevron together on the slim bar row */
+      }
+      #board-workspace.mobile-header-open .webmap-search { flex-basis: 100%; max-width: none; min-width: 0; }
+      #board-workspace.mobile-header-open .webmap-search .search-input { padding: 10px 12px; padding-right: 32px; font-size: 0.875rem; }
+      /* The open panel has room, so full button labels come back */
+      #board-workspace.mobile-header-open .webmap-header-actions .btn-label { display: inline; }
+      #board-workspace.mobile-header-open .webmap-header-actions .btn-label-short { display: none; }
+      #board-workspace.mobile-header-open .webmap-header-actions .btn { min-height: 44px; flex: 1 1 auto; }
+      #board-workspace.mobile-header-open .canvas-infobar { display: flex; }
+    }
+
     /* --- MOBILE COMPACT DENSITY --- */
     @media (max-width: 1024px) {
       .panel-left .panel-header    { height: 56px; padding: 10px 16px; }
@@ -1780,6 +1815,48 @@
     .hub-node input.hub-title { letter-spacing: var(--track-snug); }
     .quality-check { line-height: 1.55; }
 
+    /* Card-page modal microlabels (classed so the phone block below can tighten them) */
+    .cardpage-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; margin-bottom: 6px; }
+    .cardpage-label.mt { margin-top: 18px; }
+    .cardpage-sub { font-size: 0.8rem; opacity: 0.7; margin-bottom: 16px; }
+
+    /* --- PHONE DENSITY: very tight spacing at ≤768px --- */
+    /* Late in the sheet on purpose: wins over the base spacing-rhythm and the
+       earlier 1024/720/600/480 blocks at phone widths. Spacing only — no
+       color, type, or layout changes. */
+    @media (max-width: 768px) {
+      /* Landing / setup */
+      #setup-screen .config-container { padding: 20px 0 40px; }
+      .landing-hero { margin-bottom: 24px; }
+      #setup-screen .hero-eyebrow { margin-bottom: 20px; }
+      #setup-screen .config-header h1 { margin-bottom: 20px; }
+      #setup-screen .hero-lede { margin-bottom: 20px; }
+      .hero-cta { gap: 12px; }
+      .hero-cta .btn { padding: 12px 18px; }
+      .landing-section { margin-bottom: 24px; padding-top: 14px; }
+      .landing-section-head { margin-bottom: 12px; }
+      .config-field { margin-bottom: 14px; }
+      .upskill-banner { padding: 12px 14px; margin-bottom: 16px; }
+      /* Sorting */
+      .sorting-top { padding: 8px 12px 0; }
+      .sort-card { padding: 20px 18px 28px; }
+      .sorting-hint { padding: 10px 0 max(10px, env(safe-area-inset-bottom)); }
+      .sorting-complete { padding: 14px 16px; }
+      /* Modals */
+      .modal-overlay { padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)); }
+      .modal-content { padding: 14px; max-height: calc(100dvh - 20px); }
+      .modal-header h3 { margin-bottom: 10px; }
+      .modal-body p { margin-bottom: 12px; }
+      .modal-body textarea { margin-bottom: 12px; }
+      .cardpage-sub { margin-bottom: 10px; }
+      .cardpage-label.mt { margin-top: 10px; }
+      /* Board chrome */
+      .toast { padding: 10px 14px; }
+      #toast-region { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+      .zoom-toolbar { right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 3px; }
+      .canvas-infobar { padding: 6px 10px; }
+    }
+
     /* Apple HIG ~44pt touch targets. Last in the sheet so these win the
        cascade over the base rules above at equal specificity. */
     @media (pointer: coarse) {
@@ -1970,7 +2047,7 @@
     <main class="panel-center webmap-panel">
       <div class="panel-header webmap-header">
         <h2 id="board-title-display">Your Web Map <span id="save-status" aria-live="polite"></span></h2>
-        <div class="webmap-header-actions">
+        <div class="webmap-header-actions" id="webmap-header-actions">
           <div class="search-wrap webmap-search" id="search-wrap">
             <label class="sr-only" for="search-input">Search signals</label>
             <input type="text" id="search-input" class="search-input" placeholder="Search signals..." oninput="filterItems()">
@@ -1999,6 +2076,10 @@
             </div>
           </div>
         </div>
+        <span id="mobile-ready-dot" class="mobile-ready-dot" aria-hidden="true"></span>
+        <button class="btn btn-primary mobile-push" onclick="openCommitModal()">Push</button>
+        <button id="header-expand-btn" class="header-expand-btn" type="button" onclick="toggleMobileHeader()"
+                aria-expanded="false" aria-controls="webmap-header-actions" aria-label="Show board controls">▾</button>
       </div>
       <div class="canvas-infobar">
         <div class="view-tabs" id="view-tabs">
@@ -2162,11 +2243,11 @@
     <div class="modal-content" style="max-width: 760px;">
       <div class="modal-header"><h3 id="card-page-title">Card</h3></div>
       <div class="modal-body">
-        <p id="card-page-sub" style="font-size:0.8rem; opacity:0.7; margin-bottom:16px;"></p>
+        <p id="card-page-sub" class="cardpage-sub"></p>
         <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
-        <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6; margin-bottom:6px;">Main document — notes.md</div>
+        <div class="cardpage-label">Main document — notes.md</div>
         <textarea id="card-page-doc" style="width:100%; height:min(240px, 38dvh); font-family:monospace; font-size:0.825rem; padding:14px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
-        <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6; margin:18px 0 6px;">Attached markdown files</div>
+        <div class="cardpage-label mt">Attached markdown files</div>
         <div id="card-page-files" class="cardpage-files"></div>
         <input type="file" id="card-page-upload" accept=".md,.markdown,text/markdown,text/plain" multiple class="sr-only">
         <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
@@ -2949,6 +3030,26 @@
       const ws = document.getElementById('board-workspace');
       const collapsed = ws.classList.toggle('header-collapsed');
       localStorage.setItem('olos.headerCollapsed', collapsed ? '1' : '');
+    }
+
+    // Phone slim-bar chevron: expand/collapse the header control panel.
+    // Not persisted — every load starts collapsed.
+    function toggleMobileHeader(open) {
+      const ws = document.getElementById('board-workspace');
+      const isOpen = typeof open === 'boolean'
+        ? ws.classList.toggle('mobile-header-open', open)
+        : ws.classList.toggle('mobile-header-open');
+      const btn = document.getElementById('header-expand-btn');
+      if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    // Tour/tutorial spotlights can target controls that live inside the
+    // collapsed phone panel — pop it open so the target is visible/measurable.
+    function ensureMobileHeaderFor(el) {
+      if (!el || !window.matchMedia('(max-width: 768px)').matches) return;
+      if (!el.closest('.webmap-header-actions, .canvas-infobar')) return;
+      const ws = document.getElementById('board-workspace');
+      if (ws && !ws.classList.contains('mobile-header-open')) toggleMobileHeader(true);
     }
 
     function zoomBy(direction, anchorClientX, anchorClientY) {
@@ -3932,6 +4033,13 @@
       let marqueeJustEnded = false;
       const marqueeEl = document.getElementById('marquee-rect');
 
+      // Touching anywhere on the canvas dismisses the phone header panel.
+      // Capture phase: node/edge handlers stop propagation before bubble.
+      viewport.addEventListener('pointerdown', () => {
+        const wsEl = document.getElementById('board-workspace');
+        if (wsEl && wsEl.classList.contains('mobile-header-open')) toggleMobileHeader(false);
+      }, true);
+
       viewport.addEventListener('pointerdown', (e) => {
         // Ignore canvas chrome (zoom toolbar, tutorial button) so their
         // clicks aren't swallowed by marquee/pan start + preventDefault.
@@ -4401,9 +4509,11 @@
     }
 
     function _tourResolveTarget(step) {
-      if (step.targetId) return document.getElementById(step.targetId);
-      if (step.targetSelector) return document.querySelector(step.targetSelector);
-      return null;
+      let el = null;
+      if (step.targetId) el = document.getElementById(step.targetId);
+      else if (step.targetSelector) el = document.querySelector(step.targetSelector);
+      ensureMobileHeaderFor(el);
+      return el;
     }
 
     function _tourPositionSpotlight(el, padding) {
@@ -4996,6 +5106,7 @@
       const hl = document.getElementById('tutorial-highlight');
       const sel = typeof step.highlight === 'function' ? step.highlight() : step.highlight;
       const el = sel ? document.querySelector(sel) : null;
+      ensureMobileHeaderFor(el);
       if (!el) {
         hl.classList.add('hidden');
       } else {
@@ -5634,6 +5745,8 @@ ${AI_RULES}
           : `${v.named}/${v.total} cards named & described`;
       el.classList.toggle('meets-target', v.ready);
       el.classList.toggle('below-target', !v.ready);
+      const dot = document.getElementById('mobile-ready-dot');
+      if (dot) dot.classList.toggle('is-ready', v.ready);
     }
 
     // --- Problem Situation evidence trail + AI prompts ---
