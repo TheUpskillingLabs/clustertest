@@ -659,6 +659,22 @@
     .canvas-viewport.space-pan-ready.is-panning,
     .canvas-viewport.space-pan-ready.is-panning * { cursor: grabbing !important; }
 
+    /* Canvas node cursor overrides — reset the grab inherited from viewport */
+    .canvas-node { cursor: default; }
+    .canvas-node input,
+    .canvas-node textarea,
+    .canvas-node [contenteditable="true"] { cursor: text; }
+    .canvas-node button,
+    .canvas-node .card-type-chip,
+    .canvas-node .card-type-reclassify,
+    .canvas-node .role-pill,
+    .canvas-node .super-toggle,
+    .canvas-node .hub-ai-btn,
+    .canvas-node .hub-commit-btn,
+    .canvas-node .hub-delete-btn { cursor: pointer; }
+    .canvas-node.dragging,
+    .canvas-viewport.is-node-dragging { cursor: grabbing !important; }
+
     .canvas-world {
       position: absolute;
       top: 0; left: 0;
@@ -1135,18 +1151,24 @@
 
     .canvas-hint {
       position: absolute;
-      left: 20px;
-      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-      background: rgba(16,24,32,0.85);
+      right: 16px;
+      bottom: 122px; /* above #tour-help-btn (72px + 34px + 16px gap) */
+      background: rgba(16,24,32,0.88);
       color: var(--ghost-white);
       padding: 8px 14px;
       border-radius: 8px;
       font-size: 0.72rem;
       font-weight: 500;
       pointer-events: none;
-      z-index: 10;
-      max-width: 70%;
+      z-index: 13;
+      max-width: 260px;
+      text-align: right;
+      line-height: 1.55;
+      opacity: 0;
+      transition: opacity 0.18s ease;
     }
+    #tour-help-btn:hover ~ .canvas-hint,
+    #tour-help-btn:focus-visible ~ .canvas-hint { opacity: 1; }
 
     @media (prefers-reduced-motion: reduce) {
       .canvas-node, .edge-layer .edge, .hub-node { transition-duration: 60ms !important; animation-duration: 60ms !important; }
@@ -1563,9 +1585,9 @@
           <button type="button" class="zoom-btn" id="panel-toggle-btn" onclick="toggleHeaderCollapse()" aria-label="Hide / show header" title="Hide / show header">↕</button>
         </div>
         <div id="marquee-rect" class="marquee-rect"></div>
-        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag to select · Edge dots to connect · Scroll to pan · Cmd-scroll to zoom · Space-drag to pan</span><span class="hint-mobile">Drag to move · Tap to connect · Pinch to zoom · Two fingers to pan</span></div>
         <button id="tour-help-btn" class="hidden" onclick="tutorialStart()"
                 aria-label="Start the guided tutorial" title="Start tutorial">🎓</button>
+        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag to select · Edge dots to connect · Scroll to pan · Cmd-scroll to zoom · Space-drag to pan</span><span class="hint-mobile">Drag to move · Tap to connect · Pinch to zoom · Two fingers to pan</span></div>
       </div>
     </main>
   </div>
@@ -2934,6 +2956,8 @@
             el.removeEventListener('pointercancel', onUp);
             try { el.releasePointerCapture(pointerId); } catch (_) {}
             el.classList.remove('lifted', 'dragging');
+            const vpC = el.closest('.canvas-viewport');
+            if (vpC) vpC.classList.remove('is-node-dragging');
             if (dragging) {
               dragIds.forEach(id => {
                 const s = dragStart[id];
@@ -2951,6 +2975,8 @@
             if (dx < 3 && dy < 3) return;
             dragging = true;
             el.classList.add('dragging');
+            const vp = el.closest('.canvas-viewport');
+            if (vp) vp.classList.add('is-node-dragging');
           }
           const zoom = appState.view.zoom;
           const dx = (ev.clientX - startClientX) / zoom;
@@ -2975,6 +3001,8 @@
           try { el.releasePointerCapture(pointerId); } catch (_) {}
           el.classList.remove('lifted');
           el.classList.remove('dragging');
+          const vp2 = el.closest('.canvas-viewport');
+          if (vp2) vp2.classList.remove('is-node-dragging');
           pointerId = null;
           if (dragging) {
             dragging = false;
