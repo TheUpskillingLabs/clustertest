@@ -10,7 +10,7 @@ The tool walks you through four stages:
 
 1. **Sort the signals** — swipe through each signal card to classify it as **noise** (swipe left), **signal** (swipe right), or **★ super signal** (swipe up). The binary forces intellectual commitment. Super signals mark the evidence you consider most urgent or revelatory. Your sorting decisions become analytical data — the AI uses what you kept vs. discarded to challenge your instincts.
 
-2. **Triangulate on the canvas** — drag surviving signals onto a web map and connect them. When you connect two signals, a **card-type picker** asks what kind of evidence this is (History, Counterfactual, Boundary, Flux, Player, Value, or Problem). Connect two cards to create a **Theme**. Connect two themes to create a **Problem Situation**. Signals can belong to multiple cards — this is a **many-to-many lattice**, not a tree.
+2. **Triangulate on the canvas** — drag surviving signals onto a web map and connect them. Connecting two signals creates a plain **evidence card** — keep adding signals to it, then classify it into one of seven types (History, Counterfactual, Boundary, Flux, Player, Value, or Problem) once the pattern is clear; the ✨ AI button can help you decide. Connect two cards to create a **Theme**. Connect two themes to create a **Problem Situation**. Signals can belong to multiple cards — this is a **many-to-many lattice**, not a tree.
 
 3. **Map & pressure-test** — for each committed theme, map who's affected and pressure-test your framing, with AI prompts grounded in Dorst's methodology as thinking partners.
 
@@ -21,7 +21,7 @@ The tool walks you through four stages:
 | Object | What it is | Created by |
 |---|---|---|
 | **Signal** | Raw evidence — a pattern of action or behavior, not an opinion | Imported from CSV, sample data, or manual entry |
-| **Card** | An intermediate evidence classification — one of seven types (see below) | Connecting two signals on the canvas |
+| **Card** | An intermediate evidence card — created plain, then classified into one of seven types (see below) | Connecting two signals on the canvas |
 | **Theme** | A deeper universal that 2+ cards triangulate toward — bridges human experience and structural/systemic factors | Connecting two cards |
 | **Problem Situation** | An open, complex, networked, dynamic condition — not a bounded problem but a situation worth framing | Connecting two themes |
 
@@ -82,8 +82,8 @@ The sorting screen is a pure gesture interface:
 ## Building the lattice
 
 1. Hover any signal card to reveal **dots** on its edges.
-2. Drag from a dot to another signal — a **card-type picker** appears. Choose the evidence type and a **Card** node appears at the midpoint. The signals stay where you placed them; connecting never reshuffles your layout.
-3. Drag more signals onto the card to grow it — signals can belong to multiple cards (many-to-many).
+2. Drag from a dot to another signal — a plain **evidence card** appears at the midpoint. The signals stay where you placed them; connecting never reshuffles your layout.
+3. Drag more signals onto the card to grow it — signals can belong to multiple cards (many-to-many). When the pattern is clear, classify the card using the inline type chips (or the ✨ AI button for help). You can re-classify any time via "Change type".
 4. Connect two cards to create a **Theme**. Themes show quality-check prompts:
    - *Bridge test:* Does this theme describe both a structural condition AND a human experience?
    - *Depth test:* Is this hidden beneath the surface of everyday professional life?
@@ -92,7 +92,7 @@ The sorting screen is a pure gesture interface:
 
 ### View states
 
-The tab bar at the top of the canvas lets you switch between four views: **Signals**, **Cards**, **Themes**, and **Situations**. Each view highlights one layer at full size and fades the others, letting you focus on one level of abstraction at a time.
+The tab bar at the top of the canvas lets you switch between **All** and four focused views: **Signals**, **Cards**, **Themes**, and **Situations**. **All** shows every node at full size; each focused view highlights one layer and fades the others, letting you focus on one level of abstraction at a time.
 
 ### AI prompts
 

@@ -1423,19 +1423,21 @@
     .super-toggle { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(255,215,0,0.3); background: rgba(255,215,0,0.1); color: #f4b400; cursor: pointer; transition: all 0.15s; }
     .super-toggle:hover { background: rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.5); }
 
-    /* Card-type picker popover */
-    .card-type-picker { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; background: rgba(16,24,32,0.5); }
-    .card-type-picker.hidden { display: none; }
-    .card-type-picker-inner { background: var(--midnight); border: 2px solid var(--cloud); border-radius: 16px; padding: 20px 24px; max-width: 420px; width: 90%; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
-    .card-type-picker-title { color: var(--ghost-white); font-size: 0.85rem; font-weight: 700; margin-bottom: 14px; text-align: center; }
-    .card-type-picker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .card-type-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border-radius: 10px; border: 2px solid transparent; background: rgba(255,255,255,0.06); color: var(--ghost-white); cursor: pointer; transition: all 0.15s; font-family: inherit; }
-    .card-type-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.05); }
-    .card-type-btn .ct-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-    .card-type-btn .ct-desc { font-size: 0.55rem; opacity: 0.6; text-align: center; line-height: 1.3; }
-    @media (max-width: 480px) {
-      .card-type-picker-grid { grid-template-columns: repeat(3, 1fr); }
-    }
+    /* Inline card-type picker (on the card node itself) */
+    .card-type-inline { margin-top: 6px; }
+    .card-type-hint { font-size: 0.62rem; color: rgba(255,255,255,0.55); line-height: 1.4; margin-bottom: 6px; }
+    .card-type-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .card-type-chip { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--chip-color, rgba(255,255,255,0.25)); background: rgba(255,255,255,0.04); color: var(--chip-color, rgba(255,255,255,0.7)); cursor: pointer; transition: all 0.15s; }
+    .card-type-chip:hover { background: var(--chip-color, rgba(255,255,255,0.15)); color: var(--midnight); }
+    .card-type-chip.active { background: var(--chip-color); color: var(--midnight); }
+    .card-type-reclassify { font-size: 0.58rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: none; color: rgba(255,255,255,0.55); cursor: pointer; margin-bottom: 4px; }
+    .card-type-reclassify:hover { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.4); }
+
+    /* Undefined evidence card — neutral slate with a subtle dashed border */
+    .hub-node.card-undefined { border-color: #8a93a3; border-style: dashed; }
+    .hub-node[data-card-type="evidence"] .hub-tag { color: #8a93a3; }
+    .hub-node[data-card-type="evidence"] .hub-count { background: #8a93a3; }
+    .hub-node[data-card-type="evidence"] .connect-handle { background: #8a93a3; box-shadow: 0 2px 6px rgba(138,147,163,0.55); }
 
     @media (max-width: 480px) {
       .sorting-top { padding: 12px 16px 0; }
@@ -1588,7 +1590,8 @@
       </div>
       <div class="canvas-infobar">
         <div class="view-tabs" id="view-tabs">
-          <button class="view-tab is-active" data-view="signals" onclick="setCanvasView('signals')">Signals</button>
+          <button class="view-tab is-active" data-view="all" onclick="setCanvasView('all')">All</button>
+          <button class="view-tab" data-view="signals" onclick="setCanvasView('signals')">Signals</button>
           <button class="view-tab" data-view="cards" onclick="setCanvasView('cards')">Cards</button>
           <button class="view-tab" data-view="themes" onclick="setCanvasView('themes')">Themes</button>
           <button class="view-tab" data-view="situations" onclick="setCanvasView('situations')">Situations</button>
@@ -1824,13 +1827,6 @@
     </div>
   </div>
 
-  <div id="card-type-picker" class="card-type-picker hidden" role="dialog" aria-label="Choose card type">
-    <div class="card-type-picker-inner">
-      <p class="card-type-picker-title">What kind of evidence is this?</p>
-      <div class="card-type-picker-grid" id="card-type-picker-grid"></div>
-    </div>
-  </div>
-
   <div id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
   <script>
@@ -1904,7 +1900,11 @@
       { id: 'value',          label: 'Value',          color: '#27ae60', desc: 'A deeper or universal value from the field' },
       { id: 'problem',        label: 'Problem',        color: '#e67e22', desc: 'A bounded difficulty, solvable conventionally' }
     ];
+    // Plain/undefined evidence card — created when two signals are first
+    // connected, before the user classifies it into one of the seven types.
+    const EVIDENCE_TYPE = { id: null, label: 'Evidence', color: '#8a93a3', desc: 'Raw evidence — classify it once the pattern is clear' };
     const CARD_TYPE_MAP = Object.fromEntries(CARD_TYPES.map(t => [t.id, t]));
+    function cardTypeInfo(cardType) { return CARD_TYPE_MAP[cardType] || EVIDENCE_TYPE; }
     const PLAYER_ROLES = [
       { id: 'inner-circle',  label: 'Inner-circle',  desc: 'Already involved, necessary to any solution' },
       { id: 'wider-field',   label: 'Wider-field',   desc: 'Not yet involved but with potential influence' },
@@ -1921,7 +1921,7 @@
         nodes: {},
         view: { zoom: 1, panX: 0, panY: 0 },
         viewInitialized: false,
-        canvasViewState: 'signals',
+        canvasViewState: 'all',
         committedThemeIds: [],
         problematizations: {},
         stakeholderMaps: {},
@@ -2017,7 +2017,7 @@
         if (typeof parsed.view.panX !== 'number') parsed.view.panX = 0;
         if (typeof parsed.view.panY !== 'number') parsed.view.panY = 0;
         if (typeof parsed.viewInitialized !== 'boolean') parsed.viewInitialized = false;
-        if (!parsed.canvasViewState) parsed.canvasViewState = 'signals';
+        if (!parsed.canvasViewState) parsed.canvasViewState = 'all';
         if (!parsed.sorting || typeof parsed.sorting !== 'object') parsed.sorting = { currentIndex: 0, decisions: {} };
         if (!parsed.sorting.decisions) parsed.sorting.decisions = {};
         if (typeof parsed.sorting.currentIndex !== 'number') parsed.sorting.currentIndex = 0;
@@ -2326,7 +2326,7 @@
     }
     function nodeLabel(id) {
       const layer = nodeLayer(id);
-      if (layer === 'card') { const c = findCard(id); return CARD_TYPE_MAP[c.cardType]?.label || 'Card'; }
+      if (layer === 'card') { const c = findCard(id); return cardTypeInfo(c.cardType).label; }
       if (layer === 'theme') { const t = findTheme(id); return t.isSuper ? '★ Super-theme' : 'Theme'; }
       if (layer === 'situation') return 'Problem Situation';
       return 'Signal';
@@ -2796,13 +2796,14 @@
 
     function buildCardNode(card) {
       const el = document.createElement('div');
-      const ct = CARD_TYPE_MAP[card.cardType] || CARD_TYPES[0];
-      el.className = 'canvas-node hub-node card-node card-type-' + card.cardType;
+      const ct = cardTypeInfo(card.cardType);
+      const undefinedType = !card.cardType;
+      el.className = 'canvas-node hub-node card-node' + (undefinedType ? ' card-undefined' : ' card-type-' + card.cardType);
       el.id = 'node-' + card.id;
       el.setAttribute('data-node-id', card.id);
       el.setAttribute('data-kind', 'hub');
       el.setAttribute('data-layer', 'card');
-      el.setAttribute('data-card-type', card.cardType);
+      el.setAttribute('data-card-type', card.cardType || 'evidence');
       const pos = getNodePos(card.id);
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
@@ -2814,6 +2815,20 @@
             <input type="radio" name="role-${escapeHtml(card.id)}" value="${r.id}" ${card.playerRole === r.id ? 'checked' : ''}> ${escapeHtml(r.label)}
           </label>`).join('')}
         </div>` : '';
+      // Type picker: shown expanded on undefined cards, collapsed (re-classify)
+      // behind a small link on cards that already have a type.
+      const typeChips = CARD_TYPES.map(t =>
+        `<button type="button" class="card-type-chip${card.cardType === t.id ? ' active' : ''}" data-type="${t.id}" style="--chip-color: ${t.color};" title="${escapeHtml(t.desc)}">${escapeHtml(t.label)}</button>`
+      ).join('');
+      const typePickerHtml = undefinedType
+        ? `<div class="card-type-inline" data-expanded="1">
+             <p class="card-type-hint">What kind of evidence is this? Connect more signals first, or classify it now${' '}— the ✨ AI button can help.</p>
+             <div class="card-type-chips">${typeChips}</div>
+           </div>`
+        : `<div class="card-type-inline" data-expanded="0">
+             <button type="button" class="card-type-reclassify">Change type ▾</button>
+             <div class="card-type-chips" hidden>${typeChips}</div>
+           </div>`;
       el.innerHTML = `
         <div class="hub-tag" style="color: ${ct.color};">
           <span>${escapeHtml(ct.label)}</span>
@@ -2821,9 +2836,10 @@
         </div>
         <input type="text" class="hub-title" placeholder="${escapeHtml(ct.desc)}" value="${escapeHtml(card.title || '')}" />
         <textarea class="hub-desc" placeholder="What does this evidence constitute?" rows="2">${escapeHtml(card.description || '')}</textarea>
+        ${typePickerHtml}
         ${roleHtml}
         <div class="hub-actions">
-          <button type="button" class="hub-suggest" title="Get an AI prompt for this ${escapeHtml(ct.label.toLowerCase())}">✨ AI</button>
+          <button type="button" class="hub-suggest" title="Get an AI prompt to help classify and name this card">✨ AI</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
         ${connectHandlesHtml(card.id)}
@@ -2833,6 +2849,29 @@
           radio.addEventListener('change', () => { card.playerRole = radio.value; scheduleSave(); renderAllNodes(); renderAllEdges(); });
         });
       }
+      // Reclassify toggle (typed cards only).
+      const reclassifyBtn = el.querySelector('.card-type-reclassify');
+      if (reclassifyBtn) {
+        reclassifyBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        reclassifyBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const chips = el.querySelector('.card-type-chips');
+          if (chips) chips.hidden = !chips.hidden;
+        });
+      }
+      // Type chip selection.
+      el.querySelectorAll('.card-type-chip').forEach(chip => {
+        chip.addEventListener('pointerdown', (e) => e.stopPropagation());
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const newType = chip.getAttribute('data-type');
+          card.cardType = newType;
+          if (newType !== 'player') delete card.playerRole;
+          scheduleSave();
+          renderAllNodes();
+          renderAllEdges();
+        });
+      });
       wireNodeEditing(el, card, () => deleteCard(card.id));
       attachNodeDrag(el, card.id);
       return el;
@@ -3313,7 +3352,7 @@
       const b = nodeCenter(signalB);
       const midX = (a.x + b.x) / 2 - NODE_HUB_W / 2;
       const midY = (a.y + b.y) / 2 - NODE_HUB_H / 2;
-      const newCard = { id: uid('card'), title: '', description: '', cardType: cardType || 'problem', signalIds: [signalA, signalB] };
+      const newCard = { id: uid('card'), title: '', description: '', cardType: cardType || null, signalIds: [signalA, signalB] };
       appState.cards.push(newCard);
       setNodePos(newCard.id, midX, midY);
       return newCard;
@@ -3419,9 +3458,10 @@
       const sLayer = nodeLayer(sourceId);
       const tLayer = nodeLayer(targetId);
 
-      // Signal + Signal → show card-type picker, then create card
+      // Signal + Signal → create a plain evidence card (classify it later)
       if (sLayer === 'signal' && tLayer === 'signal') {
-        showCardTypePicker(sourceId, targetId);
+        const newCard = createCardBetween(sourceId, targetId, null);
+        spawnHubUI(newCard, newCard.id);
         return;
       }
 
@@ -3463,39 +3503,6 @@
       }
       toast('These can\'t be connected directly.');
     }
-
-    let pendingCardTypeSignals = null;
-    function showCardTypePicker(signalA, signalB) {
-      pendingCardTypeSignals = { a: signalA, b: signalB };
-      const grid = document.getElementById('card-type-picker-grid');
-      grid.innerHTML = '';
-      CARD_TYPES.forEach(ct => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'card-type-btn';
-        btn.style.borderColor = ct.color;
-        btn.innerHTML = `<span class="ct-label" style="color: ${ct.color};">${escapeHtml(ct.label)}</span><span class="ct-desc">${escapeHtml(ct.desc)}</span>`;
-        btn.addEventListener('click', () => {
-          hideCardTypePicker();
-          if (!pendingCardTypeSignals) return;
-          const { a, b } = pendingCardTypeSignals;
-          pendingCardTypeSignals = null;
-          const newCard = createCardBetween(a, b, ct.id);
-          spawnHubUI(newCard, newCard.id);
-        });
-        grid.appendChild(btn);
-      });
-      document.getElementById('card-type-picker').classList.remove('hidden');
-    }
-    function hideCardTypePicker() {
-      document.getElementById('card-type-picker').classList.add('hidden');
-      pendingCardTypeSignals = null;
-    }
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !document.getElementById('card-type-picker').classList.contains('hidden')) {
-        hideCardTypePicker();
-      }
-    });
 
     // ----- Force-directed auto-spacing -----
     let relaxAnim = null;
@@ -4109,7 +4116,7 @@
       ],
       board: [
         { targetId: 'canvas-viewport', title: 'The Canvas', body: 'Your signals are laid out here. Drag empty space to pan, scroll to zoom, and drag any signal card to reposition it.', tooltipPlacement: 'bottom-right', spotlightPadding: 0 },
-        { targetSelector: '.signal-node', title: 'Signal Cards', body: 'Hover a signal to reveal dots on its edges. Drag from any dot onto another signal to connect them — a card-type picker appears so you can classify the evidence.', tooltipPlacement: 'bottom-right', spotlightPadding: 8 },
+        { targetSelector: '.signal-node', title: 'Signal Cards', body: 'Hover a signal to reveal dots on its edges. Drag from any dot onto another signal to connect them — a plain evidence card appears. Keep adding signals, then classify the card into one of the seven types when the pattern is clear.', tooltipPlacement: 'bottom-right', spotlightPadding: 8 },
         { targetSelector: '#view-tabs', title: 'View states', body: 'Switch between views: Signals, Cards, Themes, and Situations. Each view highlights one layer and fades the others, letting you focus on one level of abstraction.', tooltipPlacement: 'bottom-left', spotlightPadding: 4 },
         { targetSelector: '.btn-ai-prompt', title: '✨ AI Prompt', body: "Copy this prompt into your LLM. Look for patterns it names that surprise you, then ask it to defend the ones that feel too neat.", tooltipPlacement: 'bottom-left', spotlightPadding: 6 },
         { targetSelector: 'button[onclick="openCommitModal()"]', title: 'Commit to themes', body: 'When you have 2–3 themes with clear through-lines, commit them to move into the deep-dive workspace.', tooltipPlacement: 'bottom-left', spotlightPadding: 6 }
@@ -4341,6 +4348,10 @@
       const layer = hubId ? nodeLayer(hubId) : null;
       if (layer === 'card') {
         const c = findCard(hubId);
+        if (c && !c.cardType) {
+          const typeList = CARD_TYPES.map(t => `${t.label} (${t.desc})`).join('; ');
+          return `This is an unclassified evidence card. Your most useful job here is to help the user classify it into ONE of the seven Frame Creation evidence types and then name it. The seven types are: ${typeList}. Read the constituent signals, decide which type best fits what they triangulate toward, and explain why. If two types are plausible, say so and explain the trade-off.`;
+        }
         const ct = c ? (CARD_TYPE_MAP[c.cardType] || {}) : {};
         return `This is a ${ct.label || 'Card'} — ${ct.desc || 'an intermediate evidence card'}. Focus on what the constituent signals, when triangulated, reveal about this specific kind of evidence. Who is affected, in what context, and what mechanism or condition do they point toward together?`;
       }
