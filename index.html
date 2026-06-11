@@ -2301,12 +2301,14 @@
           // sub-wedge (so it can't spill into a sibling's cone).
           const minClearR = boxReach(pd.w, pd.h, myA) + boxReach(kd.w, kd.h, myA) + 12;
           const minFitR = kHalf / Math.sin(Math.min(half, Math.PI / 2));
-          const lower = Math.max(minClearR, minFitR);
-          const upper = Math.max(idealR, lower);
+          // Keep the tree compact and scannable: a child never sits beyond its
+          // tidy ideal ring. The floors only raise the radius UP TO that ring
+          // (never past it), so cards stay close instead of exploding outward.
+          const lower = Math.min(idealR, Math.max(minClearR, minFitR));
           // Move the child the minimum distance: keep its current radius when it
-          // already satisfies the floors, otherwise push it just far enough out.
+          // already satisfies the floor, otherwise pull/push it onto the ring.
           const desired = freshSet.has(k) ? idealR : curRad[k];
-          const gap = Math.min(Math.max(desired, lower), upper);
+          const gap = Math.min(Math.max(desired, lower), idealR);
 
           place(k, myCenter, myA, half * WEDGE_SHRINK, gap, dep + 1);
         });
