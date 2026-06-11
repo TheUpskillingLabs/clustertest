@@ -2,6 +2,8 @@
 
 A thinking instrument for Kees Dorst's Frame Creation model — sort friction signals, triangulate them up a ladder of cards, and synthesize a Problem Situation worth framing.
 
+Try it out here: theupskillinglabs.github.io/triangles/
+
 ## What it does
 
 You start with a pool of **friction signals**: raw evidence from the world — articles, datasets, observations, interview fragments, policies, statistics. Your job is to triangulate the patterns hiding inside them — sort the noise, classify the evidence, then build upward, level by level, until you can name the open condition underneath it all.
