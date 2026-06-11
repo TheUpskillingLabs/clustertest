@@ -144,7 +144,7 @@ Every card has a **✨ AI** button. Prompts are level- and type-aware — an unc
 
 ## Push to the Problem Situation
 
-Once every card on the board is named and described, the **Push to Problem Situation** button opens the synthesis screen:
+Once every card on the board is named and described — and the ladder has climbed to **at least one named and described theme** — the **Push to Problem Situation** button opens the synthesis screen:
 
 - **Name & describe** the open condition
 - **Frame it** — "If this situation is approached as if it is ___, then ___"
