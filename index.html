@@ -148,46 +148,117 @@
     }
     .upskill-banner h3 { font-size: 0.95rem; margin-bottom: 6px; color: var(--primary-teal); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
     .upskill-banner p { font-size: 0.875rem; line-height: 1.5; }
-    .banner-points { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-    .banner-points li { font-size: 0.875rem; line-height: 1.5; padding-left: 14px; position: relative; }
-    .banner-points li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; background: var(--primary-teal); }
+    /* --- LANDING (editorial layout) --- */
+    /* Big type hierarchy, hairline rules, indexed sections; existing fonts & palette only. */
+    #setup-screen { padding: 0 24px; }
+    #setup-screen .config-container {
+      background: none; border: none; max-width: 960px; padding: 88px 0 120px;
+    }
+    .landing-hero { margin-bottom: 96px; }
+    #setup-screen .hero-eyebrow {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px;
+      max-width: none;
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.16em; color: var(--cloud); opacity: 0.75; margin-bottom: 44px;
+    }
+    .hero-eyebrow-rule { flex: 1; min-width: 48px; height: 1px; background: rgba(255,255,255,0.25); }
+    #setup-screen .config-header h1 {
+      font-size: clamp(2.6rem, 8.5vw, 5.5rem);
+      line-height: 0.98; font-weight: 700; text-transform: uppercase;
+      letter-spacing: var(--track-tight); color: var(--ghost-white);
+      margin-bottom: 32px;
+    }
+    .hero-accent { color: var(--primary-teal); }
+    #setup-screen .hero-lede {
+      font-size: var(--text-lg); line-height: var(--lh-body); color: var(--cloud);
+      opacity: 0.85; max-width: 56ch; margin-bottom: 40px; text-wrap: pretty;
+    }
+    .hero-cta { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
+    .hero-cta .btn { padding: 14px 26px; font-size: 0.9rem; }
+    .hero-cta-note { font-size: 0.8rem; color: var(--cloud); opacity: 0.6; }
 
-    /* --- LANDING EXPLAINER (how-it-works steps) --- */
-    /* Step badges follow the canvas ladder: teal signals → slate evidence →
-       red patterns → purple situation, so the colors teach themselves. */
-    .explainer-title {
-      font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
-      letter-spacing: var(--track-label); color: var(--primary-teal);
-      margin-bottom: 12px;
+    .landing-section { border-top: 1px solid rgba(255,255,255,0.14); padding-top: 28px; margin-bottom: 88px; }
+    .landing-section:last-child { margin-bottom: 0; }
+    .landing-section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; }
+    .landing-index {
+      font-size: 0.75rem; font-weight: 700; color: var(--primary-teal);
+      font-variant-numeric: tabular-nums; letter-spacing: 0.08em;
     }
+    .landing-kicker {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.16em; color: var(--cloud); opacity: 0.65;
+    }
+    .landing-statement {
+      font-size: clamp(1.6rem, 3.6vw, 2.5rem); line-height: 1.12; font-weight: 700;
+      letter-spacing: var(--track-tight); color: var(--ghost-white);
+      max-width: 24ch; text-wrap: balance; margin-bottom: 30px;
+    }
+    .landing-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 48px; }
+    .landing-cols p, .landing-intro {
+      font-size: 0.92rem; line-height: var(--lh-body); color: var(--cloud);
+      opacity: 0.8; text-wrap: pretty;
+    }
+    .landing-intro { max-width: 56ch; margin-bottom: 36px; }
+
+    /* 02 — steps: hairline columns, oversized numerals in the canvas tier colors
+       (teal signals → slate evidence → red patterns → purple situation). */
     .explainer-steps {
-      list-style: none; margin: 0 0 32px; padding: 0;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      list-style: none; margin: 10px 0 0; padding: 0;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px 32px;
     }
-    @media (max-width: 600px) { .explainer-steps { grid-template-columns: 1fr; } }
-    .explainer-step {
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px; padding: 14px 16px;
-      display: flex; gap: 12px; align-items: flex-start;
-    }
+    .explainer-step { border-top: 1px solid rgba(255,255,255,0.18); padding-top: 18px; }
     .explainer-step-num {
-      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; margin-top: -1px;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 0.7rem; font-weight: 800; color: var(--midnight);
+      display: block; font-size: 2.1rem; font-weight: 700; line-height: 1;
+      letter-spacing: var(--track-tight); margin-bottom: 14px;
       font-variant-numeric: tabular-nums;
     }
-    .explainer-step[data-step="1"] .explainer-step-num { background: var(--primary-teal); }
-    .explainer-step[data-step="2"] .explainer-step-num { background: #8a93a3; }
-    .explainer-step[data-step="3"] .explainer-step-num { background: #e74c3c; }
-    .explainer-step[data-step="4"] .explainer-step-num { background: #8a4fff; color: var(--ghost-white); }
+    .explainer-step[data-step="1"] .explainer-step-num { color: var(--primary-teal); }
+    .explainer-step[data-step="2"] .explainer-step-num { color: #8a93a3; }
+    .explainer-step[data-step="3"] .explainer-step-num { color: #e74c3c; }
+    .explainer-step[data-step="4"] .explainer-step-num { color: #8a4fff; }
     .explainer-step h3 {
-      font-size: 0.78rem; font-weight: 700; color: var(--ghost-white);
-      text-transform: uppercase; letter-spacing: var(--track-label); margin-bottom: 4px;
-      text-wrap: balance;
+      font-size: 0.72rem; font-weight: 700; color: var(--ghost-white);
+      text-transform: uppercase; letter-spacing: var(--track-label);
+      margin-bottom: 8px; text-wrap: balance;
     }
     .explainer-step p {
-      font-size: 0.8rem; color: var(--cloud); opacity: 0.85;
-      line-height: var(--lh-snug); text-wrap: pretty;
+      font-size: 0.82rem; color: var(--cloud); opacity: 0.75;
+      line-height: 1.55; text-wrap: pretty;
+    }
+
+    /* 03 — triad */
+    .triad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px 32px; }
+    .triad-cell { border-top: 1px solid rgba(255,255,255,0.18); padding-top: 18px; }
+    .triad-cell h3 {
+      font-size: 1.3rem; font-weight: 700; color: var(--ghost-white);
+      letter-spacing: var(--track-snug); line-height: var(--lh-tight); margin-bottom: 10px;
+    }
+    .triad-cell p {
+      font-size: 0.82rem; color: var(--cloud); opacity: 0.75;
+      line-height: 1.55; text-wrap: pretty;
+    }
+    .landing-footnote {
+      margin-top: 40px; padding-left: 16px; border-left: 2px solid var(--primary-teal);
+      font-size: 0.85rem; color: var(--cloud); opacity: 0.75;
+      line-height: var(--lh-body); max-width: 64ch; text-wrap: pretty;
+    }
+
+    /* 04 — setup form keeps its card chrome */
+    .setup-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 36px;
+    }
+
+    @media (max-width: 900px) { .explainer-steps { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 720px) {
+      .landing-cols, .triad-grid { grid-template-columns: 1fr; }
+      .landing-hero { margin-bottom: 64px; }
+      .landing-section { margin-bottom: 64px; }
+      #setup-screen .config-container { padding: 56px 0 88px; }
+    }
+    @media (max-width: 560px) {
+      .explainer-steps { grid-template-columns: 1fr; }
+      .setup-card { padding: 22px 18px; }
     }
 
     /* --- VIEW 2: APPLICATION WORKSPACE --- */
@@ -1611,60 +1682,85 @@
 
   <div id="setup-screen">
     <div class="config-container">
-      <div class="config-header">
-        <h1>The Triangulator-inator</h1>
-        <p>Hard problems rarely fail for lack of solutions — they fail because everyone keeps solving the same framing of them. The Triangulator-inator is a canvas for problem framing: sort a pool of real-world friction signals, triangulate them into evidence you can defend, and climb to the deeper themes a genuinely new frame can grow from.</p>
-        <button type="button" class="btn btn-outline" onclick="tutorialStart()" style="margin-top: 12px;">🎓 New here? Take the 5-minute guided tutorial</button>
-      </div>
+      <header class="config-header landing-hero">
+        <p class="hero-eyebrow"><span>A problem&#8209;framing canvas</span><span class="hero-eyebrow-rule" aria-hidden="true"></span><span>After Kees Dorst's Frame Creation</span></p>
+        <h1>The<br>Triangulator<span class="hero-accent">-inator</span></h1>
+        <p class="hero-lede">Hard problems rarely fail for lack of solutions — they fail because everyone keeps solving the same framing of them. Sort a pool of real-world friction signals, triangulate them into evidence you can defend, and climb to the deeper themes a genuinely new frame can grow from.</p>
+        <div class="hero-cta">
+          <button type="button" class="btn btn-primary" onclick="tutorialStart()">🎓 Take the 5-minute guided tutorial</button>
+          <span class="hero-cta-note">or set up your own signal pool below</span>
+        </div>
+      </header>
 
-      <div class="upskill-banner">
-        <h3>Why problem framing?</h3>
-        <p>When a problem keeps swallowing solutions, the most powerful move isn't a better answer — it's a better question. Kees Dorst's Frame Creation method showed how expert designers do this: excavate the problem's history and hard limits, map the wider field of players and values, and surface the themes underneath, until the situation can be approached <em>as if</em> it were a different problem entirely. A good frame makes previously unthinkable solutions feel obvious.</p>
-      </div>
+      <section class="landing-section" aria-labelledby="landing-h-why">
+        <div class="landing-section-head"><span class="landing-index">01</span><span class="landing-kicker">Why problem framing</span></div>
+        <h2 class="landing-statement" id="landing-h-why">A better question beats a better answer.</h2>
+        <div class="landing-cols">
+          <p>When a problem keeps swallowing solutions, the most powerful move isn't another fix — it's a new way of seeing. Kees Dorst's Frame Creation method showed how expert designers do this: excavate the problem's history and hard limits, map the wider field of players and values, and surface the themes underneath.</p>
+          <p>The destination is a frame: approach the situation <em>as if</em> it were a different problem entirely, and previously unthinkable solutions start to feel obvious.</p>
+        </div>
+      </section>
 
-      <h2 class="explainer-title">How it works</h2>
-      <ol class="explainer-steps">
+      <section class="landing-section" aria-labelledby="landing-h-how">
+        <div class="landing-section-head"><span class="landing-index">02</span><span class="landing-kicker">How it works</span></div>
+        <h2 class="landing-statement" id="landing-h-how">From a noisy pool of signals to a frame&#8209;ready situation.</h2>
+        <ol class="explainer-steps">
         <li class="explainer-step" data-step="1">
-          <span class="explainer-step-num" aria-hidden="true">1</span>
+          <span class="explainer-step-num" aria-hidden="true">01</span>
           <div>
             <h3>Sort the pool</h3>
             <p>Swipe through the friction signals one at a time — noise gets discarded, signal gets kept, and the rare super-signal gets flagged. Fast and instinctive; you can revisit later.</p>
           </div>
         </li>
         <li class="explainer-step" data-step="2">
-          <span class="explainer-step-num" aria-hidden="true">2</span>
+          <span class="explainer-step-num" aria-hidden="true">02</span>
           <div>
             <h3>Triangulate evidence</h3>
             <p>On the canvas, connect two signals that point at the same thing. That makes an <strong>evidence card</strong>: classify it as one of Dorst's seven evidence types, then name the claim it makes.</p>
           </div>
         </li>
         <li class="explainer-step" data-step="3">
-          <span class="explainer-step-num" aria-hidden="true">3</span>
+          <span class="explainer-step-num" aria-hidden="true">03</span>
           <div>
             <h3>Climb the ladder</h3>
             <p>Connect evidence into <strong>patterns</strong>, patterns into <strong>themes</strong> and beyond. Each tier unlocks only when the cards below it are named and described — every claim rests on examined claims.</p>
           </div>
         </li>
         <li class="explainer-step" data-step="4">
-          <span class="explainer-step-num" aria-hidden="true">4</span>
+          <span class="explainer-step-num" aria-hidden="true">04</span>
           <div>
             <h3>Push to the problem situation</h3>
             <p>When the whole map is named, push it forward and synthesize the open condition your frames will come from — with the full evidence trail behind every word.</p>
           </div>
         </li>
       </ol>
+      </section>
 
-      <div class="upskill-banner">
-        <h3>An innovation on Frame Creation</h3>
-        <p>Frame Creation was built for expert design studios on long engagements. This tool re-engineers it for <strong>citizen-builders</strong> — people close to a problem who want to act on it:</p>
-        <ul class="banner-points">
-          <li><strong>Discover &amp; align</strong> — sorting and triangulating real signals takes a group from a pile of anecdotes to shared, evidence-backed ground in one sitting.</li>
-          <li><strong>Reframe</strong> — the seven evidence types and the theme ladder push thinking past the obvious problem toward framings no one arrived with.</li>
-          <li><strong>Express</strong> — a solution built from your own frame carries your signature, and the evidence trail behind it lets you stand behind every word.</li>
-        </ul>
-        <p style="margin-top: 10px;">The ✨ AI button on every card generates a method-grounded prompt for your LLM of choice — a thinking partner that surfaces what you missed, while you decide what matters.</p>
-      </div>
+      <section class="landing-section" aria-labelledby="landing-h-who">
+        <div class="landing-section-head"><span class="landing-index">03</span><span class="landing-kicker">An innovation on Frame Creation</span></div>
+        <h2 class="landing-statement" id="landing-h-who">Built for citizen&#8209;builders, not expert studios.</h2>
+        <p class="landing-intro">Frame Creation was built for seasoned design teams on long engagements. This tool re-engineers it for people close to a problem who want to act on it:</p>
+        <div class="triad-grid">
+          <div class="triad-cell">
+            <h3>Discover<br>&amp; align</h3>
+            <p>Sorting and triangulating real signals takes a group from a pile of anecdotes to shared, evidence-backed ground in one sitting.</p>
+          </div>
+          <div class="triad-cell">
+            <h3>Reframe</h3>
+            <p>The seven evidence types and the theme ladder push thinking past the obvious problem toward framings no one arrived with.</p>
+          </div>
+          <div class="triad-cell">
+            <h3>Express</h3>
+            <p>A solution built from your own frame carries your signature, and the evidence trail behind it lets you stand behind every word.</p>
+          </div>
+        </div>
+        <p class="landing-footnote">The ✨ AI button on every card generates a method-grounded prompt for your LLM of choice — a thinking partner that surfaces what you missed, while you decide what matters.</p>
+      </section>
 
+      <section class="landing-section" aria-labelledby="landing-h-start">
+        <div class="landing-section-head"><span class="landing-index">04</span><span class="landing-kicker">Start here</span></div>
+        <h2 class="landing-statement" id="landing-h-start">Load your signal pool.</h2>
+        <div class="setup-card">
       <div class="config-field">
         <label for="config-title">Name your web map</label>
         <input type="text" id="config-title" class="config-input" value="Upskilling Labs: Signal Pool">
@@ -1709,6 +1805,8 @@
         <button class="btn btn-outline" onclick="skipSortingToBoard()" style="min-width: 120px;">Skip to Canvas</button>
         <button class="btn btn-primary" onclick="startSorting()" style="min-width: 160px;">Start Sorting</button>
       </div>
+        </div>
+      </section>
     </div>
   </div>
 
