@@ -4,6 +4,8 @@ A problem-framing instrument built on Kees Dorst's Frame Creation method. Load a
 
 Try it: **theupskillinglabs.github.io/triangles/**
 
+An open-source project created for **The Upskilling Labs** by **Levy Strategic Design**.
+
 ---
 
 ## What it does

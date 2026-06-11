@@ -250,6 +250,15 @@
       border-radius: 12px; padding: 36px;
     }
 
+    /* Colophon */
+    .landing-colophon {
+      border-top: 1px solid rgba(255,255,255,0.14); padding-top: 20px;
+      font-size: 0.78rem; color: var(--cloud); opacity: 0.6;
+      letter-spacing: var(--track-label); text-transform: uppercase;
+    }
+    .landing-colophon a { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.3); }
+    .landing-colophon a:hover { color: var(--ghost-white); border-bottom-color: var(--primary-teal); }
+
     @media (max-width: 900px) { .explainer-steps { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 720px) {
       .landing-cols, .triad-grid { grid-template-columns: 1fr; }
@@ -1808,6 +1817,10 @@
       </div>
         </div>
       </section>
+
+      <footer class="landing-colophon">
+        <p>An open-source project created for <a href="https://github.com/TheUpskillingLabs/triangles" target="_blank" rel="noopener">The Upskilling Labs</a> by Levy Strategic Design</p>
+      </footer>
     </div>
   </div>
 
