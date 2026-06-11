@@ -1234,25 +1234,6 @@
     #tutorial-coach-next:hover:not(:disabled) { background: #007882; }
     #tutorial-coach-next:disabled { opacity: 0.35; cursor: default; }
 
-    /* Floating tutorial entry button (hidden while the tutorial runs). */
-    #tutorial-launch-btn {
-      position: fixed;
-      left: 16px;
-      bottom: 16px;
-      z-index: 90;
-      background: var(--ghost-white);
-      border: 2px solid var(--cloud);
-      color: var(--midnight);
-      font-weight: 700;
-      font-size: 0.78rem;
-      padding: 8px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-      box-shadow: 0 3px 10px rgba(16,24,32,0.12);
-      transition: box-shadow 0.15s ease, border-color 0.15s ease;
-    }
-    #tutorial-launch-btn:hover { border-color: var(--primary-teal); box-shadow: 0 5px 14px rgba(16,24,32,0.18); }
-    #tutorial-launch-btn.hidden { display: none; }
 
     /* Offer modal content tweaks */
     #tutorial-offer-modal .modal-content { max-width: 480px; text-align: center; border-top: 4px solid var(--primary-teal); }
@@ -1583,8 +1564,8 @@
         </div>
         <div id="marquee-rect" class="marquee-rect"></div>
         <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag to select · Edge dots to connect · Scroll to pan · Cmd-scroll to zoom · Space-drag to pan</span><span class="hint-mobile">Drag to move · Tap to connect · Pinch to zoom · Two fingers to pan</span></div>
-        <button id="tour-help-btn" class="hidden" onclick="tourRestart()"
-                aria-label="Restart feature tour" title="Restart tour">?</button>
+        <button id="tour-help-btn" class="hidden" onclick="tutorialStart()"
+                aria-label="Start the guided tutorial" title="Start tutorial">🎓</button>
       </div>
     </main>
   </div>
@@ -1617,9 +1598,6 @@
       <button type="button" id="tutorial-coach-next" onclick="tutorialAdvance()">Next →</button>
     </div>
   </aside>
-
-  <!-- Floating tutorial entry button -->
-  <button type="button" id="tutorial-launch-btn" class="hidden" onclick="tutorialStart()" aria-label="Start the guided tutorial">🎓 Tutorial</button>
 
   <!-- SPOTLIGHT TOUR OVERLAY -->
   <div id="tour-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Feature tour">
@@ -4260,7 +4238,7 @@
             <li><strong>Patterns</strong> name mechanisms; <strong>themes</strong> bridge the structural and the human.</li>
             <li><strong>Push</strong> only when every card can defend itself.</li>
           </ul>
-          <p>None of this was saved — your own workspace is exactly as you left it. Replay any time with the <strong>🎓 Tutorial</strong> button, and use the <strong>?</strong> button for quick per-screen orientation.</p>`
+          <p>None of this was saved — your own workspace is exactly as you left it. Replay any time with the <strong>🎓</strong> button in the canvas corner.</p>`
       }
     ];
 
@@ -4287,7 +4265,7 @@
       _tutSatisfied = false;
       _tutCreated = {};
       appState = buildTutorialState();
-      const launchBtn = document.getElementById('tutorial-launch-btn');
+      const launchBtn = document.getElementById('tour-help-btn');
       if (launchBtn) launchBtn.classList.add('hidden');
       goToScreen('sorting');
       document.getElementById('tutorial-coach').classList.remove('hidden');
@@ -4410,7 +4388,7 @@
     }
 
     function updateTutorialLaunchBtn() {
-      const btn = document.getElementById('tutorial-launch-btn');
+      const btn = document.getElementById('tour-help-btn');
       if (btn) btn.classList.toggle('hidden', tutorialMode);
     }
 
