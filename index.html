@@ -611,6 +611,7 @@
     .workspace-section:last-child { margin-bottom: 0; }
     .workspace-section > label { display: block; font-size: 1rem; font-weight: 700; color: var(--midnight); margin-bottom: 4px; }
     .workspace-section .field-hint { font-size: 0.825rem; color: var(--midnight); opacity: 0.7; margin-bottom: 16px; line-height: 1.5; }
+    .ws-stage-label { font-size: 0.75rem; font-weight: 700; color: var(--primary-teal); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
     .workspace-section textarea { width: 100%; min-height: 120px; padding: 16px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--ghost-white); color: var(--midnight); font-size: 0.875rem; line-height: 1.6; resize: vertical; outline: none; font-family: 'Geologica', sans-serif; transition: border-color 0.2s; }
     .workspace-section textarea:focus { border-color: var(--primary-teal); }
     .ws-text-input { width: 100%; padding: 12px 16px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--ghost-white); color: var(--midnight); font-size: 0.95rem; font-weight: 600; outline: none; font-family: 'Geologica', sans-serif; transition: border-color 0.2s; }
@@ -980,15 +981,25 @@
       max-height: 56px; overflow-y: auto; /* fixed bar height — scroll long descriptions */
     }
     .section-desc::placeholder { color: rgba(255,255,255,0.4); }
-    .section-actions { display: flex; gap: 8px; flex-shrink: 0; }
-    .section-export {
-      background: var(--primary-teal); color: var(--ghost-white); border: none;
-      padding: 12px 16px; border-radius: 10px; font-weight: 700; font-size: 0.8rem;
-      cursor: pointer; font-family: 'Geologica', sans-serif; white-space: nowrap;
-      box-shadow: 0 8px 24px rgba(0,148,160,0.35);
+    .section-actions {
+      display: flex; gap: 6px; flex-shrink: 0;
+      flex-wrap: wrap; justify-content: flex-end; align-items: flex-start;
     }
-    .section-export:hover { background: #007882; }
-    .section-export.hidden { display: none; }
+    .section-tool {
+      display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      min-width: 64px; padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 10px;
+      background: rgba(255,255,255,0.06); color: var(--ghost-white);
+      font-family: 'Geologica', sans-serif; font-size: 0.65rem; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.12s ease;
+    }
+    .section-tool:hover { background: rgba(0,148,160,0.35); }
+    .section-tool .st-glyph { font-size: 1rem; line-height: 1; }
+    .section-tool-primary { background: var(--primary-teal); border-color: transparent; box-shadow: 0 8px 24px rgba(0,148,160,0.35); }
+    .section-tool-primary:hover { background: #007882; }
+    .section-tool-danger:hover { background: rgba(196,30,58,0.45); }
+    .section-tool.is-disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
     /* FigJam-style bottom dock: arm a tool, then click the canvas to place. */
     .canvas-dock {
@@ -2242,23 +2253,12 @@
         <button class="btn btn-outline" onclick="backToBoard()">← Back to Board</button>
         <h2 id="workspace-title">Build the case</h2>
       </div>
-      <p class="workspace-intro">For each pattern, map who's affected and pressure-test your framing. Each section has a prompt you copy into your LLM — but the goal isn't to get an answer. It's to have a conversation that sharpens your thinking. Argue with the AI. Ask it "who's missing?" and "what breaks if I'm wrong?" Then come back and write what you actually believe.</p>
-      <div class="interview-helper">
-        <div class="step-label">Step 1 — Before you write anything</div>
-        <h3>Talk to the people first</h3>
-        <p class="helper-desc">Before you map stakeholders or write a problematization, talk to the people who reported these signals. They have ground truth you can't guess at. Use the prompt below to plan a 30-minute conversation per pattern.</p>
-        <div class="prompt-cta-header">
-          <div class="prompt-cta-label">✨ Interview &amp; Validate prompt</div>
-          <button class="btn btn-primary copy-btn" onclick="copyText('workspace-interview-prompt')">Copy this prompt</button>
-        </div>
-        <div class="prompt-text" id="workspace-interview-prompt"></div>
-        <p class="copy-hint">Paste into Claude, ChatGPT, Gemini, NotebookLM, or Perplexity. Use it to prep your interview questions — then go talk to the actual people.</p>
-      </div>
+      <p class="workspace-intro">Work through the four stages in order: solidify the situation, take honest stock of your evidence, name who you still need to reach, then find the paradox at the core. The stages generate research demand on purpose — each one should send you back out to the field, to your sources, or to your AI thinking partner before you write what you actually believe.</p>
     </div>
     <nav class="workspace-jump-bar" id="workspace-jump-bar" aria-label="Jump to a committed cluster"></nav>
     <div class="workspace-cards" id="workspace-cards-container"></div>
     <div class="workspace-footer">
-      <span class="submit-status" id="submit-status-hint">Complete every section to submit.</span>
+      <span class="submit-status" id="submit-status-hint">To submit: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.</span>
       <button class="btn btn-primary" id="submit-for-voting-btn" onclick="submitForVoting()" disabled>Submit for Voting</button>
     </div>
   </div>
@@ -2322,6 +2322,23 @@
         <input type="text" id="card-page-title-input" class="ws-text-input" placeholder="Name this card — a claim, not a topic" style="margin-bottom:8px;">
         <label class="sr-only" for="card-page-desc-input">Card description</label>
         <textarea id="card-page-desc-input" class="ws-text-input" rows="2" placeholder="Describe it in a sentence or two" style="resize:none; font-weight:400; margin-bottom:16px; height:72px; font-family:'Geologica',sans-serif; font-size:0.9rem; background:var(--ghost-white); padding:12px 16px;"></textarea>
+        <details id="card-page-ai" style="margin-bottom:16px; border:2px solid var(--cloud); border-radius:8px; background:var(--ghost-white);">
+          <summary style="cursor:pointer; padding:12px 16px; font-weight:700; font-size:0.9rem; color:var(--midnight); list-style-position:inside;">✨ AI thinking partner</summary>
+          <div style="padding:0 16px 16px;">
+            <div id="card-page-ai-tabs" class="ai-mode-tabs" role="tablist" aria-label="AI prompt mode">
+              <button type="button" role="tab" data-mode="throughline" class="ai-mode-tab is-active" aria-selected="true">Through-line</button>
+              <button type="button" role="tab" data-mode="name" class="ai-mode-tab" aria-selected="false">Name &amp; describe</button>
+              <button type="button" role="tab" data-mode="stress" class="ai-mode-tab" aria-selected="false">Stress-test</button>
+            </div>
+            <p id="card-page-ai-blurb" style="font-size:0.825rem; color:var(--midnight); opacity:0.75; line-height:1.5; margin:10px 0;"></p>
+            <label class="sr-only" for="card-page-ai-prompt">Generated AI prompt</label>
+            <textarea id="card-page-ai-prompt" readonly style="width:100%; height:min(200px, 30dvh); font-family:monospace; font-size:0.78rem; padding:12px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
+            <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
+              <button type="button" class="btn btn-primary" onclick="copyCardPagePrompt()">Copy this prompt</button>
+              <span style="font-size:0.78rem; color:var(--midnight); opacity:0.65;">Paste into Claude, ChatGPT, Gemini, NotebookLM, or Perplexity — rebuilt from the live board every time you open it.</span>
+            </div>
+          </div>
+        </details>
         <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
         <div class="cardpage-label">Main document — notes.md</div>
         <textarea id="card-page-doc" style="width:100%; height:min(240px, 38dvh); font-family:monospace; font-size:0.825rem; padding:16px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
@@ -2716,7 +2733,8 @@
       if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
       parsed.boardIntroSeen = parsed.boardIntroSeen === true;
       // --- Migrate singular situation + committedCardIds → situations[] ---
-      const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization'];
+      const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization',
+        'openness', 'evidenceCoverage', 'researchAgenda', 'voicesNeeded', 'accessNeeds', 'paradox', 'statusQuoBeneficiaries'];
       if (!Array.isArray(parsed.situations)) {
         parsed.situations = [];
         const sit = (parsed.situation && typeof parsed.situation === 'object') ? parsed.situation : null;
@@ -3113,6 +3131,18 @@
       const seen = new Set();
       c.childIds.forEach(kid => signalsUnder(kid).forEach(s => seen.add(s)));
       return [...seen];
+    }
+    // Every card (deduped) in the subtrees beneath a situation's member cards,
+    // including the members themselves.
+    function situationCards(s) {
+      if (!s || !Array.isArray(s.memberCardIds)) return [];
+      return [...situationCardIds(s)].map(findCard).filter(Boolean);
+    }
+    // Submission requires at least one theme (tier >= 3) that is both named
+    // and described somewhere in the situation's subtree.
+    function situationHasNamedTheme(s) {
+      return situationCards(s).some(c =>
+        c.tier >= 3 && (c.title || '').trim() && (c.description || '').trim());
     }
     function parentsOf(id) { return appState.cards.filter(c => c.childIds.includes(id)); }
     function topLevelCards() { return appState.cards.filter(c => parentsOf(c.id).length === 0); }
@@ -3591,11 +3621,6 @@
         del.addEventListener('pointerdown', (e) => e.stopPropagation());
         del.addEventListener('click', (e) => { e.stopPropagation(); deleteObj(); });
       }
-      const suggest = el.querySelector('.hub-suggest');
-      if (suggest) {
-        suggest.addEventListener('pointerdown', (e) => e.stopPropagation());
-        suggest.addEventListener('click', (e) => { e.stopPropagation(); openHubNamePromptModal(obj.id); });
-      }
       const expandBtn = el.querySelector('.hub-expand');
       if (expandBtn) {
         expandBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -3667,7 +3692,6 @@
         ${roleHtml}
         <div class="hub-actions">
           <button type="button" class="hub-expand" title="Open this card's page">⤢ Open</button>
-          <button type="button" class="hub-suggest" title="Get an AI prompt to help classify and name this card">✨ AI</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
         ${connectHandlesHtml(card.id)}
@@ -3764,7 +3788,6 @@
         ${themeQuality}
         <div class="hub-actions">
           <button type="button" class="hub-expand" title="Open this card's page">⤢ Open</button>
-          <button type="button" class="hub-suggest" title="Get an AI prompt for this ${escapeHtml(label.toLowerCase())}">✨ AI</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
         ${connectHandlesHtml(card.id)}
@@ -5766,7 +5789,9 @@ Rules:
     const AI_RULES = `- Do NOT propose solutions, interventions, products, or features.
 - Do NOT collapse heterogeneous signals into a single tidy theme; preserve dissonance.
 - Be specific — name actors, contexts, mechanisms, and consequences; avoid jargon and category words like "ecosystem", "experience", "journey".
-- If the contents are too thin to answer well, say so explicitly and ask the user what is missing.`;
+- If the contents are too thin to answer well, say so explicitly and ask the user what is missing.
+- Do NOT fill gaps with assumptions. Name what is missing and tell the user how to go find it.
+- Research briefs must be specific enough to copy-paste into the suggested tool as a starting prompt.`;
 
     // Three task / thinking / format blocks per mode. Each mode adds one rule.
     const HUB_PROMPT_MODES = {
@@ -5858,7 +5883,9 @@ A single question the user must be able to answer to defend the current framing 
       const m = HUB_PROMPT_MODES[mode] || HUB_PROMPT_MODES.throughline;
       const task = m.task.replaceAll('{tierLabel}', label);
       const thinking = m.thinking.map((s, i) => `${i + 1}. ${s}`).join('\n');
-      const contents = formatTreeOutline(hubId, 0, 4) || '(none yet)';
+      // No depth cap: the prompt carries the complete lineage of
+      // signals → evidence → patterns → themes beneath this card.
+      const contents = formatTreeOutline(hubId, 0) || '(none yet)';
       return `<role>
 ${AI_ROLE}
 </role>
@@ -5901,43 +5928,27 @@ ${AI_RULES}
     let currentAIHubId = null;
     let currentAIMode = 'throughline';
 
+    // Legacy entry point — the per-card prompt now lives on the card page,
+    // inside the "AI thinking partner" accordion.
     function openHubAIModal(hubId, mode) {
       const c = findCard(hubId);
       if (!c) return;
-      currentAIHubId = hubId;
-      currentPoolMode = null;
-      currentAIMode = mode || 'throughline';
-      const tier = hubTier(hubId);
-      const label = tierLabel(tier);
-      const titleEl = document.getElementById('ai-modal-title');
-      const blurb = document.getElementById('ai-modal-blurb');
-      const tabs = document.getElementById('ai-mode-tabs');
-      const ta = document.getElementById('ai-prompt-text');
-      const m = HUB_PROMPT_MODES[currentAIMode] || HUB_PROMPT_MODES.throughline;
-      if (titleEl) titleEl.textContent = `AI thinking partner — ${label} "${c.title || 'Untitled'}"`;
-      if (blurb) blurb.textContent = m.blurb;
-      if (tabs) {
-        tabs.classList.remove('hidden');
-        tabs.innerHTML = '';
-        Object.entries(HUB_PROMPT_MODES).forEach(([key, hm]) => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.role = 'tab';
-          btn.setAttribute('data-mode', key);
-          btn.className = 'ai-mode-tab' + (key === currentAIMode ? ' is-active' : '');
-          btn.textContent = hm.label;
-          tabs.appendChild(btn);
-        });
-      }
-      ta.value = buildHubPrompt(hubId, currentAIMode);
-      openModal('ai-modal');
+      openCardPage(hubId);
+      const det = document.getElementById('card-page-ai');
+      if (det) det.open = true;
+      setCardPageAIMode(HUB_PROMPT_MODES[mode] ? mode : 'throughline');
     }
 
     function switchAIMode(mode) {
-      if (!currentAIHubId && !currentPoolMode) return;
+      if (!currentAIHubId && !currentPoolMode && !currentSituationId) return;
       currentAIMode = mode;
       const ta = document.getElementById('ai-prompt-text');
-      if (currentPoolMode) {
+      if (currentSituationId) {
+        ta.value = buildSituationPrompt(mode, findSituation(currentSituationId));
+        const k = SITUATION_PROMPT_KINDS[mode];
+        const blurb = document.getElementById('ai-modal-blurb');
+        if (blurb && k) blurb.textContent = k.blurb;
+      } else if (currentPoolMode) {
         ta.value = buildPoolPrompt(mode);
         const pm = POOL_PROMPT_MODES[mode];
         const blurb = document.getElementById('ai-modal-blurb');
@@ -5962,6 +5973,7 @@ ${AI_RULES}
     function openHubNamePromptModal(hubId) { openHubAIModal(hubId, 'throughline'); }
 
     let currentPoolMode = null;
+    let currentSituationId = null;
 
     const POOL_PROMPT_MODES = {
       landscape: {
@@ -6185,6 +6197,7 @@ ${AI_RULES}
 
     function openAIPromptModal(mode) {
       currentAIHubId = null;
+      currentSituationId = null;
       currentPoolMode = mode || 'landscape';
       currentAIMode = currentPoolMode;
       const d = poolSignalData();
@@ -6211,6 +6224,42 @@ ${AI_RULES}
         });
       }
       ta.value = buildPoolPrompt(currentPoolMode);
+      openModal('ai-modal');
+    }
+
+    // Situation-lens prompts for one section box: tabs come from
+    // SITUATION_PROMPT_KINDS; tab switches route through switchAIMode.
+    function openSituationAIModal(sitId, kind) {
+      const sit = findSituation(sitId);
+      if (!sit) return;
+      currentAIHubId = null;
+      currentPoolMode = null;
+      currentSituationId = sitId;
+      currentAIMode = SITUATION_PROMPT_KINDS[kind] ? kind : 'frame';
+
+      const titleEl = document.getElementById('ai-modal-title');
+      const blurb = document.getElementById('ai-modal-blurb');
+      const tabs = document.getElementById('ai-mode-tabs');
+      const ta = document.getElementById('ai-prompt-text');
+
+      if (titleEl) titleEl.textContent = (sit.title || '').trim()
+        ? `LLM analysis — ${sit.title.trim()}`
+        : 'LLM analysis — situation lenses';
+      if (blurb) blurb.textContent = SITUATION_PROMPT_KINDS[currentAIMode].blurb;
+      if (tabs) {
+        tabs.classList.remove('hidden');
+        tabs.innerHTML = '';
+        Object.entries(SITUATION_PROMPT_KINDS).forEach(([key, k]) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.role = 'tab';
+          btn.setAttribute('data-mode', key);
+          btn.className = 'ai-mode-tab' + (key === currentAIMode ? ' is-active' : '');
+          btn.textContent = k.label;
+          tabs.appendChild(btn);
+        });
+      }
+      ta.value = buildSituationPrompt(currentAIMode, sit);
       openModal('ai-modal');
     }
 
@@ -6295,6 +6344,8 @@ ${AI_RULES}
 
     const SITUATION_PROMPT_KINDS = {
       frame: {
+        label: 'Frame',
+        blurb: 'Articulate a frame: "if this situation is approached as if it is X, then Y follows." Frames are metaphors from other domains, not restatements.',
         task: 'Help me articulate a FRAME for this situation. A frame is a proposed new way of seeing: "If this situation is approached AS IF it is [X], then [Y] follows."',
         thinking: [
           'Read the full evidence trail. Identify the 2–3 deepest tensions or paradoxes.',
@@ -6317,6 +6368,8 @@ One question that forces you to defend the frame as a genuine reorientation, not
         modeRule: 'Frames are metaphors from other domains — NOT restatements of the themes. Do NOT propose solutions; propose ways of seeing.'
       },
       stakeholder: {
+        label: 'Stakeholders',
+        blurb: 'Map who is involved, affected, empowered, or excluded — inner circle, wider field, owners, gatekeepers — and the voice whose absence weakens the framing.',
         task: 'Help me build a robust Stakeholder Map for this whole situation. Identify who is involved, affected, empowered, or excluded — without trying to solve anything.',
         thinking: [
           'Read the evidence trail. For each theme/pattern, identify whose voice is present and whose is absent.',
@@ -6341,6 +6394,8 @@ The one stakeholder whose absence most weakens the current framing, and what the
         modeRule: 'Do NOT conflate stakeholders with job titles — name practices and currencies. The user\'s own organization is a stakeholder too.'
       },
       problematize: {
+        label: 'Problematize',
+        blurb: 'Complicate your understanding: hidden assumptions, who benefits from the status quo, where the evidence is thin, and the strongest counter-framing.',
         task: 'Problematize this situation. Complicate my understanding and surface systemic roots, hidden assumptions, and beneficiaries of the status quo.',
         thinking: [
           'Read the framing and evidence. Identify what the user takes for granted.',
@@ -6365,6 +6420,8 @@ A single question you must answer to defend this framing as-is.`,
         modeRule: 'Do not soften criticisms — the user benefits from being challenged, not reassured.'
       },
       interview: {
+        label: 'Interviews',
+        blurb: 'Prepare to talk to the people behind the load-bearing signals — open-ended questions, complicating factors, and secondary research fields.',
         task: 'Help me prepare to investigate this situation through interviews with the people behind these signals. They have ground truth I cannot guess.',
         thinking: [
           'Identify the 3–5 most load-bearing signals — those that, if wrong or differently nuanced, would most change the framing.',
@@ -6384,8 +6441,58 @@ For each of 3–5 key signals:
 ## Secondary research
 2–3 fields or bodies of literature to consult, with a specific reason for each.`,
         modeRule: 'Interview questions must be open-ended — no leading questions, no yes/no. Do NOT assume what the interviewee will say.'
+      },
+
+      'gap-analysis': {
+        label: 'Gap analysis',
+        blurb: 'Audit the evidence base: coverage of the seven Dorst types, missing perspectives, thin claims, a research brief, and what access the research demands.',
+        task: `Audit this problem situation's evidence base and produce a research brief. Read the full evidence trail, the card inventory (titles, descriptions, types, tiers), and the epistemics notes the user wrote on each card ("where I'm not sure", "whose voice is still missing"). Your job is not to strengthen the framing — it is to expose exactly where the evidence is thin, whose perspective is absent, and what the user must go find before the framing can be trusted.`,
+        thinking: [
+          'Walk the evidence trail card by card. Note each card\'s Dorst evidence type (or its absence) and how many independent signals sit beneath it.',
+          'Tally the seven evidence types — history, counterfactual, boundary, flux, player, value, problem — present vs. absent across all cards.',
+          'Cross-reference the epistemics notes against the situation description, the openness statement, and the problematization: which admitted uncertainties were never followed up?',
+          'For every gap, formulate the single question that would close it, then pick the cheapest credible method for answering it.',
+          'For each method, identify what access it demands — people, datasets, channels — and whether the user plausibly has it today.'
+        ],
+        output: `## Coverage map
+Which of the seven Dorst evidence types (history, counterfactual, boundary, flux, player, value, problem) are present vs. absent across this situation's cards. If there are no flux cards, that's a blind spot about what's changing. If there are no player cards, the field hasn't been mapped. Name each gap explicitly.
+
+## Perspective audit
+Whose lived experience is represented in the signals and whose isn't. Cross-reference the "whose voice is still missing" entries from the card notes. Name specific populations, roles, or viewpoints that are absent.
+
+## Depth audit
+Which claims rest on genuine triangulation (multiple independent signals) vs. a single source. Name the thinnest cards.
+
+## Research brief
+For each gap identified above, one concrete research task:
+**What to find out:** the question
+**Method:** interview, survey, field observation, deep research sweep, or secondary literature review
+**Tool:** NotebookLM (deep research on uploaded documents), Claude (synthesis), Perplexity (grounded web research), or "go talk to people"
+**What it would change:** what the answer would change about the current framing
+
+## Access needs
+What the research demands that the user doesn't currently have access to: specific people, roles, or communities who could ground-truth claims; datasets or documents behind institutional walls; populations a survey would need to reach; adjacent domains that hold relevant knowledge. For each, suggest a realistic path to access — a warm introduction, a cold outreach email, a public records request, a community forum, an academic database, a professional association. Be concrete: "talk to someone" is not a path; "post in [specific subreddit/forum] asking for [specific role]" is.`,
+        modeRule: 'Audit what exists — do not invent evidence or soften absences. Every research task must name a question, a method, a tool, and what the answer would change.'
       }
     };
+
+    // Pull a user-written section out of a card's notes.md by its ## header.
+    // Seeded placeholder lines (full-line *italics* from the doc scaffold)
+    // don't count as content.
+    function extractDocSection(docText, header) {
+      if (!docText) return '';
+      const lines = String(docText).split('\n');
+      const start = lines.findIndex(l => l.trim().toLowerCase() === ('## ' + header).toLowerCase());
+      if (start === -1) return '';
+      const out = [];
+      for (let i = start + 1; i < lines.length; i++) {
+        const t = lines[i].trim();
+        if (t.startsWith('## ') || t === '---') break;
+        if (/^\*.*\*$/.test(t)) continue;
+        out.push(lines[i]);
+      }
+      return out.join('\n').trim();
+    }
 
     function buildSituationPrompt(kind, sit) {
       const s = sit || appState.situations[appState.situations.length - 1]
@@ -6398,9 +6505,42 @@ For each of 3–5 key signals:
       const currentState = [
         `Working title: ${title}`,
         `Description: ${s.description || '(none yet)'}`,
+        s.openness ? `Why it's open, not bounded: ${s.openness}` : null,
+        s.problematization ? `Problematization so far: ${s.problematization}` : null,
         s.frame ? `Current frame: ${s.frame}` : null,
         s.stakeholderMap ? `Stakeholder notes: ${s.stakeholderMap}` : null
       ].filter(Boolean).join('\n');
+
+      // The gap analysis also reads the card inventory and the epistemics
+      // notes ("where I'm not sure" / "whose voice is still missing") that
+      // live in each card's notes.md.
+      let extraBlocks = '';
+      if (kind === 'gap-analysis') {
+        const cards = situationCards(s);
+        const inventory = cards.map(c => {
+          const t = c.tier === 1 ? `${tierName(c.tier)} · ${cardTypeInfo(c.cardType).label}` : tierName(c.tier);
+          const sigs = signalsUnder(c.id).length;
+          return `- [${t}] ${c.title || 'Untitled'} — ${(c.description || '(no description)').trim()} (${sigs} signal${sigs === 1 ? '' : 's'})`;
+        }).join('\n') || '(no cards yet)';
+        const epistemics = cards.map(c => {
+          const unsure = extractDocSection(c.doc, "Where I'm not sure");
+          const missing = extractDocSection(c.doc, 'Whose voice is still missing');
+          if (!unsure && !missing) return null;
+          const bits = [`Card: ${c.title || 'Untitled'}`];
+          if (unsure) bits.push(`Where I'm not sure: ${unsure}`);
+          if (missing) bits.push(`Whose voice is still missing: ${missing}`);
+          return bits.join('\n');
+        }).filter(Boolean).join('\n\n') || '(no epistemics notes written on any card yet)';
+        extraBlocks = `
+<card_inventory>
+${inventory}
+</card_inventory>
+
+<epistemics>
+${epistemics}
+</epistemics>
+`;
+      }
 
       return `<role>
 ${AI_ROLE}
@@ -6420,7 +6560,7 @@ ${currentState}
 <evidence_trail>
 ${evidence}
 </evidence_trail>
-
+${extraBlocks}
 <task>${k.task}</task>
 
 <thinking_steps>
@@ -6486,7 +6626,19 @@ ${AI_RULES}
               <textarea class="section-desc"${legacy ? ' id="section-desc"' : ''} rows="2" placeholder="Describe it — the open, complex, networked condition">${escapeHtml(s.description || '')}</textarea>
             </div>
             <div class="section-actions">
-              <button class="section-export ${ready ? '' : 'hidden'}"${legacy ? ' id="section-export"' : ''}>Export folder ⤓</button>
+              <button type="button" class="section-tool section-ai" title="Situation lenses — copy prompts into your LLM" aria-label="LLM Analysis">
+                <span class="st-glyph" aria-hidden="true">✨</span><span class="st-label">LLM Analysis</span>
+              </button>
+              <button type="button" class="section-tool section-workbook" title="Open the full workbook for this situation" aria-label="Open workbook">
+                <span class="st-glyph" aria-hidden="true">📖</span><span class="st-label">Workbook</span>
+              </button>
+              <button type="button" class="section-tool section-tool-primary section-export ${ready ? '' : 'is-disabled'}"${legacy ? ' id="section-export"' : ''}
+                title="${ready ? 'Export working folder' : 'Name and describe the situation to export'}" aria-disabled="${ready ? 'false' : 'true'}" aria-label="Export working folder">
+                <span class="st-glyph" aria-hidden="true">⤓</span><span class="st-label">Export</span>
+              </button>
+              <button type="button" class="section-tool section-tool-danger section-unframe" title="Unframe — release cards back to the board" aria-label="Unframe situation">
+                <span class="st-glyph" aria-hidden="true">🗑</span><span class="st-label">Unframe</span>
+              </button>
             </div>
           </div>`;
         layer.appendChild(el);
@@ -6512,22 +6664,37 @@ ${AI_RULES}
       });
     }
 
-    function toggleSectionExport(boxEl, sit) {
+    // Export stays visible but reads as disabled until the box is named and
+    // described (no `disabled` attribute — it must keep receiving clicks so
+    // exportWorkingFolder can toast the hint, and so the drag-handle guard
+    // still sees a button).
+    function updateSectionReadyState(boxEl, sit) {
+      const ready = (sit.title || '').trim() && (sit.description || '').trim();
       const exp = boxEl.querySelector('.section-export'); if (!exp) return;
-      exp.classList.toggle('hidden', !((sit.title || '').trim() && (sit.description || '').trim()));
+      exp.classList.toggle('is-disabled', !ready);
+      exp.setAttribute('aria-disabled', ready ? 'false' : 'true');
+      exp.title = ready ? 'Export working folder' : 'Name and describe the situation to export';
     }
 
     function wireSectionBox(boxEl, sit) {
       const title = boxEl.querySelector('.section-title');
       const desc  = boxEl.querySelector('.section-desc');
-      const exp   = boxEl.querySelector('.section-export');
       const drag  = boxEl.querySelector('.section-drag');
       if (title) { title.addEventListener('pointerdown', e => e.stopPropagation());
-        title.addEventListener('input', () => { sit.title = title.value; scheduleSave(); toggleSectionExport(boxEl, sit); }); }
+        title.addEventListener('input', () => { sit.title = title.value; scheduleSave(); updateSectionReadyState(boxEl, sit); }); }
       if (desc) { desc.addEventListener('pointerdown', e => e.stopPropagation());
-        desc.addEventListener('input', () => { sit.description = desc.value; scheduleSave(); toggleSectionExport(boxEl, sit); }); }
-      if (exp) { exp.addEventListener('pointerdown', e => e.stopPropagation());
-        exp.addEventListener('click', e => { e.stopPropagation(); exportWorkingFolder(sit.id); }); }
+        desc.addEventListener('input', () => { sit.description = desc.value; scheduleSave(); updateSectionReadyState(boxEl, sit); }); }
+      const actions = [
+        ['.section-ai',       () => openSituationAIModal(sit.id)],
+        ['.section-workbook', () => openSituationWorkbook(sit.id)],
+        ['.section-export',   () => exportWorkingFolder(sit.id)],
+        ['.section-unframe',  () => confirmUnframeSituation(sit.id)]
+      ];
+      actions.forEach(([sel, action]) => {
+        const btn = boxEl.querySelector(sel); if (!btn) return;
+        btn.addEventListener('pointerdown', e => e.stopPropagation());
+        btn.addEventListener('click', e => { e.stopPropagation(); action(); });
+      });
       if (drag) attachSectionDrag(drag, sit);
     }
 
@@ -6555,6 +6722,36 @@ ${AI_RULES}
         };
         handle.addEventListener('pointermove', onMove); handle.addEventListener('pointerup', onUp);
       });
+    }
+
+    function openSituationWorkbook(sitId) {
+      goToScreen('workspace');
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`.workspace-cluster-card[data-sit-id="${sitId}"]`);
+        if (el) el.scrollIntoView({ block: 'start' });
+      });
+    }
+
+    // Unframe = delete the situation, releasing its cards back to the
+    // committable pool. Cards, signals, and positions are untouched — the
+    // situation only stores memberCardIds. Confirm via toast action.
+    function confirmUnframeSituation(sitId) {
+      const s = findSituation(sitId); if (!s) return;
+      toast(`Unframe “${(s.title || '').trim() || 'this situation'}”? Cards stay on the board.`,
+        { actionLabel: 'Unframe', duration: 7000, onAction: () => unframeSituation(sitId) });
+    }
+    function unframeSituation(sitId) {
+      if (tutorialMode) return;
+      const i = appState.situations.findIndex(s => s.id === sitId);
+      if (i === -1) return;
+      appState.situations.splice(i, 1);
+      invalidateSituationIndex();
+      if (currentSituationId === sitId) { currentSituationId = null; closeModal('ai-modal'); }
+      renderSections();
+      updateAddButtonVisibility();
+      updateClusterProgressChip();
+      scheduleSave();
+      toast('Unframed — its cards can be committed again.');
     }
 
     // --- Commit to a Problem Situation ---
@@ -6646,9 +6843,6 @@ ${AI_RULES}
         ? `Problem Situation: ${appState.settings.title}`
         : 'Frame the Problem Situation';
 
-      const interviewEl = document.getElementById('workspace-interview-prompt');
-      if (interviewEl) interviewEl.textContent = buildSituationPrompt('interview');
-
       const container = document.getElementById('workspace-cards-container');
       const jumpBar = document.getElementById('workspace-jump-bar');
       if (jumpBar) jumpBar.innerHTML = '';
@@ -6667,9 +6861,11 @@ ${AI_RULES}
     }
 
     function renderSituationEditor(s, idx) {
-      const tops = s.memberCardIds.map(findCard).filter(Boolean);
+      const tops = s.memberCardIds.map(findCard).filter(Boolean)
+        .sort((a, b) => (b.tier - a.tier) || (a.title || '').localeCompare(b.title || ''));
       const card = document.createElement('article');
       card.className = 'workspace-cluster-card';
+      card.setAttribute('data-sit-id', s.id);
       const n = idx + 1;
       const many = appState.situations.length > 1;
 
@@ -6682,64 +6878,77 @@ ${AI_RULES}
             ${many && (s.title || '').trim() ? `<h3 style="margin:0;">${escapeHtml(s.title)}</h3>` : ''}
           </div>
           <p class="field-hint">An open, complex, networked condition synthesized from what you framed. This is not a problem to solve yet — it's a situation to frame.</p>
-          <ul class="signal-chips">${trail}</ul>
         </header>
 
         <section class="workspace-section">
+          <div class="ws-stage-label">Stage 1 — Solidify the situation</div>
           <label for="sit-title-${n}">Name the situation</label>
-          <input type="text" id="sit-title-${n}" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('${s.id}', 'title', this.value)">
+          <input type="text" id="sit-title-${n}" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('${s.id}', 'title', this.value); recomputeSubmitButton();">
           <label for="sit-desc-${n}" style="margin-top:12px;">Describe it</label>
           <textarea id="sit-desc-${n}" placeholder="This is an open condition, not a bounded problem, because ___" oninput="updateSituationField('${s.id}', 'description', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.description || '')}</textarea>
+          <label for="sit-open-${n}" style="margin-top:12px;">Why this is open, not bounded</label>
+          <p class="field-hint">A bounded problem has a known solution path. An open situation doesn't — it's complex, networked, and dynamic. What makes this one open?</p>
+          <textarea id="sit-open-${n}" placeholder="What makes this open: the network of actors, the moving parts, the absence of a known path…" oninput="updateSituationField('${s.id}', 'openness', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.openness || '')}</textarea>
+          <label style="margin-top:12px;">What feeds this situation</label>
+          <p class="field-hint">The themes and cards backing this situation — orientation, not editing. Rework them on the board.</p>
+          <ul class="signal-chips">${trail}</ul>
         </section>
 
         <section class="workspace-section">
-          <label for="sit-frame-${n}">Frame it</label>
-          <p class="field-hint">A frame is a new way of seeing — a metaphor that reorganizes the evidence.</p>
-          <div class="prompt-cta">
+          <div class="ws-stage-label">Stage 2 — Evidence landscape &amp; research agenda</div>
+          <label for="sit-coverage-${n}">What the evidence covers</label>
+          <p class="field-hint">Look at your evidence trail. Which of Dorst's seven types do you have? (History, counterfactual, boundary, flux, player, value, problem.) Which are thin or missing entirely?</p>
+          <textarea id="sit-coverage-${n}" placeholder="Strong on ___, thin on ___, nothing at all on ___" oninput="updateSituationField('${s.id}', 'evidenceCoverage', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.evidenceCoverage || '')}</textarea>
+          <label for="sit-agenda-${n}" style="margin-top:12px;">Research agenda — what I think is still missing</label>
+          <p class="field-hint">Name the gaps as you see them: who you'd want to interview, what you'd survey, what you'd send into a deep-research tool (NotebookLM, Claude, Perplexity), what secondary sources you'd pull. Be specific — each gap is a named question with a method, not a vague "more research needed."</p>
+          <textarea id="sit-agenda-${n}" placeholder="Gap: ___. Question: ___. Method: ___." oninput="updateSituationField('${s.id}', 'researchAgenda', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.researchAgenda || '')}</textarea>
+          <div class="prompt-cta" style="margin-top:16px;">
             <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Help me find a frame</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('sit-frame-prompt-${n}')">Copy this prompt</button>
+              <div class="prompt-cta-label">✨ Evidence gap analysis &amp; research brief</div>
+              <button class="btn btn-primary copy-btn" onclick="copyText('sit-gap-prompt-${n}')">Copy this prompt</button>
             </div>
-            <div class="prompt-text" id="sit-frame-prompt-${n}"></div>
-            <p class="copy-hint">Paste into your LLM. Push for non-obvious metaphors, then write the frame in your own words.</p>
+            <div class="prompt-text" id="sit-gap-prompt-${n}"></div>
+            <p class="copy-hint">Paste into Claude, ChatGPT, Gemini, NotebookLM, or Perplexity. The AI reads your full evidence trail and names what's missing — then go find it.</p>
           </div>
-          <textarea id="sit-frame-${n}" placeholder="If this situation is approached as if it is ___, then ___" oninput="updateSituationField('${s.id}', 'frame', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.frame || '')}</textarea>
         </section>
 
         <section class="workspace-section">
-          <label for="sit-stake-${n}">Stakeholder Map</label>
-          <p class="field-hint">Inner-circle, wider-field, owners/clients, gatekeepers — across the whole situation.</p>
-          <div class="prompt-cta">
-            <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Map who's involved</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('sit-stake-prompt-${n}')">Copy this prompt</button>
-            </div>
-            <div class="prompt-text" id="sit-stake-prompt-${n}"></div>
-            <p class="copy-hint">Paste into your LLM. Ask "who did you leave out and why?" Write your map from what you learned.</p>
-          </div>
-          <textarea id="sit-stake-${n}" placeholder="Who's in the inner circle, the wider field, who could own this? Your words." oninput="updateSituationField('${s.id}', 'stakeholderMap', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.stakeholderMap || '')}</textarea>
+          <div class="ws-stage-label">Stage 3 — Research access</div>
+          <label for="sit-voices-${n}">Who do you need to hear from?</label>
+          <p class="field-hint">Who lives inside this problem and could ground-truth your framing? Name specific roles, communities, or institutions — not abstractly ('patients') but concretely enough to act on ('someone who navigated the Medicaid recertification process in the last 6 months').</p>
+          <textarea id="sit-voices-${n}" placeholder="Specific roles, communities, institutions — concrete enough to act on" oninput="updateSituationField('${s.id}', 'voicesNeeded', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.voicesNeeded || '')}</textarea>
+          <label for="sit-access-${n}" style="margin-top:12px;">What you can't reach alone — and how you might</label>
+          <p class="field-hint">What does the research demand that you don't currently have access to? A conversation with someone in a specific role? A dataset behind a paywall? A survey distributed to a population you don't have a channel to? Name the need and your best guess at how to get there — a warm introduction, a public records request, a community listserv, a cold email.</p>
+          <textarea id="sit-access-${n}" placeholder="Need: ___. Possible path: ___." oninput="updateSituationField('${s.id}', 'accessNeeds', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.accessNeeds || '')}</textarea>
         </section>
 
         <section class="workspace-section">
-          <label for="sit-problem-${n}">Pressure-test the framing</label>
-          <p class="field-hint">Hidden assumptions, structural biases, who benefits from things staying as they are.</p>
-          <div class="prompt-cta">
-            <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Problematize this situation</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('sit-problem-prompt-${n}')">Copy this prompt</button>
-            </div>
-            <div class="prompt-text" id="sit-problem-prompt-${n}"></div>
-            <p class="copy-hint">If the response confirms your framing, ask it to break it.</p>
-          </div>
-          <textarea id="sit-problem-${n}" placeholder="After the AI challenged you — what's assumed, what's missing, who benefits? Your words." oninput="updateSituationField('${s.id}', 'problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
+          <div class="ws-stage-label">Stage 4 — The paradox</div>
+          <label for="sit-paradox-${n}">What makes this situation hard to resolve?</label>
+          <p class="field-hint">In Dorst's terms, the paradox is the deadlock — the reason conventional approaches keep failing. It's not 'this is complicated.' It's the specific structural tension that traps everyone. Name it: 'The situation demands X, but the same conditions that create the need also prevent X from working.'</p>
+          <textarea id="sit-paradox-${n}" placeholder="The situation demands ___, but the same conditions that create the need also prevent ___ from working." oninput="updateSituationField('${s.id}', 'paradox', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.paradox || '')}</textarea>
+          <label for="sit-status-${n}" style="margin-top:12px;">Who benefits from the status quo?</label>
+          <p class="field-hint">If this situation persists indefinitely, who wins? Follow the incentives — name actors and mechanisms.</p>
+          <textarea id="sit-status-${n}" placeholder="Actor: ___. Mechanism: ___." oninput="updateSituationField('${s.id}', 'statusQuoBeneficiaries', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.statusQuoBeneficiaries || '')}</textarea>
+          <label for="sit-problem-${n}" style="margin-top:12px;">Pressure-test your framing</label>
+          <p class="field-hint">What are you assuming? What would break this framing if it turned out to be wrong? What have you chosen not to see?</p>
+          <textarea id="sit-problem-${n}" placeholder="What's assumed, what would break this, what you've chosen not to see. Your words." oninput="updateSituationField('${s.id}', 'problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
         </section>
       `;
 
-      card.querySelector(`#sit-frame-prompt-${n}`).textContent = buildSituationPrompt('frame', s);
-      card.querySelector(`#sit-stake-prompt-${n}`).textContent = buildSituationPrompt('stakeholder', s);
-      card.querySelector(`#sit-problem-prompt-${n}`).textContent = buildSituationPrompt('problematize', s);
+      card.querySelector(`#sit-gap-prompt-${n}`).textContent = buildSituationPrompt('gap-analysis', s);
+      // The gap-analysis prompt always reflects live state: regenerate after
+      // any edit inside this editor (debounced so typing stays smooth).
+      let gapTimer = null;
+      card.addEventListener('input', () => {
+        clearTimeout(gapTimer);
+        gapTimer = setTimeout(() => {
+          const el = card.querySelector(`#sit-gap-prompt-${n}`);
+          if (el) el.textContent = buildSituationPrompt('gap-analysis', s);
+        }, 500);
+      });
       requestAnimationFrame(() => {
-        [`sit-desc-${n}`, `sit-frame-${n}`, `sit-stake-${n}`, `sit-problem-${n}`].forEach(id => { const t = card.querySelector('#' + id); if (t) autoResize(t); });
+        [`sit-desc-${n}`, `sit-open-${n}`, `sit-coverage-${n}`, `sit-agenda-${n}`, `sit-voices-${n}`, `sit-access-${n}`, `sit-paradox-${n}`, `sit-status-${n}`, `sit-problem-${n}`].forEach(id => { const t = card.querySelector('#' + id); if (t) autoResize(t); });
       });
       return card;
     }
@@ -6751,10 +6960,14 @@ ${AI_RULES}
       scheduleSave();
     }
 
-    // Complete = at least one situation fully deepened (all 5 fields filled).
+    // Complete = at least one situation with the required fields filled and a
+    // named-and-described theme (tier >= 3) somewhere in its subtree. The
+    // reflective fields (coverage, agenda, voices, access, beneficiaries) are
+    // encouraged but never gate.
     function workspaceIsComplete() {
       return appState.situations.some(s =>
-        ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].every(k => (s[k] || '').trim()));
+        ['title', 'description', 'openness', 'paradox', 'problematization'].every(k => (s[k] || '').trim())
+        && situationHasNamedTheme(s));
     }
 
     function recomputeSubmitButton() {
@@ -6770,7 +6983,7 @@ ${AI_RULES}
             ? `Last submitted ${new Date(appState.submittedAt).toLocaleString()}. Re-submit to update.`
             : 'Ready.';
         } else {
-          hint.textContent = 'Complete every section to submit.';
+          hint.textContent = 'To submit: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.';
         }
       }
     }
@@ -6783,7 +6996,7 @@ ${AI_RULES}
 
     function openSubmitModal() {
       if (!workspaceIsComplete()) {
-        toast('Complete every section to submit.');
+        toast('Fill the required fields (name, description, openness, paradox, pressure-test) and back the situation with at least one named theme.');
         return;
       }
       const sits = appState.situations;
@@ -6791,10 +7004,10 @@ ${AI_RULES}
       const signalSet = new Set();
       tops.forEach(c => signalsUnder(c.id).forEach(id => signalSet.add(id)));
       const charCount = sits.reduce((sum, s) =>
-        sum + ['description', 'frame', 'stakeholderMap', 'problematization'].reduce((a, k) => a + (s[k] || '').trim().length, 0), 0);
+        sum + ['description', 'openness', 'evidenceCoverage', 'researchAgenda', 'voicesNeeded', 'accessNeeds', 'paradox', 'statusQuoBeneficiaries', 'problematization'].reduce((a, k) => a + (s[k] || '').trim().length, 0), 0);
       const titles = sits.map(s => `"${s.title || 'Untitled'}"`).join(', ');
       const summary = document.getElementById('submit-modal-summary');
-      summary.textContent = `You're submitting ${sits.length} Problem Situation${sits.length === 1 ? '' : 's'} — ${titles} — built from ${tops.length} top-level card${tops.length === 1 ? '' : 's'} covering ${signalSet.size} signal${signalSet.size === 1 ? '' : 's'}, with ${charCount} characters of framing, stakeholder, and problematization analysis.`;
+      summary.textContent = `You're submitting ${sits.length} Problem Situation${sits.length === 1 ? '' : 's'} — ${titles} — built from ${tops.length} top-level card${tops.length === 1 ? '' : 's'} covering ${signalSet.size} signal${signalSet.size === 1 ? '' : 's'}, with ${charCount} characters of situation, evidence-landscape, research-access, and paradox analysis.`;
       const prior = document.getElementById('submit-modal-prior');
       if (appState.submittedAt) {
         prior.textContent = `Previously submitted on ${new Date(appState.submittedAt).toLocaleString()}. Re-submitting will replace that timestamp.`;
@@ -6838,27 +7051,30 @@ ${AI_RULES}
       wrap.style.maxWidth = '840px';
 
       appState.situations.forEach(s => {
-        const tops = s.memberCardIds.map(findCard).filter(Boolean);
+        const tops = s.memberCardIds.map(findCard).filter(Boolean)
+          .sort((a, b) => (b.tier - a.tier) || (a.title || '').localeCompare(b.title || ''));
+        // Required fields always render (with "(empty)"); reflective fields only when written.
+        const answer = (h, v, required) => (v || '').trim() || required
+          ? `<div class="submission-answer"><h4>${escapeHtml(h)}</h4><div class="answer-body">${escapeHtml((v || '').trim() || '(empty)')}</div></div>`
+          : '';
         const article = document.createElement('article');
         article.className = 'submission-cluster';
         article.innerHTML = `
           <h3>${escapeHtml(s.title || 'Untitled Problem Situation')} <span style="font-size:0.7rem; color:#8a4fff; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:8px;">Problem Situation</span></h3>
           ${s.description ? `<p class="cluster-desc">${escapeHtml(s.description)}</p>` : ''}
+          ${answer('Why this is open, not bounded', s.openness, true)}
           <ul class="signal-chips">
             ${tops.map(c => `<li>${escapeHtml(c.title || 'Untitled')} (${escapeHtml(nodeLabel(c.id))})</li>`).join('')}
           </ul>
-          <div class="submission-answer">
-            <h4>Frame</h4>
-            <div class="answer-body">${escapeHtml((s.frame || '').trim() || '(empty)')}</div>
-          </div>
-          <div class="submission-answer">
-            <h4>Stakeholder Map</h4>
-            <div class="answer-body">${escapeHtml((s.stakeholderMap || '').trim() || '(empty)')}</div>
-          </div>
-          <div class="submission-answer">
-            <h4>Problematization</h4>
-            <div class="answer-body">${escapeHtml((s.problematization || '').trim() || '(empty)')}</div>
-          </div>
+          ${answer('What the evidence covers', s.evidenceCoverage, false)}
+          ${answer('Research agenda — what’s still missing', s.researchAgenda, false)}
+          ${answer('Who I need to hear from', s.voicesNeeded, false)}
+          ${answer('What I can’t reach alone — and how I might', s.accessNeeds, false)}
+          ${answer('The paradox', s.paradox, true)}
+          ${answer('Who benefits from the status quo', s.statusQuoBeneficiaries, false)}
+          ${answer('Pressure-testing the framing', s.problematization, true)}
+          ${answer('Legacy — Frame', s.frame, false)}
+          ${answer('Legacy — Stakeholder Map', s.stakeholderMap, false)}
         `;
         wrap.appendChild(article);
       });
@@ -6874,7 +7090,7 @@ ${AI_RULES}
           <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; line-height: 1.6; margin-bottom: 20px;">Your peers are going to challenge your framing. Before you walk in, make sure you have an answer to each of these.</p>
           <ol style="font-size: 0.9rem; color: var(--midnight); line-height: 1.8; padding-left: 20px;">
             <li style="margin-bottom: 8px;">Which signal doesn't quite fit — and why did you keep it anyway?</li>
-            <li style="margin-bottom: 8px;">Whose voice is missing from your stakeholder map?</li>
+            <li style="margin-bottom: 8px;">Whose voice is still missing — and what's your path to reaching them?</li>
             <li style="margin-bottom: 8px;">What assumption would break your framing if it turned out to be wrong?</li>
             <li style="margin-bottom: 8px;">Why is this an open situation and not a bounded problem?</li>
             <li style="margin-bottom: 8px;">What's the strongest argument that the evidence should have been organized differently?</li>
@@ -6890,11 +7106,22 @@ ${AI_RULES}
         ? `*Submitted on ${new Date(appState.submittedAt).toLocaleString()}*\n\n`
         : `*Draft — not yet submitted*\n\n`;
       appState.situations.forEach(s => {
+        const section = (h, v, required) => {
+          if (!(v || '').trim() && !required) return;
+          md += `### ${h}\n${(v || '').trim() || '(empty)'}\n\n`;
+        };
         md += `---\n\n## Problem Situation: ${s.title || 'Untitled'}\n\n`;
         if (s.description) md += `${s.description}\n\n`;
-        md += `### Frame\n${(s.frame || '(empty)').trim()}\n\n`;
-        md += `### Stakeholder Map\n${(s.stakeholderMap || '(empty)').trim()}\n\n`;
-        md += `### Problematization\n${(s.problematization || '(empty)').trim()}\n\n`;
+        section('Why this is open, not bounded', s.openness, true);
+        section('What the evidence covers', s.evidenceCoverage, false);
+        section('Research agenda — what’s still missing', s.researchAgenda, false);
+        section('Who I need to hear from', s.voicesNeeded, false);
+        section('What I can’t reach alone — and how I might', s.accessNeeds, false);
+        section('The paradox', s.paradox, true);
+        section('Who benefits from the status quo', s.statusQuoBeneficiaries, false);
+        section('Pressure-testing the framing', s.problematization, true);
+        section('Legacy — Frame', s.frame, false);
+        section('Legacy — Stakeholder Map', s.stakeholderMap, false);
         md += `### Evidence trail\n\n`;
         s.memberCardIds.map(findCard).filter(Boolean).forEach(c => { md += formatCardOutline(c.id, 0) + '\n\n'; });
       });
@@ -6931,24 +7158,78 @@ ${AI_RULES}
       return lines.join('\n');
     }
 
-    // problem-situation.md: every box's title + description + what it was built from.
+    // problem-situation.md: a staged document mirroring the workbook, so the
+    // zip works as a shared starting artifact for whoever picks it up next.
     function exportSituationDoc() {
-      const lines = [];
-      appState.situations.forEach((s, i) => {
-        lines.push(`${i === 0 ? '#' : '##'} ${s.title || 'Untitled Problem Situation'}`, '');
-        if ((s.description || '').trim()) lines.push(s.description.trim(), '');
-        const tops = s.memberCardIds.map(findCard).filter(Boolean);
-        if (tops.length) {
-          lines.push(`${i === 0 ? '##' : '###'} Built from`, '');
-          tops.forEach(c => {
-            const sigs = signalsUnder(c.id).length;
-            lines.push(`- **${c.title || 'Untitled'}** — ${tierName(c.tier)} · ${sigs} signal${sigs === 1 ? '' : 's'}`);
-          });
-          lines.push('');
-        }
+      const w = (v, fb) => (v || '').trim() || fb;
+      const blocks = appState.situations.map(s => {
+        const cards = situationCards(s);
+        const sigSet = new Set();
+        s.memberCardIds.forEach(id => signalsUnder(id).forEach(x => sigSet.add(x)));
+        const trail = s.memberCardIds.map(findCard).filter(Boolean)
+          .map(c => {
+            // formatTreeOutline skips the root at depth 0 — name it ourselves.
+            const head = `• ${nodeLabel(c.id)}: ${c.title || 'Untitled'}${c.description ? ' — ' + c.description : ''}`;
+            const sub = formatTreeOutline(c.id, 0);
+            return sub ? head + '\n' + sub : head;
+          }).join('\n') || '(no cards yet)';
+        return `# ${s.title || 'Untitled Problem Situation'}
+
+> A problem situation framed using Kees Dorst's Frame Creation method.
+> Built from ${cards.length} card${cards.length === 1 ? '' : 's'} covering ${sigSet.size} signal${sigSet.size === 1 ? '' : 's'} across the evidence ladder.
+> Exported ${appState.exportedAt || new Date().toISOString()}.
+
+## The situation
+${w(s.description, '(not yet written)')}
+
+### Why this is open, not bounded
+${w(s.openness, '(not yet written)')}
+
+### Evidence trail
+${trail}
+
+---
+
+## Evidence landscape
+### What the evidence covers
+${w(s.evidenceCoverage, '(not yet written)')}
+
+### Gaps — what I think is still thin
+${w(s.researchAgenda, '(not yet written)')}
+
+---
+
+## Research access
+### Who I need to hear from
+${w(s.voicesNeeded, '(not yet identified)')}
+
+### What I can't reach alone — and how I might
+${w(s.accessNeeds, '(not yet identified)')}
+
+---
+
+## The paradox
+${w(s.paradox, '(not yet written)')}
+
+### Who benefits from the status quo
+${w(s.statusQuoBeneficiaries, '(not yet written)')}
+
+### Pressure-testing the framing
+${w(s.problematization, '(not yet written)')}`;
       });
-      if (appState.exportedAt) lines.push(`*Exported ${appState.exportedAt}*`, '');
-      return lines.join('\n');
+      if (!blocks.length) blocks.push('# Untitled Problem Situation\n\n(no problem situation framed yet)');
+      const next = `---
+
+## What comes next
+This situation is framed but not solved — and solving it is not the next step. The next steps in Frame Creation are:
+
+1. **Map the field** — identify every player connected to this situation or a future resolution. Define each by their practices and currency, not their title. Look especially for players who share the values your themes surfaced — even in distant, unexpected domains.
+2. **Identify a client** — from the potential problem owners, who could own this situation or adopt a resolution? What would they need to see?
+3. **Choose a delivery context** — through what kind of vehicle does a resolution reach the field? (An internal team, a government program, an open-source project, a startup, a nonprofit, a civic institution, a co-op — there is no right answer, only trade-offs.)
+4. **Deepen the archaeology** — the gaps above name what's still thin. Go find it: interview people, run deep-research sweeps, pull secondary sources.
+5. **Create frames** — only after the field is mapped and the archaeology is deep. "If this situation is approached as if it is ___, then ___."
+`;
+      return blocks.join('\n\n---\n\n') + '\n\n' + next;
     }
 
     // Root README that primes any LLM once, so the unzipped folder can be
@@ -6980,6 +7261,19 @@ Upload this whole folder to Claude or ChatGPT and start with:
 > Read the README, then act as my Frame Creation thinking partner. Start by
 > reading \`problem-situation.md\`, then the cards in \`cards/\`. Don't propose
 > solutions.
+
+## Getting started with this folder
+
+This is a problem situation framed using Kees Dorst's Frame Creation method. The evidence trail runs from raw observations (signals) through typed evidence, patterns, and themes up to the situation itself.
+
+### If you're picking up where someone left off
+Read \`problem-situation.md\` first — it has the situation description, the paradox, the evidence trail, and an honest accounting of what's still thin. Then browse the \`cards/\` folder: each card has a \`notes.md\` workbook, a \`deepen.md\` AI prompt, and an \`evidence.md\` trail. Start with the highest-tier cards and work down. Read critically — where is the evidence strong? Where is it a single source dressed up as triangulation?
+
+### Using this with an AI
+Upload this whole folder to Claude, ChatGPT, or NotebookLM. Start with: _"Read the README, then act as my Frame Creation thinking partner. Read problem-situation.md and the cards. Help me find what's missing and what's assumed — don't propose solutions."_ The \`gap-analysis.md\` file is a ready-to-paste prompt that produces a structured evidence audit.
+
+### Loading the canvas
+Open \`state.json\` in the Triangulator to load the full board — all nodes, edges, positions, and the problem situation box.
 `;
     }
 
@@ -7019,14 +7313,25 @@ ${AI_RULES}
 `;
     }
 
-    function buildExportFiles() {
+    function buildExportFiles(sitId) {
       const first = appState.situations[0];
-      const root = folderSlug((first && first.title) || appState.settings.title) + '/';
+      // The situation driving the root-level prompt files: the one being
+      // exported, else the first named one, else whatever exists.
+      const named = (s) => s && ((s.title || '').trim() || (s.description || '').trim());
+      const sit = (sitId && findSituation(sitId)) || appState.situations.find(named) || first;
+      const root = folderSlug((sit && sit.title) || appState.settings.title) + '/';
       const files = [];
       const add = (path, content) => files.push({ path: root + path, content });
 
       add('README.md', buildExportReadme());
       add('problem-situation.md', exportSituationDoc());
+      if (sit) {
+        // Ready-to-run evidence audit — paste straight into an AI tool.
+        add('gap-analysis.md', buildSituationPrompt('gap-analysis', sit));
+        if ((sit.researchAgenda || '').trim()) {
+          add('research-agenda.md', '# Research agenda — known gaps and next investigations\n\n' + sit.researchAgenda.trim());
+        }
+      }
 
       // Machine-readable snapshot — lets someone else open this folder in the
       // tool and see the exact same board (cards, signals, positions, box).
@@ -7135,7 +7440,7 @@ ${AI_RULES}
         return;
       }
       appState.exportedAt = new Date().toISOString();
-      const blob = buildZip(buildExportFiles());
+      const blob = buildZip(buildExportFiles(s.id));
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -7587,11 +7892,50 @@ ${AI_RULES}
       if (!c.doc) c.doc = defaultCardDoc(c);
       doc.value = c.doc;
       doc.oninput = () => { c.doc = doc.value; scheduleSave(); };
+      const ai = document.getElementById('card-page-ai');
+      if (ai) ai.open = false; // collapsed by default; prompt rebuilds on open
+      setCardPageAIMode('throughline');
       renderCardFiles(c);
       const up = document.getElementById('card-page-upload');
       up.value = ''; up.onchange = (e) => handleCardFileUpload(c, e);
       openModal('card-page-modal');
     }
+
+    // --- Card-page AI accordion: prompts rebuild from live appState every
+    // time the accordion opens or the mode tab changes — never cached.
+    let cardPageAIMode = 'throughline';
+    function refreshCardPageAIPrompt() {
+      const ta = document.getElementById('card-page-ai-prompt');
+      if (!ta || !currentCardPageId) return;
+      ta.value = buildHubPrompt(currentCardPageId, cardPageAIMode);
+      const m = HUB_PROMPT_MODES[cardPageAIMode];
+      const blurb = document.getElementById('card-page-ai-blurb');
+      if (blurb && m) blurb.textContent = m.blurb;
+    }
+    function setCardPageAIMode(mode) {
+      cardPageAIMode = HUB_PROMPT_MODES[mode] ? mode : 'throughline';
+      document.querySelectorAll('#card-page-ai-tabs .ai-mode-tab').forEach(btn => {
+        const on = btn.getAttribute('data-mode') === cardPageAIMode;
+        btn.classList.toggle('is-active', on);
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      refreshCardPageAIPrompt();
+    }
+    async function copyCardPagePrompt() {
+      refreshCardPageAIPrompt(); // never copy a stale prompt
+      const ta = document.getElementById('card-page-ai-prompt');
+      const ok = await clipboardCopy(ta ? ta.value : '');
+      toast(ok ? 'Copied.' : 'Copy failed — select the text and copy manually.');
+    }
+    (() => {
+      const tabs = document.getElementById('card-page-ai-tabs');
+      if (tabs) tabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('.ai-mode-tab');
+        if (btn) setCardPageAIMode(btn.getAttribute('data-mode'));
+      });
+      const det = document.getElementById('card-page-ai');
+      if (det) det.addEventListener('toggle', () => { if (det.open) refreshCardPageAIPrompt(); });
+    })();
 
     function renderCardFiles(c) {
       const wrap = document.getElementById('card-page-files');
