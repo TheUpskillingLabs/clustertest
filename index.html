@@ -7037,24 +7037,78 @@ ${AI_RULES}
       return lines.join('\n');
     }
 
-    // problem-situation.md: every box's title + description + what it was built from.
+    // problem-situation.md: a staged document mirroring the workbook, so the
+    // zip works as a shared starting artifact for whoever picks it up next.
     function exportSituationDoc() {
-      const lines = [];
-      appState.situations.forEach((s, i) => {
-        lines.push(`${i === 0 ? '#' : '##'} ${s.title || 'Untitled Problem Situation'}`, '');
-        if ((s.description || '').trim()) lines.push(s.description.trim(), '');
-        const tops = s.memberCardIds.map(findCard).filter(Boolean);
-        if (tops.length) {
-          lines.push(`${i === 0 ? '##' : '###'} Built from`, '');
-          tops.forEach(c => {
-            const sigs = signalsUnder(c.id).length;
-            lines.push(`- **${c.title || 'Untitled'}** — ${tierName(c.tier)} · ${sigs} signal${sigs === 1 ? '' : 's'}`);
-          });
-          lines.push('');
-        }
+      const w = (v, fb) => (v || '').trim() || fb;
+      const blocks = appState.situations.map(s => {
+        const cards = situationCards(s);
+        const sigSet = new Set();
+        s.memberCardIds.forEach(id => signalsUnder(id).forEach(x => sigSet.add(x)));
+        const trail = s.memberCardIds.map(findCard).filter(Boolean)
+          .map(c => {
+            // formatTreeOutline skips the root at depth 0 — name it ourselves.
+            const head = `• ${nodeLabel(c.id)}: ${c.title || 'Untitled'}${c.description ? ' — ' + c.description : ''}`;
+            const sub = formatTreeOutline(c.id, 0);
+            return sub ? head + '\n' + sub : head;
+          }).join('\n') || '(no cards yet)';
+        return `# ${s.title || 'Untitled Problem Situation'}
+
+> A problem situation framed using Kees Dorst's Frame Creation method.
+> Built from ${cards.length} card${cards.length === 1 ? '' : 's'} covering ${sigSet.size} signal${sigSet.size === 1 ? '' : 's'} across the evidence ladder.
+> Exported ${appState.exportedAt || new Date().toISOString()}.
+
+## The situation
+${w(s.description, '(not yet written)')}
+
+### Why this is open, not bounded
+${w(s.openness, '(not yet written)')}
+
+### Evidence trail
+${trail}
+
+---
+
+## Evidence landscape
+### What the evidence covers
+${w(s.evidenceCoverage, '(not yet written)')}
+
+### Gaps — what I think is still thin
+${w(s.researchAgenda, '(not yet written)')}
+
+---
+
+## Research access
+### Who I need to hear from
+${w(s.voicesNeeded, '(not yet identified)')}
+
+### What I can't reach alone — and how I might
+${w(s.accessNeeds, '(not yet identified)')}
+
+---
+
+## The paradox
+${w(s.paradox, '(not yet written)')}
+
+### Who benefits from the status quo
+${w(s.statusQuoBeneficiaries, '(not yet written)')}
+
+### Pressure-testing the framing
+${w(s.problematization, '(not yet written)')}`;
       });
-      if (appState.exportedAt) lines.push(`*Exported ${appState.exportedAt}*`, '');
-      return lines.join('\n');
+      if (!blocks.length) blocks.push('# Untitled Problem Situation\n\n(no problem situation framed yet)');
+      const next = `---
+
+## What comes next
+This situation is framed but not solved — and solving it is not the next step. The next steps in Frame Creation are:
+
+1. **Map the field** — identify every player connected to this situation or a future resolution. Define each by their practices and currency, not their title. Look especially for players who share the values your themes surfaced — even in distant, unexpected domains.
+2. **Identify a client** — from the potential problem owners, who could own this situation or adopt a resolution? What would they need to see?
+3. **Choose a delivery context** — through what kind of vehicle does a resolution reach the field? (An internal team, a government program, an open-source project, a startup, a nonprofit, a civic institution, a co-op — there is no right answer, only trade-offs.)
+4. **Deepen the archaeology** — the gaps above name what's still thin. Go find it: interview people, run deep-research sweeps, pull secondary sources.
+5. **Create frames** — only after the field is mapped and the archaeology is deep. "If this situation is approached as if it is ___, then ___."
+`;
+      return blocks.join('\n\n---\n\n') + '\n\n' + next;
     }
 
     // Root README that primes any LLM once, so the unzipped folder can be
@@ -7086,6 +7140,19 @@ Upload this whole folder to Claude or ChatGPT and start with:
 > Read the README, then act as my Frame Creation thinking partner. Start by
 > reading \`problem-situation.md\`, then the cards in \`cards/\`. Don't propose
 > solutions.
+
+## Getting started with this folder
+
+This is a problem situation framed using Kees Dorst's Frame Creation method. The evidence trail runs from raw observations (signals) through typed evidence, patterns, and themes up to the situation itself.
+
+### If you're picking up where someone left off
+Read \`problem-situation.md\` first — it has the situation description, the paradox, the evidence trail, and an honest accounting of what's still thin. Then browse the \`cards/\` folder: each card has a \`notes.md\` workbook, a \`deepen.md\` AI prompt, and an \`evidence.md\` trail. Start with the highest-tier cards and work down. Read critically — where is the evidence strong? Where is it a single source dressed up as triangulation?
+
+### Using this with an AI
+Upload this whole folder to Claude, ChatGPT, or NotebookLM. Start with: _"Read the README, then act as my Frame Creation thinking partner. Read problem-situation.md and the cards. Help me find what's missing and what's assumed — don't propose solutions."_ The \`gap-analysis.md\` file is a ready-to-paste prompt that produces a structured evidence audit.
+
+### Loading the canvas
+Open \`state.json\` in the Triangulator to load the full board — all nodes, edges, positions, and the problem situation box.
 `;
     }
 
@@ -7125,14 +7192,25 @@ ${AI_RULES}
 `;
     }
 
-    function buildExportFiles() {
+    function buildExportFiles(sitId) {
       const first = appState.situations[0];
-      const root = folderSlug((first && first.title) || appState.settings.title) + '/';
+      // The situation driving the root-level prompt files: the one being
+      // exported, else the first named one, else whatever exists.
+      const named = (s) => s && ((s.title || '').trim() || (s.description || '').trim());
+      const sit = (sitId && findSituation(sitId)) || appState.situations.find(named) || first;
+      const root = folderSlug((sit && sit.title) || appState.settings.title) + '/';
       const files = [];
       const add = (path, content) => files.push({ path: root + path, content });
 
       add('README.md', buildExportReadme());
       add('problem-situation.md', exportSituationDoc());
+      if (sit) {
+        // Ready-to-run evidence audit — paste straight into an AI tool.
+        add('gap-analysis.md', buildSituationPrompt('gap-analysis', sit));
+        if ((sit.researchAgenda || '').trim()) {
+          add('research-agenda.md', '# Research agenda — known gaps and next investigations\n\n' + sit.researchAgenda.trim());
+        }
+      }
 
       // Machine-readable snapshot — lets someone else open this folder in the
       // tool and see the exact same board (cards, signals, positions, box).
@@ -7241,7 +7319,7 @@ ${AI_RULES}
         return;
       }
       appState.exportedAt = new Date().toISOString();
-      const blob = buildZip(buildExportFiles());
+      const blob = buildZip(buildExportFiles(s.id));
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
