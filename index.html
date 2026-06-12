@@ -223,8 +223,8 @@
     }
     .landing-intro { max-width: 56ch; margin-bottom: 52px; }
 
-    /* 03 — steps: hairline columns, oversized numerals in the canvas tier colors
-       (teal signals → slate evidence → red patterns → purple situation). */
+    /* 03 — steps: hairline columns, oversized numerals in the real tier colors
+       (teal signal → slate evidence → red pattern → amber theme). */
     .explainer-steps {
       list-style: none; margin: 0; padding: 0;
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 48px 40px;
@@ -238,7 +238,7 @@
     .explainer-step[data-step="1"] .explainer-step-num { color: var(--primary-teal); }
     .explainer-step[data-step="2"] .explainer-step-num { color: #8a93a3; }
     .explainer-step[data-step="3"] .explainer-step-num { color: #e74c3c; }
-    .explainer-step[data-step="4"] .explainer-step-num { color: #8a4fff; }
+    .explainer-step[data-step="4"] .explainer-step-num { color: #f4b400; }
     .explainer-step h3 {
       font-size: 0.72rem; font-weight: 700; color: var(--ghost-white);
       text-transform: uppercase; letter-spacing: var(--track-label);
@@ -255,52 +255,29 @@
       line-height: var(--lh-body); max-width: 64ch; text-wrap: pretty;
     }
 
-    /* Long-read accordions: each landing section carries its full article in a
-       native <details>, collapsed by default so "Start here" stays in reach. */
-    .landing-article {
-      max-width: 76ch; margin-top: 36px;
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; overflow: hidden;
+    /* 03 — triad (reused for the theory section's three reasoning patterns) */
+    .triad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px 40px; }
+    .triad-cell { border-top: 1px solid rgba(255,255,255,0.18); padding-top: 28px; }
+    .triad-cell h3 {
+      font-size: 1.3rem; font-weight: 700; color: var(--ghost-white);
+      letter-spacing: var(--track-snug); line-height: var(--lh-tight); margin-bottom: 16px;
     }
-    .landing-article > summary {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 18px; cursor: pointer; list-style: none; user-select: none;
-      font-size: 0.85rem; font-weight: 600; color: var(--ghost-white);
-      background: rgba(255,255,255,0.05);
+    .triad-eyebrow {
+      display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.14em; margin-bottom: 10px; color: var(--primary-teal);
     }
-    .landing-article > summary::-webkit-details-marker { display: none; }
-    .landing-article > summary::after {
-      content: "▾"; margin-left: auto; color: var(--primary-teal);
-      transition: transform 0.2s ease;
+    .triad-cell p {
+      font-size: 0.82rem; color: var(--cloud); opacity: 0.75;
+      line-height: 1.55; text-wrap: pretty;
     }
-    .landing-article[open] > summary::after { transform: rotate(180deg); }
-    .landing-article[open] > summary { border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .landing-article-meta { font-size: 0.72rem; font-weight: 400; color: var(--cloud); opacity: 0.7; }
-    .landing-prose { padding: 8px 18px 28px; }
-    .landing-prose p {
-      font-size: 0.98rem; line-height: var(--lh-body); color: var(--cloud);
-      opacity: 0.8; text-wrap: pretty; margin-bottom: 1em; max-width: 68ch;
-    }
-    .landing-prose h3 {
-      font-size: 1.05rem; font-weight: 700; color: var(--ghost-white);
-      letter-spacing: var(--track-snug); margin: 32px 0 10px;
-    }
-    .landing-prose ul, .landing-prose ol { margin: 0 0 1em; padding-left: 22px; max-width: 66ch; }
-    .landing-prose li {
-      font-size: 0.94rem; line-height: var(--lh-body); color: var(--cloud);
-      opacity: 0.8; text-wrap: pretty; margin-bottom: 8px;
-    }
-    .landing-prose strong { color: var(--ghost-white); }
+    /* Aside block: a framed pull-paragraph that breaks up the scannable grids. */
     .landing-callout {
-      margin: 24px 0; padding-left: 20px; border-left: 2px solid var(--primary-teal);
-      font-size: 0.9rem; color: var(--cloud); opacity: 0.85;
-      line-height: var(--lh-body); max-width: 64ch; text-wrap: pretty;
+      margin: 48px 0 0; padding: 20px 24px; border-left: 2px solid var(--primary-teal);
+      background: rgba(255,255,255,0.04); border-radius: 0 8px 8px 0;
+      font-size: 0.92rem; color: var(--cloud); opacity: 0.9;
+      line-height: var(--lh-body); max-width: 70ch; text-wrap: pretty;
     }
-    .lattice-diagram {
-      font-family: 'Courier New', monospace; font-size: 0.72rem; line-height: 1.4;
-      background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px; padding: 16px; overflow-x: auto;
-      color: var(--ghost-white); margin: 0 0 1em;
-    }
+    .landing-callout strong { color: var(--ghost-white); }
 
     /* 04 — setup form keeps its card chrome (capped so inputs stay usable) */
     .setup-card {
@@ -326,12 +303,11 @@
       .landing-section-head { flex-direction: row; align-items: baseline; gap: 16px; margin-bottom: 28px; }
     }
     @media (max-width: 720px) {
-      .landing-cols { grid-template-columns: 1fr; }
+      .landing-cols, .triad-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 560px) {
       .explainer-steps { grid-template-columns: 1fr; }
       .setup-card { padding: 24px 20px; }
-      .landing-prose { padding: 4px 14px 22px; }
     }
 
     /* --- VIEW 2: APPLICATION WORKSPACE --- */
@@ -1994,133 +1970,87 @@
         <div class="landing-section-head"><span class="landing-index">01</span><span class="landing-kicker">Behold!</span></div>
         <h2 class="landing-statement" id="landing-h-behold">Stop reacting to symptoms. Start architecting the future.</h2>
         <div class="landing-cols">
-          <p>Right now, everyone wants to dive straight into building. You're probably here to upskill in AI, and the internet is obsessed with "vibe coding" — fire off a few natural-language prompts, watch the machine generate code, workflows, and entire applications in seconds. It is incredibly tempting to skip the messy, ambiguous work of problem-framing and go straight to the magic.</p>
-          <p>Here's the hard truth of the AI era: what you get out of an AI tool is entirely a function of what you put into it. Feed it a shallow problem definition and it will hand you a mediocre, legacy solution — just faster. In a world where execution is effectively free and instant, <strong>context is the ultimate flex</strong>.</p>
+          <p>Everyone wants to dive straight into building. The internet is obsessed with "vibe coding" — fire off a few prompts and watch the machine spit out whole applications in seconds. It's wildly tempting to skip the messy, ambiguous work of framing the problem and go straight to the magic.</p>
+          <p>But here's the hard truth of the AI era: what you get out is a function of what you put in. Feed an AI a shallow problem and it hands you a mediocre, legacy solution — just <em>faster</em>. When execution is free and instant, <strong>context is the ultimate flex</strong>. There's no magic AI in here doing the thinking for you. This is where you build that context first.</p>
         </div>
-        <details class="landing-article">
-          <summary>Behold! The Triangulator-inator! <span class="landing-article-meta">the full pitch · ~4 min read</span></summary>
-          <div class="landing-prose">
-            <p>If you are going to untangle the deeply networked chaos of modern problems — or, you know, take over the Tri-State Area — you are going to need the right gadget.</p>
-            <p>Welcome to <strong>The Triangulator-inator</strong>, a field mapping and theme identification tool by The Upskilling Labs (designed by Levy Strategic Design). And yes, true to its namesake, it <em>does</em> actually have a self-destruct button — it's in the board menu — where you can vaporize your entire board with ease if you need a clean slate. But unlike a certain mad scientist's inventions, the underlying architecture actually works, and your progress will absolutely not be thwarted by a semi-aquatic egg-laying mammal in a fedora.</p>
-            <h3>The "Vibe Coding" Trap</h3>
-            <p>If you feed an AI a shallow, industrial-era problem definition, it will not give you a paradigm-shifting innovation. We start here — before you write a single line of code or build an automation — because deep, accurate, structurally sound context is the single most critical skill you can develop today. The professionals who win tomorrow won't be the ones who type the fastest prompts; they will be the ones who can wade into chaos, extract the true human themes, and feed the machine a fundamentally superior problem frame.</p>
-            <p><strong>And before you ask: no, there is no magic AI inside this app doing the thinking for you.</strong> The app makes no AI calls at all — the ✨ buttons you'll meet along the way generate method-grounded prompts you carry to the LLM of your choice, a thinking partner you stay in charge of. The Triangulator-inator itself is a simulator and an architectural launchpad. It is designed to teach you <em>how</em> to think about chaotic data, <em>how</em> to build the high-level cognitive context required to decode complexity, and <em>how</em> to perfectly structure an intractable problem so that you can feed it into <em>any</em> modern tech stack.</p>
-            <h3>Your Secret Power: A Stealth Relational Database</h3>
-            <p>Navigating the messy reality of a complex problem shouldn't mean losing your best ideas to scattered sticky notes, lost documents, and photos of a whiteboard you will never look at again.</p>
-            <p>While the Triangulator-inator looks and feels like a fluid, visual canvas, it is actually a stealthy, high-powered relational database engine. As you work through the problem situation, the app captures your cognitive leaps in real time, translating your human intuition into a strict, actionable data architecture. Here is how the tool builds the "bones" of your project invisibly beneath the surface:</p>
-            <ul>
-              <li><strong>Web maps as data lattices.</strong> When you drag, drop, and connect cards on the canvas, you aren't just drawing lines on a screen. You are actively building a structured, many-to-many data lattice that links your themes down to your patterns, your classified evidence, and the exact granular survey signals you started with.</li>
-              <li><strong>Deeply enriched nodes.</strong> Every card on your web map is a vault. As you explore the problem, you enrich these nodes with deep context, writing extensive markdown notes and attaching primary and secondary source documents directly to the specific cards they support. Your raw evidence is permanently and structurally bonded to your strategic claims.</li>
-              <li><strong>Instant tech-ready architecture.</strong> When your framing work concludes, you never have to manually transcribe a brainstorm again. The tool traverses your database and automatically generates a comprehensive, hierarchical working folder. With a single export, you download a .zip containing a discrete sub-folder for every single card, complete with auto-generated notes.md files, an evidence trail tracing its roots, and your attached sources perfectly organized.</li>
-            </ul>
-            <h3>Triangulate the Chaos and Launch</h3>
-            <p>Your journey through the tool runs in five structured, interactive steps:</p>
-            <ol>
-              <li><strong>Load the pool.</strong> You begin with chaos: a cloud of qualitative survey observations (like the included Civics &amp; Elections field survey). Bring your own via CSV, convert any dataset with the built-in AI prompt, or start from the sample.</li>
-              <li><strong>Sort signal from noise.</strong> Work the pool one card at a time — discard the noise, keep the signals, flag the ★ supers that might reframe everything. You'll learn to isolate the core structural paradoxes causing the current deadlock.</li>
-              <li><strong>Triangulate on the canvas.</strong> Connect signals that point at the same thing to mint evidence, classify each claim with one of Dorst's seven types, then climb the ladder: evidence into pattern, pattern into theme.</li>
-              <li><strong>Build the problem situation.</strong> Push your strongest patterns and themes into the four-stage workbook, find the paradox at the core, and articulate the open condition your new frame will come from.</li>
-              <li><strong>Export and launch.</strong> Walk away with a print-ready artifact — or the full .zip working folder, ready to drop into the tech stack of your choosing.</li>
-            </ol>
-            <div class="landing-callout"><strong>The ultimate benefit:</strong> you walk away with the exact, data-rich bones of your project, completely organized into a clean file structure. Because this data model is standardized, you can immediately take your structural outline, your context-rich notes, and your source folders and plug them into <strong>any AI tool, vibe-coding environment, or tech stack of your own choosing</strong>.</div>
-            <p>Stop reacting to symptoms. Start architecting the future. (Just watch out for that self-destruct button.)</p>
+        <p class="landing-intro"><strong>Your secret power: a stealth relational database.</strong> It looks and feels like a fluid visual canvas. Underneath, it quietly turns every move you make into a strict, actionable data architecture.</p>
+        <div class="triad-grid">
+          <div class="triad-cell">
+            <h3>Web maps as data lattices</h3>
+            <p>Every line you draw builds a many-to-many lattice — linking your themes down through patterns and classified evidence to the exact survey signals you started with.</p>
           </div>
-        </details>
+          <div class="triad-cell">
+            <h3>Deeply enriched nodes</h3>
+            <p>Every card is a vault. Write markdown notes, attach primary and secondary sources, and bond your raw evidence directly to the strategic claims it supports.</p>
+          </div>
+          <div class="triad-cell">
+            <h3>Tech-ready export</h3>
+            <p>One click traverses the whole database into a .zip: a folder per card, auto-generated notes.md, an evidence trail, your sources organized — ready to drop into any tech stack.</p>
+          </div>
+        </div>
+        <div class="landing-callout">Built by Levy Strategic Design for The Upskilling Labs. And yes — true to its name, it has an actual <strong>self-destruct button</strong> in the board menu, to vaporize your board for a clean slate. Unlike a certain mad scientist's inventions, this one works — and your progress won't be thwarted by a semi-aquatic egg-laying mammal in a fedora.</div>
       </section>
 
       <section class="landing-section" aria-labelledby="landing-h-theory">
         <div class="landing-section-head"><span class="landing-index">02</span><span class="landing-kicker">The theory</span></div>
-        <h2 class="landing-statement" id="landing-h-theory">You're not solving the wrong way. You're solving inside the wrong frame.</h2>
-        <p class="landing-intro">We owe this entire paradigm shift to design scholar Kees Dorst, who systematically articulated the practice of Frame Creation to rescue organizations from their own cognitive deadlocks. If your projects get stuck in an endless loop of organizational whack-a-mole, you aren't crazy — you're experiencing an <strong>ontological mismatch</strong>: industrial-era, linear logic applied to post-industrial, hyper-connected problems.</p>
-        <details class="landing-article">
-          <summary>The Theory of Frame Creation: The Method Behind the Madness <span class="landing-article-meta">~4 min read</span></summary>
-          <div class="landing-prose">
-            <h3>The Equation of Causality</h3>
-            <p>To elucidate the genius of expert designers, Dorst used formal logic to compare how different professions approach the fundamental equation of causality. Every professional challenge consists of three interacting elements:</p>
-            <ul>
-              <li><strong>The WHAT (the elements):</strong> the physical things, actors, or systems involved.</li>
-              <li><strong>The HOW (the working method):</strong> the pattern of relationships, rules, or operating models connecting those elements.</li>
-              <li><strong>The OUTCOME (the value):</strong> the final observed phenomenon or created value.</li>
-            </ul>
-            <p>Depending on how many of these variables you know, your brain defaults to one of three reasoning patterns.</p>
-            <p><strong>1. Deduction (the Scientist).</strong> You know the WHAT and the HOW; the goal is to predict the OUTCOME. If you know the mass of planets (WHAT) and the laws of gravity (HOW), you can safely deduce exact future planetary positions (OUTCOME). Great for the hard sciences, but useless for navigating dynamic societal shifts.</p>
-            <p><strong>2. Induction (the Detective).</strong> You know the WHAT and the OUTCOME; the goal is to hypothesize the missing HOW. A detective like Sherlock Holmes observes a crime scene (OUTCOME) and suspects (WHAT) to creatively induce the narrative of the crime (HOW).</p>
-            <p><strong>3. Normal abduction (the Reactive Fixer).</strong> You know the HOW and the OUTCOME; the goal is to engineer or find the missing WHAT. If the desired outcome is an energy rush in the morning, and the known working method is chemical stimulation via caffeine, the WHAT simply becomes the engineering of a coffee machine.</p>
-            <div class="landing-callout"><strong>The trap:</strong> normal abduction is highly efficient for closed problems, but fails catastrophically in complex, dynamic environments because it stubbornly refuses to question the underlying HOW. When handed a messy problem, your brain locks down an established institutional logic and frantically tries to engineer a WHAT to fix the symptom.</div>
-            <h3>Enter Design Abduction: Dorst's Breakthrough</h3>
-            <p>When you are dealing with open, networked societal and organizational problems, you possess only a deep understanding of the desired value — the <strong>OUTCOME</strong>. Both the WHAT and the HOW are completely unknown. Because two variables are missing, the problem cannot be solved sequentially: you must simultaneously propose a new pattern of relationships (the HOW) and the corresponding elements (the WHAT), testing them in conjunction.</p>
-            <p><strong>The act of proposing this hypothetical, novel pattern of relationships is the definition of "framing."</strong> A frame acts as a strategic thought tool — often expressed as a metaphor or an organizational principle — that rearticulates the entire problem arena, creating an entirely new standpoint from which the problem becomes solvable. As organizational theorist Armand Hatchuel brilliantly notes, it is the difference between relying on a known set of alternatives to find "a good movie to see" (normal abduction) versus having to creatively expand concepts to design "a good time" (design abduction).</p>
-            <h3>Transcending the Paradox</h3>
-            <p>Why go through all this cognitive heavy lifting? Because at the core of the most intractable challenges lies a <strong>paradox</strong> — conflicting, mutually exclusive requirements that are all fundamentally valid. Traditional problem-solving leaves an organization with only two unsatisfactory options when facing a paradox: prioritize one side at the expense of the other, or negotiate a mediocre compromise.</p>
-            <p>Dorst's Frame Creation model offers a third path: <strong>transcending the paradox altogether</strong>. A paradox is only insurmountable within the boundaries of its original, predefined context — so you deliberately widen that context. You look at the broader field of actors and extract universal human themes (the amber Theme cards at the top of your canvas ladder). Once you hit that deeper phenomenological layer, you can establish a new frame that satisfies the conflicting considerations simultaneously.</p>
-            <p>The Triangulator-inator does not let you bypass this genius. It enforces Dorst's exact cognitive leaps: it isolates the paradox, maps the field, forces you to extract the themes, and links the frame you build in the problem-situation workbook directly back to your raw data lattice. You are building the ultimate high-level context, ready to be unleashed on whatever technology stack you choose.</p>
+        <h2 class="landing-statement" id="landing-h-theory">You're not solving it wrong. You're solving inside the wrong frame.</h2>
+        <p class="landing-intro">Credit where it's due: design scholar Kees Dorst named this move <strong>Frame Creation</strong>. If your projects feel like endless organizational whack-a-mole, you're not crazy — you're hitting an <strong>ontological mismatch</strong>, running industrial-era linear logic on post-industrial, hyper-connected problems. Every challenge is really an equation of three parts — the <strong>WHAT</strong> (the pieces), the <strong>HOW</strong> (the working method), and the <strong>OUTCOME</strong> (the value). How many you already know decides how your brain reasons.</p>
+        <div class="triad-grid">
+          <div class="triad-cell">
+            <span class="triad-eyebrow">Deduction</span>
+            <h3>The Scientist</h3>
+            <p>Knows the WHAT and the HOW, predicts the OUTCOME. Perfect for planets and gravity. Useless for navigating dynamic societal shifts.</p>
           </div>
-        </details>
+          <div class="triad-cell">
+            <span class="triad-eyebrow">Induction</span>
+            <h3>The Detective</h3>
+            <p>Knows the WHAT and the OUTCOME, deduces the missing HOW. Sherlock reading the crime scene to reconstruct the story.</p>
+          </div>
+          <div class="triad-cell">
+            <span class="triad-eyebrow">Normal abduction</span>
+            <h3>The Reactive Fixer</h3>
+            <p>Knows the HOW and the OUTCOME, engineers a WHAT to match. Efficient — and exactly how you get stuck, fixing symptoms while never questioning the HOW.</p>
+          </div>
+        </div>
+        <div class="landing-callout"><strong>The expert's move is design abduction.</strong> When both the WHAT and the HOW are unknown, you invent a new pattern of relationships <em>and</em> the pieces to fill it — at once. That invented pattern is a <strong>frame</strong>: the difference between picking "a good movie to see" and designing "a good time." At the core of every intractable problem sits a paradox — valid, mutually exclusive demands. Rather than pick a side or split the difference, you widen the context until a new frame satisfies both. This tool drags you, deliberately, toward exactly that leap.</div>
       </section>
 
       <section class="landing-section" aria-labelledby="landing-h-canvas">
         <div class="landing-section-head"><span class="landing-index">03</span><span class="landing-kicker">The canvas</span></div>
         <h2 class="landing-statement" id="landing-h-canvas">Not a whiteboard. A data lattice.</h2>
-        <p class="landing-intro">When you first open the workspace, you'll face a vast cloud of observation cards. It looks like chaos, because modern problem environments are a cacophony of voices — but this canvas is not a generic brainstorming whiteboard. It is a strict data model: a directed acyclic graph where every card type represents a different layer of cognitive abstraction.</p>
+        <p class="landing-intro">Open the workspace and you'll meet a cloud of observation cards. It looks like chaos because real problems are a cacophony — but this is no brainstorming whiteboard. It's a strict directed graph. First you sift the cloud, swiping each card to <strong>noise</strong>, <strong>signal</strong>, or <strong>★ super</strong>. Then you climb, one tier at a time:</p>
         <ol class="explainer-steps">
         <li class="explainer-step" data-step="1">
           <span class="explainer-step-num" aria-hidden="true">01</span>
           <div>
-            <h3>Sort the pool</h3>
-            <p>Work through your observations one at a time. Keep what's real, discard the noise, flag the ones that might shift everything. Fast and instinctive — trust your gut, revisit later.</p>
+            <h3>Signal</h3>
+            <p>A verified observation that survived the sort. Bonded to the real words of people in the field — so nothing you build can be dismissed as fluffy.</p>
           </div>
         </li>
         <li class="explainer-step" data-step="2">
           <span class="explainer-step-num" aria-hidden="true">02</span>
           <div>
-            <h3>Triangulate evidence</h3>
-            <p>Two signals pointing at the same thing? That's evidence. Connect them on the canvas, classify the claim using Dorst's seven types, and name what you've found. Now you can defend it.</p>
+            <h3>Evidence</h3>
+            <p>Two signals pointing the same way, triangulated and tagged with one of Dorst's seven types. A hunch becomes a claim you can defend.</p>
           </div>
         </li>
         <li class="explainer-step" data-step="3">
           <span class="explainer-step-num" aria-hidden="true">03</span>
           <div>
-            <h3>Climb the ladder</h3>
-            <p>Evidence into <strong>pattern</strong>. Pattern into <strong>theme</strong>. Each step, the real problem comes into focus. Each tier unlocks only when the level below is named — because every claim should rest on examined ones.</p>
+            <h3>Pattern</h3>
+            <p>Clusters of evidence — the repeating institutional and cultural behaviors hiding inside hundreds of scattered data points.</p>
           </div>
         </li>
         <li class="explainer-step" data-step="4">
           <span class="explainer-step-num" aria-hidden="true">04</span>
           <div>
-            <h3>Name the situation</h3>
-            <p>When the map is complete, push it forward. Synthesize the open condition your frame will come from. This is where your breakthrough lives — and the evidence trail makes every word of it yours to stand behind.</p>
+            <h3>Theme</h3>
+            <p>The deep, neutral human reality underneath: identity, fear of risk, isolation. Dorst's pivot point — and the launchpad for the frame you build next door, in the workbook.</p>
           </div>
         </li>
       </ol>
-        <details class="landing-article">
-          <summary>Navigating the Canvas: The Anatomy of a Lattice <span class="landing-article-meta">the field guide · ~5 min read</span></summary>
-          <div class="landing-prose">
-            <h3>Step Zero: Sifting the Cloud (Signal vs. Noise)</h3>
-            <p>Before you connect a single line, the app forces a critical first step: <strong>you must sort every observation card into signal or noise</strong>. When you are flooded with qualitative data from the public and sector experts, it is incredibly easy to get distracted by complaints, surface-level frustrations, or irrelevant tangents.</p>
-            <p>Swipe left (←) to discard <strong>noise</strong> — superficial complaints, ad-hoc policy reactions, out-of-scope venting. Swipe right (→) to keep a <strong>signal</strong> — real evidence of systemic behavior, a unique practitioner insight, a hard environmental reality. Swipe up (↑) to flag a <strong>★ super signal</strong>: one that doesn't just confirm what you suspected, but reframes the situation. By clearing the static immediately, you ensure the foundational layer of your relational database is built purely on high-fidelity ground truth.</p>
-            <h3>The Tiers of the Data Lattice</h3>
-            <p>Once your signals are locked in, you climb the ladder, transforming raw observations into strategic paradigms:</p>
-            <pre class="lattice-diagram">[ SIGNALS ] → [ EVIDENCE ] → [ PATTERNS ] → [ THEMES ]
- raw kept      triangulated    grouped        human
- observations  + classified    behaviors      realities
-               (7 Dorst types)
-
-   …and beyond the canvas: [ THE WORKSPACE ]
-                           where your FRAME is born</pre>
-            <p><strong>Signal cards.</strong> Your verified, high-fidelity observations — survey data points, public comments, and practitioner notes that survived the sort. This is your anchor to reality: your final strategy can never be accused of being "fluffy" or ungrounded, because it is structurally bonded to the exact words of the people in the field.</p>
-            <p><strong>Evidence cards.</strong> Two or more signals pointing at the same thing, triangulated and classified with one of Dorst's seven evidence types. This is where a hunch becomes a defensible claim.</p>
-            <p><strong>Pattern cards.</strong> Clusters of connected evidence. As you look across the canvas, you will notice different stakeholder groups repeating the same systemic actions or running into the same historical routines. Patterns synthesize hundreds of individual data points into distinct, visible institutional and cultural behaviors.</p>
-            <p><strong>Theme cards.</strong> The deep, universal human conditions underlying your patterns — the core pivot of Dorst's entire philosophy. Themes are completely neutral: they belong neither to the problem nor the solution, focusing on profound realities like <em>identity preservation, fear of risk, or spatial isolation</em>. Open a theme (or any card) and you can write markdown notes and attach primary or secondary sources to justify your claim — building the deep, high-level context modern AI tools require.</p>
-            <p>One house rule: <strong>higher tiers stay locked until every card beneath them is named and described</strong> — because every claim should rest on examined ones. And the frames themselves? They are deliberately not a canvas card. When your themes are named, you push the map into the problem-situation workbook, where your conditional "if/then" propositions — wrapped in sharp structural metaphors — emerge with their whole evidence trail attached.</p>
-            <h3>The Intuition Engine: Why You Must Do This By Hand</h3>
-            <p>In an era where you could easily upload a CSV of survey data into an LLM and ask it to "find the themes," why are we forcing you to manually drag, drop, read, and connect these cards yourself? <strong>Because you are building something vastly more important than a database: you are building a mental model.</strong> By physically wrestling with the data, touching the individual signals, and making the deliberate choice to connect <em>this</em> pattern to <em>that</em> theme, you are mapping the entire field directly into your own brain. This deep, manual cognitive immersion primes your intuition.</p>
-            <p>When you eventually take this architecture into an AI tool, your intuition is the only defense you have. It is the finely tuned radar that will tell you if the AI's generated output is actually a brilliant, paradigm-shifting solution, or just confidently delivered, hallucinated nonsense. You cannot outsource the context-building phase to a machine without outsourcing your own strategic judgment.</p>
-            <h3>Why the Tech-Ready File Structure Matters (The Reality Check)</h3>
-            <p>You aren't just making a pretty picture. By enforcing this strict hierarchy, the Triangulator-inator maps out the exact relationship rules of your project. When you hit that final export button, the tool converts your visual map into a standardized, relational file architecture: a working folder where every card gets its own sub-folder, with notes.md files and your attached source documents matched to the exact nodes they support. Drop that into a vibe-coding environment or an LLM tech stack of your own choosing, and <strong>the AI is significantly more likely to help you build highly accurate, contextually brilliant solutions — because you fed it a flawless data architecture.</strong></p>
-            <div class="landing-callout"><strong>Let's be completely candid, though: there are absolutely no guarantees.</strong> AI tools are still prone to hallucinations, logic loops, and occasional bouts of utter nonsense. If you give one garbage context, it will generate hyper-accelerated garbage solutions. But if you feed it the data-rich, human-validated bones generated by this tool — backed by your fully primed intuition — you drastically stack the deck in your favor. You give the machine a fighting chance to generate something truly exceptional.</div>
-          </div>
-        </details>
-        <p class="landing-footnote">There is no AI inside the app itself — the ✨ button on every card generates a method-grounded prompt for the LLM of your choice: a thinking partner that surfaces what you missed, while you stay in control of what matters.</p>
+        <div class="landing-callout"><strong>Why by hand?</strong> You could dump a CSV into an LLM and ask it to "find the themes." We make you drag, read, and connect every card yourself — because you're not just building a database, you're building a <strong>mental model</strong>. That primed intuition is your only radar for telling a brilliant AI answer from confidently delivered nonsense.</div>
+        <p class="landing-footnote">No guarantees — garbage context in, hyper-accelerated garbage out. But feed your stack the human-validated bones this tool produces, backed by your own primed intuition, and you stack the deck hard in your favor. There's no AI inside the app itself: the ✨ button on each card just hands you a method-grounded prompt for the LLM of your choice.</p>
       </section>
 
       <section class="landing-section" aria-labelledby="landing-h-start">
