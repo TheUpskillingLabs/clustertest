@@ -1057,6 +1057,7 @@
       .section-desc { font-size: 16px; }
     }
     .cardpage-files { display: flex; flex-direction: column; gap: 8px; }
+    .cardpage-file-group { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--midnight); opacity: 0.55; margin-top: 4px; }
     .cardpage-file { display: flex; align-items: center; gap: 12px; background: var(--cloud); border-radius: 8px; padding: 12px 16px; }
     .cardpage-file > span:first-child { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cardpage-file-size { font-size: 0.75rem; opacity: 0.6; flex-shrink: 0; }
@@ -2305,11 +2306,13 @@
         <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
         <div class="cardpage-label">Main document — notes.md</div>
         <textarea id="card-page-doc" style="width:100%; height:min(240px, 38dvh); font-family:monospace; font-size:0.825rem; padding:16px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
-        <div class="cardpage-label mt">Attached markdown files</div>
+        <div class="cardpage-label mt">Attached sources</div>
         <div id="card-page-files" class="cardpage-files"></div>
         <input type="file" id="card-page-upload" accept=".md,.markdown,text/markdown,text/plain" multiple class="sr-only">
-        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
-          <button class="btn btn-outline" onclick="document.getElementById('card-page-upload').click()">Upload markdown files</button>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:flex-end; margin-top:8px;">
+          <button class="btn btn-outline" onclick="pickCardFiles('primary')">Attach primary source</button>
+          <button class="btn btn-outline" onclick="pickCardFiles('secondary')">Attach secondary source</button>
+          <button class="btn btn-outline" onclick="pickCardFiles()">Upload markdown files</button>
           <button class="btn btn-primary" onclick="closeModal('card-page-modal')" data-autofocus>Done</button>
         </div>
       </div>
@@ -2676,7 +2679,13 @@
         delete c.signalIds;
         if (c.tier === 1 && typeof c.cardType === 'undefined') c.cardType = null;
         if (typeof c.doc !== 'string') c.doc = '';
-        if (!Array.isArray(c.files)) c.files = [];   // [{ name, content }]
+        if (!Array.isArray(c.files)) c.files = [];   // [{ name, content, kind? }]
+        c.files = c.files.filter(f => f && typeof f.name === 'string');
+        c.files.forEach(f => {
+          if (typeof f.content !== 'string') f.content = String(f.content || '');
+          // optional source tag: 'primary' | 'secondary' only
+          if (f.kind !== 'primary' && f.kind !== 'secondary') delete f.kind;
+        });
       });
       if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
       // --- Migrate singular situation + committedCardIds → situations[] ---
@@ -6874,12 +6883,81 @@ ${AI_RULES}
       return lines.join('\n');
     }
 
+    // Root README that primes any LLM once, so the unzipped folder can be
+    // dropped straight into Claude/ChatGPT without re-explaining the method.
+    function buildExportReadme() {
+      return `# How to read this folder
+
+This is a working folder from a Frame Creation web map (Kees Dorst's method).
+Raw field observations ("signals") were triangulated into evidence cards, which
+climb a ladder: evidence supports patterns, patterns point to themes, and themes
+converge toward a problem situation — the open, complex, networked condition a
+new frame will eventually come from. \`problem-situation.md\` names that condition;
+each folder in \`cards/\` holds one card's claim (\`card.json\`), the author's working
+notes (\`notes.md\`), the evidence beneath it (\`evidence.md\`), and prompts for going
+deeper. The job at this stage is to investigate the field, not to solve anything.
+
+## Role
+
+${AI_ROLE}
+
+## Rules
+
+${AI_RULES}
+
+## How to use this with an AI
+
+Upload this whole folder to Claude or ChatGPT and start with:
+
+> Read the README, then act as my Frame Creation thinking partner. Start by
+> reading \`problem-situation.md\`, then the cards in \`cards/\`. Don't propose
+> solutions.
+`;
+    }
+
+    // Field-widening prompt (Dorst steps 4–5) — only for cards where the
+    // field is the point: tier-1 player/value and every tier-3+ card.
+    function cardWantsFieldScan(c) {
+      return (c.tier === 1 && (c.cardType === 'player' || c.cardType === 'value')) || c.tier >= 3;
+    }
+    function buildFieldScanPrompt(c) {
+      const what = c.tier === 1
+        ? (c.cardType === 'player' ? 'player (a stakeholder understood by their practices, interests, values, and frames)' : 'value (a deep, universal value observed in the field)')
+        : tierName(c.tier).toLowerCase() + ' (a deeper condition beneath the patterns)';
+      return `<role>
+${AI_ROLE}
+</role>
+
+<context>
+This card is a ${tierName(c.tier)}${c.tier === 1 ? ' · ' + cardTypeInfo(c.cardType).label : ''}${c.playerRole ? ' · ' + c.playerRole : ''} from a Frame Creation web map.
+
+Title: ${c.title || 'Untitled'}
+Description: ${c.description || '(none yet)'}
+
+Evidence beneath it:
+${formatTreeOutline(c.id, 0, 4) || '(none yet)'}
+</context>
+
+<task>
+Widen to the field (Dorst steps 4–5). This card names a ${what}. Radically widen beyond the original problem:
+1. Surface analogous fields and domains where this same ${c.tier === 1 ? (c.cardType === 'player' ? 'player-type' : 'value') : 'condition'} operates — aim for surprising but defensible analogies, not obvious neighbors.
+2. For each, name what that field already knows: how it understands the ${c.tier === 1 && c.cardType === 'player' ? "player's currency" : 'underlying dynamic'}, and what practices or framings it has developed.
+3. Identify unexpected players who share the underlying value — people and institutions nobody at the table has thought to involve.
+</task>
+
+<rules>
+${AI_RULES}
+</rules>
+`;
+    }
+
     function buildExportFiles() {
       const first = appState.situations[0];
       const root = folderSlug((first && first.title) || appState.settings.title) + '/';
       const files = [];
       const add = (path, content) => files.push({ path: root + path, content });
 
+      add('README.md', buildExportReadme());
       add('problem-situation.md', exportSituationDoc());
 
       // Machine-readable snapshot — lets someone else open this folder in the
@@ -6903,7 +6981,11 @@ ${AI_RULES}
         add(f + 'notes.md', docText);
         add(f + 'deepen.md', buildHubPrompt(c.id, 'throughline'));
         add(f + 'evidence.md', formatTreeOutline(c.id, 0) || '(no evidence beneath this card yet)');
-        (c.files || []).forEach(file => add(f + 'files/' + sanitizeFileName(file.name), file.content));
+        if (cardWantsFieldScan(c)) add(f + 'field-scan.md', buildFieldScanPrompt(c));
+        (c.files || []).forEach(file => {
+          const sub = file.kind === 'primary' ? 'primary/' : file.kind === 'secondary' ? 'secondary/' : '';
+          add(f + 'sources/' + sub + sanitizeFileName(file.name), file.content);
+        });
       });
       return files;
     }
@@ -7445,10 +7527,20 @@ ${AI_RULES}
 
     function renderCardFiles(c) {
       const wrap = document.getElementById('card-page-files');
-      if (!c.files || !c.files.length) { wrap.innerHTML = '<p class="cardpage-empty">No attached files yet.</p>'; return; }
-      wrap.innerHTML = c.files.map((f, i) =>
-        `<div class="cardpage-file"><span>${escapeHtml(f.name)}</span><span class="cardpage-file-size">${f.content.length} chars</span><button onclick="removeCardFile(${i})">Remove</button></div>`
-      ).join('');
+      if (!c.files || !c.files.length) { wrap.innerHTML = '<p class="cardpage-empty">No attached sources yet.</p>'; return; }
+      // Grouped by kind, but each row keeps its ORIGINAL array index so
+      // removeCardFile() stays correct.
+      const groups = [
+        ['primary', 'Primary — from the situation itself'],
+        ['secondary', 'Secondary — literature, data, prior art'],
+        [undefined, 'Other files']
+      ];
+      const row = (f, i) =>
+        `<div class="cardpage-file"><span>${escapeHtml(f.name)}</span><span class="cardpage-file-size">${f.content.length} chars</span><button onclick="removeCardFile(${i})">Remove</button></div>`;
+      wrap.innerHTML = groups.map(([kind, label]) => {
+        const rows = c.files.map((f, i) => f.kind === kind ? row(f, i) : '').join('');
+        return rows ? `<div class="cardpage-file-group">${label}</div>${rows}` : '';
+      }).join('');
     }
 
     function removeCardFile(i) {
@@ -7456,14 +7548,27 @@ ${AI_RULES}
       c.files.splice(i, 1); scheduleSave(); renderCardFiles(c);
     }
 
+    // The three attach buttons share one hidden input; the chosen kind rides
+    // along until the change event fires.
+    let pendingUploadKind = undefined;
+    function pickCardFiles(kind) {
+      pendingUploadKind = kind;
+      document.getElementById('card-page-upload').click();
+    }
+
     function handleCardFileUpload(c, evt) {
+      const kind = pendingUploadKind; pendingUploadKind = undefined;
       const files = [...(evt.target.files || [])]; evt.target.value = '';
       if (!files.length) return;
       files.forEach(file => {
         if (!/\.(md|markdown|txt)$/i.test(file.name)) { toast(`Skipped ${file.name} — markdown/text only.`); return; }
         if (file.size > 500000) { toast(`Skipped ${file.name} — too large (500 KB max).`); return; }
         const r = new FileReader();
-        r.onload = () => { c.files.push({ name: file.name, content: String(r.result || '') }); scheduleSave(); renderCardFiles(c); };
+        r.onload = () => {
+          const entry = { name: file.name, content: String(r.result || '') };
+          if (kind === 'primary' || kind === 'secondary') entry.kind = kind;
+          c.files.push(entry); scheduleSave(); renderCardFiles(c);
+        };
         r.onerror = () => { toast(`Couldn't read ${file.name}.`); };
         r.readAsText(file);
       });
