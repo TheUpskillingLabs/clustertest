@@ -981,15 +981,25 @@
       max-height: 56px; overflow-y: auto; /* fixed bar height — scroll long descriptions */
     }
     .section-desc::placeholder { color: rgba(255,255,255,0.4); }
-    .section-actions { display: flex; gap: 8px; flex-shrink: 0; }
-    .section-export {
-      background: var(--primary-teal); color: var(--ghost-white); border: none;
-      padding: 12px 16px; border-radius: 10px; font-weight: 700; font-size: 0.8rem;
-      cursor: pointer; font-family: 'Geologica', sans-serif; white-space: nowrap;
-      box-shadow: 0 8px 24px rgba(0,148,160,0.35);
+    .section-actions {
+      display: flex; gap: 6px; flex-shrink: 0;
+      flex-wrap: wrap; justify-content: flex-end; align-items: flex-start;
     }
-    .section-export:hover { background: #007882; }
-    .section-export.hidden { display: none; }
+    .section-tool {
+      display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      min-width: 64px; padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 10px;
+      background: rgba(255,255,255,0.06); color: var(--ghost-white);
+      font-family: 'Geologica', sans-serif; font-size: 0.65rem; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.12s ease;
+    }
+    .section-tool:hover { background: rgba(0,148,160,0.35); }
+    .section-tool .st-glyph { font-size: 1rem; line-height: 1; }
+    .section-tool-primary { background: var(--primary-teal); border-color: transparent; box-shadow: 0 8px 24px rgba(0,148,160,0.35); }
+    .section-tool-primary:hover { background: #007882; }
+    .section-tool-danger:hover { background: rgba(196,30,58,0.45); }
+    .section-tool.is-disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
     /* FigJam-style bottom dock: arm a tool, then click the canvas to place. */
     .canvas-dock {
@@ -5930,10 +5940,15 @@ ${AI_RULES}
     }
 
     function switchAIMode(mode) {
-      if (!currentAIHubId && !currentPoolMode) return;
+      if (!currentAIHubId && !currentPoolMode && !currentSituationId) return;
       currentAIMode = mode;
       const ta = document.getElementById('ai-prompt-text');
-      if (currentPoolMode) {
+      if (currentSituationId) {
+        ta.value = buildSituationPrompt(mode, findSituation(currentSituationId));
+        const k = SITUATION_PROMPT_KINDS[mode];
+        const blurb = document.getElementById('ai-modal-blurb');
+        if (blurb && k) blurb.textContent = k.blurb;
+      } else if (currentPoolMode) {
         ta.value = buildPoolPrompt(mode);
         const pm = POOL_PROMPT_MODES[mode];
         const blurb = document.getElementById('ai-modal-blurb');
@@ -5958,6 +5973,7 @@ ${AI_RULES}
     function openHubNamePromptModal(hubId) { openHubAIModal(hubId, 'throughline'); }
 
     let currentPoolMode = null;
+    let currentSituationId = null;
 
     const POOL_PROMPT_MODES = {
       landscape: {
@@ -6181,6 +6197,7 @@ ${AI_RULES}
 
     function openAIPromptModal(mode) {
       currentAIHubId = null;
+      currentSituationId = null;
       currentPoolMode = mode || 'landscape';
       currentAIMode = currentPoolMode;
       const d = poolSignalData();
@@ -6207,6 +6224,42 @@ ${AI_RULES}
         });
       }
       ta.value = buildPoolPrompt(currentPoolMode);
+      openModal('ai-modal');
+    }
+
+    // Situation-lens prompts for one section box: tabs come from
+    // SITUATION_PROMPT_KINDS; tab switches route through switchAIMode.
+    function openSituationAIModal(sitId, kind) {
+      const sit = findSituation(sitId);
+      if (!sit) return;
+      currentAIHubId = null;
+      currentPoolMode = null;
+      currentSituationId = sitId;
+      currentAIMode = SITUATION_PROMPT_KINDS[kind] ? kind : 'frame';
+
+      const titleEl = document.getElementById('ai-modal-title');
+      const blurb = document.getElementById('ai-modal-blurb');
+      const tabs = document.getElementById('ai-mode-tabs');
+      const ta = document.getElementById('ai-prompt-text');
+
+      if (titleEl) titleEl.textContent = (sit.title || '').trim()
+        ? `LLM analysis — ${sit.title.trim()}`
+        : 'LLM analysis — situation lenses';
+      if (blurb) blurb.textContent = SITUATION_PROMPT_KINDS[currentAIMode].blurb;
+      if (tabs) {
+        tabs.classList.remove('hidden');
+        tabs.innerHTML = '';
+        Object.entries(SITUATION_PROMPT_KINDS).forEach(([key, k]) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.role = 'tab';
+          btn.setAttribute('data-mode', key);
+          btn.className = 'ai-mode-tab' + (key === currentAIMode ? ' is-active' : '');
+          btn.textContent = k.label;
+          tabs.appendChild(btn);
+        });
+      }
+      ta.value = buildSituationPrompt(currentAIMode, sit);
       openModal('ai-modal');
     }
 
@@ -6291,6 +6344,8 @@ ${AI_RULES}
 
     const SITUATION_PROMPT_KINDS = {
       frame: {
+        label: 'Frame',
+        blurb: 'Articulate a frame: "if this situation is approached as if it is X, then Y follows." Frames are metaphors from other domains, not restatements.',
         task: 'Help me articulate a FRAME for this situation. A frame is a proposed new way of seeing: "If this situation is approached AS IF it is [X], then [Y] follows."',
         thinking: [
           'Read the full evidence trail. Identify the 2–3 deepest tensions or paradoxes.',
@@ -6313,6 +6368,8 @@ One question that forces you to defend the frame as a genuine reorientation, not
         modeRule: 'Frames are metaphors from other domains — NOT restatements of the themes. Do NOT propose solutions; propose ways of seeing.'
       },
       stakeholder: {
+        label: 'Stakeholders',
+        blurb: 'Map who is involved, affected, empowered, or excluded — inner circle, wider field, owners, gatekeepers — and the voice whose absence weakens the framing.',
         task: 'Help me build a robust Stakeholder Map for this whole situation. Identify who is involved, affected, empowered, or excluded — without trying to solve anything.',
         thinking: [
           'Read the evidence trail. For each theme/pattern, identify whose voice is present and whose is absent.',
@@ -6337,6 +6394,8 @@ The one stakeholder whose absence most weakens the current framing, and what the
         modeRule: 'Do NOT conflate stakeholders with job titles — name practices and currencies. The user\'s own organization is a stakeholder too.'
       },
       problematize: {
+        label: 'Problematize',
+        blurb: 'Complicate your understanding: hidden assumptions, who benefits from the status quo, where the evidence is thin, and the strongest counter-framing.',
         task: 'Problematize this situation. Complicate my understanding and surface systemic roots, hidden assumptions, and beneficiaries of the status quo.',
         thinking: [
           'Read the framing and evidence. Identify what the user takes for granted.',
@@ -6361,6 +6420,8 @@ A single question you must answer to defend this framing as-is.`,
         modeRule: 'Do not soften criticisms — the user benefits from being challenged, not reassured.'
       },
       interview: {
+        label: 'Interviews',
+        blurb: 'Prepare to talk to the people behind the load-bearing signals — open-ended questions, complicating factors, and secondary research fields.',
         task: 'Help me prepare to investigate this situation through interviews with the people behind these signals. They have ground truth I cannot guess.',
         thinking: [
           'Identify the 3–5 most load-bearing signals — those that, if wrong or differently nuanced, would most change the framing.',
@@ -6383,6 +6444,8 @@ For each of 3–5 key signals:
       },
 
       'gap-analysis': {
+        label: 'Gap analysis',
+        blurb: 'Audit the evidence base: coverage of the seven Dorst types, missing perspectives, thin claims, a research brief, and what access the research demands.',
         task: `Audit this problem situation's evidence base and produce a research brief. Read the full evidence trail, the card inventory (titles, descriptions, types, tiers), and the epistemics notes the user wrote on each card ("where I'm not sure", "whose voice is still missing"). Your job is not to strengthen the framing — it is to expose exactly where the evidence is thin, whose perspective is absent, and what the user must go find before the framing can be trusted.`,
         thinking: [
           'Walk the evidence trail card by card. Note each card\'s Dorst evidence type (or its absence) and how many independent signals sit beneath it.',
@@ -6563,7 +6626,19 @@ ${AI_RULES}
               <textarea class="section-desc"${legacy ? ' id="section-desc"' : ''} rows="2" placeholder="Describe it — the open, complex, networked condition">${escapeHtml(s.description || '')}</textarea>
             </div>
             <div class="section-actions">
-              <button class="section-export ${ready ? '' : 'hidden'}"${legacy ? ' id="section-export"' : ''}>Export folder ⤓</button>
+              <button type="button" class="section-tool section-ai" title="Situation lenses — copy prompts into your LLM" aria-label="LLM Analysis">
+                <span class="st-glyph" aria-hidden="true">✨</span><span class="st-label">LLM Analysis</span>
+              </button>
+              <button type="button" class="section-tool section-workbook" title="Open the full workbook for this situation" aria-label="Open workbook">
+                <span class="st-glyph" aria-hidden="true">📖</span><span class="st-label">Workbook</span>
+              </button>
+              <button type="button" class="section-tool section-tool-primary section-export ${ready ? '' : 'is-disabled'}"${legacy ? ' id="section-export"' : ''}
+                title="${ready ? 'Export working folder' : 'Name and describe the situation to export'}" aria-disabled="${ready ? 'false' : 'true'}" aria-label="Export working folder">
+                <span class="st-glyph" aria-hidden="true">⤓</span><span class="st-label">Export</span>
+              </button>
+              <button type="button" class="section-tool section-tool-danger section-unframe" title="Unframe — release cards back to the board" aria-label="Unframe situation">
+                <span class="st-glyph" aria-hidden="true">🗑</span><span class="st-label">Unframe</span>
+              </button>
             </div>
           </div>`;
         layer.appendChild(el);
@@ -6589,22 +6664,37 @@ ${AI_RULES}
       });
     }
 
-    function toggleSectionExport(boxEl, sit) {
+    // Export stays visible but reads as disabled until the box is named and
+    // described (no `disabled` attribute — it must keep receiving clicks so
+    // exportWorkingFolder can toast the hint, and so the drag-handle guard
+    // still sees a button).
+    function updateSectionReadyState(boxEl, sit) {
+      const ready = (sit.title || '').trim() && (sit.description || '').trim();
       const exp = boxEl.querySelector('.section-export'); if (!exp) return;
-      exp.classList.toggle('hidden', !((sit.title || '').trim() && (sit.description || '').trim()));
+      exp.classList.toggle('is-disabled', !ready);
+      exp.setAttribute('aria-disabled', ready ? 'false' : 'true');
+      exp.title = ready ? 'Export working folder' : 'Name and describe the situation to export';
     }
 
     function wireSectionBox(boxEl, sit) {
       const title = boxEl.querySelector('.section-title');
       const desc  = boxEl.querySelector('.section-desc');
-      const exp   = boxEl.querySelector('.section-export');
       const drag  = boxEl.querySelector('.section-drag');
       if (title) { title.addEventListener('pointerdown', e => e.stopPropagation());
-        title.addEventListener('input', () => { sit.title = title.value; scheduleSave(); toggleSectionExport(boxEl, sit); }); }
+        title.addEventListener('input', () => { sit.title = title.value; scheduleSave(); updateSectionReadyState(boxEl, sit); }); }
       if (desc) { desc.addEventListener('pointerdown', e => e.stopPropagation());
-        desc.addEventListener('input', () => { sit.description = desc.value; scheduleSave(); toggleSectionExport(boxEl, sit); }); }
-      if (exp) { exp.addEventListener('pointerdown', e => e.stopPropagation());
-        exp.addEventListener('click', e => { e.stopPropagation(); exportWorkingFolder(sit.id); }); }
+        desc.addEventListener('input', () => { sit.description = desc.value; scheduleSave(); updateSectionReadyState(boxEl, sit); }); }
+      const actions = [
+        ['.section-ai',       () => openSituationAIModal(sit.id)],
+        ['.section-workbook', () => openSituationWorkbook(sit.id)],
+        ['.section-export',   () => exportWorkingFolder(sit.id)],
+        ['.section-unframe',  () => confirmUnframeSituation(sit.id)]
+      ];
+      actions.forEach(([sel, action]) => {
+        const btn = boxEl.querySelector(sel); if (!btn) return;
+        btn.addEventListener('pointerdown', e => e.stopPropagation());
+        btn.addEventListener('click', e => { e.stopPropagation(); action(); });
+      });
       if (drag) attachSectionDrag(drag, sit);
     }
 
@@ -6632,6 +6722,36 @@ ${AI_RULES}
         };
         handle.addEventListener('pointermove', onMove); handle.addEventListener('pointerup', onUp);
       });
+    }
+
+    function openSituationWorkbook(sitId) {
+      goToScreen('workspace');
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`.workspace-cluster-card[data-sit-id="${sitId}"]`);
+        if (el) el.scrollIntoView({ block: 'start' });
+      });
+    }
+
+    // Unframe = delete the situation, releasing its cards back to the
+    // committable pool. Cards, signals, and positions are untouched — the
+    // situation only stores memberCardIds. Confirm via toast action.
+    function confirmUnframeSituation(sitId) {
+      const s = findSituation(sitId); if (!s) return;
+      toast(`Unframe “${(s.title || '').trim() || 'this situation'}”? Cards stay on the board.`,
+        { actionLabel: 'Unframe', duration: 7000, onAction: () => unframeSituation(sitId) });
+    }
+    function unframeSituation(sitId) {
+      if (tutorialMode) return;
+      const i = appState.situations.findIndex(s => s.id === sitId);
+      if (i === -1) return;
+      appState.situations.splice(i, 1);
+      invalidateSituationIndex();
+      if (currentSituationId === sitId) { currentSituationId = null; closeModal('ai-modal'); }
+      renderSections();
+      updateAddButtonVisibility();
+      updateClusterProgressChip();
+      scheduleSave();
+      toast('Unframed — its cards can be committed again.');
     }
 
     // --- Commit to a Problem Situation ---
@@ -6745,6 +6865,7 @@ ${AI_RULES}
         .sort((a, b) => (b.tier - a.tier) || (a.title || '').localeCompare(b.title || ''));
       const card = document.createElement('article');
       card.className = 'workspace-cluster-card';
+      card.setAttribute('data-sit-id', s.id);
       const n = idx + 1;
       const many = appState.situations.length > 1;
 
