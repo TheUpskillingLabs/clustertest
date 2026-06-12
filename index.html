@@ -461,6 +461,13 @@
     .modal-body textarea { width: 100%; height: 260px; font-family: monospace; font-size: 0.825rem; padding: 16px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--cloud); color: var(--midnight); resize: none; margin-bottom: 20px; outline: none; }
     .modal-body textarea:focus { border-color: var(--primary-teal); }
 
+    /* First-canvas assignment popup */
+    .intro-lede { font-weight: 600; }
+    .intro-steps { margin: 0 0 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .intro-steps li { font-size: 0.9rem; line-height: 1.6; color: var(--midnight); }
+    .intro-steps li::marker { font-weight: 700; color: var(--primary-teal); }
+    .intro-hint { font-size: 0.8rem; opacity: 0.65; margin-bottom: 0; }
+
     .tap-instruction { display: none; text-align: center; font-size: 0.75rem; color: var(--primary-teal); font-weight: 700; padding: 12px; background: var(--cloud); margin-bottom: 12px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;}
     @media (max-width: 1024px) { .tap-instruction { display: block; } }
 
@@ -2321,6 +2328,25 @@
     </div>
   </div>
 
+  <div id="board-intro-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="board-intro-title">
+    <div class="modal-content" style="max-width: 560px;">
+      <div class="modal-header"><h3 id="board-intro-title">Your assignment</h3></div>
+      <div class="modal-body">
+        <p class="intro-lede">This canvas is where scattered observations become a defensible claim about what's really going on.</p>
+        <ol class="intro-steps">
+          <li><strong>Triangulate.</strong> Drag related signals near each other and connect them — two signals pointing at the same thing forge an evidence card.</li>
+          <li><strong>Climb the ladder.</strong> Connect evidence into patterns, and patterns into a theme — the deeper condition hidden underneath.</li>
+          <li><strong>Name &amp; describe every card.</strong> Write claims, not topics. Higher cards stay locked until the cards beneath them can defend themselves.</li>
+          <li><strong>Commit.</strong> Once you've built up to at least one named &amp; described theme, press <strong>Commit</strong> to frame your problem situation.</li>
+        </ol>
+        <p class="intro-hint">The chip above the canvas tracks how close you are to being ready.</p>
+        <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+          <button class="btn btn-primary" onclick="closeModal('board-intro-modal')" data-autofocus>Start mapping</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="add-signal-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="add-signal-title-h">
     <div class="modal-content" style="max-width: 480px;">
       <div class="modal-header">
@@ -2533,6 +2559,7 @@
         submittedAt: null,
         exportedAt: null,
         currentScreen: 'setup',
+        boardIntroSeen: false, // first-canvas assignment popup shown once
         sorting: { currentIndex: 0, decisions: {} }
       };
     }
@@ -2690,6 +2717,7 @@
         });
       });
       if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
+      parsed.boardIntroSeen = parsed.boardIntroSeen === true;
       // --- Migrate singular situation + committedCardIds → situations[] ---
       const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization'];
       if (!Array.isArray(parsed.situations)) {
@@ -2978,12 +3006,23 @@
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
+      maybeShowBoardIntro();
       if (!tutorialMode && !localStorage.getItem('olos.tutorial.offered') && !localStorage.getItem('olos.tutorial.done')) {
         showTutorialOffer();
       } else {
         const helpBtn = document.getElementById('tour-help-btn');
         if (helpBtn) helpBtn.classList.remove('hidden');
       }
+    }
+
+    // First arrival on a fresh canvas: explain the assignment once — build up
+    // to a named & described theme, then press Commit.
+    function maybeShowBoardIntro() {
+      if (tutorialMode) return;
+      if (appState.boardIntroSeen || hasSituations()) return;
+      appState.boardIntroSeen = true;
+      scheduleSave();
+      openModal('board-intro-modal');
     }
 
     function setBoardTitleDisplay() {
@@ -7803,6 +7842,7 @@ ${AI_RULES}
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
+      maybeShowBoardIntro();
       if (!localStorage.getItem('olos.tutorial.offered') && !localStorage.getItem('olos.tutorial.done')) {
         showTutorialOffer();
       } else {
