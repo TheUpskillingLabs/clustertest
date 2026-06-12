@@ -2312,6 +2312,23 @@
         <input type="text" id="card-page-title-input" class="ws-text-input" placeholder="Name this card — a claim, not a topic" style="margin-bottom:8px;">
         <label class="sr-only" for="card-page-desc-input">Card description</label>
         <textarea id="card-page-desc-input" class="ws-text-input" rows="2" placeholder="Describe it in a sentence or two" style="resize:none; font-weight:400; margin-bottom:16px; height:72px; font-family:'Geologica',sans-serif; font-size:0.9rem; background:var(--ghost-white); padding:12px 16px;"></textarea>
+        <details id="card-page-ai" style="margin-bottom:16px; border:2px solid var(--cloud); border-radius:8px; background:var(--ghost-white);">
+          <summary style="cursor:pointer; padding:12px 16px; font-weight:700; font-size:0.9rem; color:var(--midnight); list-style-position:inside;">✨ AI thinking partner</summary>
+          <div style="padding:0 16px 16px;">
+            <div id="card-page-ai-tabs" class="ai-mode-tabs" role="tablist" aria-label="AI prompt mode">
+              <button type="button" role="tab" data-mode="throughline" class="ai-mode-tab is-active" aria-selected="true">Through-line</button>
+              <button type="button" role="tab" data-mode="name" class="ai-mode-tab" aria-selected="false">Name &amp; describe</button>
+              <button type="button" role="tab" data-mode="stress" class="ai-mode-tab" aria-selected="false">Stress-test</button>
+            </div>
+            <p id="card-page-ai-blurb" style="font-size:0.825rem; color:var(--midnight); opacity:0.75; line-height:1.5; margin:10px 0;"></p>
+            <label class="sr-only" for="card-page-ai-prompt">Generated AI prompt</label>
+            <textarea id="card-page-ai-prompt" readonly style="width:100%; height:min(200px, 30dvh); font-family:monospace; font-size:0.78rem; padding:12px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
+            <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
+              <button type="button" class="btn btn-primary" onclick="copyCardPagePrompt()">Copy this prompt</button>
+              <span style="font-size:0.78rem; color:var(--midnight); opacity:0.65;">Paste into Claude, ChatGPT, Gemini, NotebookLM, or Perplexity — rebuilt from the live board every time you open it.</span>
+            </div>
+          </div>
+        </details>
         <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
         <div class="cardpage-label">Main document — notes.md</div>
         <textarea id="card-page-doc" style="width:100%; height:min(240px, 38dvh); font-family:monospace; font-size:0.825rem; padding:16px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
@@ -3108,7 +3125,7 @@
     // Every card (deduped) in the subtrees beneath a situation's member cards,
     // including the members themselves.
     function situationCards(s) {
-      if (!s) return [];
+      if (!s || !Array.isArray(s.memberCardIds)) return [];
       return [...situationCardIds(s)].map(findCard).filter(Boolean);
     }
     // Submission requires at least one theme (tier >= 3) that is both named
@@ -3594,11 +3611,6 @@
         del.addEventListener('pointerdown', (e) => e.stopPropagation());
         del.addEventListener('click', (e) => { e.stopPropagation(); deleteObj(); });
       }
-      const suggest = el.querySelector('.hub-suggest');
-      if (suggest) {
-        suggest.addEventListener('pointerdown', (e) => e.stopPropagation());
-        suggest.addEventListener('click', (e) => { e.stopPropagation(); openHubNamePromptModal(obj.id); });
-      }
       const expandBtn = el.querySelector('.hub-expand');
       if (expandBtn) {
         expandBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -3670,7 +3682,6 @@
         ${roleHtml}
         <div class="hub-actions">
           <button type="button" class="hub-expand" title="Open this card's page">⤢ Open</button>
-          <button type="button" class="hub-suggest" title="Get an AI prompt to help classify and name this card">✨ AI</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
         ${connectHandlesHtml(card.id)}
@@ -3767,7 +3778,6 @@
         ${themeQuality}
         <div class="hub-actions">
           <button type="button" class="hub-expand" title="Open this card's page">⤢ Open</button>
-          <button type="button" class="hub-suggest" title="Get an AI prompt for this ${escapeHtml(label.toLowerCase())}">✨ AI</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
         ${connectHandlesHtml(card.id)}
@@ -5769,7 +5779,9 @@ Rules:
     const AI_RULES = `- Do NOT propose solutions, interventions, products, or features.
 - Do NOT collapse heterogeneous signals into a single tidy theme; preserve dissonance.
 - Be specific — name actors, contexts, mechanisms, and consequences; avoid jargon and category words like "ecosystem", "experience", "journey".
-- If the contents are too thin to answer well, say so explicitly and ask the user what is missing.`;
+- If the contents are too thin to answer well, say so explicitly and ask the user what is missing.
+- Do NOT fill gaps with assumptions. Name what is missing and tell the user how to go find it.
+- Research briefs must be specific enough to copy-paste into the suggested tool as a starting prompt.`;
 
     // Three task / thinking / format blocks per mode. Each mode adds one rule.
     const HUB_PROMPT_MODES = {
@@ -5861,7 +5873,9 @@ A single question the user must be able to answer to defend the current framing 
       const m = HUB_PROMPT_MODES[mode] || HUB_PROMPT_MODES.throughline;
       const task = m.task.replaceAll('{tierLabel}', label);
       const thinking = m.thinking.map((s, i) => `${i + 1}. ${s}`).join('\n');
-      const contents = formatTreeOutline(hubId, 0, 4) || '(none yet)';
+      // No depth cap: the prompt carries the complete lineage of
+      // signals → evidence → patterns → themes beneath this card.
+      const contents = formatTreeOutline(hubId, 0) || '(none yet)';
       return `<role>
 ${AI_ROLE}
 </role>
@@ -5904,36 +5918,15 @@ ${AI_RULES}
     let currentAIHubId = null;
     let currentAIMode = 'throughline';
 
+    // Legacy entry point — the per-card prompt now lives on the card page,
+    // inside the "AI thinking partner" accordion.
     function openHubAIModal(hubId, mode) {
       const c = findCard(hubId);
       if (!c) return;
-      currentAIHubId = hubId;
-      currentPoolMode = null;
-      currentAIMode = mode || 'throughline';
-      const tier = hubTier(hubId);
-      const label = tierLabel(tier);
-      const titleEl = document.getElementById('ai-modal-title');
-      const blurb = document.getElementById('ai-modal-blurb');
-      const tabs = document.getElementById('ai-mode-tabs');
-      const ta = document.getElementById('ai-prompt-text');
-      const m = HUB_PROMPT_MODES[currentAIMode] || HUB_PROMPT_MODES.throughline;
-      if (titleEl) titleEl.textContent = `AI thinking partner — ${label} "${c.title || 'Untitled'}"`;
-      if (blurb) blurb.textContent = m.blurb;
-      if (tabs) {
-        tabs.classList.remove('hidden');
-        tabs.innerHTML = '';
-        Object.entries(HUB_PROMPT_MODES).forEach(([key, hm]) => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.role = 'tab';
-          btn.setAttribute('data-mode', key);
-          btn.className = 'ai-mode-tab' + (key === currentAIMode ? ' is-active' : '');
-          btn.textContent = hm.label;
-          tabs.appendChild(btn);
-        });
-      }
-      ta.value = buildHubPrompt(hubId, currentAIMode);
-      openModal('ai-modal');
+      openCardPage(hubId);
+      const det = document.getElementById('card-page-ai');
+      if (det) det.open = true;
+      setCardPageAIMode(HUB_PROMPT_MODES[mode] ? mode : 'throughline');
     }
 
     function switchAIMode(mode) {
@@ -6387,8 +6380,56 @@ For each of 3–5 key signals:
 ## Secondary research
 2–3 fields or bodies of literature to consult, with a specific reason for each.`,
         modeRule: 'Interview questions must be open-ended — no leading questions, no yes/no. Do NOT assume what the interviewee will say.'
+      },
+
+      'gap-analysis': {
+        task: `Audit this problem situation's evidence base and produce a research brief. Read the full evidence trail, the card inventory (titles, descriptions, types, tiers), and the epistemics notes the user wrote on each card ("where I'm not sure", "whose voice is still missing"). Your job is not to strengthen the framing — it is to expose exactly where the evidence is thin, whose perspective is absent, and what the user must go find before the framing can be trusted.`,
+        thinking: [
+          'Walk the evidence trail card by card. Note each card\'s Dorst evidence type (or its absence) and how many independent signals sit beneath it.',
+          'Tally the seven evidence types — history, counterfactual, boundary, flux, player, value, problem — present vs. absent across all cards.',
+          'Cross-reference the epistemics notes against the situation description, the openness statement, and the problematization: which admitted uncertainties were never followed up?',
+          'For every gap, formulate the single question that would close it, then pick the cheapest credible method for answering it.',
+          'For each method, identify what access it demands — people, datasets, channels — and whether the user plausibly has it today.'
+        ],
+        output: `## Coverage map
+Which of the seven Dorst evidence types (history, counterfactual, boundary, flux, player, value, problem) are present vs. absent across this situation's cards. If there are no flux cards, that's a blind spot about what's changing. If there are no player cards, the field hasn't been mapped. Name each gap explicitly.
+
+## Perspective audit
+Whose lived experience is represented in the signals and whose isn't. Cross-reference the "whose voice is still missing" entries from the card notes. Name specific populations, roles, or viewpoints that are absent.
+
+## Depth audit
+Which claims rest on genuine triangulation (multiple independent signals) vs. a single source. Name the thinnest cards.
+
+## Research brief
+For each gap identified above, one concrete research task:
+**What to find out:** the question
+**Method:** interview, survey, field observation, deep research sweep, or secondary literature review
+**Tool:** NotebookLM (deep research on uploaded documents), Claude (synthesis), Perplexity (grounded web research), or "go talk to people"
+**What it would change:** what the answer would change about the current framing
+
+## Access needs
+What the research demands that the user doesn't currently have access to: specific people, roles, or communities who could ground-truth claims; datasets or documents behind institutional walls; populations a survey would need to reach; adjacent domains that hold relevant knowledge. For each, suggest a realistic path to access — a warm introduction, a cold outreach email, a public records request, a community forum, an academic database, a professional association. Be concrete: "talk to someone" is not a path; "post in [specific subreddit/forum] asking for [specific role]" is.`,
+        modeRule: 'Audit what exists — do not invent evidence or soften absences. Every research task must name a question, a method, a tool, and what the answer would change.'
       }
     };
+
+    // Pull a user-written section out of a card's notes.md by its ## header.
+    // Seeded placeholder lines (full-line *italics* from the doc scaffold)
+    // don't count as content.
+    function extractDocSection(docText, header) {
+      if (!docText) return '';
+      const lines = String(docText).split('\n');
+      const start = lines.findIndex(l => l.trim().toLowerCase() === ('## ' + header).toLowerCase());
+      if (start === -1) return '';
+      const out = [];
+      for (let i = start + 1; i < lines.length; i++) {
+        const t = lines[i].trim();
+        if (t.startsWith('## ') || t === '---') break;
+        if (/^\*.*\*$/.test(t)) continue;
+        out.push(lines[i]);
+      }
+      return out.join('\n').trim();
+    }
 
     function buildSituationPrompt(kind, sit) {
       const s = sit || appState.situations[appState.situations.length - 1]
@@ -6401,9 +6442,42 @@ For each of 3–5 key signals:
       const currentState = [
         `Working title: ${title}`,
         `Description: ${s.description || '(none yet)'}`,
+        s.openness ? `Why it's open, not bounded: ${s.openness}` : null,
+        s.problematization ? `Problematization so far: ${s.problematization}` : null,
         s.frame ? `Current frame: ${s.frame}` : null,
         s.stakeholderMap ? `Stakeholder notes: ${s.stakeholderMap}` : null
       ].filter(Boolean).join('\n');
+
+      // The gap analysis also reads the card inventory and the epistemics
+      // notes ("where I'm not sure" / "whose voice is still missing") that
+      // live in each card's notes.md.
+      let extraBlocks = '';
+      if (kind === 'gap-analysis') {
+        const cards = situationCards(s);
+        const inventory = cards.map(c => {
+          const t = c.tier === 1 ? `${tierName(c.tier)} · ${cardTypeInfo(c.cardType).label}` : tierName(c.tier);
+          const sigs = signalsUnder(c.id).length;
+          return `- [${t}] ${c.title || 'Untitled'} — ${(c.description || '(no description)').trim()} (${sigs} signal${sigs === 1 ? '' : 's'})`;
+        }).join('\n') || '(no cards yet)';
+        const epistemics = cards.map(c => {
+          const unsure = extractDocSection(c.doc, "Where I'm not sure");
+          const missing = extractDocSection(c.doc, 'Whose voice is still missing');
+          if (!unsure && !missing) return null;
+          const bits = [`Card: ${c.title || 'Untitled'}`];
+          if (unsure) bits.push(`Where I'm not sure: ${unsure}`);
+          if (missing) bits.push(`Whose voice is still missing: ${missing}`);
+          return bits.join('\n');
+        }).filter(Boolean).join('\n\n') || '(no epistemics notes written on any card yet)';
+        extraBlocks = `
+<card_inventory>
+${inventory}
+</card_inventory>
+
+<epistemics>
+${epistemics}
+</epistemics>
+`;
+      }
 
       return `<role>
 ${AI_ROLE}
@@ -6423,7 +6497,7 @@ ${currentState}
 <evidence_trail>
 ${evidence}
 </evidence_trail>
-
+${extraBlocks}
 <task>${k.task}</task>
 
 <thinking_steps>
@@ -6742,6 +6816,16 @@ ${AI_RULES}
       `;
 
       card.querySelector(`#sit-gap-prompt-${n}`).textContent = buildSituationPrompt('gap-analysis', s);
+      // The gap-analysis prompt always reflects live state: regenerate after
+      // any edit inside this editor (debounced so typing stays smooth).
+      let gapTimer = null;
+      card.addEventListener('input', () => {
+        clearTimeout(gapTimer);
+        gapTimer = setTimeout(() => {
+          const el = card.querySelector(`#sit-gap-prompt-${n}`);
+          if (el) el.textContent = buildSituationPrompt('gap-analysis', s);
+        }, 500);
+      });
       requestAnimationFrame(() => {
         [`sit-desc-${n}`, `sit-open-${n}`, `sit-coverage-${n}`, `sit-agenda-${n}`, `sit-voices-${n}`, `sit-access-${n}`, `sit-paradox-${n}`, `sit-status-${n}`, `sit-problem-${n}`].forEach(id => { const t = card.querySelector('#' + id); if (t) autoResize(t); });
       });
@@ -7609,11 +7693,50 @@ ${AI_RULES}
       if (!c.doc) c.doc = defaultCardDoc(c);
       doc.value = c.doc;
       doc.oninput = () => { c.doc = doc.value; scheduleSave(); };
+      const ai = document.getElementById('card-page-ai');
+      if (ai) ai.open = false; // collapsed by default; prompt rebuilds on open
+      setCardPageAIMode('throughline');
       renderCardFiles(c);
       const up = document.getElementById('card-page-upload');
       up.value = ''; up.onchange = (e) => handleCardFileUpload(c, e);
       openModal('card-page-modal');
     }
+
+    // --- Card-page AI accordion: prompts rebuild from live appState every
+    // time the accordion opens or the mode tab changes — never cached.
+    let cardPageAIMode = 'throughline';
+    function refreshCardPageAIPrompt() {
+      const ta = document.getElementById('card-page-ai-prompt');
+      if (!ta || !currentCardPageId) return;
+      ta.value = buildHubPrompt(currentCardPageId, cardPageAIMode);
+      const m = HUB_PROMPT_MODES[cardPageAIMode];
+      const blurb = document.getElementById('card-page-ai-blurb');
+      if (blurb && m) blurb.textContent = m.blurb;
+    }
+    function setCardPageAIMode(mode) {
+      cardPageAIMode = HUB_PROMPT_MODES[mode] ? mode : 'throughline';
+      document.querySelectorAll('#card-page-ai-tabs .ai-mode-tab').forEach(btn => {
+        const on = btn.getAttribute('data-mode') === cardPageAIMode;
+        btn.classList.toggle('is-active', on);
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      refreshCardPageAIPrompt();
+    }
+    async function copyCardPagePrompt() {
+      refreshCardPageAIPrompt(); // never copy a stale prompt
+      const ta = document.getElementById('card-page-ai-prompt');
+      const ok = await clipboardCopy(ta ? ta.value : '');
+      toast(ok ? 'Copied.' : 'Copy failed — select the text and copy manually.');
+    }
+    (() => {
+      const tabs = document.getElementById('card-page-ai-tabs');
+      if (tabs) tabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('.ai-mode-tab');
+        if (btn) setCardPageAIMode(btn.getAttribute('data-mode'));
+      });
+      const det = document.getElementById('card-page-ai');
+      if (det) det.addEventListener('toggle', () => { if (det.open) refreshCardPageAIPrompt(); });
+    })();
 
     function renderCardFiles(c) {
       const wrap = document.getElementById('card-page-files');
