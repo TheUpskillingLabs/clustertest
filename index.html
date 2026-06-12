@@ -249,6 +249,30 @@
       line-height: 1.55; text-wrap: pretty;
     }
 
+    /* 04 — journey: vertical numbered ledger for the five phases */
+    .journey-steps {
+      list-style: none; margin: 0; padding: 0; max-width: 80ch; counter-reset: journey;
+    }
+    .journey-steps li {
+      display: grid; grid-template-columns: 72px 1fr; gap: 8px 28px;
+      padding: 26px 0; border-top: 1px solid rgba(255,255,255,0.18);
+      counter-increment: journey;
+    }
+    .journey-steps li::before {
+      content: "0" counter(journey); grid-row: span 2;
+      font-size: 2.1rem; font-weight: 700; line-height: 1; color: var(--primary-teal);
+      letter-spacing: var(--track-tight); font-variant-numeric: tabular-nums;
+    }
+    .journey-steps h3 {
+      font-size: 0.72rem; font-weight: 700; color: var(--ghost-white);
+      text-transform: uppercase; letter-spacing: var(--track-label);
+      margin: 6px 0 0; text-wrap: balance;
+    }
+    .journey-steps p {
+      font-size: 0.88rem; color: var(--cloud); opacity: 0.78;
+      line-height: 1.6; text-wrap: pretty; max-width: 64ch;
+    }
+
     .landing-footnote {
       margin-top: 64px; padding-left: 20px; border-left: 2px solid var(--primary-teal);
       font-size: 0.85rem; color: var(--cloud); opacity: 0.75;
@@ -308,6 +332,7 @@
     @media (max-width: 560px) {
       .explainer-steps { grid-template-columns: 1fr; }
       .setup-card { padding: 24px 20px; }
+      .journey-steps li { grid-template-columns: 52px 1fr; gap: 6px 18px; }
     }
 
     /* --- VIEW 2: APPLICATION WORKSPACE --- */
@@ -1968,93 +1993,165 @@
 
       <section class="landing-section" aria-labelledby="landing-h-behold">
         <div class="landing-section-head"><span class="landing-index">01</span><span class="landing-kicker">Behold!</span></div>
-        <h2 class="landing-statement" id="landing-h-behold">Stop reacting to symptoms. Start architecting the future.</h2>
+        <h2 class="landing-statement" id="landing-h-behold">You are going to need the right gadget.</h2>
         <div class="landing-cols">
-          <p>Everyone wants to dive straight into building. The internet is obsessed with "vibe coding" — fire off a few prompts and watch the machine spit out whole applications in seconds. It's wildly tempting to skip the messy, ambiguous work of framing the problem and go straight to the magic.</p>
-          <p>But here's the hard truth of the AI era: what you get out is a function of what you put in. Feed an AI a shallow problem and it hands you a mediocre, legacy solution — just <em>faster</em>. When execution is free and instant, <strong>context is the ultimate flex</strong>. There's no magic AI in here doing the thinking for you. This is where you build that context first.</p>
+          <p>Right now, everyone wants to dive straight into building. You are likely here because you want to upskill in AI, and the internet is currently obsessed with "vibe coding" — jumping into an LLM, firing off a few natural language prompts, and watching the machine generate code, workflows, and entire applications in seconds. It is incredibly tempting to skip the messy, ambiguous work of problem-framing and go straight to the magic.</p>
+          <p>But if you are going to untangle the deeply networked chaos of modern problems — or, you know, take over the Tri-State Area — you are going to need the right gadget.</p>
+          <p>Welcome to <strong>The Triangulator-inator</strong>, a field mapping and theme identification tool by The Upskilling Labs, designed by Levy Strategic Design. And yes, true to its namesake, it <em>does</em> actually have a self-destruct button where you can vaporize your entire board with ease if you need a clean slate.</p>
+          <p>But unlike a certain mad scientist's inventions, the underlying architecture actually works — and your progress will absolutely not be thwarted by a semi-aquatic egg-laying mammal in a fedora.</p>
         </div>
-        <p class="landing-intro"><strong>Your secret power: a stealth relational database.</strong> It looks and feels like a fluid visual canvas. Underneath, it quietly turns every move you make into a strict, actionable data architecture.</p>
+      </section>
+
+      <section class="landing-section" aria-labelledby="landing-h-trap">
+        <div class="landing-section-head"><span class="landing-index">02</span><span class="landing-kicker">The vibe-coding trap</span></div>
+        <h2 class="landing-statement" id="landing-h-trap">Context is the ultimate flex.</h2>
+        <div class="landing-cols">
+          <p>Here is the hard truth of the AI era: <strong>what you get out of an AI tool is entirely a function of what you put into it.</strong> If you feed an AI a shallow, industrial-era problem definition, it will not give you a paradigm-shifting innovation. It will just give you a mediocre, legacy solution <em>faster</em>. In a world where execution is effectively free and instant, context is the ultimate flex.</p>
+          <p>We start here — before you write a single line of code or build an automation — because having deep, accurate, structurally sound context is the single most critical skill you can develop today. The professionals who win tomorrow won't be the ones who type the fastest prompts; they will be the ones who can wade into chaos, extract the true human themes, and feed the machine a fundamentally superior problem frame.</p>
+        </div>
+        <div class="landing-callout"><strong>And before you ask: no, there is no magic AI inside this app doing the thinking for you.</strong> The Triangulator-inator is a simulator and an architectural launchpad. It is designed to teach you <em>how</em> to think about chaotic data, <em>how</em> to build the high-level cognitive context required to decode complexity, and <em>how</em> to perfectly structure an intractable problem so that you can feed it into <em>any</em> modern tech stack. (The ✨ buttons you'll meet along the way generate method-grounded prompts you carry to the LLM of your choice — the thinking stays yours.)</div>
+      </section>
+
+      <section class="landing-section" aria-labelledby="landing-h-power">
+        <div class="landing-section-head"><span class="landing-index">03</span><span class="landing-kicker">Your secret power</span></div>
+        <h2 class="landing-statement" id="landing-h-power">A stealth relational database.</h2>
+        <p class="landing-intro">Navigating the messy reality of a complex problem shouldn't mean losing your best ideas to scattered sticky notes, lost documents, and photos of a whiteboard you will never look at again. While the Triangulator-inator looks and feels like a fluid, visual canvas, it is actually a stealthy, high-powered relational database engine. As you work, the app captures your cognitive leaps in real time, translating your human intuition into a strict, actionable data architecture — building the "bones" of your project invisibly beneath the surface.</p>
         <div class="triad-grid">
           <div class="triad-cell">
             <h3>Web maps as data lattices</h3>
-            <p>Every line you draw builds a many-to-many lattice — linking your themes down through patterns and classified evidence to the exact survey signals you started with.</p>
+            <p>When you drag, drop, and connect cards on the canvas, you aren't just drawing lines on a screen. You are actively building a structured, many-to-many data lattice — linking your themes down through patterns and classified evidence to the exact granular survey signals you started with.</p>
           </div>
           <div class="triad-cell">
             <h3>Deeply enriched nodes</h3>
-            <p>Every card is a vault. Write markdown notes, attach primary and secondary sources, and bond your raw evidence directly to the strategic claims it supports.</p>
+            <p>Every card on your web map is a vault. As you explore the problem, you enrich these nodes with deep context — writing extensive markdown notes and attaching primary and secondary source documents directly to the cards they support. Your raw evidence is permanently, structurally bonded to your strategic claims.</p>
           </div>
           <div class="triad-cell">
-            <h3>Tech-ready export</h3>
-            <p>One click traverses the whole database into a .zip: a folder per card, auto-generated notes.md, an evidence trail, your sources organized — ready to drop into any tech stack.</p>
+            <h3>Instant tech-ready architecture</h3>
+            <p>You never have to manually transcribe a brainstorm again. With a single export, the tool traverses your database into a .zip working folder: a discrete sub-folder for every card, auto-generated notes.md files, an evidence trail tracing its roots, and your attached sources perfectly organized.</p>
           </div>
         </div>
-        <div class="landing-callout">Built by Levy Strategic Design for The Upskilling Labs. And yes — true to its name, it has an actual <strong>self-destruct button</strong> in the board menu, to vaporize your board for a clean slate. Unlike a certain mad scientist's inventions, this one works — and your progress won't be thwarted by a semi-aquatic egg-laying mammal in a fedora.</div>
+      </section>
+
+      <section class="landing-section" aria-labelledby="landing-h-journey">
+        <div class="landing-section-head"><span class="landing-index">04</span><span class="landing-kicker">The journey</span></div>
+        <h2 class="landing-statement" id="landing-h-journey">Triangulate the chaos and launch.</h2>
+        <ol class="journey-steps">
+          <li>
+            <h3>Load the pool</h3>
+            <p>You begin with chaos. The app ingests a cloud of qualitative survey data — like the included Civics &amp; Elections field survey — or your own observations via CSV, with a built-in AI prompt to convert any dataset.</p>
+          </li>
+          <li>
+            <h3>Sort signal from noise</h3>
+            <p>Work the pool one card at a time: discard the noise, keep the signals, flag the ★ supers that might reframe everything. You learn to analyze the sector's historical routines and isolate the core structural paradoxes causing the current deadlock.</p>
+          </li>
+          <li>
+            <h3>Triangulate on the canvas</h3>
+            <p>Step into the visual workspace and explore the expanded field. Connect signals that point at the same thing to mint evidence, classify each claim with one of Dorst's seven types, and actively build out the foundational lattice of your relational database.</p>
+          </li>
+          <li>
+            <h3>Extract themes, craft the frame</h3>
+            <p>Extract the profound, universal human values sitting beneath the data. Once your themes are named, the problem-situation workbook helps you craft the precise, structural propositions — frames — needed to spark radical new solutions.</p>
+          </li>
+          <li>
+            <h3>Export and launch</h3>
+            <p>Walk away with a print-ready artifact, or the full .zip working folder — the exact, data-rich bones of your project, completely organized into a clean file structure.</p>
+          </li>
+        </ol>
+        <div class="landing-callout"><strong>The ultimate benefit:</strong> because this data model is standardized, you can immediately take your structural outline, your context-rich notes, and your source folders and plug them into <strong>any AI tool, vibe-coding environment, or tech stack of your own choosing</strong>. Stop reacting to symptoms. Start architecting the future. (Just watch out for that self-destruct button.)</div>
       </section>
 
       <section class="landing-section" aria-labelledby="landing-h-theory">
-        <div class="landing-section-head"><span class="landing-index">02</span><span class="landing-kicker">The theory</span></div>
-        <h2 class="landing-statement" id="landing-h-theory">You're not solving it wrong. You're solving inside the wrong frame.</h2>
-        <p class="landing-intro">Credit where it's due: design scholar Kees Dorst named this move <strong>Frame Creation</strong>. If your projects feel like endless organizational whack-a-mole, you're not crazy — you're hitting an <strong>ontological mismatch</strong>, running industrial-era linear logic on post-industrial, hyper-connected problems. Every challenge is really an equation of three parts — the <strong>WHAT</strong> (the pieces), the <strong>HOW</strong> (the working method), and the <strong>OUTCOME</strong> (the value). How many you already know decides how your brain reasons.</p>
+        <div class="landing-section-head"><span class="landing-index">05</span><span class="landing-kicker">The theory</span></div>
+        <h2 class="landing-statement" id="landing-h-theory">The method behind the madness.</h2>
+        <div class="landing-cols">
+          <p>Now that you're properly terrified of vibe coding yourself into a ditch, let's look under the hood at the cognitive science of how experts solve problems — and give credit where credit is profoundly due. We owe this entire paradigm shift to design scholar <strong>Kees Dorst</strong>, who systematically articulated the practice of Frame Creation — out of longitudinal studies of expert designers, architectural practices, and artistic interventions — to rescue organizations from their own cognitive deadlocks.</p>
+          <p>If you've ever felt like your projects get stuck in an endless loop of organizational whack-a-mole, you aren't crazy — you're experiencing an <strong>ontological mismatch</strong>: you're trying to use industrial-era, linear logic to solve post-industrial, hyper-connected problems.</p>
+        </div>
+        <p class="landing-intro">To elucidate the genius of expert designers, Dorst used formal logic to compare how different professions approach the fundamental equation of causality. Every professional challenge consists of three interacting elements: the <strong>WHAT</strong> (the elements — physical things, actors, systems), the <strong>HOW</strong> (the working method — the pattern of relationships connecting them), and the <strong>OUTCOME</strong> (the final observed value). Depending on how many of these variables you know, your brain defaults to one of three reasoning patterns:</p>
         <div class="triad-grid">
           <div class="triad-cell">
             <span class="triad-eyebrow">Deduction</span>
             <h3>The Scientist</h3>
-            <p>Knows the WHAT and the HOW, predicts the OUTCOME. Perfect for planets and gravity. Useless for navigating dynamic societal shifts.</p>
+            <p><strong>Knows:</strong> the WHAT and the HOW. <strong>Goal:</strong> predict the OUTCOME. Know the mass of planets and the laws of gravity, and you can safely deduce exact future planetary positions. Great for the hard sciences — useless for navigating dynamic societal shifts.</p>
           </div>
           <div class="triad-cell">
             <span class="triad-eyebrow">Induction</span>
             <h3>The Detective</h3>
-            <p>Knows the WHAT and the OUTCOME, deduces the missing HOW. Sherlock reading the crime scene to reconstruct the story.</p>
+            <p><strong>Knows:</strong> the WHAT and the OUTCOME. <strong>Goal:</strong> hypothesize the missing HOW. Sherlock Holmes observes a crime scene (OUTCOME) and suspects (WHAT), and creatively induces the narrative of the crime (HOW).</p>
           </div>
           <div class="triad-cell">
             <span class="triad-eyebrow">Normal abduction</span>
             <h3>The Reactive Fixer</h3>
-            <p>Knows the HOW and the OUTCOME, engineers a WHAT to match. Efficient — and exactly how you get stuck, fixing symptoms while never questioning the HOW.</p>
+            <p><strong>Knows:</strong> the HOW and the OUTCOME. <strong>Goal:</strong> engineer the missing WHAT. Desired outcome: an energy rush in the morning. Known method: chemical stimulation via caffeine. The WHAT simply becomes the engineering of a coffee machine.</p>
           </div>
         </div>
-        <div class="landing-callout"><strong>The expert's move is design abduction.</strong> When both the WHAT and the HOW are unknown, you invent a new pattern of relationships <em>and</em> the pieces to fill it — at once. That invented pattern is a <strong>frame</strong>: the difference between picking "a good movie to see" and designing "a good time." At the core of every intractable problem sits a paradox — valid, mutually exclusive demands. Rather than pick a side or split the difference, you widen the context until a new frame satisfies both. This tool drags you, deliberately, toward exactly that leap.</div>
+        <div class="landing-callout"><strong>The trap:</strong> normal abduction is highly efficient for closed problems, but fails catastrophically in complex, dynamic environments because it stubbornly refuses to question the underlying HOW. When handed a messy problem, your brain locks down an established institutional logic and frantically tries to engineer a WHAT to fix the symptom.</div>
+      </section>
+
+      <section class="landing-section" aria-labelledby="landing-h-abduction">
+        <div class="landing-section-head"><span class="landing-index">06</span><span class="landing-kicker">The breakthrough</span></div>
+        <h2 class="landing-statement" id="landing-h-abduction">Transcending the paradox.</h2>
+        <div class="landing-cols">
+          <p>The breakthrough of expert design practice lies in <strong>design abduction</strong>. With open, networked societal and organizational problems, you only possess a deep understanding of the desired value — the OUTCOME. Both the WHAT and the HOW are completely unknown. Because two variables are missing, the problem cannot be solved sequentially: you must simultaneously propose a new pattern of relationships (the HOW) and the corresponding elements (the WHAT), testing them in conjunction.</p>
+          <p><strong>The act of proposing this hypothetical, novel pattern of relationships is the definition of "framing."</strong> A frame is a strategic thought tool — often expressed as a metaphor or an organizational principle — that rearticulates the entire problem arena, creating an entirely new standpoint from which the problem becomes solvable. As organizational theorist Armand Hatchuel notes, it is the difference between relying on known alternatives to find "a good movie to see" and creatively expanding concepts to design "a good time."</p>
+          <p>Why go through all this cognitive heavy lifting? Because at the core of the most intractable challenges lies a <strong>paradox</strong> — conflicting, mutually exclusive requirements that are all fundamentally valid. Traditional problem-solving leaves an organization with two unsatisfactory options: prioritize one side at the expense of the other, or negotiate a mediocre compromise.</p>
+          <p>Frame Creation offers a third path: <strong>transcending the paradox altogether</strong>. A paradox is only insurmountable within the boundaries of its original, predefined context — so you deliberately widen that context. You look at the broader field of actors, extract the universal human themes beneath, and establish a new frame that satisfies the conflicting considerations simultaneously. The Triangulator-inator does not let you bypass this genius: it isolates the paradox, maps the field, forces you to extract the themes, and links your new frame directly back to your raw data lattice.</p>
+        </div>
       </section>
 
       <section class="landing-section" aria-labelledby="landing-h-canvas">
-        <div class="landing-section-head"><span class="landing-index">03</span><span class="landing-kicker">The canvas</span></div>
+        <div class="landing-section-head"><span class="landing-index">07</span><span class="landing-kicker">The canvas</span></div>
         <h2 class="landing-statement" id="landing-h-canvas">Not a whiteboard. A data lattice.</h2>
-        <p class="landing-intro">Open the workspace and you'll meet a cloud of observation cards. It looks like chaos because real problems are a cacophony — but this is no brainstorming whiteboard. It's a strict directed graph. First you sift the cloud, swiping each card to <strong>noise</strong>, <strong>signal</strong>, or <strong>★ super</strong>. Then you climb, one tier at a time:</p>
+        <div class="landing-cols">
+          <p>When you first open the workspace, you will be confronted with a vast cloud of observation cards pulled from expert, practitioner, and public survey data. It looks like chaos, because modern problem environments are a cacophony of voices. But this canvas is not a generic brainstorming whiteboard — it is a strict data model: a directed acyclic graph where every card type represents a different layer of cognitive abstraction.</p>
+          <p><strong>Step zero: sift the cloud.</strong> Before you connect a single line, you must sort every observation into signal or noise. Swipe left (←) to discard <strong>noise</strong> — superficial complaints, ad-hoc reactions, out-of-scope venting. Swipe right (→) to keep a <strong>signal</strong> — real evidence of systemic behavior, a practitioner insight, a hard environmental reality. Swipe up (↑) to flag a <strong>★ super signal</strong>: one that reframes the situation rather than merely confirming it. Clear the static, and your foundation is pure, high-fidelity ground truth.</p>
+        </div>
+        <p class="landing-intro">With your signals locked in, you climb the four tiers of the lattice, transforming raw observations into strategic paradigms:</p>
         <ol class="explainer-steps">
         <li class="explainer-step" data-step="1">
           <span class="explainer-step-num" aria-hidden="true">01</span>
           <div>
             <h3>Signal</h3>
-            <p>A verified observation that survived the sort. Bonded to the real words of people in the field — so nothing you build can be dismissed as fluffy.</p>
+            <p>Your verified, high-fidelity observations — the survey data points and practitioner notes that survived the sort. Your anchor to reality: the final strategy can never be accused of being "fluffy," because it is structurally bonded to the exact words of people in the field.</p>
           </div>
         </li>
         <li class="explainer-step" data-step="2">
           <span class="explainer-step-num" aria-hidden="true">02</span>
           <div>
             <h3>Evidence</h3>
-            <p>Two signals pointing the same way, triangulated and tagged with one of Dorst's seven types. A hunch becomes a claim you can defend.</p>
+            <p>Two or more signals pointing at the same thing, triangulated and classified with one of Dorst's seven types. Where a hunch becomes a defensible claim.</p>
           </div>
         </li>
         <li class="explainer-step" data-step="3">
           <span class="explainer-step-num" aria-hidden="true">03</span>
           <div>
             <h3>Pattern</h3>
-            <p>Clusters of evidence — the repeating institutional and cultural behaviors hiding inside hundreds of scattered data points.</p>
+            <p>Clusters of connected evidence — stakeholder groups repeating the same systemic actions and historical routines. Hundreds of data points become distinct, visible institutional and cultural behaviors.</p>
           </div>
         </li>
         <li class="explainer-step" data-step="4">
           <span class="explainer-step-num" aria-hidden="true">04</span>
           <div>
             <h3>Theme</h3>
-            <p>The deep, neutral human reality underneath: identity, fear of risk, isolation. Dorst's pivot point — and the launchpad for the frame you build next door, in the workbook.</p>
+            <p>The deep, universal human conditions beneath your patterns — neutral realities like identity preservation, fear of risk, or spatial isolation. The core pivot of Dorst's philosophy, enriched with your notes and sources.</p>
           </div>
         </li>
       </ol>
-        <div class="landing-callout"><strong>Why by hand?</strong> You could dump a CSV into an LLM and ask it to "find the themes." We make you drag, read, and connect every card yourself — because you're not just building a database, you're building a <strong>mental model</strong>. That primed intuition is your only radar for telling a brilliant AI answer from confidently delivered nonsense.</div>
-        <p class="landing-footnote">No guarantees — garbage context in, hyper-accelerated garbage out. But feed your stack the human-validated bones this tool produces, backed by your own primed intuition, and you stack the deck hard in your favor. There's no AI inside the app itself: the ✨ button on each card just hands you a method-grounded prompt for the LLM of your choice.</p>
+        <p class="landing-footnote">Higher tiers stay locked until every card beneath them is named and described — every claim rests on examined ones. And the frames themselves are deliberately not a canvas card: when your themes are named, you push the map into the problem-situation workbook, where your conditional "if/then" propositions — wrapped in sharp structural metaphors — emerge with their whole evidence trail attached.</p>
+      </section>
+
+      <section class="landing-section" aria-labelledby="landing-h-intuition">
+        <div class="landing-section-head"><span class="landing-index">08</span><span class="landing-kicker">The intuition engine</span></div>
+        <h2 class="landing-statement" id="landing-h-intuition">Why you must do this by hand.</h2>
+        <div class="landing-cols">
+          <p>In an era where you could easily upload a CSV of survey data into an LLM and ask it to "find the themes," why are we forcing you to manually drag, drop, read, and connect these cards yourself? <strong>Because you are building something vastly more important than a database: you are building a mental model.</strong> By physically wrestling with the data, touching the individual signals, and making the deliberate choice to connect <em>this</em> pattern to <em>that</em> theme, you are mapping the entire field directly into your own brain.</p>
+          <p>This deep, manual cognitive immersion primes your intuition — and when you eventually take this architecture into an AI tool, your intuition is the only defense you have. It is the finely tuned radar that will tell you if the AI's generated output is actually a brilliant, paradigm-shifting solution, or just confidently delivered, hallucinated nonsense. You cannot outsource the context-building phase to a machine without outsourcing your own strategic judgment.</p>
+        </div>
+        <div class="landing-callout"><strong>Let's be completely candid, though: there are absolutely no guarantees.</strong> AI tools are still prone to hallucinations, logic loops, and occasional bouts of utter nonsense. If you give it garbage context, it will generate hyper-accelerated garbage solutions. But if you feed it the data-rich, human-validated bones generated by this tool — backed by your fully primed intuition — you drastically stack the deck in your favor. You give the machine a fighting chance to generate something truly exceptional.</div>
       </section>
 
       <section class="landing-section" aria-labelledby="landing-h-start">
-        <div class="landing-section-head"><span class="landing-index">04</span><span class="landing-kicker">Start here</span></div>
+        <div class="landing-section-head"><span class="landing-index">09</span><span class="landing-kicker">Start here</span></div>
         <h2 class="landing-statement" id="landing-h-start">Start with what you know.</h2>
         <div class="setup-card">
       <div class="config-field">
