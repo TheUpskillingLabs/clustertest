@@ -1024,7 +1024,9 @@
       .dock-label { display: none; }
       .dock-tool { min-width: 44px; min-height: 40px; }
       .dock-glyph { font-size: 1.1rem; }
-      .canvas-dock { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+      /* The zoom toolbar owns the bottom-right corner on phones; the dock
+         floats one row above it so the two never overlap. */
+      .canvas-dock { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
     }
 
     /* Evidence-type chips (dock flyout) + manual signal form */
@@ -2103,7 +2105,7 @@
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
           <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full collection of observations and insights with your AI thinking partner">✨ <span class="btn-label">LLM Field Analyis</span></button>
-          <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Commit</span><span class="btn-label-short">Commit</span></button>
+          <button class="btn btn-primary" onclick="openCommitModal()">Commit</button>
         </div>
         <span id="mobile-ready-dot" class="mobile-ready-dot" aria-hidden="true"></span>
         <button class="btn btn-primary mobile-push" onclick="openCommitModal()">Commit</button>
@@ -2302,7 +2304,7 @@
         <label class="sr-only" for="card-page-title-input">Card name</label>
         <input type="text" id="card-page-title-input" class="ws-text-input" placeholder="Name this card — a claim, not a topic" style="margin-bottom:8px;">
         <label class="sr-only" for="card-page-desc-input">Card description</label>
-        <textarea id="card-page-desc-input" class="ws-text-input" rows="2" placeholder="Describe it in a sentence or two" style="resize:none; font-weight:400; margin-bottom:16px;"></textarea>
+        <textarea id="card-page-desc-input" class="ws-text-input" rows="2" placeholder="Describe it in a sentence or two" style="resize:none; font-weight:400; margin-bottom:16px; height:72px; font-family:'Geologica',sans-serif; font-size:0.9rem; background:var(--ghost-white); padding:12px 16px;"></textarea>
         <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
         <div class="cardpage-label">Main document — notes.md</div>
         <textarea id="card-page-doc" style="width:100%; height:min(240px, 38dvh); font-family:monospace; font-size:0.825rem; padding:16px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
@@ -4504,9 +4506,9 @@
       }, true);
 
       viewport.addEventListener('pointerdown', (e) => {
-        // Ignore canvas chrome (zoom toolbar, tutorial button) so their
+        // Ignore canvas chrome (zoom toolbar, dock, tutorial button) so their
         // clicks aren't swallowed by marquee/pan start + preventDefault.
-        if (e.target.closest('.zoom-toolbar, #tour-help-btn, .canvas-hint')) return;
+        if (e.target.closest('.zoom-toolbar, .canvas-dock, #tour-help-btn, .canvas-hint')) return;
         if (e.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) return;
         const onNode = !!e.target.closest('.canvas-node');
         const onEdge = !!(e.target.classList && e.target.classList.contains('edge-hit'));
