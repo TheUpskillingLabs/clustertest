@@ -2026,6 +2026,16 @@
             <strong style="color: var(--ghost-white); font-size: 0.875rem;">Load your own observations</strong>
             <span style="font-size: 0.75rem; color: var(--cloud); opacity: 0.7;">Columns: <code>title,summary</code> (header row required)</span>
           </div>
+          <details style="margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; overflow: hidden;">
+            <summary style="padding: 9px 13px; font-size: 0.82rem; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; color: var(--ghost-white); background: rgba(255,255,255,0.05); user-select: none;">
+              <span>✨</span><span>Convert any dataset with AI</span>
+            </summary>
+            <div style="padding: 12px 13px; border-top: 1px solid rgba(255,255,255,0.08);">
+              <p style="font-size: 0.82rem; color: var(--cloud); margin-bottom: 10px;">Copy this prompt, open Claude or ChatGPT, paste it in, then add your raw data at the bottom. Upload the CSV it returns here.</p>
+              <textarea readonly rows="9" onclick="this.select()" style="width: 100%; box-sizing: border-box; font-family: 'Courier New', monospace; font-size: 0.78rem; line-height: 1.5; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; background: rgba(0,0,0,0.3); color: var(--ghost-white); resize: none; margin-bottom: 8px;" id="csv-prompt-text-setup"></textarea>
+              <button type="button" class="btn btn-outline" style="font-size: 0.82rem; padding: 6px 14px;" onclick="copyCsvPrompt(this)">Copy prompt</button>
+            </div>
+          </details>
           <div style="display: flex; flex-wrap: wrap; gap: 16px 20px; align-items: center;">
             <input type="file" id="csv-file-input" accept=".csv,text/csv" class="sr-only" onchange="handleCsvUpload(event)">
             <button type="button" class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">Upload CSV</button>
@@ -2374,6 +2384,16 @@
       </div>
       <div class="modal-body">
         <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; margin-bottom: 16px;">Add observations from a CSV to this canvas. New signals land together in open space beside your current map — nothing you've built moves. Columns: <code>title,summary</code> (header row required), or <a href="#" onclick="downloadCsvTemplate(); return false;">download the template</a>.</p>
+        <details style="margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.12); border-radius: 8px; overflow: hidden;">
+          <summary style="padding: 10px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; color: var(--midnight); background: rgba(0,0,0,0.04); user-select: none;">
+            <span>✨</span><span>Convert any dataset with AI</span>
+          </summary>
+          <div style="padding: 12px 14px; border-top: 1px solid rgba(0,0,0,0.08);">
+            <p style="font-size: 0.82rem; color: var(--midnight); opacity: 0.8; margin-bottom: 10px;">Copy this prompt, open Claude or ChatGPT, paste it in, then add your raw data at the bottom. Upload the CSV it returns here.</p>
+            <textarea readonly rows="9" onclick="this.select()" style="width: 100%; box-sizing: border-box; font-family: 'Courier New', monospace; font-size: 0.78rem; line-height: 1.5; padding: 10px 12px; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; background: #f7f7f9; color: #1a1a2e; resize: none; margin-bottom: 8px;" id="csv-prompt-text-board"></textarea>
+            <button type="button" class="btn btn-outline" style="font-size: 0.82rem; padding: 6px 14px;" onclick="copyCsvPrompt(this)">Copy prompt</button>
+          </div>
+        </details>
         <input type="file" id="board-csv-input" accept=".csv,text/csv" class="sr-only" onchange="handleBoardCsvUpload(event)">
         <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
           <button class="btn btn-outline" onclick="closeModal('board-csv-modal')">Cancel</button>
@@ -2800,6 +2820,8 @@
       if (countEl) countEl.textContent = appState.items.length;
       const sampleBtn = document.getElementById('load-sample-btn');
       if (sampleBtn) sampleBtn.disabled = DEFAULT_ITEMS.every(d => appState.items.some(i => i.id === d.id));
+      const setupPrompt = document.getElementById('csv-prompt-text-setup');
+      if (setupPrompt && !setupPrompt.value) setupPrompt.value = CSV_TRANSFORM_PROMPT;
     }
 
     function addConfigItem() {
@@ -2905,9 +2927,20 @@
       reader.readAsText(file);
     }
 
+    function copyCsvPrompt(btn) {
+      navigator.clipboard.writeText(CSV_TRANSFORM_PROMPT).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.disabled = true;
+        setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+      });
+    }
+
     // --- Board-side CSV import: appends new signal nodes to a live canvas ---
     function openBoardCsvModal() {
       openModal('board-csv-modal');
+      const t = document.getElementById('csv-prompt-text-board');
+      if (t && !t.value) t.value = CSV_TRANSFORM_PROMPT;
     }
 
     function handleBoardCsvUpload(evt) {
@@ -5710,6 +5743,19 @@
       }
       return `This is a ${tierName(t)} — the highest convergence in your ladder, bridging multiple domains of human experience and structural forces. This should be close to frame-ready: a single lens that reorganizes everything below it. Test: could someone outside your field understand this as a way of seeing the whole situation?`;
     }
+
+    const CSV_TRANSFORM_PROMPT = `You are helping format observations for a Frame Creation web map.
+Convert the data below into a CSV with exactly two columns:
+
+  title,summary
+
+Rules:
+• title — 5–8 words naming the core friction (what is broken or stuck)
+• summary — 1–3 sentences describing the situation factually: who is affected, what breaks down, why it matters. No proposed solutions.
+• One row per distinct friction signal. Merge near-duplicates.
+• Return ONLY valid CSV, starting with the header row. No explanation, no code fences. Wrap values containing commas in double quotes.
+
+[PASTE YOUR DATA HERE]`;
 
     const AI_ROLE = `You are an expert critical theorist, design researcher, and qualitative sensemaking partner grounded in Kees Dorst's Frame Creation methodology. You are a thinking partner — you do not write the user's synthesis for them. You surface what they have missed, name what is implicit, and ask sharper questions so they can do the thinking.`;
 
