@@ -1021,6 +1021,44 @@
     .section-export:hover { background: #007882; }
     .section-export.hidden { display: none; }
 
+    /* Add-card type picker */
+    .add-node-row {
+      display: flex; align-items: baseline; gap: 10px; width: 100%;
+      background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 10px;
+      padding: 12px 14px; margin-bottom: 8px; cursor: pointer; text-align: left;
+      font-family: 'Geologica', sans-serif; transition: border-color 0.12s ease, background 0.12s ease;
+    }
+    .add-node-row:hover { border-color: var(--primary-teal); background: rgba(0,148,160,0.05); }
+    .add-node-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; align-self: center; }
+    .add-node-label { font-weight: 700; font-size: 0.9rem; color: var(--midnight); white-space: nowrap; }
+    .add-node-desc { font-size: 0.78rem; color: var(--midnight); opacity: 0.6; min-width: 0; }
+    .add-node-group-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label, 0.08em);
+      color: var(--midnight); opacity: 0.6; margin: 12px 0 8px;
+    }
+    .add-node-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .add-node-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 2px solid var(--cloud); border-radius: 999px; background: var(--ghost-white);
+      padding: 6px 12px; font-family: 'Geologica', sans-serif; font-size: 0.78rem; font-weight: 600;
+      color: var(--midnight); cursor: pointer; transition: border-color 0.12s ease;
+    }
+    .add-node-chip svg { width: 14px; height: 14px; color: var(--chip-color, var(--midnight)); }
+    .add-node-chip:hover { border-color: var(--chip-color, var(--primary-teal)); }
+    #add-signal-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--cloud); }
+    #add-signal-form.hidden { display: none; }
+
+    /* Source badge on nodes merged in from a shared working folder */
+    .node-source-badge {
+      position: absolute; top: -9px; right: 10px; z-index: 2;
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.04em;
+      padding: 2px 8px; border-radius: 9px;
+      background: var(--midnight); color: var(--ghost-white);
+      border: 1px solid rgba(255,255,255,0.25);
+      max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      pointer-events: none;
+    }
+
     /* Card page modal */
     @media (pointer: coarse) {
       /* ≥16px stops iOS Safari from zooming the page when these get focus */
@@ -2072,6 +2110,8 @@
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
           <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full signal pool with your AI thinking partner">✨ <span class="btn-label">See the whole pool</span></button>
+          <button class="btn btn-outline" onclick="openBoardCsvModal()" aria-label="Import more observations from a CSV"><span class="btn-label">Import CSV</span><span class="btn-label-short">CSV</span></button>
+          <button class="btn btn-outline hidden" id="add-node-btn" onclick="openAddNodeMenu()" aria-label="Add a card to the canvas">＋ <span class="btn-label">Add card</span><span class="btn-label-short">Add</span></button>
           <button class="btn btn-outline" onclick="openImportModal()" aria-label="Open a shared working folder"><span class="btn-label">Open shared folder</span><span class="btn-label-short">Open</span></button>
           <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Push to Problem Situation</span><span class="btn-label-short">Push</span></button>
           <div class="profile-anchor">
@@ -2274,6 +2314,44 @@
     </div>
   </div>
 
+  <div id="add-node-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="add-node-title">
+    <div class="modal-content" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 id="add-node-title">Add to the canvas</h3>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--midnight); opacity: 0.75; margin-bottom: 14px;">New cards start empty — name and describe them, then connect evidence beneath them whenever you're ready.</p>
+        <div id="add-node-options"></div>
+        <div id="add-signal-form" class="hidden">
+          <label class="sr-only" for="add-signal-title">New signal title</label>
+          <input type="text" id="add-signal-title" class="config-input" placeholder="Signal title...">
+          <label class="sr-only" for="add-signal-summary">New signal summary</label>
+          <input type="text" id="add-signal-summary" class="config-input" placeholder="What's the friction? Who feels it?...">
+          <button class="btn btn-primary" onclick="createManualSignal()">Add signal</button>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 12px;">
+          <button class="btn btn-outline" onclick="closeModal('add-node-modal')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="board-csv-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="board-csv-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="board-csv-title">Import more observations</h3>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; margin-bottom: 16px;">Add observations from a CSV to this canvas. New signals land together in open space beside your current map — nothing you've built moves. Columns: <code>title,summary</code> (header row required), or <a href="#" onclick="downloadCsvTemplate(); return false;">download the template</a>.</p>
+        <input type="file" id="board-csv-input" accept=".csv,text/csv" class="sr-only" onchange="handleBoardCsvUpload(event)">
+        <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+          <button class="btn btn-outline" onclick="closeModal('board-csv-modal')">Cancel</button>
+          <button class="btn btn-primary" onclick="document.getElementById('board-csv-input').click()" data-autofocus>Choose CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="import-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
     <div class="modal-content">
       <div class="modal-header">
@@ -2294,6 +2372,7 @@
           <p id="import-confirm-summary" style="font-size: 0.9rem; color: var(--midnight); margin-bottom: 16px;"></p>
           <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
             <button class="btn btn-outline" onclick="closeModal('import-modal')">Cancel</button>
+            <button class="btn btn-outline" onclick="confirmMergeImport()">Merge into my board</button>
             <button class="btn btn-primary" onclick="confirmImport()">Replace my board</button>
           </div>
         </div>
@@ -2430,9 +2509,6 @@
       { id: 'owner-client',  label: 'Owner/Client',  desc: 'Could own this problem situation or buy its resolution' }
     ];
 
-    function emptySituation() {
-      return { title: '', description: '', frame: '', stakeholderMap: '', problematization: '', active: false, box: null };
-    }
     function defaultState() {
       return {
         settings: { title: '' },
@@ -2441,8 +2517,10 @@
         // cardType ∈ 7 types); tier 2 = pattern; 3 = theme; 4 = super-theme;
         // 5 = mega-theme; 6+ extensible. childIds reference lower-tier nodes.
         cards: [],
-        situation: emptySituation(),   // the single Problem Situation (next screen)
-        committedCardIds: [],          // top-tier cards pushed into the situation
+        // Problem Situations: each push frames a group of cards in its own
+        // section box. { id, title, description, frame, stakeholderMap,
+        // problematization, box, memberCardIds (top-level roots), createdAt }
+        situations: [],
         nodes: {},
         view: { zoom: 1, panX: 0, panY: 0 },
         viewInitialized: false,
@@ -2533,8 +2611,12 @@
         }
 
         // --- Unify cards/themes/situations → single tiered cards[] + situation ---
+        // Legacy situations carried themeIds; the current model's situations
+        // carry memberCardIds and must NOT be consumed by this migration.
+        const legacySituations = Array.isArray(parsed.situations)
+          && parsed.situations.some(s => s && Array.isArray(s.themeIds));
         const needsUnify = (Array.isArray(parsed.cards) && parsed.cards.some(c => Array.isArray(c.signalIds)))
-          || Array.isArray(parsed.themes) || Array.isArray(parsed.situations);
+          || Array.isArray(parsed.themes) || legacySituations;
         if (needsUnify) {
           const unified = [];
           (parsed.cards || []).forEach(c => {
@@ -2597,11 +2679,46 @@
         if (!Array.isArray(c.files)) c.files = [];   // [{ name, content }]
       });
       if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
-      if (!parsed.situation || typeof parsed.situation !== 'object') parsed.situation = emptySituation();
-      ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].forEach(k => { if (typeof parsed.situation[k] !== 'string') parsed.situation[k] = ''; });
-      if (!Array.isArray(parsed.committedCardIds)) parsed.committedCardIds = [];
-      if (typeof parsed.situation.active !== 'boolean') parsed.situation.active = !!(parsed.committedCardIds && parsed.committedCardIds.length);
-      if (!parsed.situation.box || typeof parsed.situation.box !== 'object') parsed.situation.box = null;
+      // --- Migrate singular situation + committedCardIds → situations[] ---
+      const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization'];
+      if (!Array.isArray(parsed.situations)) {
+        parsed.situations = [];
+        const sit = (parsed.situation && typeof parsed.situation === 'object') ? parsed.situation : null;
+        const committed = Array.isArray(parsed.committedCardIds) ? parsed.committedCardIds : [];
+        const hasContent = !!sit && (sit.active === true || committed.length > 0
+          || SIT_FIELDS.some(k => typeof sit[k] === 'string' && sit[k].trim()));
+        if (hasContent) {
+          let members = committed.filter(id => parsed.cards.some(c => c.id === id));
+          if (!members.length) {
+            // Pushed but the committed list was lost: recompute top-level roots.
+            members = parsed.cards
+              .filter(c => !parsed.cards.some(p => Array.isArray(p.childIds) && p.childIds.includes(c.id)))
+              .map(c => c.id);
+          }
+          const mig = {
+            id: uid('sit'),
+            box: (sit.box && typeof sit.box === 'object') ? sit.box : null,
+            memberCardIds: members,
+            createdAt: new Date().toISOString()
+          };
+          SIT_FIELDS.forEach(k => { mig[k] = (typeof sit[k] === 'string') ? sit[k] : ''; });
+          parsed.situations.push(mig);
+        }
+      }
+      delete parsed.situation;
+      delete parsed.committedCardIds;
+      parsed.situations = parsed.situations.filter(s => s && typeof s === 'object');
+      parsed.situations.forEach(s => {
+        if (typeof s.id !== 'string' || !s.id) s.id = uid('sit');
+        SIT_FIELDS.forEach(k => { if (typeof s[k] !== 'string') s[k] = ''; });
+        if (!s.box || typeof s.box !== 'object') s.box = null;
+        s.memberCardIds = (Array.isArray(s.memberCardIds) ? s.memberCardIds : [])
+          .filter(id => parsed.cards.some(c => c.id === id));
+        if (typeof s.createdAt !== 'string') s.createdAt = new Date().toISOString();
+      });
+      // Source provenance (merged boards): keep only non-empty strings.
+      parsed.items.forEach(it => { if (typeof it.source !== 'string' || !it.source) delete it.source; });
+      parsed.cards.forEach(c => { if (typeof c.source !== 'string' || !c.source) delete c.source; });
       if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
       if (typeof parsed.exportedAt === 'undefined') parsed.exportedAt = null;
       if (!parsed.currentScreen) parsed.currentScreen = 'setup';
@@ -2724,6 +2841,29 @@
       return rows;
     }
 
+    // Parse CSV text into fresh signal items. Returns { items } or { error }.
+    function csvRowsToItems(text) {
+      let rows;
+      try { rows = parseCsv(text); } catch (e) { return { error: 'Could not parse that CSV.' }; }
+      if (rows.length < 2) return { error: 'CSV needs a header row plus at least one signal.' };
+      const header = rows[0].map(h => h.trim().toLowerCase());
+      const titleIdx = header.indexOf('title');
+      const summaryIdx = header.indexOf('summary');
+      if (titleIdx === -1 || summaryIdx === -1) {
+        return { error: 'CSV header must include "title" and "summary" columns.' };
+      }
+      const items = [];
+      for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
+        const t = (row[titleIdx] || '').trim();
+        const s = (row[summaryIdx] || '').trim();
+        if (!t || !s) continue;
+        items.push({ id: uid('item'), tag: 'Friction Signal', title: t, summary: s });
+      }
+      if (items.length === 0) return { error: 'No valid rows found in CSV.' };
+      return { items };
+    }
+
     function handleCsvUpload(evt) {
       const file = evt.target.files && evt.target.files[0];
       evt.target.value = '';
@@ -2731,40 +2871,51 @@
       const reader = new FileReader();
       reader.onerror = () => toast('Could not read that file.');
       reader.onload = () => {
-        try {
-          const rows = parseCsv(String(reader.result || ''));
-          if (rows.length < 2) { toast('CSV needs a header row plus at least one signal.'); return; }
-          const header = rows[0].map(h => h.trim().toLowerCase());
-          const titleIdx = header.indexOf('title');
-          const summaryIdx = header.indexOf('summary');
-          if (titleIdx === -1 || summaryIdx === -1) {
-            toast('CSV header must include "title" and "summary" columns.');
-            return;
-          }
-          const newItems = [];
-          for (let r = 1; r < rows.length; r++) {
-            const row = rows[r];
-            const t = (row[titleIdx] || '').trim();
-            const s = (row[summaryIdx] || '').trim();
-            if (!t && !s) continue;
-            if (!t || !s) continue;
-            newItems.push({ id: uid('item'), tag: 'Friction Signal', title: t, summary: s });
-          }
-          if (newItems.length === 0) { toast('No valid rows found in CSV.'); return; }
-          const modeEl = document.querySelector('input[name="csv-mode"]:checked');
-          const mode = modeEl ? modeEl.value : 'append';
-          if (mode === 'replace') {
-            appState.items = newItems;
-            appState.cards.forEach(c => { if (c.tier === 1) c.childIds = []; });
-          } else {
-            appState.items = appState.items.concat(newItems);
-          }
-          renderConfigItems();
-          scheduleSave();
-          toast(`${newItems.length} signal${newItems.length === 1 ? '' : 's'} loaded (${mode}).`);
-        } catch (e) {
-          toast('Could not parse that CSV.');
+        const result = csvRowsToItems(String(reader.result || ''));
+        if (result.error) { toast(result.error); return; }
+        const newItems = result.items;
+        const modeEl = document.querySelector('input[name="csv-mode"]:checked');
+        const mode = modeEl ? modeEl.value : 'append';
+        if (mode === 'replace') {
+          appState.items = newItems;
+          appState.cards.forEach(c => { if (c.tier === 1) c.childIds = []; });
+        } else {
+          appState.items = appState.items.concat(newItems);
         }
+        renderConfigItems();
+        scheduleSave();
+        toast(`${newItems.length} signal${newItems.length === 1 ? '' : 's'} loaded (${mode}).`);
+      };
+      reader.readAsText(file);
+    }
+
+    // --- Board-side CSV import: appends new signal nodes to a live canvas ---
+    function openBoardCsvModal() {
+      openModal('board-csv-modal');
+    }
+
+    function handleBoardCsvUpload(evt) {
+      const file = evt.target.files && evt.target.files[0];
+      evt.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onerror = () => toast('Could not read that file.');
+      reader.onload = () => {
+        const result = csvRowsToItems(String(reader.result || ''));
+        if (result.error) { toast(result.error); return; }
+        const newItems = result.items;
+        appState.items = appState.items.concat(newItems);
+        // Mark them sorted as signals and keep the sorting cursor at the end,
+        // otherwise pickInitialScreen() bounces the next reload into sorting.
+        newItems.forEach(it => { appState.sorting.decisions[it.id] = 'signal'; });
+        appState.sorting.currentIndex = appState.items.length;
+        placeNodesInFreeSpace(newItems.map(it => it.id));
+        renderAllNodes();
+        renderAllEdges();
+        updateClusterProgressChip();
+        closeModal('board-csv-modal');
+        scheduleSave();
+        toast(`${newItems.length} signal${newItems.length === 1 ? '' : 's'} added to the canvas.`);
       };
       reader.readAsText(file);
     }
@@ -2905,6 +3056,67 @@
     }
     function parentsOf(id) { return appState.cards.filter(c => c.childIds.includes(id)); }
     function topLevelCards() { return appState.cards.filter(c => parentsOf(c.id).length === 0); }
+
+    // --- Problem-situation membership helpers ---
+    function hasSituations() { return appState.situations.length > 0; }
+    function findSituation(id) { return appState.situations.find(s => s.id === id); }
+    // All card ids inside a situation: each member root + every card beneath it.
+    function situationCardIds(sit) {
+      const out = new Set();
+      const walk = (id) => {
+        const c = findCard(id);
+        if (!c || out.has(id)) return;
+        out.add(id);
+        c.childIds.forEach(walk);
+      };
+      sit.memberCardIds.forEach(walk);
+      return out;
+    }
+    // Every card id committed to ANY situation.
+    function committedCardIdSet() {
+      const out = new Set();
+      appState.situations.forEach(sit => situationCardIds(sit).forEach(id => out.add(id)));
+      return out;
+    }
+    // Top-level cards not yet captured by any situation — the next pushable
+    // group. Excludes roots whose subtree overlaps a committed tree, so a
+    // committed root that later gains a parent can't be double-captured.
+    function uncommittedTopLevelCards() {
+      const committed = committedCardIdSet();
+      return topLevelCards().filter(c => {
+        if (committed.has(c.id)) return false;
+        const tree = new Set();
+        const walk = (id) => {
+          const card = findCard(id);
+          if (!card || tree.has(id)) return;
+          tree.add(id);
+          card.childIds.forEach(walk);
+        };
+        walk(c.id);
+        return ![...tree].some(id => committed.has(id));
+      });
+    }
+    // The lattice of one situation: its cards + the signals beneath them,
+    // filtered to positioned nodes (mirrors latticeNodeIds).
+    function situationNodeIds(sit) {
+      const ids = new Set();
+      situationCardIds(sit).forEach(cid => {
+        ids.add(cid);
+        signalsUnder(cid).forEach(s => ids.add(s));
+      });
+      return [...ids].filter(id => appState.nodes[id]);
+    }
+    // nodeId → situationId index for cheap per-frame geometry refresh.
+    let _sitIndex = null;
+    function cardSituationIndex() {
+      if (_sitIndex) return _sitIndex;
+      _sitIndex = new Map();
+      appState.situations.forEach(sit => {
+        situationNodeIds(sit).forEach(id => _sitIndex.set(id, sit.id));
+      });
+      return _sitIndex;
+    }
+    function invalidateSituationIndex() { _sitIndex = null; }
     function nodeLabel(id) {
       if (isSignalId(id)) return 'Signal';
       const c = findCard(id);
@@ -3026,6 +3238,54 @@
       if (placed.size > before) scheduleSave();
     }
 
+    // All active section-box rects on the canvas.
+    function sectionBoxes() {
+      return appState.situations.map(s => s.box).filter(Boolean);
+    }
+
+    // World-space bounding box of all positioned content (nodes + section
+    // boxes), or null on an empty canvas. Shared by free-space placement
+    // and folder merge.
+    function contentBounds() {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      Object.keys(appState.nodes).forEach(id => {
+        const p = appState.nodes[id];
+        const { w, h } = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x + w > maxX) maxX = p.x + w;
+        if (p.y + h > maxY) maxY = p.y + h;
+      });
+      sectionBoxes().forEach(b => {
+        if (b.x < minX) minX = b.x;
+        if (b.y < minY) minY = b.y;
+        if (b.x + b.w > maxX) maxX = b.x + b.w;
+        if (b.y + b.h > maxY) maxY = b.y + b.h;
+      });
+      if (minX === Infinity) return null;
+      return { minX, minY, maxX, maxY };
+    }
+
+    // Place freshly added nodes in a phyllotaxis cluster in open space to the
+    // right of everything already on the canvas (or at the default center on
+    // an empty board), so new arrivals never land under existing work.
+    function placeNodesInFreeSpace(ids) {
+      if (!ids.length) return;
+      const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+      const C = 110;
+      const clusterRadius = C * Math.sqrt(ids.length);
+      const bounds = contentBounds();
+      const cx = bounds ? bounds.maxX + 160 + clusterRadius : 1000;
+      const cy = bounds ? (bounds.minY + bounds.maxY) / 2 : 700;
+      const baseAng = Math.random() * Math.PI * 2;
+      ids.forEach((id, k) => {
+        const dims = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
+        const r = C * Math.sqrt(k + 1);
+        const ang = baseAng + k * GOLDEN;
+        setNodePos(id, cx + Math.cos(ang) * r - dims.w / 2, cy + Math.sin(ang) * r - dims.h / 2);
+      });
+    }
+
     function applyViewTransform() {
       const world = document.getElementById('canvas-world');
       if (!world) return;
@@ -3100,11 +3360,11 @@
         if (p.x + w > maxX) maxX = p.x + w;
         if (p.y + h > maxY) maxY = p.y + h;
       });
-      if (appState.situation.active && appState.situation.box) {
-        const b = appState.situation.box;
+      const boxes = sectionBoxes();
+      boxes.forEach(b => {
         minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
         maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
-      }
+      });
       const viewport = document.getElementById('canvas-viewport');
       const rect = viewport.getBoundingClientRect();
       const margin = 60;
@@ -3114,11 +3374,12 @@
         return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(sx, sy, 1)));
       };
       let zoom = fit();
-      if (appState.situation.active && appState.situation.box) {
-        // The box header is counter-scaled (constant ~110px on screen), so its
+      if (boxes.length) {
+        // Box headers are counter-scaled (constant ~110px on screen), so their
         // world height depends on the zoom we just picked — refit once with
-        // headroom for it above the box.
-        minY = Math.min(minY, appState.situation.box.y - 116 / zoom);
+        // headroom above the topmost box.
+        const topY = Math.min(...boxes.map(b => b.y));
+        minY = Math.min(minY, topY - 116 / zoom);
         zoom = fit();
       }
       const contentW = maxX - minX, contentH = maxY - minY;
@@ -3142,7 +3403,8 @@
       }
       renderAllNodes();
       renderAllEdges();
-      renderSection();
+      renderSections();
+      updateAddButtonVisibility();
       updateClusterProgressChip();
       filterItems();
     }
@@ -3160,7 +3422,8 @@
       applyViewState();
       buildViewTabs();
       applySelectionClasses();
-      if (appState.situation.active) refreshSectionGeometry();
+      invalidateSituationIndex();
+      if (hasSituations()) refreshSectionGeometry();
     }
 
     // Distinct tiers currently present, ascending.
@@ -3212,11 +3475,18 @@
       });
     }
 
+    // Provenance pill for nodes merged in from a shared working folder.
+    function sourceBadgeHtml(obj) {
+      if (!obj.source) return '';
+      const s = escapeHtml(obj.source);
+      return `<span class="node-source-badge" title="Imported from ${s}">${s}</span>`;
+    }
+
     function buildSignalNode(item) {
       const el = document.createElement('div');
       const parked = !parentHubId(item.id);
       const isSuper = appState.sorting.decisions[item.id] === 'super';
-      el.className = 'canvas-node signal-node' + (parked ? ' parked' : '') + (isSuper ? ' super-signal' : '');
+      el.className = 'canvas-node signal-node' + (parked ? ' parked' : '') + (isSuper ? ' super-signal' : '') + (item.source ? ' has-source' : '');
       el.id = 'node-' + item.id;
       el.setAttribute('data-node-id', item.id);
       el.setAttribute('data-kind', 'signal');
@@ -3224,6 +3494,7 @@
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
       el.innerHTML = `
+        ${sourceBadgeHtml(item)}
         <span class="card-tag">${isSuper ? '★ ' : ''}${escapeHtml(item.tag || 'Signal')}</span>
         <h3>${escapeHtml(item.title)}</h3>
         <p class="summary-text">${escapeHtml(item.summary)}</p>
@@ -3290,7 +3561,7 @@
       const el = document.createElement('div');
       const ct = cardTypeInfo(card.cardType);
       const undefinedType = !card.cardType;
-      el.className = 'canvas-node hub-node card-node' + (undefinedType ? ' card-undefined' : ' card-type-' + card.cardType);
+      el.className = 'canvas-node hub-node card-node' + (undefinedType ? ' card-undefined' : ' card-type-' + card.cardType) + (card.source ? ' has-source' : '');
       el.id = 'node-' + card.id;
       el.setAttribute('data-node-id', card.id);
       el.setAttribute('data-kind', 'hub');
@@ -3332,6 +3603,7 @@
              <div class="card-type-groups" hidden>${groupedChips}</div>
            </div>`;
       el.innerHTML = `
+        ${sourceBadgeHtml(card)}
         <div class="hub-tag">
           <span class="hub-tag-label">
             <span class="type-glyph" style="color: ${ct.color};" aria-hidden="true">${ct.icon}</span>
@@ -3410,7 +3682,7 @@
       const label = tierName(card.tier);
       const childWord = tierName(card.tier - 1).toLowerCase();
       const locked = hubLocked(card);
-      el.className = 'canvas-node hub-node card-node tiernode-' + card.tier + (locked ? ' hub-locked' : '');
+      el.className = 'canvas-node hub-node card-node tiernode-' + card.tier + (locked ? ' hub-locked' : '') + (card.source ? ' has-source' : '');
       el.id = 'node-' + card.id;
       el.setAttribute('data-node-id', card.id);
       el.setAttribute('data-kind', 'hub');
@@ -3431,6 +3703,7 @@
         themeQuality = `<div class="quality-check"><em>Lens test:</em> Could someone outside your field understand this as a way of seeing the whole situation?</div>`;
       }
       el.innerHTML = `
+        ${sourceBadgeHtml(card)}
         <div class="hub-tag" style="color: ${color};">
           <span class="hub-tag-label"><span class="type-name">${escapeHtml(label)}</span></span>
           <span class="hub-count" style="background:${color}; color:${lightText ? 'var(--midnight)' : 'var(--ghost-white)'};">${childCount} ${escapeHtml(childWord)}${childCount === 1 ? '' : 's'} · ${sigCount} signal${sigCount === 1 ? '' : 's'}</span>
@@ -3456,10 +3729,19 @@
       if (idx < 0) return;
       appState.cards.splice(idx, 1);
       appState.cards.forEach(c => { c.childIds = c.childIds.filter(x => x !== id); });
-      appState.committedCardIds = appState.committedCardIds.filter(x => x !== id);
+      // Drop from any situation; a situation that empties out dissolves.
+      let dissolved = 0;
+      appState.situations.forEach(s => { s.memberCardIds = s.memberCardIds.filter(x => x !== id); });
+      appState.situations = appState.situations.filter(s => {
+        if (s.memberCardIds.length) return true;
+        dissolved++;
+        return false;
+      });
       delete appState.nodes[id];
+      invalidateSituationIndex();
+      if (dissolved) renderSections();
       renderAllNodes(); renderAllEdges(); updateClusterProgressChip(); scheduleSave();
-      toast('Card removed.');
+      toast(dissolved ? 'Card removed — its problem situation dissolved with it.' : 'Card removed.');
     }
 
     function edgesFromState() {
@@ -3614,6 +3896,8 @@
         const el = document.getElementById('node-' + id);
         if (el) el.classList.add('marquee-selected');
       });
+      // Push scope follows the selection — keep the readiness chip in sync.
+      updateClusterProgressChip();
     }
 
     // ----- Node drag (move on canvas) -----
@@ -3691,7 +3975,7 @@
           if (!raf) raf = requestAnimationFrame(() => {
             raf = null;
             dragIds.forEach(id => updateEdgesForNode(id));
-            if (appState.situation.active) refreshSectionGeometry();
+            if (hasSituations()) dragIds.forEach(id => refreshSectionGeometry(id));
           });
         };
         const onUp = (ev) => {
@@ -3707,7 +3991,7 @@
           pointerId = null;
           if (dragging) {
             dragging = false;
-            if (appState.situation.active) refreshSectionGeometry();
+            if (hasSituations()) refreshSectionGeometry();
             scheduleSave();
           } else {
             // Click (not drag): select/toggle this node
@@ -3856,6 +4140,114 @@
         const el = document.getElementById('node-' + newObj.id);
         if (el) { const ti = el.querySelector('.hub-title'); if (ti) ti.focus(); }
       }, 280);
+    }
+
+    // --- Manual card creation (unlocked once a first situation is framed) ---
+    let pendingAddWorldPos = null;
+
+    function updateAddButtonVisibility() {
+      const btn = document.getElementById('add-node-btn');
+      if (btn) btn.classList.toggle('hidden', !hasSituations());
+    }
+
+    function openAddNodeMenu(worldPos) {
+      if (!hasSituations()) return;
+      pendingAddWorldPos = worldPos || null;
+      buildAddNodeOptions();
+      const form = document.getElementById('add-signal-form');
+      if (form) form.classList.add('hidden');
+      openModal('add-node-modal');
+    }
+
+    function buildAddNodeOptions() {
+      const wrap = document.getElementById('add-node-options');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+      const row = (label, desc, color, onPick) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'add-node-row';
+        b.innerHTML = `<span class="add-node-swatch" style="background:${color};"></span><span class="add-node-label">${label}</span><span class="add-node-desc">${desc}</span>`;
+        b.addEventListener('click', onPick);
+        wrap.appendChild(b);
+        return b;
+      };
+      row('Signal', 'A raw observation from the field', 'var(--primary-teal)', () => {
+        const form = document.getElementById('add-signal-form');
+        if (form) { form.classList.remove('hidden'); form.querySelector('input').focus(); }
+      });
+      // Evidence: the 7 claim types + unclassified
+      const evLabel = document.createElement('div');
+      evLabel.className = 'add-node-group-label';
+      evLabel.textContent = 'Evidence — pick a claim type';
+      wrap.appendChild(evLabel);
+      const chipGrid = document.createElement('div');
+      chipGrid.className = 'add-node-chips';
+      [...CARD_TYPES, EVIDENCE_TYPE].forEach(t => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'add-node-chip';
+        chip.style.setProperty('--chip-color', t.color);
+        chip.innerHTML = `${t.icon}<span>${t.id ? t.label : 'Unclassified'}</span>`;
+        chip.title = t.desc;
+        chip.addEventListener('click', () => createManualNode(1, t.id));
+        chipGrid.appendChild(chip);
+      });
+      wrap.appendChild(chipGrid);
+      row('Pattern', 'A recurring structure across evidence', tierColor(2), () => createManualNode(2));
+      row('Theme', 'A deeper condition patterns point toward', tierColor(3), () => createManualNode(3));
+      row('Super-theme', 'A condition spanning several themes', tierColor(4), () => createManualNode(4));
+    }
+
+    // World-space point a new node should appear at: the double-clicked spot,
+    // or the center of the current viewport.
+    function manualAddPosition(kind, id) {
+      const dims = nodeSize(kind, id);
+      if (pendingAddWorldPos) {
+        return { x: pendingAddWorldPos.x - dims.w / 2, y: pendingAddWorldPos.y - dims.h / 2 };
+      }
+      const viewport = document.getElementById('canvas-viewport');
+      const rect = viewport.getBoundingClientRect();
+      const { panX, panY, zoom } = appState.view;
+      return {
+        x: (rect.width / 2 - panX) / zoom - dims.w / 2,
+        y: (rect.height / 2 - panY) / zoom - dims.h / 2
+      };
+    }
+
+    function createManualNode(tier, cardType) {
+      const card = { id: uid('card'), title: '', description: '', tier, childIds: [], doc: '', files: [] };
+      if (tier === 1) { card.cardType = cardType || null; card.playerRole = null; }
+      appState.cards.push(card);
+      const pos = manualAddPosition('hub', card.id);
+      setNodePos(card.id, pos.x, pos.y);
+      pendingAddWorldPos = null;
+      closeModal('add-node-modal');
+      invalidateSituationIndex();
+      spawnHubUI(card, card.id);
+    }
+
+    function createManualSignal() {
+      const titleEl = document.getElementById('add-signal-title');
+      const summaryEl = document.getElementById('add-signal-summary');
+      const t = (titleEl.value || '').trim();
+      const s = (summaryEl.value || '').trim();
+      if (!t || !s) { toast('A signal needs both a title and a summary.'); return; }
+      const item = { id: uid('item'), tag: 'Friction Signal', title: t, summary: s };
+      appState.items.push(item);
+      // Same sorting bookkeeping as board CSV import — never resume sorting.
+      appState.sorting.decisions[item.id] = 'signal';
+      appState.sorting.currentIndex = appState.items.length;
+      const pos = manualAddPosition('signal', item.id);
+      setNodePos(item.id, pos.x, pos.y);
+      pendingAddWorldPos = null;
+      titleEl.value = ''; summaryEl.value = '';
+      closeModal('add-node-modal');
+      renderAllNodes();
+      renderAllEdges();
+      animateNodeSpawn(item.id);
+      updateClusterProgressChip();
+      scheduleSave();
     }
 
     function warnIfUnderpopulated(hubId) {
@@ -4055,6 +4447,18 @@
         const wsEl = document.getElementById('board-workspace');
         if (wsEl && wsEl.classList.contains('mobile-header-open')) toggleMobileHeader(false);
       }, true);
+
+      // Double-click empty canvas → add a card at that spot (post first push).
+      viewport.addEventListener('dblclick', (e) => {
+        if (!hasSituations()) return;
+        if (e.target.closest('.canvas-node, .section-box, .zoom-toolbar, .canvas-hint, .marquee-rect')) return;
+        const rect = viewport.getBoundingClientRect();
+        const { panX, panY, zoom } = appState.view;
+        openAddNodeMenu({
+          x: (e.clientX - rect.left - panX) / zoom,
+          y: (e.clientY - rect.top - panY) / zoom
+        });
+      });
 
       viewport.addEventListener('pointerdown', (e) => {
         // Ignore canvas chrome (zoom toolbar, tutorial button) so their
@@ -5727,10 +6131,12 @@ ${AI_RULES}
       toast(ok ? 'Copied.' : 'Copy failed — select and copy manually.');
     }
 
-    // --- Validation + progress (all cards named & described, plus at least
-    // one named & described theme, to push) ---
-    function validateBoard() {
-      const cards = appState.cards;
+    // --- Validation + progress (every card in the pushable group named &
+    // described, plus at least one named & described theme, to push) ---
+    // Zero-arg: validates the group the next push would capture (the whole
+    // board until the first push).
+    function validateBoard(cardsArg) {
+      const cards = cardsArg || pushableGroup().cards;
       const named = cards.filter(c => (c.title || '').trim());
       const missing = cards.filter(c => !(c.title || '').trim() || !(c.description || '').trim());
       const tops = topLevelCards();
@@ -5751,11 +6157,14 @@ ${AI_RULES}
       const el = document.getElementById('cluster-progress');
       if (!el) return;
       const v = validateBoard();
+      const framed = appState.situations.length;
       el.textContent = v.ready
-        ? `Ready to push — ${v.total} card${v.total === 1 ? '' : 's'} named & described`
-        : (!v.missing.length && v.total && !v.hasTheme)
-          ? 'Climb to a named & described theme to push'
-          : `${v.named}/${v.total} cards named & described`;
+        ? `Ready to push — ${v.total} card${v.total === 1 ? '' : 's'} named & described${selectedNodeIds.size ? ' (selection)' : ''}`
+        : (!v.total && framed)
+          ? `${framed} situation${framed === 1 ? '' : 's'} framed`
+          : (!v.missing.length && v.total && !v.hasTheme)
+            ? 'Climb to a named & described theme to push'
+            : `${v.named}/${v.total} cards named & described`;
       el.classList.toggle('meets-target', v.ready);
       el.classList.toggle('below-target', !v.ready);
       const dot = document.getElementById('mobile-ready-dot');
@@ -5765,8 +6174,9 @@ ${AI_RULES}
     // --- Problem Situation evidence trail + AI prompts ---
     // Compact outline of the whole ladder (top-level cards → … → signals).
     function formatCardOutline(id, depth) { return formatTreeOutline(id, depth); }
-    function situationEvidenceText() {
-      const tops = topLevelCards().filter(c => (c.title || '').trim() || c.childIds.length);
+    function situationEvidenceText(sit) {
+      const tops = (sit ? sit.memberCardIds.map(findCard).filter(Boolean) : topLevelCards())
+        .filter(c => (c.title || '').trim() || c.childIds.length);
       if (!tops.length) return '(no cards yet)';
       return tops.map(c => formatTreeOutline(c.id, 0)).join('\n');
     }
@@ -5865,10 +6275,11 @@ For each of 3–5 key signals:
       }
     };
 
-    function buildSituationPrompt(kind) {
-      const s = appState.situation;
+    function buildSituationPrompt(kind, sit) {
+      const s = sit || appState.situations[appState.situations.length - 1]
+        || { title: '', description: '', frame: '', stakeholderMap: '' };
       const title = s.title || appState.settings.title || 'this problem situation';
-      const evidence = situationEvidenceText();
+      const evidence = situationEvidenceText(sit);
       const k = SITUATION_PROMPT_KINDS[kind];
       if (!k) return '';
       const thinking = k.thinking.map((s, i) => `${i + 1}. ${s}`).join('\n');
@@ -5923,8 +6334,8 @@ ${AI_RULES}
       appState.cards.forEach(c => { ids.add(c.id); signalsUnder(c.id).forEach(s => ids.add(s)); });
       return [...ids].filter(id => appState.nodes[id]);
     }
-    function computeSectionBox() {
-      const ids = latticeNodeIds();
+    function computeSectionBoxFor(sit) {
+      const ids = situationNodeIds(sit);
       if (!ids.length) return null;
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       ids.forEach(id => {
@@ -5936,75 +6347,91 @@ ${AI_RULES}
       return { x: minX - pad, y: minY - pad, w: (maxX - minX) + pad * 2, h: (maxY - minY) + pad * 2 };
     }
 
-    function renderSection() {
+    function renderSections() {
       const layer = document.getElementById('sections-layer');
       if (!layer) return;
-      const s = appState.situation;
-      if (!s.active) { layer.innerHTML = ''; return; }
-      if (!s.box) s.box = computeSectionBox();
-      const box = s.box;
-      if (!box) { layer.innerHTML = ''; return; }
-      const ready = (s.title || '').trim() && (s.description || '').trim();
-      layer.innerHTML = `
-        <div class="section-box" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px;">
+      layer.innerHTML = '';
+      appState.situations.forEach((s, i) => {
+        if (!s.box) s.box = computeSectionBoxFor(s);
+        const box = s.box;
+        if (!box) return;
+        const ready = (s.title || '').trim() && (s.description || '').trim();
+        // Legacy ids live on the FIRST box only (single-box selectors in tests
+        // and tours); every box carries the classes + data-sit-id.
+        const legacy = i === 0;
+        const el = document.createElement('div');
+        el.className = 'section-box';
+        el.setAttribute('data-sit-id', s.id);
+        el.style.cssText = `left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px;`;
+        el.innerHTML = `
           <div class="section-header">
-            <div class="section-titles" id="section-drag">
-              <input class="section-title" id="section-title" placeholder="Name the problem situation" value="${escapeHtml(s.title || '')}">
-              <textarea class="section-desc" id="section-desc" rows="2" placeholder="Describe it — the open, complex, networked condition">${escapeHtml(s.description || '')}</textarea>
+            <div class="section-titles section-drag"${legacy ? ' id="section-drag"' : ''}>
+              <input class="section-title"${legacy ? ' id="section-title"' : ''} placeholder="Name the problem situation" value="${escapeHtml(s.title || '')}">
+              <textarea class="section-desc"${legacy ? ' id="section-desc"' : ''} rows="2" placeholder="Describe it — the open, complex, networked condition">${escapeHtml(s.description || '')}</textarea>
             </div>
             <div class="section-actions">
-              <button class="section-export ${ready ? '' : 'hidden'}" id="section-export">Export folder ⤓</button>
+              <button class="section-export ${ready ? '' : 'hidden'}"${legacy ? ' id="section-export"' : ''}>Export folder ⤓</button>
             </div>
-          </div>
-        </div>`;
-      wireSection();
+          </div>`;
+        layer.appendChild(el);
+        wireSectionBox(el, s);
+      });
     }
 
-    // Resize/move the existing box div without rebuilding it (keeps input focus).
-    function refreshSectionGeometry() {
-      if (!appState.situation.active) return;
-      const box = computeSectionBox(); if (!box) return;
-      appState.situation.box = box;
-      const el = document.querySelector('.section-box');
-      if (el) { el.style.left = box.x + 'px'; el.style.top = box.y + 'px'; el.style.width = box.w + 'px'; el.style.height = box.h + 'px'; }
+    // Resize/move existing box divs without rebuilding them (keeps input
+    // focus). With a nodeId, refresh only the situation that node belongs to.
+    function refreshSectionGeometry(nodeId) {
+      if (!hasSituations()) return;
+      let sits = appState.situations;
+      if (nodeId !== undefined) {
+        const sitId = cardSituationIndex().get(nodeId);
+        if (!sitId) return;
+        sits = appState.situations.filter(s => s.id === sitId);
+      }
+      sits.forEach(s => {
+        const box = computeSectionBoxFor(s); if (!box) return;
+        s.box = box;
+        const el = document.querySelector(`.section-box[data-sit-id="${s.id}"]`);
+        if (el) { el.style.left = box.x + 'px'; el.style.top = box.y + 'px'; el.style.width = box.w + 'px'; el.style.height = box.h + 'px'; }
+      });
     }
 
-    function toggleSectionExport() {
-      const exp = document.getElementById('section-export'); if (!exp) return;
-      const s = appState.situation;
-      exp.classList.toggle('hidden', !((s.title || '').trim() && (s.description || '').trim()));
+    function toggleSectionExport(boxEl, sit) {
+      const exp = boxEl.querySelector('.section-export'); if (!exp) return;
+      exp.classList.toggle('hidden', !((sit.title || '').trim() && (sit.description || '').trim()));
     }
 
-    function wireSection() {
-      const title = document.getElementById('section-title');
-      const desc  = document.getElementById('section-desc');
-      const exp   = document.getElementById('section-export');
-      const drag  = document.getElementById('section-drag');
+    function wireSectionBox(boxEl, sit) {
+      const title = boxEl.querySelector('.section-title');
+      const desc  = boxEl.querySelector('.section-desc');
+      const exp   = boxEl.querySelector('.section-export');
+      const drag  = boxEl.querySelector('.section-drag');
       if (title) { title.addEventListener('pointerdown', e => e.stopPropagation());
-        title.addEventListener('input', () => { appState.situation.title = title.value; scheduleSave(); toggleSectionExport(); }); }
+        title.addEventListener('input', () => { sit.title = title.value; scheduleSave(); toggleSectionExport(boxEl, sit); }); }
       if (desc) { desc.addEventListener('pointerdown', e => e.stopPropagation());
-        desc.addEventListener('input', () => { appState.situation.description = desc.value; autoResize(desc); scheduleSave(); toggleSectionExport(); });
+        desc.addEventListener('input', () => { sit.description = desc.value; autoResize(desc); scheduleSave(); toggleSectionExport(boxEl, sit); });
         requestAnimationFrame(() => autoResize(desc)); }
       if (exp) { exp.addEventListener('pointerdown', e => e.stopPropagation());
-        exp.addEventListener('click', e => { e.stopPropagation(); exportWorkingFolder(); }); }
-      if (drag) attachSectionDrag(drag);
+        exp.addEventListener('click', e => { e.stopPropagation(); exportWorkingFolder(sit.id); }); }
+      if (drag) attachSectionDrag(drag, sit);
     }
 
-    // Drag the title panel → move the whole lattice (the box follows via recompute).
-    function attachSectionDrag(handle) {
+    // Drag the title panel → move that situation's lattice (box follows).
+    function attachSectionDrag(handle, sit) {
       handle.addEventListener('pointerdown', (e) => {
         if (e.target.closest('input, textarea, button')) return;
         e.stopPropagation();
         const pid = e.pointerId; handle.setPointerCapture(pid);
         const sx = e.clientX, sy = e.clientY;
-        const ids = latticeNodeIds();
+        const ids = situationNodeIds(sit);
         const start = {}; ids.forEach(id => start[id] = { ...getNodePos(id) });
         const onMove = (ev) => {
           if (ev.pointerId !== pid) return;
           const dx = (ev.clientX - sx) / appState.view.zoom, dy = (ev.clientY - sy) / appState.view.zoom;
           ids.forEach(id => { const p = start[id]; setNodePos(id, p.x + dx, p.y + dy);
             const el = document.getElementById('node-' + id); if (el) { el.style.left = (p.x + dx) + 'px'; el.style.top = (p.y + dy) + 'px'; } });
-          ids.forEach(updateEdgesForNode); refreshSectionGeometry();
+          ids.forEach(updateEdgesForNode);
+          if (ids.length) refreshSectionGeometry(ids[0]);
         };
         const onUp = (ev) => {
           if (ev.pointerId !== pid) return;
@@ -6016,15 +6443,54 @@ ${AI_RULES}
     }
 
     // --- Push to Problem Situation ---
-    // Gate: every card must be named AND described. Then the push frames the
-    // lattice in a section box on the canvas — no screen change.
+    // Selection-based: a multi-selection pushes just those trees; with no
+    // selection, everything not yet inside a situation is pushed. Gate: every
+    // card in the group named AND described, with at least one theme.
+    function pushableGroup() {
+      let roots = uncommittedTopLevelCards();
+      if (selectedNodeIds.size) {
+        roots = roots.filter(root => {
+          const tree = new Set([root.id]);
+          const walk = (id) => {
+            const c = findCard(id);
+            if (!c) return;
+            c.childIds.forEach(kid => { if (!tree.has(kid)) { tree.add(kid); walk(kid); } });
+          };
+          walk(root.id);
+          root.childIds.forEach(walk);
+          signalsUnder(root.id).forEach(s => tree.add(s));
+          return [...tree].some(id => selectedNodeIds.has(id));
+        });
+      }
+      const cardIds = new Set();
+      roots.forEach(root => {
+        const walk = (id) => {
+          const c = findCard(id);
+          if (!c || cardIds.has(id)) return;
+          cardIds.add(id);
+          c.childIds.forEach(walk);
+        };
+        walk(root.id);
+      });
+      return { roots, cards: appState.cards.filter(c => cardIds.has(c.id)) };
+    }
+
     function openCommitModal() {
       if (tutorialMode) {
         toast('In the tutorial we stop before pushing — that step is for your real board.');
         return;
       }
-      const v = validateBoard();
+      const group = pushableGroup();
       const warningEl = document.getElementById('validation-warning');
+      if (!group.roots.length) {
+        const msg = selectedNodeIds.size
+          ? 'Nothing in your selection is left to push — it’s already framed.'
+          : 'Everything on the board is already framed. Build new cards to push another situation.';
+        warningEl.textContent = '';
+        toast(msg);
+        return;
+      }
+      const v = validateBoard(group.cards);
       if (!v.ready) {
         const msg = v.warnings[0] || 'Name and describe every card before pushing.';
         warningEl.textContent = msg;
@@ -6032,11 +6498,22 @@ ${AI_RULES}
         return;
       }
       warningEl.textContent = '';
-      appState.situation.active = true;
-      appState.situation.box = computeSectionBox();
-      appState.committedCardIds = topLevelCards().map(c => c.id);
-      renderSection();
-      resetView();   // zoom out to fit the lattice + box
+      const sit = {
+        id: uid('sit'),
+        title: '', description: '', frame: '', stakeholderMap: '', problematization: '',
+        box: null,
+        memberCardIds: group.roots.map(c => c.id),
+        createdAt: new Date().toISOString()
+      };
+      appState.situations.push(sit);
+      invalidateSituationIndex();
+      sit.box = computeSectionBoxFor(sit);
+      selectedNodeIds.clear();
+      applySelectionClasses();
+      renderSections();
+      updateAddButtonVisibility();
+      updateClusterProgressChip();
+      resetView();   // zoom out to fit all lattices + boxes
       scheduleSave();
       toast('Framed. Name and describe the problem situation on the box, then export.');
     }
@@ -6044,12 +6521,7 @@ ${AI_RULES}
     function onCommitRowChange() {}
     function getCheckedCommitIds() { return []; }
     function updateCommitContinueButton() {}
-    function confirmCommit() {
-      appState.committedCardIds = topLevelCards().map(c => c.id);
-      closeModal('commit-modal');
-      scheduleSave();
-      goToScreen('workspace');
-    }
+    function confirmCommit() { closeModal('commit-modal'); }
 
     // --- Workspace (per-committed-cluster deepening) ---
     // --- Workspace = the single Problem Situation ---
@@ -6067,103 +6539,107 @@ ${AI_RULES}
       if (jumpBar) jumpBar.innerHTML = '';
       container.innerHTML = '';
 
-      const tops = topLevelCards();
-      if (!tops.length) {
+      if (!hasSituations()) {
         const empty = document.createElement('p');
         empty.style.cssText = 'background: var(--ghost-white); padding: 24px; border-radius: 12px; border: 2px solid var(--cloud); color: var(--midnight);';
-        empty.textContent = 'No cards yet. Go back to the board, build at least one card, name and describe it, then push to the Problem Situation.';
+        empty.textContent = 'No problem situation yet. Go back to the board, build at least one card ladder, name and describe it, then push to a Problem Situation.';
         container.appendChild(empty);
         recomputeSubmitButton();
         return;
       }
-      container.appendChild(renderSituationEditor(tops));
+      appState.situations.forEach((sit, i) => container.appendChild(renderSituationEditor(sit, i)));
       recomputeSubmitButton();
     }
 
-    function renderSituationEditor(tops) {
-      const s = appState.situation;
+    function renderSituationEditor(s, idx) {
+      const tops = s.memberCardIds.map(findCard).filter(Boolean);
       const card = document.createElement('article');
       card.className = 'workspace-cluster-card';
+      const n = idx + 1;
+      const many = appState.situations.length > 1;
 
       const trail = tops.map(c => `<li><strong>${escapeHtml(c.title || 'Untitled')}</strong> <span class="ws-card-tier">${escapeHtml(nodeLabel(c.id))}</span> — ${signalsUnder(c.id).length} signal${signalsUnder(c.id).length === 1 ? '' : 's'}</li>`).join('');
 
       card.innerHTML = `
         <header>
           <div class="ws-card-titlerow">
-            <span class="ws-card-tier" style="background:#8a4fff;color:#fff;">Problem Situation</span>
+            <span class="ws-card-tier" style="background:#8a4fff;color:#fff;">Problem Situation${many ? ' ' + n : ''}</span>
+            ${many && (s.title || '').trim() ? `<h3 style="margin:0;">${escapeHtml(s.title)}</h3>` : ''}
           </div>
-          <p class="field-hint">An open, complex, networked condition synthesized from everything you built. This is not a problem to solve yet — it's a situation to frame.</p>
+          <p class="field-hint">An open, complex, networked condition synthesized from what you framed. This is not a problem to solve yet — it's a situation to frame.</p>
           <ul class="signal-chips">${trail}</ul>
         </header>
 
         <section class="workspace-section">
-          <label for="sit-title">Name the situation</label>
-          <input type="text" id="sit-title" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('title', this.value)">
-          <label for="sit-desc" style="margin-top:12px;">Describe it</label>
-          <textarea id="sit-desc" placeholder="This is an open condition, not a bounded problem, because ___" oninput="updateSituationField('description', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.description || '')}</textarea>
+          <label for="sit-title-${n}">Name the situation</label>
+          <input type="text" id="sit-title-${n}" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('${s.id}', 'title', this.value)">
+          <label for="sit-desc-${n}" style="margin-top:12px;">Describe it</label>
+          <textarea id="sit-desc-${n}" placeholder="This is an open condition, not a bounded problem, because ___" oninput="updateSituationField('${s.id}', 'description', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.description || '')}</textarea>
         </section>
 
         <section class="workspace-section">
-          <label for="sit-frame">Frame it</label>
+          <label for="sit-frame-${n}">Frame it</label>
           <p class="field-hint">A frame is a new way of seeing — a metaphor that reorganizes the evidence.</p>
           <div class="prompt-cta">
             <div class="prompt-cta-header">
               <div class="prompt-cta-label">✨ Help me find a frame</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('sit-frame-prompt')">Copy this prompt</button>
+              <button class="btn btn-primary copy-btn" onclick="copyText('sit-frame-prompt-${n}')">Copy this prompt</button>
             </div>
-            <div class="prompt-text" id="sit-frame-prompt"></div>
+            <div class="prompt-text" id="sit-frame-prompt-${n}"></div>
             <p class="copy-hint">Paste into your LLM. Push for non-obvious metaphors, then write the frame in your own words.</p>
           </div>
-          <textarea id="sit-frame" placeholder="If this situation is approached as if it is ___, then ___" oninput="updateSituationField('frame', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.frame || '')}</textarea>
+          <textarea id="sit-frame-${n}" placeholder="If this situation is approached as if it is ___, then ___" oninput="updateSituationField('${s.id}', 'frame', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.frame || '')}</textarea>
         </section>
 
         <section class="workspace-section">
-          <label for="sit-stake">Stakeholder Map</label>
+          <label for="sit-stake-${n}">Stakeholder Map</label>
           <p class="field-hint">Inner-circle, wider-field, owners/clients, gatekeepers — across the whole situation.</p>
           <div class="prompt-cta">
             <div class="prompt-cta-header">
               <div class="prompt-cta-label">✨ Map who's involved</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('sit-stake-prompt')">Copy this prompt</button>
+              <button class="btn btn-primary copy-btn" onclick="copyText('sit-stake-prompt-${n}')">Copy this prompt</button>
             </div>
-            <div class="prompt-text" id="sit-stake-prompt"></div>
+            <div class="prompt-text" id="sit-stake-prompt-${n}"></div>
             <p class="copy-hint">Paste into your LLM. Ask "who did you leave out and why?" Write your map from what you learned.</p>
           </div>
-          <textarea id="sit-stake" placeholder="Who's in the inner circle, the wider field, who could own this? Your words." oninput="updateSituationField('stakeholderMap', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.stakeholderMap || '')}</textarea>
+          <textarea id="sit-stake-${n}" placeholder="Who's in the inner circle, the wider field, who could own this? Your words." oninput="updateSituationField('${s.id}', 'stakeholderMap', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.stakeholderMap || '')}</textarea>
         </section>
 
         <section class="workspace-section">
-          <label for="sit-problem">Pressure-test the framing</label>
+          <label for="sit-problem-${n}">Pressure-test the framing</label>
           <p class="field-hint">Hidden assumptions, structural biases, who benefits from things staying as they are.</p>
           <div class="prompt-cta">
             <div class="prompt-cta-header">
               <div class="prompt-cta-label">✨ Problematize this situation</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('sit-problem-prompt')">Copy this prompt</button>
+              <button class="btn btn-primary copy-btn" onclick="copyText('sit-problem-prompt-${n}')">Copy this prompt</button>
             </div>
-            <div class="prompt-text" id="sit-problem-prompt"></div>
+            <div class="prompt-text" id="sit-problem-prompt-${n}"></div>
             <p class="copy-hint">If the response confirms your framing, ask it to break it.</p>
           </div>
-          <textarea id="sit-problem" placeholder="After the AI challenged you — what's assumed, what's missing, who benefits? Your words." oninput="updateSituationField('problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
+          <textarea id="sit-problem-${n}" placeholder="After the AI challenged you — what's assumed, what's missing, who benefits? Your words." oninput="updateSituationField('${s.id}', 'problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
         </section>
       `;
 
-      card.querySelector('#sit-frame-prompt').textContent = buildSituationPrompt('frame');
-      card.querySelector('#sit-stake-prompt').textContent = buildSituationPrompt('stakeholder');
-      card.querySelector('#sit-problem-prompt').textContent = buildSituationPrompt('problematize');
+      card.querySelector(`#sit-frame-prompt-${n}`).textContent = buildSituationPrompt('frame', s);
+      card.querySelector(`#sit-stake-prompt-${n}`).textContent = buildSituationPrompt('stakeholder', s);
+      card.querySelector(`#sit-problem-prompt-${n}`).textContent = buildSituationPrompt('problematize', s);
       requestAnimationFrame(() => {
-        ['sit-desc', 'sit-frame', 'sit-stake', 'sit-problem'].forEach(id => { const t = card.querySelector('#' + id); if (t) autoResize(t); });
+        [`sit-desc-${n}`, `sit-frame-${n}`, `sit-stake-${n}`, `sit-problem-${n}`].forEach(id => { const t = card.querySelector('#' + id); if (t) autoResize(t); });
       });
       return card;
     }
 
-    function updateSituationField(key, value) {
-      appState.situation[key] = value;
+    function updateSituationField(sitId, key, value) {
+      const s = findSituation(sitId);
+      if (!s) return;
+      s[key] = value;
       scheduleSave();
     }
 
+    // Complete = at least one situation fully deepened (all 5 fields filled).
     function workspaceIsComplete() {
-      if (!topLevelCards().length) return false;
-      const s = appState.situation;
-      return ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].every(k => (s[k] || '').trim());
+      return appState.situations.some(s =>
+        ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].every(k => (s[k] || '').trim()));
     }
 
     function recomputeSubmitButton() {
@@ -6195,13 +6671,15 @@ ${AI_RULES}
         toast('Complete every section to submit.');
         return;
       }
-      const tops = topLevelCards();
+      const sits = appState.situations;
+      const tops = sits.flatMap(s => s.memberCardIds.map(findCard).filter(Boolean));
       const signalSet = new Set();
       tops.forEach(c => signalsUnder(c.id).forEach(id => signalSet.add(id)));
-      const s = appState.situation;
-      const charCount = ['description', 'frame', 'stakeholderMap', 'problematization'].reduce((sum, k) => sum + (s[k] || '').trim().length, 0);
+      const charCount = sits.reduce((sum, s) =>
+        sum + ['description', 'frame', 'stakeholderMap', 'problematization'].reduce((a, k) => a + (s[k] || '').trim().length, 0), 0);
+      const titles = sits.map(s => `"${s.title || 'Untitled'}"`).join(', ');
       const summary = document.getElementById('submit-modal-summary');
-      summary.textContent = `You're submitting one Problem Situation — "${s.title || 'Untitled'}" — built from ${tops.length} top-level card${tops.length === 1 ? '' : 's'} covering ${signalSet.size} signal${signalSet.size === 1 ? '' : 's'}, with ${charCount} characters of framing, stakeholder, and problematization analysis.`;
+      summary.textContent = `You're submitting ${sits.length} Problem Situation${sits.length === 1 ? '' : 's'} — ${titles} — built from ${tops.length} top-level card${tops.length === 1 ? '' : 's'} covering ${signalSet.size} signal${signalSet.size === 1 ? '' : 's'}, with ${charCount} characters of framing, stakeholder, and problematization analysis.`;
       const prior = document.getElementById('submit-modal-prior');
       if (appState.submittedAt) {
         prior.textContent = `Previously submitted on ${new Date(appState.submittedAt).toLocaleString()}. Re-submitting will replace that timestamp.`;
@@ -6244,30 +6722,31 @@ ${AI_RULES}
       wrap.style.width = '100%';
       wrap.style.maxWidth = '840px';
 
-      const s = appState.situation;
-      const tops = topLevelCards();
-      const article = document.createElement('article');
-      article.className = 'submission-cluster';
-      article.innerHTML = `
-        <h3>${escapeHtml(s.title || 'Untitled Problem Situation')} <span style="font-size:0.7rem; color:#8a4fff; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:6px;">Problem Situation</span></h3>
-        ${s.description ? `<p class="cluster-desc">${escapeHtml(s.description)}</p>` : ''}
-        <ul class="signal-chips">
-          ${tops.map(c => `<li>${escapeHtml(c.title || 'Untitled')} (${escapeHtml(nodeLabel(c.id))})</li>`).join('')}
-        </ul>
-        <div class="submission-answer">
-          <h4>Frame</h4>
-          <div class="answer-body">${escapeHtml((s.frame || '').trim() || '(empty)')}</div>
-        </div>
-        <div class="submission-answer">
-          <h4>Stakeholder Map</h4>
-          <div class="answer-body">${escapeHtml((s.stakeholderMap || '').trim() || '(empty)')}</div>
-        </div>
-        <div class="submission-answer">
-          <h4>Problematization</h4>
-          <div class="answer-body">${escapeHtml((s.problematization || '').trim() || '(empty)')}</div>
-        </div>
-      `;
-      wrap.appendChild(article);
+      appState.situations.forEach(s => {
+        const tops = s.memberCardIds.map(findCard).filter(Boolean);
+        const article = document.createElement('article');
+        article.className = 'submission-cluster';
+        article.innerHTML = `
+          <h3>${escapeHtml(s.title || 'Untitled Problem Situation')} <span style="font-size:0.7rem; color:#8a4fff; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:6px;">Problem Situation</span></h3>
+          ${s.description ? `<p class="cluster-desc">${escapeHtml(s.description)}</p>` : ''}
+          <ul class="signal-chips">
+            ${tops.map(c => `<li>${escapeHtml(c.title || 'Untitled')} (${escapeHtml(nodeLabel(c.id))})</li>`).join('')}
+          </ul>
+          <div class="submission-answer">
+            <h4>Frame</h4>
+            <div class="answer-body">${escapeHtml((s.frame || '').trim() || '(empty)')}</div>
+          </div>
+          <div class="submission-answer">
+            <h4>Stakeholder Map</h4>
+            <div class="answer-body">${escapeHtml((s.stakeholderMap || '').trim() || '(empty)')}</div>
+          </div>
+          <div class="submission-answer">
+            <h4>Problematization</h4>
+            <div class="answer-body">${escapeHtml((s.problematization || '').trim() || '(empty)')}</div>
+          </div>
+        `;
+        wrap.appendChild(article);
+      });
       body.appendChild(wrap);
 
       const peerReview = document.createElement('div');
@@ -6291,19 +6770,19 @@ ${AI_RULES}
     }
 
     function downloadMarkdown() {
-      const s = appState.situation;
-      const tops = topLevelCards();
       let md = `# ${appState.settings.title || 'Problem Situation'}\n`;
       md += appState.submittedAt
         ? `*Submitted on ${new Date(appState.submittedAt).toLocaleString()}*\n\n`
         : `*Draft — not yet submitted*\n\n`;
-      md += `---\n\n## Problem Situation: ${s.title || 'Untitled'}\n\n`;
-      if (s.description) md += `${s.description}\n\n`;
-      md += `### Frame\n${(s.frame || '(empty)').trim()}\n\n`;
-      md += `### Stakeholder Map\n${(s.stakeholderMap || '(empty)').trim()}\n\n`;
-      md += `### Problematization\n${(s.problematization || '(empty)').trim()}\n\n`;
-      md += `---\n\n## Evidence trail\n\n`;
-      tops.forEach(c => { md += formatCardOutline(c.id, 0) + '\n\n'; });
+      appState.situations.forEach(s => {
+        md += `---\n\n## Problem Situation: ${s.title || 'Untitled'}\n\n`;
+        if (s.description) md += `${s.description}\n\n`;
+        md += `### Frame\n${(s.frame || '(empty)').trim()}\n\n`;
+        md += `### Stakeholder Map\n${(s.stakeholderMap || '(empty)').trim()}\n\n`;
+        md += `### Problematization\n${(s.problematization || '(empty)').trim()}\n\n`;
+        md += `### Evidence trail\n\n`;
+        s.memberCardIds.map(findCard).filter(Boolean).forEach(c => { md += formatCardOutline(c.id, 0) + '\n\n'; });
+      });
       md += `---\n\n`;
 
       const blob = new Blob([md], { type: 'text/markdown' });
@@ -6337,26 +6816,29 @@ ${AI_RULES}
       return lines.join('\n');
     }
 
-    // problem-situation.md: the box's title + description + what it was built from.
+    // problem-situation.md: every box's title + description + what it was built from.
     function exportSituationDoc() {
-      const s = appState.situation;
-      const lines = [`# ${s.title || 'Untitled Problem Situation'}`, ''];
-      if ((s.description || '').trim()) lines.push(s.description.trim(), '');
-      const tops = appState.committedCardIds.map(findCard).filter(Boolean);
-      if (tops.length) {
-        lines.push('## Built from', '');
-        tops.forEach(c => {
-          const sigs = signalsUnder(c.id).length;
-          lines.push(`- **${c.title || 'Untitled'}** — ${tierName(c.tier)} · ${sigs} signal${sigs === 1 ? '' : 's'}`);
-        });
-        lines.push('');
-      }
+      const lines = [];
+      appState.situations.forEach((s, i) => {
+        lines.push(`${i === 0 ? '#' : '##'} ${s.title || 'Untitled Problem Situation'}`, '');
+        if ((s.description || '').trim()) lines.push(s.description.trim(), '');
+        const tops = s.memberCardIds.map(findCard).filter(Boolean);
+        if (tops.length) {
+          lines.push(`${i === 0 ? '##' : '###'} Built from`, '');
+          tops.forEach(c => {
+            const sigs = signalsUnder(c.id).length;
+            lines.push(`- **${c.title || 'Untitled'}** — ${tierName(c.tier)} · ${sigs} signal${sigs === 1 ? '' : 's'}`);
+          });
+          lines.push('');
+        }
+      });
       if (appState.exportedAt) lines.push(`*Exported ${appState.exportedAt}*`, '');
       return lines.join('\n');
     }
 
     function buildExportFiles() {
-      const root = folderSlug(appState.situation.title) + '/';
+      const first = appState.situations[0];
+      const root = folderSlug((first && first.title) || appState.settings.title) + '/';
       const files = [];
       const add = (path, content) => files.push({ path: root + path, content });
 
@@ -6367,7 +6849,7 @@ ${AI_RULES}
       const state = JSON.parse(JSON.stringify(appState));
       state.currentScreen = 'board';
       state.viewInitialized = false;
-      add('state.json', JSON.stringify({ app: 'triangulator', version: 1, exportedAt: new Date().toISOString(), state }, null, 2));
+      add('state.json', JSON.stringify({ app: 'triangulator', version: 2, exportedAt: new Date().toISOString(), state }, null, 2));
 
       const usedCards = appState.cards.slice().sort((a, b) => (b.tier - a.tier) || (a.title || '').localeCompare(b.title || ''));
       usedCards.forEach((c, i) => {
@@ -6454,10 +6936,13 @@ ${AI_RULES}
       return new Blob([...chunks, ...central, new Uint8Array(eocd.buffer)], { type: 'application/zip' });
     }
 
-    function exportWorkingFolder() {
+    function exportWorkingFolder(sitId) {
       if (tutorialMode) { toast('Exporting is for your real board — finish the tutorial first.'); return; }
-      const s = appState.situation;
-      if (!(s.title || '').trim() || !(s.description || '').trim()) {
+      // The export always carries the whole board; the gate is that the
+      // situation you're exporting from (or at least one) is named & described.
+      const named = (s) => s && (s.title || '').trim() && (s.description || '').trim();
+      const s = sitId ? findSituation(sitId) : appState.situations.find(named);
+      if (!named(s)) {
         toast('Name and describe the problem situation before exporting.');
         return;
       }
@@ -6571,9 +7056,9 @@ ${AI_RULES}
       stagedImportState = state;
       const sigSet = new Set();
       state.cards.forEach(c => c.childIds.forEach(id => { if (state.items.some(i => i.id === id)) sigSet.add(id); }));
-      const title = (state.situation.title || '').trim() || state.settings.title || 'Untitled';
+      const title = ((state.situations[0] || {}).title || '').trim() || state.settings.title || 'Untitled';
       document.getElementById('import-confirm-summary').textContent =
-        `Replace your current board with “${title}” — ${state.cards.length} card${state.cards.length === 1 ? '' : 's'}, ${state.items.length} signal${state.items.length === 1 ? '' : 's'}? Your own work on this device will be overwritten.`;
+        `“${title}” has ${state.cards.length} card${state.cards.length === 1 ? '' : 's'} and ${state.items.length} signal${state.items.length === 1 ? '' : 's'}. Merge it in beside your own work (tagged with its source, so you can compare and mix), or replace your board with it — replacing overwrites everything on this device.`;
       document.getElementById('import-pick').classList.add('hidden');
       document.getElementById('import-confirm').classList.remove('hidden');
     }
@@ -6586,6 +7071,8 @@ ${AI_RULES}
       state.viewInitialized = false;
       appState = state;
       selectedNodeIds.clear();
+      selectedEdgeId = null;
+      invalidateSituationIndex();
       clearTimeout(saveTimer); save();
       closeModal('import-modal');
       if (!appState.settings.title) appState.settings.title = 'Signal Pool';
@@ -6593,7 +7080,92 @@ ${AI_RULES}
       ensureCanvasInitialized();
       goToScreen('board');
       resetView();
-      toast(`Opened “${(appState.situation.title || '').trim() || 'shared'}” working folder.`);
+      toast(`Opened “${((appState.situations[0] || {}).title || '').trim() || 'shared'}” working folder.`);
+    }
+
+    // --- Merge a shared working folder into the current board ---
+    // Everything imported gets fresh ids (no collisions with local work or a
+    // re-import of the same folder), lands offset to the right of the current
+    // content, and carries a source tag for the provenance badge.
+    function mergeImportedState(imp) {
+      const src = (imp.settings.title || '').trim()
+        || ((imp.situations[0] || {}).title || '').trim()
+        || 'Shared board';
+      const idMap = new Map();
+      imp.items.forEach(it => idMap.set(it.id, uid('item')));
+      imp.cards.forEach(c => idMap.set(c.id, uid('card')));
+
+      // Offset: imported content lands just right of everything local.
+      const cur = contentBounds();
+      let impMinX = Infinity, impMinY = Infinity;
+      Object.keys(imp.nodes).forEach(id => {
+        if (!idMap.has(id)) return;
+        const p = imp.nodes[id];
+        if (p.x < impMinX) impMinX = p.x;
+        if (p.y < impMinY) impMinY = p.y;
+      });
+      imp.situations.forEach(s => {
+        if (!s.box) return;
+        if (s.box.x < impMinX) impMinX = s.box.x;
+        if (s.box.y < impMinY) impMinY = s.box.y;
+      });
+      const hasImpBounds = impMinX !== Infinity;
+      const dx = (cur && hasImpBounds) ? (cur.maxX + 240) - impMinX : 0;
+      const dy = (cur && hasImpBounds) ? cur.minY - impMinY : 0;
+
+      imp.items.forEach(it => {
+        appState.items.push({ ...it, id: idMap.get(it.id), source: src });
+      });
+      imp.cards.forEach(c => {
+        appState.cards.push({
+          ...c,
+          id: idMap.get(c.id),
+          childIds: c.childIds.map(id => idMap.get(id)).filter(Boolean),
+          files: (c.files || []).map(f => ({ ...f })),
+          source: src
+        });
+      });
+      Object.keys(imp.nodes).forEach(id => {
+        const newId = idMap.get(id);
+        if (!newId) return;
+        appState.nodes[newId] = { x: imp.nodes[id].x + dx, y: imp.nodes[id].y + dy };
+      });
+      Object.keys(imp.sorting.decisions || {}).forEach(id => {
+        const newId = idMap.get(id);
+        if (newId) appState.sorting.decisions[newId] = imp.sorting.decisions[id];
+      });
+      appState.sorting.currentIndex = appState.items.length;
+      imp.situations.forEach(s => {
+        appState.situations.push({
+          ...s,
+          id: uid('sit'),
+          memberCardIds: s.memberCardIds.map(id => idMap.get(id)).filter(Boolean),
+          box: s.box ? { x: s.box.x + dx, y: s.box.y + dy, w: s.box.w, h: s.box.h } : null
+        });
+      });
+      invalidateSituationIndex();
+      return {
+        src,
+        items: imp.items.length,
+        cards: imp.cards.length,
+        situations: imp.situations.length
+      };
+    }
+
+    function confirmMergeImport() {
+      if (!stagedImportState) { closeModal('import-modal'); return; }
+      const imp = stagedImportState;
+      stagedImportState = null;
+      const n = mergeImportedState(imp);
+      selectedNodeIds.clear();
+      selectedEdgeId = null;
+      clearTimeout(saveTimer); save();
+      closeModal('import-modal');
+      ensureCanvasInitialized();
+      goToScreen('board');
+      renderBoard();
+      resetView();
+      toast(`Merged “${n.src}” — ${n.items} signal${n.items === 1 ? '' : 's'}, ${n.cards} card${n.cards === 1 ? '' : 's'}, ${n.situations} situation${n.situations === 1 ? '' : 's'}.`);
     }
 
     // ======================== CARD PAGE (expand → edit notes.md + attach files) ========================
@@ -6978,9 +7550,10 @@ ${AI_RULES}
     renderConfigItems();
 
     function pickInitialScreen() {
-      if (Array.isArray(appState.committedCardIds)) {
-        appState.committedCardIds = appState.committedCardIds.filter(id => isCardId(id));
-      }
+      appState.situations.forEach(s => {
+        s.memberCardIds = s.memberCardIds.filter(id => isCardId(id));
+      });
+      appState.situations = appState.situations.filter(s => s.memberCardIds.length);
       if (appState.cards.length > 0) return 'board';
       if (appState.currentScreen === 'sorting') return 'sorting';
       const totalItems = appState.items.length;
