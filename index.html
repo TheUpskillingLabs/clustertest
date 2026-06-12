@@ -645,30 +645,29 @@
     .submission-answer h4 { font-size: 0.95rem; font-weight: 700; color: var(--midnight); margin-bottom: 8px; }
     .submission-answer .answer-body { background: var(--cloud); border-left: 4px solid var(--primary-teal); padding: 16px; border-radius: 0 6px 6px 0; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; color: var(--midnight); }
 
-    /* --- PROFILE BUTTON + POPOVER --- */
-    .profile-anchor {
+    /* --- HAMBURGER BOARD MENU --- */
+    .menu-anchor {
       position: relative; flex-shrink: 0;
     }
-    .profile-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: var(--primary-teal); color: var(--ghost-white);
-      border: 2px solid rgba(255,255,255,0.85);
-      box-shadow: 0 2px 8px rgba(16,24,32,0.14);
-      font-size: 0.875rem; font-weight: 700; cursor: pointer;
+    .menu-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--ghost-white); color: var(--midnight);
+      border: 2px solid var(--cloud);
+      font-size: 1rem; font-weight: 700; cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      letter-spacing: 0.02em;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      font-family: 'Geologica', sans-serif;
     }
-    .profile-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,24,32,0.25); }
-    .profile-btn:focus-visible { outline: 3px solid var(--primary-teal); outline-offset: 2px; }
-    .profile-btn[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(0,148,160,0.35), 0 6px 16px rgba(16,24,32,0.25); }
+    .menu-btn:hover { border-color: var(--primary-teal); }
+    .menu-btn:focus-visible { outline: 3px solid var(--primary-teal); outline-offset: 2px; }
+    .menu-btn[aria-expanded="true"] { border-color: var(--primary-teal); box-shadow: 0 0 0 3px rgba(0,148,160,0.25); }
 
-    .profile-popover {
+    .board-menu {
       position: absolute; top: calc(100% + 12px); right: 0;
-      width: 280px; background: var(--ghost-white);
+      width: 260px; background: var(--ghost-white);
       border: 1px solid var(--cloud); border-radius: 12px;
       box-shadow: 0 20px 40px rgba(16,24,32,0.18), 0 4px 12px rgba(16,24,32,0.08);
-      padding: 16px; transform-origin: top right;
+      padding: 8px; transform-origin: top right;
       animation: pop-in 0.14s ease-out;
       z-index: 500;
     }
@@ -676,49 +675,37 @@
       from { opacity: 0; transform: scale(0.96) translateY(-4px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
-    .profile-popover::before {
+    .board-menu::before {
       content: ""; position: absolute; top: -7px; right: 16px;
       width: 12px; height: 12px; background: var(--ghost-white);
       border-top: 1px solid var(--cloud); border-left: 1px solid var(--cloud);
       transform: rotate(45deg);
     }
-    .profile-popover .profile-id {
-      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    .board-menu .divider {
+      height: 1px; background: var(--cloud); margin: 8px 0;
     }
-    .profile-popover .profile-id .avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: var(--primary-teal); color: var(--ghost-white);
-      display: inline-flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.95rem; flex-shrink: 0;
-    }
-    .profile-popover .profile-id .meta { min-width: 0; }
-    .profile-popover .profile-id .label {
-      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--midnight); opacity: 0.55; font-weight: 700; margin-bottom: 2px;
-    }
-    .profile-popover .profile-id .email {
-      font-size: 0.875rem; font-weight: 600; color: var(--midnight);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .profile-popover .divider {
-      height: 1px; background: var(--cloud); margin: 16px -16px;
-    }
-    .profile-popover .reset-desc {
-      font-size: 0.75rem; color: var(--midnight); opacity: 0.7;
-      line-height: 1.45; margin-bottom: 12px;
-    }
-    .profile-popover .btn-reset {
-      width: 100%; padding: 12px 16px; border-radius: 8px;
-      background: var(--ghost-white); color: var(--action-red);
-      border: 2px solid var(--action-red); font-weight: 700;
-      font-size: 0.8rem; cursor: pointer; text-transform: uppercase;
-      letter-spacing: 0.05em; transition: all 0.15s ease;
+    .menu-item {
+      display: block; width: 100%; text-align: left;
+      padding: 12px; border: none; border-radius: 8px;
+      background: transparent; color: var(--midnight);
+      font-size: 0.875rem; font-weight: 600; cursor: pointer;
       font-family: 'Geologica', sans-serif;
+      transition: background 0.12s ease;
     }
-    .profile-popover .btn-reset:hover { background: var(--action-red); color: var(--ghost-white); }
-    .profile-popover .btn-reset:focus-visible { outline: 3px solid var(--action-red); outline-offset: 2px; }
+    .menu-item:hover { background: var(--cloud); }
+    .menu-item:focus-visible { outline: 3px solid var(--primary-teal); outline-offset: -3px; }
+    .menu-item-danger { color: var(--action-red); }
+    .menu-item-danger:hover { background: rgba(196,30,58,0.08); }
+    .menu-mobile-only { display: none; }
+    .menu-search { padding: 4px; }
+    .menu-search input {
+      width: 100%; padding: 8px 12px; border: 2px solid var(--cloud); border-radius: 8px;
+      background: var(--ghost-white); color: var(--midnight); outline: none;
+      font-size: 16px; font-family: 'Geologica', sans-serif;
+    }
+    .menu-search input:focus { border-color: var(--primary-teal); }
 
-    @media print { .profile-anchor { display: none !important; } }
+    @media print { .menu-anchor { display: none !important; } }
 
     /* ============ WEB-MAP CANVAS ============ */
     .webmap-panel { display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; background: var(--cloud); padding-top: env(safe-area-inset-top, 0px); }
@@ -755,39 +742,19 @@
       .webmap-search { min-width: 72px; max-width: 140px; }
     }
 
-    /* --- PHONE BOARD HEADER: slim bar + drop-down control panel --- */
-    /* Collapsed (default): one 44px row — title · ready dot · Push · chevron.
-       Expanded: the full action set flows in as wrapped rows below the bar
-       (flex-wrap, no absolute positioning) and the tabs strip returns. */
-    .mobile-push, .header-expand-btn, .mobile-ready-dot { display: none; }
+    /* --- PHONE BOARD HEADER: slim bar --- */
+    /* One 44px row — title · ready dot · Commit · hamburger. Everything else
+       (including search + LLM on small screens) lives in the board menu. */
+    .mobile-push, .mobile-ready-dot { display: none; }
     @media (max-width: 768px) {
-      .webmap-header { height: auto; min-height: 44px; flex-wrap: wrap; align-items: center; padding-top: 2px; padding-bottom: 2px; }
+      .webmap-header { height: auto; min-height: 44px; align-items: center; padding-top: 2px; padding-bottom: 2px; }
       .webmap-header h2 { flex: 1; min-width: 0; }
       .webmap-header-actions, .canvas-infobar { display: none; }
       .mobile-ready-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cloud); flex-shrink: 0; transition: background 0.2s ease, box-shadow 0.2s ease; }
       .mobile-ready-dot.is-ready { background: var(--primary-teal); box-shadow: 0 0 0 3px rgba(0,148,160,0.2); }
       .mobile-push { display: inline-flex; padding: 8px 16px; min-height: 36px; flex-shrink: 0; }
-      .header-expand-btn {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 40px; height: 40px; flex-shrink: 0;
-        border: none; background: transparent; color: var(--midnight);
-        font-size: 1.05rem; cursor: pointer; border-radius: 8px;
-        transition: transform 0.15s ease, background 0.12s ease;
-      }
-      .header-expand-btn:hover { background: var(--cloud); }
-      #board-workspace.mobile-header-open .header-expand-btn { transform: rotate(180deg); background: var(--cloud); }
-      #board-workspace.mobile-header-open .mobile-push { display: none; }
-      #board-workspace.mobile-header-open .webmap-header-actions {
-        display: flex; flex-basis: 100%; flex-wrap: wrap; gap: 12px; padding: 4px 0 12px;
-        order: 10; /* keep title · dot · chevron together on the slim bar row */
-      }
-      #board-workspace.mobile-header-open .webmap-search { flex-basis: 100%; max-width: none; min-width: 0; }
-      #board-workspace.mobile-header-open .webmap-search .search-input { padding: 12px; padding-right: 32px; font-size: 0.875rem; }
-      /* The open panel has room, so full button labels come back */
-      #board-workspace.mobile-header-open .webmap-header-actions .btn-label { display: inline; }
-      #board-workspace.mobile-header-open .webmap-header-actions .btn-label-short { display: none; }
-      #board-workspace.mobile-header-open .webmap-header-actions .btn { min-height: 44px; flex: 1 1 auto; }
-      #board-workspace.mobile-header-open .canvas-infobar { display: flex; }
+      .menu-mobile-only { display: block; }
+      .board-menu { width: min(280px, calc(100vw - 24px)); }
     }
 
     /* --- MOBILE COMPACT DENSITY --- */
@@ -978,28 +945,22 @@
       pointer-events: none;               /* panning works over the frame */
     }
     .section-header {
-      position: absolute; left: 0; bottom: 100%;
-      margin-bottom: calc(12px / var(--world-zoom, 1)); /* constant screen gap */
-      display: flex; align-items: flex-start; gap: 12px;
-      pointer-events: auto;
-      /* Constant on-screen size at any canvas zoom (FigJam-style): lay out at
-         box-width × zoom, then counter-scale so title and button stay legible
-         and tappable when the lattice is zoomed far out (small screens). */
-      width: calc(100% * var(--world-zoom, 1));
-      min-width: min(340px, 92vw); /* don't cramp the title when the box is narrow on screen */
-      transform: scale(calc(1 / var(--world-zoom, 1)));
-      transform-origin: 0 100%;
-    }
-    .section-titles {
-      flex: 1; min-width: 0; max-width: 520px;
-      background: var(--midnight); border: 2px solid var(--primary-teal);
-      border-radius: 12px; padding: 12px 16px; cursor: grab;
-      box-shadow: 0 8px 24px rgba(16,24,32,0.18);
-      touch-action: none; /* drag the lattice by the panel on touch too */
+      /* Full-width bar across the top edge of the box; lives in world space
+         and scales naturally with the canvas. computeSectionBoxFor() reserves
+         SECTION_HEADER_H of box height for it. */
+      position: absolute; top: 0; left: 0; width: 100%;
+      height: 120px; box-sizing: border-box;
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 12px 16px;
+      background: var(--midnight);
+      border-radius: 16px 16px 0 0;
+      pointer-events: auto; cursor: grab;
+      touch-action: none; /* drag the lattice by the bar on touch too */
       user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
     }
+    .section-header:active { cursor: grabbing; }
+    .section-titles { flex: 1; min-width: 0; }
     .section-title, .section-desc { user-select: text; -webkit-user-select: text; }
-    .section-titles:active { cursor: grabbing; }
     .section-title {
       width: 100%; background: transparent; border: none; outline: none;
       color: var(--ghost-white); font-family: 'Geologica', sans-serif;
@@ -1009,6 +970,7 @@
     .section-desc {
       width: 100%; background: transparent; border: none; outline: none; resize: none;
       color: rgba(255,255,255,0.85); font-family: 'Geologica', sans-serif; font-size: 0.8rem; line-height: 1.5;
+      max-height: 56px; overflow-y: auto; /* fixed bar height — scroll long descriptions */
     }
     .section-desc::placeholder { color: rgba(255,255,255,0.4); }
     .section-actions { display: flex; gap: 8px; flex-shrink: 0; }
@@ -1021,21 +983,51 @@
     .section-export:hover { background: #007882; }
     .section-export.hidden { display: none; }
 
-    /* Add-card type picker */
-    .add-node-row {
-      display: flex; align-items: baseline; gap: 12px; width: 100%;
-      background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 10px;
-      padding: 12px 16px; margin-bottom: 8px; cursor: pointer; text-align: left;
-      font-family: 'Geologica', sans-serif; transition: border-color 0.12s ease, background 0.12s ease;
+    /* FigJam-style bottom dock: arm a tool, then click the canvas to place. */
+    .canvas-dock {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      display: flex; align-items: stretch; gap: 4px;
+      background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px;
+      padding: 6px; box-shadow: 0 8px 16px rgba(16,24,32,0.08);
+      z-index: 10;
     }
-    .add-node-row:hover { border-color: var(--primary-teal); background: rgba(0,148,160,0.05); }
-    .add-node-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; align-self: center; }
-    .add-node-label { font-weight: 700; font-size: 0.9rem; color: var(--midnight); white-space: nowrap; }
-    .add-node-desc { font-size: 0.78rem; color: var(--midnight); opacity: 0.6; min-width: 0; }
-    .add-node-group-label {
-      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label, 0.08em);
-      color: var(--midnight); opacity: 0.6; margin: 12px 0 8px;
+    .canvas-dock.hidden { display: none; }
+    .dock-flyout-anchor { position: relative; display: flex; }
+    .dock-tool {
+      display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      min-width: 56px; padding: 6px 8px;
+      border: none; border-radius: 8px; background: transparent;
+      color: var(--midnight); cursor: pointer;
+      font-family: 'Geologica', sans-serif; font-size: 0.65rem; font-weight: 700;
+      transition: background 0.12s ease, color 0.12s ease;
     }
+    .dock-tool:hover { background: var(--cloud); }
+    .dock-tool:focus-visible { outline: 3px solid var(--primary-teal); outline-offset: -3px; }
+    .dock-tool.is-armed { background: var(--primary-teal); color: var(--ghost-white); }
+    .dock-glyph { font-size: 0.95rem; line-height: 1; }
+    .dock-tool[data-tool="signal"] .dock-glyph { color: var(--primary-teal); }
+    .dock-tool[data-tool="tier-2"] .dock-glyph { color: #7b5ea7; }
+    .dock-tool[data-tool="tier-3"] .dock-glyph { color: #d4a017; }
+    .dock-tool[data-tool="tier-4"] .dock-glyph { color: #c0392b; }
+    .dock-tool.is-armed .dock-glyph { color: inherit; }
+    .dock-flyout {
+      position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%);
+      width: max-content; max-width: min(420px, calc(100vw - 24px));
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px;
+      padding: 12px; box-shadow: 0 12px 24px rgba(16,24,32,0.14);
+    }
+    .dock-flyout.hidden { display: none; }
+    .canvas-viewport.tool-armed { cursor: crosshair; }
+    @media (max-width: 768px) {
+      .dock-label { display: none; }
+      .dock-tool { min-width: 44px; min-height: 40px; }
+      .dock-glyph { font-size: 1.1rem; }
+      .canvas-dock { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+    }
+
+    /* Evidence-type chips (dock flyout) + manual signal form */
     .add-node-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
     .add-node-chip {
       display: inline-flex; align-items: center; gap: 8px;
@@ -1045,8 +1037,7 @@
     }
     .add-node-chip svg { width: 16px; height: 16px; color: var(--chip-color, var(--midnight)); }
     .add-node-chip:hover { border-color: var(--chip-color, var(--primary-teal)); }
-    #add-signal-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--cloud); }
-    #add-signal-form.hidden { display: none; }
+    #add-signal-form { display: flex; flex-direction: column; gap: 8px; }
 
     /* Source badge on nodes merged in from a shared working folder */
     .node-source-badge {
@@ -1918,7 +1909,8 @@
        cascade over the base rules above at equal specificity. */
     @media (pointer: coarse) {
       .zoom-btn { min-width: 44px; height: 44px; }
-      .profile-btn { width: 44px; height: 44px; }
+      .menu-btn { width: 44px; height: 44px; }
+      .dock-tool { min-width: 44px; min-height: 44px; }
       #tour-help-btn { width: 44px; height: 44px; }
       .search-clear { width: 32px; height: 32px; }
       .view-tab { padding: 12px; }
@@ -2110,34 +2102,30 @@
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
           <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full collection of observations and insights with your AI thinking partner">✨ <span class="btn-label">LLM Field Analyis</span></button>
-          <button class="btn btn-outline" onclick="openBoardCsvModal()" aria-label="Import more observations from a CSV"><span class="btn-label">Import CSV</span><span class="btn-label-short">CSV</span></button>
-          <button class="btn btn-outline hidden" id="add-node-btn" onclick="openAddNodeMenu()" aria-label="Add a card to the canvas">＋ <span class="btn-label">Add card</span><span class="btn-label-short">Add</span></button>
-          <button class="btn btn-outline" onclick="openImportModal()" aria-label="Open a shared working folder"><span class="btn-label">Open shared folder</span><span class="btn-label-short">Open</span></button>
-          <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Push to Problem Situation</span><span class="btn-label-short">Push</span></button>
-          <div class="profile-anchor">
-            <button id="profile-btn" type="button" class="profile-btn"
-                    aria-haspopup="dialog" aria-expanded="false" aria-controls="profile-popover"
-                    aria-label="Profile menu" onclick="toggleProfilePopover()">
-              <span id="profile-initial" aria-hidden="true">?</span>
-            </button>
-            <div id="profile-popover" class="profile-popover hidden" role="dialog" aria-label="Profile">
-              <div class="profile-id">
-                <div class="avatar" id="profile-avatar" aria-hidden="true">?</div>
-                <div class="meta">
-                  <div class="label">Signed in as</div>
-                  <div class="email" id="profile-email">—</div>
-                </div>
-              </div>
-              <div class="divider"></div>
-              <p class="reset-desc">Wipe everything on this device and start fresh. No undo.</p>
-              <button type="button" class="btn-reset" onclick="resetFromProfile()">Reset workspace</button>
-            </div>
-          </div>
+          <button class="btn btn-primary" onclick="openCommitModal()"><span class="btn-label">Commit</span><span class="btn-label-short">Commit</span></button>
         </div>
         <span id="mobile-ready-dot" class="mobile-ready-dot" aria-hidden="true"></span>
-        <button class="btn btn-primary mobile-push" onclick="openCommitModal()">Push</button>
-        <button id="header-expand-btn" class="header-expand-btn" type="button" onclick="toggleMobileHeader()"
-                aria-expanded="false" aria-controls="webmap-header-actions" aria-label="Show board controls">▾</button>
+        <button class="btn btn-primary mobile-push" onclick="openCommitModal()">Commit</button>
+        <div class="menu-anchor">
+          <button id="menu-btn" type="button" class="menu-btn"
+                  aria-haspopup="true" aria-expanded="false" aria-controls="board-menu"
+                  aria-label="Board menu" onclick="toggleBoardMenu()"><span aria-hidden="true">☰</span></button>
+          <div id="board-menu" class="board-menu hidden" role="menu" aria-label="Board menu">
+            <div class="menu-mobile-only">
+              <div class="menu-search">
+                <label class="sr-only" for="menu-search-input">Search signals</label>
+                <input type="text" id="menu-search-input" placeholder="Search signals..." oninput="syncMenuSearch(this)">
+              </div>
+              <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openAIPromptModal()">✨ LLM Field Analysis</button>
+              <div class="divider"></div>
+            </div>
+            <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openBoardCsvModal()">Import CSV</button>
+            <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openImportModal()">Open shared folder</button>
+            <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); exportCanvasZip()">Export canvas ⤓</button>
+            <div class="divider"></div>
+            <button type="button" class="menu-item menu-item-danger" role="menuitem" onclick="resetFromMenu()">Reset workspace</button>
+          </div>
+        </div>
       </div>
       <div class="canvas-infobar">
         <div class="view-tabs" id="view-tabs">
@@ -2166,6 +2154,16 @@
           <button type="button" class="zoom-btn" onclick="zoomBy(1)" aria-label="Zoom in">+</button>
           <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes">⤢</button>
           <button type="button" class="zoom-btn" id="panel-toggle-btn" onclick="toggleHeaderCollapse()" aria-label="Hide / show header" title="Hide / show header">↕</button>
+        </div>
+        <div id="canvas-dock" class="canvas-dock hidden" role="toolbar" aria-label="Add to canvas">
+          <button type="button" class="dock-tool" data-tool="signal" aria-pressed="false" title="Add a signal" onclick="dockToolClick(this)"><span class="dock-glyph" aria-hidden="true">●</span><span class="dock-label">Signal</span></button>
+          <div class="dock-flyout-anchor">
+            <button type="button" class="dock-tool" id="dock-evidence-btn" aria-pressed="false" aria-haspopup="true" aria-expanded="false" aria-controls="dock-evidence-flyout" title="Add evidence" onclick="toggleEvidenceFlyout()"><span class="dock-glyph" aria-hidden="true">▲</span><span class="dock-label">Evidence</span></button>
+            <div id="dock-evidence-flyout" class="dock-flyout hidden"></div>
+          </div>
+          <button type="button" class="dock-tool" data-tool="tier-2" aria-pressed="false" title="Add a pattern" onclick="dockToolClick(this)"><span class="dock-glyph" aria-hidden="true">◆</span><span class="dock-label">Pattern</span></button>
+          <button type="button" class="dock-tool" data-tool="tier-3" aria-pressed="false" title="Add a theme" onclick="dockToolClick(this)"><span class="dock-glyph" aria-hidden="true">■</span><span class="dock-label">Theme</span></button>
+          <button type="button" class="dock-tool" data-tool="tier-4" aria-pressed="false" title="Add a super-theme" onclick="dockToolClick(this)"><span class="dock-glyph" aria-hidden="true">✦</span><span class="dock-label">Super-theme</span></button>
         </div>
         <div id="marquee-rect" class="marquee-rect"></div>
         <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag to select · Edge dots to connect · Scroll to pan · Cmd-scroll to zoom · Space-drag to pan</span><span class="hint-mobile">Drag to move · Tap to connect · Pinch to zoom · Two fingers to pan</span></div>
@@ -2300,6 +2298,10 @@
       <div class="modal-header"><h3 id="card-page-title">Card</h3></div>
       <div class="modal-body">
         <p id="card-page-sub" class="cardpage-sub"></p>
+        <label class="sr-only" for="card-page-title-input">Card name</label>
+        <input type="text" id="card-page-title-input" class="ws-text-input" placeholder="Name this card — a claim, not a topic" style="margin-bottom:8px;">
+        <label class="sr-only" for="card-page-desc-input">Card description</label>
+        <textarea id="card-page-desc-input" class="ws-text-input" rows="2" placeholder="Describe it in a sentence or two" style="resize:none; font-weight:400; margin-bottom:16px;"></textarea>
         <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
         <div class="cardpage-label">Main document — notes.md</div>
         <textarea id="card-page-doc" style="width:100%; height:min(240px, 38dvh); font-family:monospace; font-size:0.825rem; padding:16px; border:2px solid var(--cloud); border-radius:8px; background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
@@ -2314,15 +2316,13 @@
     </div>
   </div>
 
-  <div id="add-node-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="add-node-title">
-    <div class="modal-content" style="max-width: 540px;">
+  <div id="add-signal-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="add-signal-title-h">
+    <div class="modal-content" style="max-width: 480px;">
       <div class="modal-header">
-        <h3 id="add-node-title">Add to the canvas</h3>
+        <h3 id="add-signal-title-h">New signal</h3>
       </div>
       <div class="modal-body">
-        <p style="font-size: 0.85rem; color: var(--midnight); opacity: 0.75; margin-bottom: 16px;">New cards start empty — name and describe them, then connect evidence beneath them whenever you're ready.</p>
-        <div id="add-node-options"></div>
-        <div id="add-signal-form" class="hidden">
+        <div id="add-signal-form">
           <label class="sr-only" for="add-signal-title">New signal title</label>
           <input type="text" id="add-signal-title" class="config-input" placeholder="Signal title...">
           <label class="sr-only" for="add-signal-summary">New signal summary</label>
@@ -2330,7 +2330,7 @@
           <button class="btn btn-primary" onclick="createManualSignal()">Add signal</button>
         </div>
         <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 12px;">
-          <button class="btn btn-outline" onclick="closeModal('add-node-modal')">Cancel</button>
+          <button class="btn btn-outline" onclick="cancelAddSignal()">Cancel</button>
         </div>
       </div>
     </div>
@@ -2517,7 +2517,7 @@
         // cardType ∈ 7 types); tier 2 = pattern; 3 = theme; 4 = super-theme;
         // 5 = mega-theme; 6+ extensible. childIds reference lower-tier nodes.
         cards: [],
-        // Problem Situations: each push frames a group of cards in its own
+        // Problem Situations: each commit frames a group of cards in its own
         // section box. { id, title, description, frame, stakeholderMap,
         // problematization, box, memberCardIds (top-level roots), createdAt }
         situations: [],
@@ -3291,7 +3291,6 @@
       if (!world) return;
       const { panX, panY, zoom } = appState.view;
       world.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-      world.style.setProperty('--world-zoom', zoom); // section header counter-scales against this
       const viewport = document.getElementById('canvas-viewport');
       if (viewport) {
         const s = 24 * zoom;
@@ -3308,25 +3307,10 @@
       localStorage.setItem('olos.headerCollapsed', collapsed ? '1' : '');
     }
 
-    // Phone slim-bar chevron: expand/collapse the header control panel.
-    // Not persisted — every load starts collapsed.
-    function toggleMobileHeader(open) {
-      const ws = document.getElementById('board-workspace');
-      const isOpen = typeof open === 'boolean'
-        ? ws.classList.toggle('mobile-header-open', open)
-        : ws.classList.toggle('mobile-header-open');
-      const btn = document.getElementById('header-expand-btn');
-      if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    }
-
-    // Tour/tutorial spotlights can target controls that live inside the
-    // collapsed phone panel — pop it open so the target is visible/measurable.
-    function ensureMobileHeaderFor(el) {
-      if (!el || !window.matchMedia('(max-width: 768px)').matches) return;
-      if (!el.closest('.webmap-header-actions, .canvas-infobar')) return;
-      const ws = document.getElementById('board-workspace');
-      if (ws && !ws.classList.contains('mobile-header-open')) toggleMobileHeader(true);
-    }
+    // The phone slim-bar's expandable panel is gone (the hamburger board menu
+    // replaced it); these stay as no-ops for dormant tutorial callers.
+    function toggleMobileHeader() {}
+    function ensureMobileHeaderFor() {}
 
     function zoomBy(direction, anchorClientX, anchorClientY) {
       const viewport = document.getElementById('canvas-viewport');
@@ -3373,15 +3357,7 @@
         const sy = (rect.height - margin * 2) / (maxY - minY);
         return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(sx, sy, 1)));
       };
-      let zoom = fit();
-      if (boxes.length) {
-        // Box headers are counter-scaled (constant ~110px on screen), so their
-        // world height depends on the zoom we just picked — refit once with
-        // headroom above the topmost box.
-        const topY = Math.min(...boxes.map(b => b.y));
-        minY = Math.min(minY, topY - 116 / zoom);
-        zoom = fit();
-      }
+      const zoom = fit();
       const contentW = maxX - minX, contentH = maxY - minY;
       appState.view.zoom = zoom;
       appState.view.panX = (rect.width  - contentW * zoom) / 2 - minX * zoom;
@@ -3519,10 +3495,23 @@
     }
 
     function wireNodeEditing(el, obj, deleteObj) {
+      // Mirror node edits into the card-page modal when it's open on this
+      // card (value-differs guard prevents input-event loops).
+      const mirrorToCardPage = () => {
+        if (currentCardPageId !== obj.id) return;
+        const modal = document.getElementById('card-page-modal');
+        if (!modal || modal.classList.contains('hidden')) return;
+        const t = document.getElementById('card-page-title-input');
+        if (t && t.value !== (obj.title || '')) t.value = obj.title || '';
+        const d = document.getElementById('card-page-desc-input');
+        if (d && d.value !== (obj.description || '')) d.value = obj.description || '';
+        refreshCardPageHeader(obj);
+      };
       const titleInput = el.querySelector('.hub-title');
       if (titleInput) {
         titleInput.addEventListener('input', () => {
           obj.title = titleInput.value; scheduleSave(); updateClusterProgressChip(); refreshParentLocks(obj.id);
+          mirrorToCardPage();
           tutorialNotify('card-edited', { id: obj.id, title: obj.title || '', description: obj.description || '' });
         });
         titleInput.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -3531,6 +3520,7 @@
       if (desc) {
         desc.addEventListener('input', () => {
           obj.description = desc.value; autoResize(desc); scheduleSave(); refreshParentLocks(obj.id);
+          mirrorToCardPage();
           tutorialNotify('card-edited', { id: obj.id, title: obj.title || '', description: obj.description || '' });
         });
         desc.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -3870,6 +3860,8 @@
       const input = document.getElementById('search-input');
       if (!input) return;
       input.value = '';
+      const menuInput = document.getElementById('menu-search-input');
+      if (menuInput) menuInput.value = '';
       filterItems();
       input.focus();
     }
@@ -4142,47 +4134,63 @@
       }, 280);
     }
 
-    // --- Manual card creation (unlocked once a first situation is framed) ---
+    // --- Manual card creation: bottom dock, armed click-to-place ---
+    // (unlocked once a first situation is framed)
     let pendingAddWorldPos = null;
+    let armedTool = null; // { kind: 'signal' } | { kind: 'card', tier, cardType }
 
     function updateAddButtonVisibility() {
-      const btn = document.getElementById('add-node-btn');
-      if (btn) btn.classList.toggle('hidden', !hasSituations());
+      const dock = document.getElementById('canvas-dock');
+      if (dock) dock.classList.toggle('hidden', !hasSituations());
+      if (!hasSituations()) disarmTool();
     }
 
-    function openAddNodeMenu(worldPos) {
-      if (!hasSituations()) return;
-      pendingAddWorldPos = worldPos || null;
-      buildAddNodeOptions();
-      const form = document.getElementById('add-signal-form');
-      if (form) form.classList.add('hidden');
-      openModal('add-node-modal');
+    function armTool(tool, btn) {
+      disarmTool();
+      armedTool = tool;
+      if (btn) { btn.classList.add('is-armed'); btn.setAttribute('aria-pressed', 'true'); }
+      const viewport = document.getElementById('canvas-viewport');
+      if (viewport) viewport.classList.add('tool-armed');
     }
 
-    function buildAddNodeOptions() {
-      const wrap = document.getElementById('add-node-options');
-      if (!wrap) return;
-      wrap.innerHTML = '';
-      const row = (label, desc, color, onPick) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'add-node-row';
-        b.innerHTML = `<span class="add-node-swatch" style="background:${color};"></span><span class="add-node-label">${label}</span><span class="add-node-desc">${desc}</span>`;
-        b.addEventListener('click', onPick);
-        wrap.appendChild(b);
-        return b;
-      };
-      row('Signal', 'A raw observation from the field', 'var(--primary-teal)', () => {
-        const form = document.getElementById('add-signal-form');
-        if (form) { form.classList.remove('hidden'); form.querySelector('input').focus(); }
+    function disarmTool() {
+      armedTool = null;
+      document.querySelectorAll('.dock-tool.is-armed').forEach(b => {
+        b.classList.remove('is-armed'); b.setAttribute('aria-pressed', 'false');
       });
-      // Evidence: the 7 claim types + unclassified
-      const evLabel = document.createElement('div');
-      evLabel.className = 'add-node-group-label';
-      evLabel.textContent = 'Evidence — pick a claim type';
-      wrap.appendChild(evLabel);
-      const chipGrid = document.createElement('div');
-      chipGrid.className = 'add-node-chips';
+      const viewport = document.getElementById('canvas-viewport');
+      if (viewport) viewport.classList.remove('tool-armed');
+      closeEvidenceFlyout();
+    }
+
+    // Dock buttons toggle: click arms, clicking the armed tool again disarms.
+    function dockToolClick(btn) {
+      const wasArmed = btn.classList.contains('is-armed');
+      if (wasArmed) { disarmTool(); return; }
+      const tool = btn.getAttribute('data-tool');
+      if (tool === 'signal') armTool({ kind: 'signal' }, btn);
+      else armTool({ kind: 'card', tier: parseInt(tool.replace('tier-', ''), 10) }, btn);
+    }
+
+    function toggleEvidenceFlyout() {
+      const fly = document.getElementById('dock-evidence-flyout');
+      const btn = document.getElementById('dock-evidence-btn');
+      if (!fly || !btn) return;
+      if (!fly.classList.contains('hidden')) { closeEvidenceFlyout(); return; }
+      if (!fly.childElementCount) buildEvidenceFlyout(fly);
+      fly.classList.remove('hidden');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeEvidenceFlyout() {
+      const fly = document.getElementById('dock-evidence-flyout');
+      const btn = document.getElementById('dock-evidence-btn');
+      if (fly) fly.classList.add('hidden');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+
+    // The 7 claim types + unclassified; picking one arms the evidence tool.
+    function buildEvidenceFlyout(fly) {
       [...CARD_TYPES, EVIDENCE_TYPE].forEach(t => {
         const chip = document.createElement('button');
         chip.type = 'button';
@@ -4190,14 +4198,41 @@
         chip.style.setProperty('--chip-color', t.color);
         chip.innerHTML = `${t.icon}<span>${t.id ? t.label : 'Unclassified'}</span>`;
         chip.title = t.desc;
-        chip.addEventListener('click', () => createManualNode(1, t.id));
-        chipGrid.appendChild(chip);
+        chip.addEventListener('click', () => {
+          armTool({ kind: 'card', tier: 1, cardType: t.id }, document.getElementById('dock-evidence-btn'));
+          closeEvidenceFlyout();
+        });
+        fly.appendChild(chip);
       });
-      wrap.appendChild(chipGrid);
-      row('Pattern', 'A recurring structure across evidence', tierColor(2), () => createManualNode(2));
-      row('Theme', 'A deeper condition patterns point toward', tierColor(3), () => createManualNode(3));
-      row('Super-theme', 'A condition spanning several themes', tierColor(4), () => createManualNode(4));
     }
+
+    // A click on empty canvas while armed lands here (capture handler in
+    // setupCanvasInteractions). One-shot: place, then disarm.
+    function placeArmedTool(worldPos) {
+      const tool = armedTool;
+      if (!tool) return;
+      pendingAddWorldPos = worldPos;
+      if (tool.kind === 'signal') {
+        disarmTool(); // keep pendingAddWorldPos staged for the form
+        openModal('add-signal-modal');
+        setTimeout(() => { const t = document.getElementById('add-signal-title'); if (t) t.focus(); }, 60);
+      } else {
+        createManualNode(tool.tier, tool.cardType);
+        disarmTool();
+      }
+    }
+
+    function cancelAddSignal() {
+      pendingAddWorldPos = null;
+      closeModal('add-signal-modal');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') disarmTool();
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dock-flyout-anchor')) closeEvidenceFlyout();
+    });
 
     // World-space point a new node should appear at: the double-clicked spot,
     // or the center of the current viewport.
@@ -4222,7 +4257,6 @@
       const pos = manualAddPosition('hub', card.id);
       setNodePos(card.id, pos.x, pos.y);
       pendingAddWorldPos = null;
-      closeModal('add-node-modal');
       invalidateSituationIndex();
       spawnHubUI(card, card.id);
     }
@@ -4242,7 +4276,7 @@
       setNodePos(item.id, pos.x, pos.y);
       pendingAddWorldPos = null;
       titleEl.value = ''; summaryEl.value = '';
-      closeModal('add-node-modal');
+      closeModal('add-signal-modal');
       renderAllNodes();
       renderAllEdges();
       animateNodeSpawn(item.id);
@@ -4441,24 +4475,24 @@
       let marqueeJustEnded = false;
       const marqueeEl = document.getElementById('marquee-rect');
 
-      // Touching anywhere on the canvas dismisses the phone header panel.
-      // Capture phase: node/edge handlers stop propagation before bubble.
-      viewport.addEventListener('pointerdown', () => {
-        const wsEl = document.getElementById('board-workspace');
-        if (wsEl && wsEl.classList.contains('mobile-header-open')) toggleMobileHeader(false);
-      }, true);
-
-      // Double-click empty canvas → add a card at that spot (post first push).
-      viewport.addEventListener('dblclick', (e) => {
-        if (!hasSituations()) return;
-        if (e.target.closest('.canvas-node, .section-box, .zoom-toolbar, .canvas-hint, .marquee-rect')) return;
+      // Armed dock tool: a click on empty canvas places the card there.
+      // Capture phase so it runs before the bubble-phase pan/marquee starter
+      // and before node/section handlers; window-level touch trackers are
+      // window-capture and still fire first, so pinch state stays correct.
+      viewport.addEventListener('pointerdown', (e) => {
+        if (!armedTool) return;
+        if (e.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) return; // pinch wins
+        if (e.target.closest('.canvas-node, .section-header, .zoom-toolbar, .canvas-dock, .canvas-hint, #tour-help-btn, #edge-delete-btn')) return;
+        if (e.target.classList && e.target.classList.contains('edge-hit')) return;
+        e.preventDefault();
+        e.stopPropagation();
         const rect = viewport.getBoundingClientRect();
         const { panX, panY, zoom } = appState.view;
-        openAddNodeMenu({
+        placeArmedTool({
           x: (e.clientX - rect.left - panX) / zoom,
           y: (e.clientY - rect.top - panY) / zoom
         });
-      });
+      }, true);
 
       viewport.addEventListener('pointerdown', (e) => {
         // Ignore canvas chrome (zoom toolbar, tutorial button) so their
@@ -4781,6 +4815,7 @@
     }
     function closeModal(id) {
       document.getElementById(id).classList.add('hidden');
+      if (id === 'card-page-modal') currentCardPageId = null; // stop node→modal mirroring
       if (lastFocusBeforeModal && typeof lastFocusBeforeModal.focus === 'function') {
         lastFocusBeforeModal.focus();
       }
@@ -4820,7 +4855,7 @@
         { targetSelector: '.signal-node', title: 'Signal Cards', body: 'Hover a signal to reveal dots on its edges. Drag from any dot onto another signal to connect them — a plain evidence card appears. Keep adding signals, then classify the card into one of the seven types when the pattern is clear.', tooltipPlacement: 'bottom-right', spotlightPadding: 8 },
         { targetSelector: '#view-tabs', title: 'Levels', body: 'Jump between levels of the ladder: All, Signals, then Evidence, Pattern, Theme, and up. Each level highlights its cards and fades the rest.', tooltipPlacement: 'bottom-left', spotlightPadding: 4 },
         { targetSelector: '.btn-ai-prompt', title: '✨ AI Prompt', body: "Copy this prompt into your LLM. Look for patterns it names that surprise you, then ask it to defend the ones that feel too neat.", tooltipPlacement: 'bottom-left', spotlightPadding: 6 },
-        { targetSelector: 'button[onclick="openCommitModal()"]', title: 'Push to Problem Situation', body: 'Once every card is named and described, push to the Problem Situation — the next screen where you synthesize it all into one open condition.', tooltipPlacement: 'bottom-left', spotlightPadding: 6 }
+        { targetSelector: 'button[onclick="openCommitModal()"]', title: 'Commit to a Problem Situation', body: 'Once every card is named and described, commit it to a Problem Situation — a framed box on the canvas you can name, describe, and export.', tooltipPlacement: 'bottom-left', spotlightPadding: 6 }
       ],
       workspace: [
         { targetSelector: '.workspace-cluster-card', title: 'The Problem Situation', body: 'One open, complex condition synthesized from your whole ladder. Name it, describe it, and frame it.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
@@ -5271,7 +5306,7 @@
           <p>A name like "grocery stores" is a <em>topic</em> — it claims nothing and can't be wrong. Good evidence names are <strong>claims</strong>: statements the signals jointly establish, that someone could push back on.</p>
           <p class="tut-example">Weak: "Grocery history" · Strong: "Retail grocery has repeatedly failed here"</p>
           <div class="tut-do">Type a title for your card (feel free to use the strong example), and a one-sentence description of what the two signals jointly establish.</div>
-          <div class="tut-why"><span class="tut-why-label">Why this matters</span>An unnamed card is an unexamined claim. The act of writing the sentence is where the thinking happens — that's why the app won't let you push to the final screen until every card is named and described.</div>`,
+          <div class="tut-why"><span class="tut-why-label">Why this matters</span>An unnamed card is an unexamined claim. The act of writing the sentence is where the thinking happens — that's why the app won't let you commit a situation until every card is named and described.</div>`,
         explainHtml: () => `
           <p><span class="tut-good">Named and described.</span> Notice what just happened: you turned two loose observations into one citable claim with an evidence trail behind it.</p>
           <p>Anyone who challenges your card, you can answer: <em>"two independent retail failures, 2019 and 2021 — here are the signals."</em></p>
@@ -5380,11 +5415,11 @@
       {
         screen: 'board', highlight: 'button[onclick="openCommitModal()"]', pad: 8, mode: 'next',
         html: `
-          <h4>The gate: Push to Problem Situation</h4>
+          <h4>The gate: Commit to a Problem Situation</h4>
           <p>On your real board, this button carries everything forward to the <strong>Problem Situation</strong> screen — where you synthesize the whole ladder into one open, complex condition, frame it ("if this situation is approached as if it is ___, then ___"), map stakeholders, and pressure-test yourself.</p>
           <p>It only unlocks when <strong>every card is named and described</strong>. That's not bureaucracy — an unnamed card is an unexamined claim, and the gate is the method enforcing its own discipline.</p>
           <div class="tut-why"><span class="tut-why-label">Why frame before solving?</span>Solutions inherit their quality from the frame they were conceived in. Your theme suggests interventions (back the wholesale collective, fund the church van, formalize store credit) that "open a supermarket" thinking would never produce — and your History card shows what that thinking already cost.</div>
-          <p>We won't push in the tutorial — that moment belongs to your real work.</p>`
+          <p>We won't commit in the tutorial — that moment belongs to your real work.</p>`
       },
       {
         screen: 'board', highlight: null, mode: 'next', nextLabel: 'Finish ✓',
@@ -5394,7 +5429,7 @@
             <li><strong>Sort</strong>: noise opines, signals observe, supers reframe.</li>
             <li><strong>Triangulate</strong>: two signals → an evidence card; classify it (the seven types), then name the <em>claim</em>.</li>
             <li><strong>Patterns</strong> name mechanisms; <strong>themes</strong> bridge the structural and the human.</li>
-            <li><strong>Push</strong> only when every card can defend itself.</li>
+            <li><strong>Commit</strong> only when every card can defend itself.</li>
           </ul>
           <p>None of this was saved — your own workspace is exactly as you left it. Replay any time with the <strong>🎓</strong> button in the canvas corner.</p>`
       }
@@ -6132,7 +6167,7 @@ ${AI_RULES}
     }
 
     // --- Validation + progress (every card in the pushable group named &
-    // described, plus at least one named & described theme, to push) ---
+    // described, plus at least one named & described theme, to commit) ---
     // Zero-arg: validates the group the next push would capture (the whole
     // board until the first push).
     function validateBoard(cardsArg) {
@@ -6159,11 +6194,11 @@ ${AI_RULES}
       const v = validateBoard();
       const framed = appState.situations.length;
       el.textContent = v.ready
-        ? `Ready to push — ${v.total} card${v.total === 1 ? '' : 's'} named & described${selectedNodeIds.size ? ' (selection)' : ''}`
+        ? `Ready to commit — ${v.total} card${v.total === 1 ? '' : 's'} named & described${selectedNodeIds.size ? ' (selection)' : ''}`
         : (!v.total && framed)
           ? `${framed} situation${framed === 1 ? '' : 's'} framed`
           : (!v.missing.length && v.total && !v.hasTheme)
-            ? 'Climb to a named & described theme to push'
+            ? 'Climb to a named & described theme to commit'
             : `${v.named}/${v.total} cards named & described`;
       el.classList.toggle('meets-target', v.ready);
       el.classList.toggle('below-target', !v.ready);
@@ -6334,6 +6369,10 @@ ${AI_RULES}
       appState.cards.forEach(c => { ids.add(c.id); signalsUnder(c.id).forEach(s => ids.add(s)); });
       return [...ids].filter(id => appState.nodes[id]);
     }
+    // World-space height of the bar across the top of each section box; the
+    // box reserves this on top of the 100px node padding (matches the
+    // .section-header CSS height).
+    const SECTION_HEADER_H = 120;
     function computeSectionBoxFor(sit) {
       const ids = situationNodeIds(sit);
       if (!ids.length) return null;
@@ -6344,7 +6383,7 @@ ${AI_RULES}
         maxX = Math.max(maxX, p.x + w); maxY = Math.max(maxY, p.y + h);
       });
       const pad = 100;
-      return { x: minX - pad, y: minY - pad, w: (maxX - minX) + pad * 2, h: (maxY - minY) + pad * 2 };
+      return { x: minX - pad, y: minY - pad - SECTION_HEADER_H, w: (maxX - minX) + pad * 2, h: (maxY - minY) + pad * 2 + SECTION_HEADER_H };
     }
 
     function renderSections() {
@@ -6364,8 +6403,8 @@ ${AI_RULES}
         el.setAttribute('data-sit-id', s.id);
         el.style.cssText = `left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px;`;
         el.innerHTML = `
-          <div class="section-header">
-            <div class="section-titles section-drag"${legacy ? ' id="section-drag"' : ''}>
+          <div class="section-header section-drag"${legacy ? ' id="section-drag"' : ''}>
+            <div class="section-titles">
               <input class="section-title"${legacy ? ' id="section-title"' : ''} placeholder="Name the problem situation" value="${escapeHtml(s.title || '')}">
               <textarea class="section-desc"${legacy ? ' id="section-desc"' : ''} rows="2" placeholder="Describe it — the open, complex, networked condition">${escapeHtml(s.description || '')}</textarea>
             </div>
@@ -6409,8 +6448,7 @@ ${AI_RULES}
       if (title) { title.addEventListener('pointerdown', e => e.stopPropagation());
         title.addEventListener('input', () => { sit.title = title.value; scheduleSave(); toggleSectionExport(boxEl, sit); }); }
       if (desc) { desc.addEventListener('pointerdown', e => e.stopPropagation());
-        desc.addEventListener('input', () => { sit.description = desc.value; autoResize(desc); scheduleSave(); toggleSectionExport(boxEl, sit); });
-        requestAnimationFrame(() => autoResize(desc)); }
+        desc.addEventListener('input', () => { sit.description = desc.value; scheduleSave(); toggleSectionExport(boxEl, sit); }); }
       if (exp) { exp.addEventListener('pointerdown', e => e.stopPropagation());
         exp.addEventListener('click', e => { e.stopPropagation(); exportWorkingFolder(sit.id); }); }
       if (drag) attachSectionDrag(drag, sit);
@@ -6442,7 +6480,7 @@ ${AI_RULES}
       });
     }
 
-    // --- Push to Problem Situation ---
+    // --- Commit to a Problem Situation ---
     // Selection-based: a multi-selection pushes just those trees; with no
     // selection, everything not yet inside a situation is pushed. Gate: every
     // card in the group named AND described, with at least one theme.
@@ -6484,8 +6522,8 @@ ${AI_RULES}
       const warningEl = document.getElementById('validation-warning');
       if (!group.roots.length) {
         const msg = selectedNodeIds.size
-          ? 'Nothing in your selection is left to push — it’s already framed.'
-          : 'Everything on the board is already framed. Build new cards to push another situation.';
+          ? 'Nothing in your selection is left to commit — it’s already framed.'
+          : 'Everything on the board is already framed. Build new cards to commit another situation.';
         warningEl.textContent = '';
         toast(msg);
         return;
@@ -6958,6 +6996,22 @@ ${AI_RULES}
       toast('Working folder exported.');
     }
 
+    // Whole-canvas export from the board menu: same folder, but no
+    // named-situation gate — the zip carries everything as-is.
+    function exportCanvasZip() {
+      if (tutorialMode) { toast('Exporting is for your real board — finish the tutorial first.'); return; }
+      appState.exportedAt = new Date().toISOString();
+      const blob = buildZip(buildExportFiles());
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = folderSlug((appState.situations[0] && appState.situations[0].title) || appState.settings.title) + '.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+      scheduleSave();
+      toast('Canvas exported.');
+    }
+
     // ======================== WORKING-FOLDER IMPORT ========================
     // Open someone else's exported folder (the .zip or its unzipped contents):
     // mine it for state.json and, after confirmation, replace the local board.
@@ -7172,17 +7226,213 @@ ${AI_RULES}
 
     let currentCardPageId = null;
 
-    function defaultCardDoc(c) { return `# ${c.title || 'Untitled'}\n\n${c.description || ''}\n`; }
+    // --- Tier/type-aware document scaffolds ---
+    // Seeded once into an empty c.doc; the upskiller overwrites the italic
+    // guidance lines. Copy is methodological (Dorst Frame Creation) — keep verbatim.
+    const CARD_DOC_BODIES = {
+      history: `## What actually happened
+*A dated chronology of documented actions — what was done, not what people meant to do.*
 
-    function openCardPage(cardId) {
-      const c = findCard(cardId); if (!c) return;
-      currentCardPageId = cardId;
+## Who acted, and what drove them
+*Name the actors and the forces behind their deeds. Stay on evidence, not stated intentions.*
+
+## What's been tried before — and how it ended
+*Earlier attempts to address this. Why did each stall, succeed, or get abandoned?*
+
+## What the history reveals about the inherited framing
+*How has everyone been seeing this problem all along? What did the history make seem inevitable?*
+`,
+      counterfactual: `## The path that was available but not taken
+*What alternative existed at a real decision point?*
+
+## Why it was rejected — and by whom
+*The reasoning, the people, the moment it was foreclosed.*
+
+## What its foreclosure exposes
+*What does the road not taken reveal about the real constraints and hidden logic of the situation?*
+`,
+      boundary: `## The nonnegotiable, stated precisely
+*The "they will never…" — quote it as exactly as you can.*
+
+## Who enforces it, and what it's anchored in
+*Where does its force come from? Who holds it in place?*
+
+## What moving it would cost
+*If this boundary shifted, who pays, and how much?*
+
+## Test: is it genuinely fixed, or only assumed?
+*Pressure-test it. Many boundaries are habits wearing the costume of laws.*
+`,
+      flux: `## What is currently in motion
+*Where is the situation already changing, as opposed to the fixed boundaries?*
+
+## What's driving the movement
+*The force behind the change — technological, economic, generational, regulatory.*
+
+## Who benefits, who resists
+*Movement creates winners and losers. Name them.*
+
+## What working *with* this momentum would imply
+*If you rode this current instead of fighting it, where would it carry you?*
+`,
+      player: `## Who they are — by practice, not title
+*Define this stakeholder by what they actually do, day to day.*
+
+## Their currency
+*What do they trade in — money, attention, authority, trust, lived experience, symbolic capital? In Dorst's terms, a player's currency is their practices, interests, values, and the frames they bring.*
+
+## Power, interests, and the frames they bring
+*What can they move? What do they want? How do they already see this situation?*
+
+## Relationships to other players
+*Allies, dependencies, rivalries. Who do they need, and who needs them?*
+
+## What they DO vs. what they SAY
+*Suspend judgment. Record behavior and note the gap between word and deed — don't assign blame.*
+`,
+      value: `## The deep value at work, named as a universal
+*Beneath the specifics, what does this point to that anyone could recognize — dignity, belonging, autonomy, safety, recognition?*
+
+## Who across the field shares it
+*This value isn't unique to your problem. Who else holds it?*
+
+## The behavior it explains
+*What otherwise-puzzling behavior makes sense once you see this value — like skipping a free service to preserve dignity?*
+
+## Widen to the field — where else does this value live?
+*Name analogous fields and domains where this same value drives behavior. This is where new frames come from. Brainstorm analogies with an AI, then filter them hard.*
+`,
+      problem: `## The bounded difficulty, stated
+*What's the conventionally solvable problem as it presents itself?*
+
+## Is it genuinely bounded, or a symptom?
+*Be honest: does this only look solvable because you're standing inside the inherited frame?*
+
+## What the conventional fix assumes
+*Name the assumptions baked into the obvious solution.*
+
+## What it points toward if you don't solve it in isolation
+*Connect it upward — what larger situation is this a surface of?*
+`,
+      unclassified: `## What these signals jointly establish
+*Two or more signals triangulating on one claim. State the claim they make together.*
+
+## What kind of evidence is this?
+*Decide the movement first — are you excavating the known problem (Archaeology & Context: history, counterfactual, boundary, flux, problem) or widening to the players and values of the field (Field mapping: player, value)? Classify it on the canvas, then deepen with the matching prompts.*
+`,
+      pattern: `## The mechanism
+*Not a topic — a mechanism. Cause → effect, with moving parts. What makes this happen?*
+
+## When and where it recurs
+*The conditions under which the pattern shows up. Who's affected, in what context?*
+
+## How the evidence beneath supports it
+*Walk each evidence card: how does it establish the mechanism? Where is the chain strongest and weakest?*
+
+## What would have to change to break it
+*The leverage points — named, not yet acted on.*
+
+## Where it doesn't hold
+*Counter-cases. Honest patterns name their own exceptions.*
+`,
+      theme: `## The deeper condition
+*The universal beneath the patterns. What force or condition is hidden under the surface of everyday life here?*
+
+## Bridge test
+*Does this name BOTH a structural condition AND a human experience? A theme that lives on only one side is just a restated pattern.*
+
+## Depth test
+*Is this hidden beneath the everyday framing? Does it explain things you didn't build it from?*
+
+## The field: where else does this condition live?
+*Analogous domains where the same condition operates. What do those fields know that yours doesn't?*
+
+## Tensions it holds
+*Don't resolve them. Name the dissonance — that's where frames are born.*
+`,
+      super: `## The convergence
+*Where multiple themes meet at a deeper level. What do they share that none names alone?*
+
+## Frame-readiness test
+*Try it: "If this situation is approached as if it is [this], then ___." Does the sentence open new possibilities, or just restate?*
+
+## The lens test
+*Could someone outside your field understand this as a way of seeing the whole situation?*
+
+## What it makes newly visible
+*What becomes thinkable under this lens that wasn't before?*
+`
+    };
+    const CARD_DOC_FOOTER = `
+---
+
+## Evidence & sources
+*Primary (from the situation itself — interviews, field notes, documents) and secondary (literature, data, prior art). Attach files below; list and annotate them here.*
+
+## Where I'm not sure
+*Your confidence. What would change your mind? What would falsify this?*
+
+## Whose voice is still missing
+*Who hasn't been heard yet — and how would they complicate this?*
+`;
+
+    function defaultCardDoc(c) {
+      const typeBit = c.tier === 1 ? ' · ' + cardTypeInfo(c.cardType).label : '';
+      const roleBit = (c.tier === 1 && c.playerRole) ? ' · ' + c.playerRole : '';
+      const header = `# ${c.title || 'Untitled'}
+
+> **${tierName(c.tier)}${typeBit}${roleBit}** — a card in a Frame Creation web map.
+> Built from ${signalsUnder(c.id).length} signal(s). The work on this page is to *investigate the field*, not to solve.
+
+`;
+      let body;
+      if (c.tier === 1) body = CARD_DOC_BODIES[c.cardType] || CARD_DOC_BODIES.unclassified;
+      else if (c.tier === 2) body = CARD_DOC_BODIES.pattern;
+      else if (c.tier === 3) body = CARD_DOC_BODIES.theme;
+      else body = CARD_DOC_BODIES.super;
+      return header + body + CARD_DOC_FOOTER;
+    }
+
+    // Live header/subtitle refresh while editing identity on the card page.
+    function refreshCardPageHeader(c) {
       document.getElementById('card-page-title').textContent = c.title || 'Untitled card';
       const sub = (c.tier === 1)
         ? `${tierName(c.tier)} · ${cardTypeInfo(c.cardType).label}${c.playerRole ? ' · ' + c.playerRole : ''}`
         : tierName(c.tier);
-      document.getElementById('card-page-sub').textContent = `${sub} · ${signalsUnder(cardId).length} signal(s)`;
+      document.getElementById('card-page-sub').textContent = `${sub} · ${signalsUnder(c.id).length} signal(s)`;
+    }
+
+    function openCardPage(cardId) {
+      const c = findCard(cardId); if (!c) return;
+      currentCardPageId = cardId;
+      refreshCardPageHeader(c);
       if (!Array.isArray(c.files)) c.files = []; // cards created pre-reload lack the field
+      // Editable identity, two-way synced with the canvas node.
+      const titleInput = document.getElementById('card-page-title-input');
+      const descInput = document.getElementById('card-page-desc-input');
+      const locked = hubLocked(c);
+      titleInput.value = c.title || '';
+      descInput.value = c.description || '';
+      titleInput.disabled = locked;
+      descInput.disabled = locked;
+      const mirrorToNode = () => {
+        const el = document.getElementById('node-' + c.id);
+        if (!el) return;
+        const t = el.querySelector('input.hub-title');
+        if (t && t.value !== c.title) t.value = c.title;
+        const d = el.querySelector('textarea.hub-desc');
+        if (d && d.value !== c.description) { d.value = c.description; autoResize(d); }
+      };
+      titleInput.oninput = () => {
+        c.title = titleInput.value;
+        refreshCardPageHeader(c); mirrorToNode();
+        scheduleSave(); updateClusterProgressChip(); refreshParentLocks(c.id);
+      };
+      descInput.oninput = () => {
+        c.description = descInput.value;
+        mirrorToNode();
+        scheduleSave(); updateClusterProgressChip(); refreshParentLocks(c.id);
+      };
       const doc = document.getElementById('card-page-doc');
       if (!c.doc) c.doc = defaultCardDoc(c);
       doc.value = c.doc;
@@ -7225,43 +7475,45 @@ ${AI_RULES}
       location.reload();
     }
 
-    // --- Profile button + popover ---
-    const PROFILE_EMAIL = 'brendan@withlevy.com';
-    function initProfile() {
-      const initial = (PROFILE_EMAIL[0] || '?').toUpperCase();
-      document.getElementById('profile-initial').textContent = initial;
-      document.getElementById('profile-avatar').textContent = initial;
-      document.getElementById('profile-email').textContent = PROFILE_EMAIL;
-    }
-    function toggleProfilePopover() {
-      const pop = document.getElementById('profile-popover');
-      const btn = document.getElementById('profile-btn');
-      const isOpen = !pop.classList.contains('hidden');
-      if (isOpen) closeProfilePopover();
+    // --- Hamburger board menu ---
+    function toggleBoardMenu() {
+      const menu = document.getElementById('board-menu');
+      const btn = document.getElementById('menu-btn');
+      const isOpen = !menu.classList.contains('hidden');
+      if (isOpen) closeBoardMenu();
       else {
-        pop.classList.remove('hidden');
+        menu.classList.remove('hidden');
         btn.setAttribute('aria-expanded', 'true');
+        const search = document.getElementById('menu-search-input');
+        const canonical = document.getElementById('search-input');
+        if (search && canonical) search.value = canonical.value;
       }
     }
-    function closeProfilePopover() {
-      const pop = document.getElementById('profile-popover');
-      const btn = document.getElementById('profile-btn');
-      if (pop.classList.contains('hidden')) return;
-      pop.classList.add('hidden');
+    function closeBoardMenu() {
+      const menu = document.getElementById('board-menu');
+      const btn = document.getElementById('menu-btn');
+      if (!menu || menu.classList.contains('hidden')) return;
+      menu.classList.add('hidden');
       btn.setAttribute('aria-expanded', 'false');
     }
+    // The menu search mirrors into the canonical header field so filterItems()
+    // keeps a single source of truth.
+    function syncMenuSearch(input) {
+      const canonical = document.getElementById('search-input');
+      if (canonical) canonical.value = input.value;
+      filterItems();
+    }
     document.addEventListener('click', (e) => {
-      const anchor = document.querySelector('.profile-anchor');
-      if (anchor && !anchor.contains(e.target)) closeProfilePopover();
+      const anchor = document.querySelector('.menu-anchor');
+      if (anchor && !anchor.contains(e.target)) closeBoardMenu();
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeProfilePopover();
+      if (e.key === 'Escape') closeBoardMenu();
     });
-    function resetFromProfile() {
-      closeProfilePopover();
+    function resetFromMenu() {
+      closeBoardMenu();
       startOver();
     }
-    initProfile();
 
     // ======================== SORTING SCREEN ========================
 
