@@ -611,6 +611,7 @@
     .workspace-section:last-child { margin-bottom: 0; }
     .workspace-section > label { display: block; font-size: 1rem; font-weight: 700; color: var(--midnight); margin-bottom: 4px; }
     .workspace-section .field-hint { font-size: 0.825rem; color: var(--midnight); opacity: 0.7; margin-bottom: 16px; line-height: 1.5; }
+    .ws-stage-label { font-size: 0.75rem; font-weight: 700; color: var(--primary-teal); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
     .workspace-section textarea { width: 100%; min-height: 120px; padding: 16px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--ghost-white); color: var(--midnight); font-size: 0.875rem; line-height: 1.6; resize: vertical; outline: none; font-family: 'Geologica', sans-serif; transition: border-color 0.2s; }
     .workspace-section textarea:focus { border-color: var(--primary-teal); }
     .ws-text-input { width: 100%; padding: 12px 16px; border: 2px solid var(--cloud); border-radius: 8px; background: var(--ghost-white); color: var(--midnight); font-size: 0.95rem; font-weight: 600; outline: none; font-family: 'Geologica', sans-serif; transition: border-color 0.2s; }
@@ -2242,23 +2243,12 @@
         <button class="btn btn-outline" onclick="backToBoard()">← Back to Board</button>
         <h2 id="workspace-title">Build the case</h2>
       </div>
-      <p class="workspace-intro">For each pattern, map who's affected and pressure-test your framing. Each section has a prompt you copy into your LLM — but the goal isn't to get an answer. It's to have a conversation that sharpens your thinking. Argue with the AI. Ask it "who's missing?" and "what breaks if I'm wrong?" Then come back and write what you actually believe.</p>
-      <div class="interview-helper">
-        <div class="step-label">Step 1 — Before you write anything</div>
-        <h3>Talk to the people first</h3>
-        <p class="helper-desc">Before you map stakeholders or write a problematization, talk to the people who reported these signals. They have ground truth you can't guess at. Use the prompt below to plan a 30-minute conversation per pattern.</p>
-        <div class="prompt-cta-header">
-          <div class="prompt-cta-label">✨ Interview &amp; Validate prompt</div>
-          <button class="btn btn-primary copy-btn" onclick="copyText('workspace-interview-prompt')">Copy this prompt</button>
-        </div>
-        <div class="prompt-text" id="workspace-interview-prompt"></div>
-        <p class="copy-hint">Paste into Claude, ChatGPT, Gemini, NotebookLM, or Perplexity. Use it to prep your interview questions — then go talk to the actual people.</p>
-      </div>
+      <p class="workspace-intro">Work through the four stages in order: solidify the situation, take honest stock of your evidence, name who you still need to reach, then find the paradox at the core. The stages generate research demand on purpose — each one should send you back out to the field, to your sources, or to your AI thinking partner before you write what you actually believe.</p>
     </div>
     <nav class="workspace-jump-bar" id="workspace-jump-bar" aria-label="Jump to a committed cluster"></nav>
     <div class="workspace-cards" id="workspace-cards-container"></div>
     <div class="workspace-footer">
-      <span class="submit-status" id="submit-status-hint">Complete every section to submit.</span>
+      <span class="submit-status" id="submit-status-hint">To submit: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.</span>
       <button class="btn btn-primary" id="submit-for-voting-btn" onclick="submitForVoting()" disabled>Submit for Voting</button>
     </div>
   </div>
@@ -2716,7 +2706,8 @@
       if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
       parsed.boardIntroSeen = parsed.boardIntroSeen === true;
       // --- Migrate singular situation + committedCardIds → situations[] ---
-      const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization'];
+      const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization',
+        'openness', 'evidenceCoverage', 'researchAgenda', 'voicesNeeded', 'accessNeeds', 'paradox', 'statusQuoBeneficiaries'];
       if (!Array.isArray(parsed.situations)) {
         parsed.situations = [];
         const sit = (parsed.situation && typeof parsed.situation === 'object') ? parsed.situation : null;
@@ -3113,6 +3104,18 @@
       const seen = new Set();
       c.childIds.forEach(kid => signalsUnder(kid).forEach(s => seen.add(s)));
       return [...seen];
+    }
+    // Every card (deduped) in the subtrees beneath a situation's member cards,
+    // including the members themselves.
+    function situationCards(s) {
+      if (!s) return [];
+      return [...situationCardIds(s)].map(findCard).filter(Boolean);
+    }
+    // Submission requires at least one theme (tier >= 3) that is both named
+    // and described somewhere in the situation's subtree.
+    function situationHasNamedTheme(s) {
+      return situationCards(s).some(c =>
+        c.tier >= 3 && (c.title || '').trim() && (c.description || '').trim());
     }
     function parentsOf(id) { return appState.cards.filter(c => c.childIds.includes(id)); }
     function topLevelCards() { return appState.cards.filter(c => parentsOf(c.id).length === 0); }
@@ -6646,9 +6649,6 @@ ${AI_RULES}
         ? `Problem Situation: ${appState.settings.title}`
         : 'Frame the Problem Situation';
 
-      const interviewEl = document.getElementById('workspace-interview-prompt');
-      if (interviewEl) interviewEl.textContent = buildSituationPrompt('interview');
-
       const container = document.getElementById('workspace-cards-container');
       const jumpBar = document.getElementById('workspace-jump-bar');
       if (jumpBar) jumpBar.innerHTML = '';
@@ -6667,7 +6667,8 @@ ${AI_RULES}
     }
 
     function renderSituationEditor(s, idx) {
-      const tops = s.memberCardIds.map(findCard).filter(Boolean);
+      const tops = s.memberCardIds.map(findCard).filter(Boolean)
+        .sort((a, b) => (b.tier - a.tier) || (a.title || '').localeCompare(b.title || ''));
       const card = document.createElement('article');
       card.className = 'workspace-cluster-card';
       const n = idx + 1;
@@ -6682,64 +6683,67 @@ ${AI_RULES}
             ${many && (s.title || '').trim() ? `<h3 style="margin:0;">${escapeHtml(s.title)}</h3>` : ''}
           </div>
           <p class="field-hint">An open, complex, networked condition synthesized from what you framed. This is not a problem to solve yet — it's a situation to frame.</p>
-          <ul class="signal-chips">${trail}</ul>
         </header>
 
         <section class="workspace-section">
+          <div class="ws-stage-label">Stage 1 — Solidify the situation</div>
           <label for="sit-title-${n}">Name the situation</label>
-          <input type="text" id="sit-title-${n}" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('${s.id}', 'title', this.value)">
+          <input type="text" id="sit-title-${n}" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('${s.id}', 'title', this.value); recomputeSubmitButton();">
           <label for="sit-desc-${n}" style="margin-top:12px;">Describe it</label>
           <textarea id="sit-desc-${n}" placeholder="This is an open condition, not a bounded problem, because ___" oninput="updateSituationField('${s.id}', 'description', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.description || '')}</textarea>
+          <label for="sit-open-${n}" style="margin-top:12px;">Why this is open, not bounded</label>
+          <p class="field-hint">A bounded problem has a known solution path. An open situation doesn't — it's complex, networked, and dynamic. What makes this one open?</p>
+          <textarea id="sit-open-${n}" placeholder="What makes this open: the network of actors, the moving parts, the absence of a known path…" oninput="updateSituationField('${s.id}', 'openness', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.openness || '')}</textarea>
+          <label style="margin-top:12px;">What feeds this situation</label>
+          <p class="field-hint">The themes and cards backing this situation — orientation, not editing. Rework them on the board.</p>
+          <ul class="signal-chips">${trail}</ul>
         </section>
 
         <section class="workspace-section">
-          <label for="sit-frame-${n}">Frame it</label>
-          <p class="field-hint">A frame is a new way of seeing — a metaphor that reorganizes the evidence.</p>
-          <div class="prompt-cta">
+          <div class="ws-stage-label">Stage 2 — Evidence landscape &amp; research agenda</div>
+          <label for="sit-coverage-${n}">What the evidence covers</label>
+          <p class="field-hint">Look at your evidence trail. Which of Dorst's seven types do you have? (History, counterfactual, boundary, flux, player, value, problem.) Which are thin or missing entirely?</p>
+          <textarea id="sit-coverage-${n}" placeholder="Strong on ___, thin on ___, nothing at all on ___" oninput="updateSituationField('${s.id}', 'evidenceCoverage', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.evidenceCoverage || '')}</textarea>
+          <label for="sit-agenda-${n}" style="margin-top:12px;">Research agenda — what I think is still missing</label>
+          <p class="field-hint">Name the gaps as you see them: who you'd want to interview, what you'd survey, what you'd send into a deep-research tool (NotebookLM, Claude, Perplexity), what secondary sources you'd pull. Be specific — each gap is a named question with a method, not a vague "more research needed."</p>
+          <textarea id="sit-agenda-${n}" placeholder="Gap: ___. Question: ___. Method: ___." oninput="updateSituationField('${s.id}', 'researchAgenda', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.researchAgenda || '')}</textarea>
+          <div class="prompt-cta" style="margin-top:16px;">
             <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Help me find a frame</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('sit-frame-prompt-${n}')">Copy this prompt</button>
+              <div class="prompt-cta-label">✨ Evidence gap analysis &amp; research brief</div>
+              <button class="btn btn-primary copy-btn" onclick="copyText('sit-gap-prompt-${n}')">Copy this prompt</button>
             </div>
-            <div class="prompt-text" id="sit-frame-prompt-${n}"></div>
-            <p class="copy-hint">Paste into your LLM. Push for non-obvious metaphors, then write the frame in your own words.</p>
+            <div class="prompt-text" id="sit-gap-prompt-${n}"></div>
+            <p class="copy-hint">Paste into Claude, ChatGPT, Gemini, NotebookLM, or Perplexity. The AI reads your full evidence trail and names what's missing — then go find it.</p>
           </div>
-          <textarea id="sit-frame-${n}" placeholder="If this situation is approached as if it is ___, then ___" oninput="updateSituationField('${s.id}', 'frame', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.frame || '')}</textarea>
         </section>
 
         <section class="workspace-section">
-          <label for="sit-stake-${n}">Stakeholder Map</label>
-          <p class="field-hint">Inner-circle, wider-field, owners/clients, gatekeepers — across the whole situation.</p>
-          <div class="prompt-cta">
-            <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Map who's involved</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('sit-stake-prompt-${n}')">Copy this prompt</button>
-            </div>
-            <div class="prompt-text" id="sit-stake-prompt-${n}"></div>
-            <p class="copy-hint">Paste into your LLM. Ask "who did you leave out and why?" Write your map from what you learned.</p>
-          </div>
-          <textarea id="sit-stake-${n}" placeholder="Who's in the inner circle, the wider field, who could own this? Your words." oninput="updateSituationField('${s.id}', 'stakeholderMap', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.stakeholderMap || '')}</textarea>
+          <div class="ws-stage-label">Stage 3 — Research access</div>
+          <label for="sit-voices-${n}">Who do you need to hear from?</label>
+          <p class="field-hint">Who lives inside this problem and could ground-truth your framing? Name specific roles, communities, or institutions — not abstractly ('patients') but concretely enough to act on ('someone who navigated the Medicaid recertification process in the last 6 months').</p>
+          <textarea id="sit-voices-${n}" placeholder="Specific roles, communities, institutions — concrete enough to act on" oninput="updateSituationField('${s.id}', 'voicesNeeded', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.voicesNeeded || '')}</textarea>
+          <label for="sit-access-${n}" style="margin-top:12px;">What you can't reach alone — and how you might</label>
+          <p class="field-hint">What does the research demand that you don't currently have access to? A conversation with someone in a specific role? A dataset behind a paywall? A survey distributed to a population you don't have a channel to? Name the need and your best guess at how to get there — a warm introduction, a public records request, a community listserv, a cold email.</p>
+          <textarea id="sit-access-${n}" placeholder="Need: ___. Possible path: ___." oninput="updateSituationField('${s.id}', 'accessNeeds', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.accessNeeds || '')}</textarea>
         </section>
 
         <section class="workspace-section">
-          <label for="sit-problem-${n}">Pressure-test the framing</label>
-          <p class="field-hint">Hidden assumptions, structural biases, who benefits from things staying as they are.</p>
-          <div class="prompt-cta">
-            <div class="prompt-cta-header">
-              <div class="prompt-cta-label">✨ Problematize this situation</div>
-              <button class="btn btn-primary copy-btn" onclick="copyText('sit-problem-prompt-${n}')">Copy this prompt</button>
-            </div>
-            <div class="prompt-text" id="sit-problem-prompt-${n}"></div>
-            <p class="copy-hint">If the response confirms your framing, ask it to break it.</p>
-          </div>
-          <textarea id="sit-problem-${n}" placeholder="After the AI challenged you — what's assumed, what's missing, who benefits? Your words." oninput="updateSituationField('${s.id}', 'problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
+          <div class="ws-stage-label">Stage 4 — The paradox</div>
+          <label for="sit-paradox-${n}">What makes this situation hard to resolve?</label>
+          <p class="field-hint">In Dorst's terms, the paradox is the deadlock — the reason conventional approaches keep failing. It's not 'this is complicated.' It's the specific structural tension that traps everyone. Name it: 'The situation demands X, but the same conditions that create the need also prevent X from working.'</p>
+          <textarea id="sit-paradox-${n}" placeholder="The situation demands ___, but the same conditions that create the need also prevent ___ from working." oninput="updateSituationField('${s.id}', 'paradox', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.paradox || '')}</textarea>
+          <label for="sit-status-${n}" style="margin-top:12px;">Who benefits from the status quo?</label>
+          <p class="field-hint">If this situation persists indefinitely, who wins? Follow the incentives — name actors and mechanisms.</p>
+          <textarea id="sit-status-${n}" placeholder="Actor: ___. Mechanism: ___." oninput="updateSituationField('${s.id}', 'statusQuoBeneficiaries', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.statusQuoBeneficiaries || '')}</textarea>
+          <label for="sit-problem-${n}" style="margin-top:12px;">Pressure-test your framing</label>
+          <p class="field-hint">What are you assuming? What would break this framing if it turned out to be wrong? What have you chosen not to see?</p>
+          <textarea id="sit-problem-${n}" placeholder="What's assumed, what would break this, what you've chosen not to see. Your words." oninput="updateSituationField('${s.id}', 'problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
         </section>
       `;
 
-      card.querySelector(`#sit-frame-prompt-${n}`).textContent = buildSituationPrompt('frame', s);
-      card.querySelector(`#sit-stake-prompt-${n}`).textContent = buildSituationPrompt('stakeholder', s);
-      card.querySelector(`#sit-problem-prompt-${n}`).textContent = buildSituationPrompt('problematize', s);
+      card.querySelector(`#sit-gap-prompt-${n}`).textContent = buildSituationPrompt('gap-analysis', s);
       requestAnimationFrame(() => {
-        [`sit-desc-${n}`, `sit-frame-${n}`, `sit-stake-${n}`, `sit-problem-${n}`].forEach(id => { const t = card.querySelector('#' + id); if (t) autoResize(t); });
+        [`sit-desc-${n}`, `sit-open-${n}`, `sit-coverage-${n}`, `sit-agenda-${n}`, `sit-voices-${n}`, `sit-access-${n}`, `sit-paradox-${n}`, `sit-status-${n}`, `sit-problem-${n}`].forEach(id => { const t = card.querySelector('#' + id); if (t) autoResize(t); });
       });
       return card;
     }
@@ -6751,10 +6755,14 @@ ${AI_RULES}
       scheduleSave();
     }
 
-    // Complete = at least one situation fully deepened (all 5 fields filled).
+    // Complete = at least one situation with the required fields filled and a
+    // named-and-described theme (tier >= 3) somewhere in its subtree. The
+    // reflective fields (coverage, agenda, voices, access, beneficiaries) are
+    // encouraged but never gate.
     function workspaceIsComplete() {
       return appState.situations.some(s =>
-        ['title', 'description', 'frame', 'stakeholderMap', 'problematization'].every(k => (s[k] || '').trim()));
+        ['title', 'description', 'openness', 'paradox', 'problematization'].every(k => (s[k] || '').trim())
+        && situationHasNamedTheme(s));
     }
 
     function recomputeSubmitButton() {
@@ -6770,7 +6778,7 @@ ${AI_RULES}
             ? `Last submitted ${new Date(appState.submittedAt).toLocaleString()}. Re-submit to update.`
             : 'Ready.';
         } else {
-          hint.textContent = 'Complete every section to submit.';
+          hint.textContent = 'To submit: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.';
         }
       }
     }
@@ -6783,7 +6791,7 @@ ${AI_RULES}
 
     function openSubmitModal() {
       if (!workspaceIsComplete()) {
-        toast('Complete every section to submit.');
+        toast('Fill the required fields (name, description, openness, paradox, pressure-test) and back the situation with at least one named theme.');
         return;
       }
       const sits = appState.situations;
@@ -6791,10 +6799,10 @@ ${AI_RULES}
       const signalSet = new Set();
       tops.forEach(c => signalsUnder(c.id).forEach(id => signalSet.add(id)));
       const charCount = sits.reduce((sum, s) =>
-        sum + ['description', 'frame', 'stakeholderMap', 'problematization'].reduce((a, k) => a + (s[k] || '').trim().length, 0), 0);
+        sum + ['description', 'openness', 'evidenceCoverage', 'researchAgenda', 'voicesNeeded', 'accessNeeds', 'paradox', 'statusQuoBeneficiaries', 'problematization'].reduce((a, k) => a + (s[k] || '').trim().length, 0), 0);
       const titles = sits.map(s => `"${s.title || 'Untitled'}"`).join(', ');
       const summary = document.getElementById('submit-modal-summary');
-      summary.textContent = `You're submitting ${sits.length} Problem Situation${sits.length === 1 ? '' : 's'} — ${titles} — built from ${tops.length} top-level card${tops.length === 1 ? '' : 's'} covering ${signalSet.size} signal${signalSet.size === 1 ? '' : 's'}, with ${charCount} characters of framing, stakeholder, and problematization analysis.`;
+      summary.textContent = `You're submitting ${sits.length} Problem Situation${sits.length === 1 ? '' : 's'} — ${titles} — built from ${tops.length} top-level card${tops.length === 1 ? '' : 's'} covering ${signalSet.size} signal${signalSet.size === 1 ? '' : 's'}, with ${charCount} characters of situation, evidence-landscape, research-access, and paradox analysis.`;
       const prior = document.getElementById('submit-modal-prior');
       if (appState.submittedAt) {
         prior.textContent = `Previously submitted on ${new Date(appState.submittedAt).toLocaleString()}. Re-submitting will replace that timestamp.`;
@@ -6838,27 +6846,30 @@ ${AI_RULES}
       wrap.style.maxWidth = '840px';
 
       appState.situations.forEach(s => {
-        const tops = s.memberCardIds.map(findCard).filter(Boolean);
+        const tops = s.memberCardIds.map(findCard).filter(Boolean)
+          .sort((a, b) => (b.tier - a.tier) || (a.title || '').localeCompare(b.title || ''));
+        // Required fields always render (with "(empty)"); reflective fields only when written.
+        const answer = (h, v, required) => (v || '').trim() || required
+          ? `<div class="submission-answer"><h4>${escapeHtml(h)}</h4><div class="answer-body">${escapeHtml((v || '').trim() || '(empty)')}</div></div>`
+          : '';
         const article = document.createElement('article');
         article.className = 'submission-cluster';
         article.innerHTML = `
           <h3>${escapeHtml(s.title || 'Untitled Problem Situation')} <span style="font-size:0.7rem; color:#8a4fff; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:8px;">Problem Situation</span></h3>
           ${s.description ? `<p class="cluster-desc">${escapeHtml(s.description)}</p>` : ''}
+          ${answer('Why this is open, not bounded', s.openness, true)}
           <ul class="signal-chips">
             ${tops.map(c => `<li>${escapeHtml(c.title || 'Untitled')} (${escapeHtml(nodeLabel(c.id))})</li>`).join('')}
           </ul>
-          <div class="submission-answer">
-            <h4>Frame</h4>
-            <div class="answer-body">${escapeHtml((s.frame || '').trim() || '(empty)')}</div>
-          </div>
-          <div class="submission-answer">
-            <h4>Stakeholder Map</h4>
-            <div class="answer-body">${escapeHtml((s.stakeholderMap || '').trim() || '(empty)')}</div>
-          </div>
-          <div class="submission-answer">
-            <h4>Problematization</h4>
-            <div class="answer-body">${escapeHtml((s.problematization || '').trim() || '(empty)')}</div>
-          </div>
+          ${answer('What the evidence covers', s.evidenceCoverage, false)}
+          ${answer('Research agenda — what’s still missing', s.researchAgenda, false)}
+          ${answer('Who I need to hear from', s.voicesNeeded, false)}
+          ${answer('What I can’t reach alone — and how I might', s.accessNeeds, false)}
+          ${answer('The paradox', s.paradox, true)}
+          ${answer('Who benefits from the status quo', s.statusQuoBeneficiaries, false)}
+          ${answer('Pressure-testing the framing', s.problematization, true)}
+          ${answer('Legacy — Frame', s.frame, false)}
+          ${answer('Legacy — Stakeholder Map', s.stakeholderMap, false)}
         `;
         wrap.appendChild(article);
       });
@@ -6874,7 +6885,7 @@ ${AI_RULES}
           <p style="font-size: 0.9rem; color: var(--midnight); opacity: 0.85; line-height: 1.6; margin-bottom: 20px;">Your peers are going to challenge your framing. Before you walk in, make sure you have an answer to each of these.</p>
           <ol style="font-size: 0.9rem; color: var(--midnight); line-height: 1.8; padding-left: 20px;">
             <li style="margin-bottom: 8px;">Which signal doesn't quite fit — and why did you keep it anyway?</li>
-            <li style="margin-bottom: 8px;">Whose voice is missing from your stakeholder map?</li>
+            <li style="margin-bottom: 8px;">Whose voice is still missing — and what's your path to reaching them?</li>
             <li style="margin-bottom: 8px;">What assumption would break your framing if it turned out to be wrong?</li>
             <li style="margin-bottom: 8px;">Why is this an open situation and not a bounded problem?</li>
             <li style="margin-bottom: 8px;">What's the strongest argument that the evidence should have been organized differently?</li>
@@ -6890,11 +6901,22 @@ ${AI_RULES}
         ? `*Submitted on ${new Date(appState.submittedAt).toLocaleString()}*\n\n`
         : `*Draft — not yet submitted*\n\n`;
       appState.situations.forEach(s => {
+        const section = (h, v, required) => {
+          if (!(v || '').trim() && !required) return;
+          md += `### ${h}\n${(v || '').trim() || '(empty)'}\n\n`;
+        };
         md += `---\n\n## Problem Situation: ${s.title || 'Untitled'}\n\n`;
         if (s.description) md += `${s.description}\n\n`;
-        md += `### Frame\n${(s.frame || '(empty)').trim()}\n\n`;
-        md += `### Stakeholder Map\n${(s.stakeholderMap || '(empty)').trim()}\n\n`;
-        md += `### Problematization\n${(s.problematization || '(empty)').trim()}\n\n`;
+        section('Why this is open, not bounded', s.openness, true);
+        section('What the evidence covers', s.evidenceCoverage, false);
+        section('Research agenda — what’s still missing', s.researchAgenda, false);
+        section('Who I need to hear from', s.voicesNeeded, false);
+        section('What I can’t reach alone — and how I might', s.accessNeeds, false);
+        section('The paradox', s.paradox, true);
+        section('Who benefits from the status quo', s.statusQuoBeneficiaries, false);
+        section('Pressure-testing the framing', s.problematization, true);
+        section('Legacy — Frame', s.frame, false);
+        section('Legacy — Stakeholder Map', s.stakeholderMap, false);
         md += `### Evidence trail\n\n`;
         s.memberCardIds.map(findCard).filter(Boolean).forEach(c => { md += formatCardOutline(c.id, 0) + '\n\n'; });
       });
