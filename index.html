@@ -2342,14 +2342,14 @@
     <div class="modal-content" style="max-width: 560px;">
       <div class="modal-header"><h3 id="board-intro-title">Your assignment</h3></div>
       <div class="modal-body">
-        <p class="intro-lede">This canvas is where scattered observations become a defensible claim about what's really going on.</p>
+        <p class="intro-lede">You've got a pile of observations from real people. Your mission: figure out what's really going on underneath them — and back it up.</p>
         <ol class="intro-steps">
-          <li><strong>Triangulate.</strong> Drag related signals near each other and connect them — two signals pointing at the same thing forge an evidence card.</li>
-          <li><strong>Climb the ladder.</strong> Connect evidence into patterns, and patterns into a theme — the deeper condition hidden underneath.</li>
-          <li><strong>Name &amp; describe every card.</strong> Write claims, not topics. Higher cards stay locked until the cards beneath them can defend themselves.</li>
-          <li><strong>Commit.</strong> Once you've built up to at least one named &amp; described theme, press <strong>Commit</strong> to frame your problem situation.</li>
+          <li><strong>Connect the dots.</strong> Drag observations that seem related next to each other and link them. Two observations pointing at the same thing make an evidence card.</li>
+          <li><strong>Build up.</strong> Link evidence cards together to find a pattern. Link patterns together to find a theme — the hidden force driving all of it.</li>
+          <li><strong>Name every card.</strong> Say what you actually think is happening, not just a topic. Cards higher up stay locked until the ones below them are solid.</li>
+          <li><strong>Commit.</strong> When you have at least one theme that's named &amp; described, hit <strong>Commit</strong> to lock in what you found.</li>
         </ol>
-        <p class="intro-hint">The chip above the canvas tracks how close you are to being ready.</p>
+        <p class="intro-hint">The chip above the canvas shows how close you are.</p>
         <div style="display:flex; justify-content:flex-end; margin-top:16px;">
           <button class="btn btn-primary" onclick="closeModal('board-intro-modal')" data-autofocus>Start mapping</button>
         </div>
@@ -3026,12 +3026,12 @@
     }
 
     // First arrival on a fresh canvas: explain the assignment once — build up
-    // to a named & described theme, then press Commit.
+    // to a named & described theme, then press Commit. The seen-flag burns on
+    // dismissal (closeModal), not on open, so a popup the user never actually
+    // saw shows again next time. The board spotlight tour waits for this modal.
     function maybeShowBoardIntro() {
       if (tutorialMode) return;
       if (appState.boardIntroSeen || hasSituations()) return;
-      appState.boardIntroSeen = true;
-      scheduleSave();
       openModal('board-intro-modal');
     }
 
@@ -4876,6 +4876,10 @@
     function closeModal(id) {
       document.getElementById(id).classList.add('hidden');
       if (id === 'card-page-modal') currentCardPageId = null; // stop node→modal mirroring
+      if (id === 'board-intro-modal') {
+        appState.boardIntroSeen = true; // burn on dismissal, not on open
+        scheduleSave();
+      }
       if (lastFocusBeforeModal && typeof lastFocusBeforeModal.focus === 'function') {
         lastFocusBeforeModal.focus();
       }
@@ -4977,10 +4981,10 @@
     }
 
     function maybeShowTour(screen) {
-      if (tutorialMode) return; // spotlight tours never fire during the tutorial
-      if (!SCREEN_TOURS[screen] || !SCREEN_TOURS[screen].length) return;
-      if (localStorage.getItem(tourDoneKey(screen))) return;
-      setTimeout(() => tourStartForScreen(screen), 400);
+      // Spotlight tour cards retired: they collided with the assignment popup
+      // on first board arrival. The step machinery below stays dormant so the
+      // tour can be restored by reinstating this body.
+      return;
     }
 
     function _tourRenderStep() {
@@ -8022,6 +8026,8 @@ ${AI_RULES}
       // Show tour help button for return visitors resuming to the board
       const resumeHelpBtn = document.getElementById('tour-help-btn');
       if (resumeHelpBtn) resumeHelpBtn.classList.remove('hidden');
+      // If they reloaded before ever dismissing the assignment popup, re-show it.
+      if (target === 'board') maybeShowBoardIntro();
       setTimeout(() => toast('Picked up where you left off.', { duration: 4000 }), 200);
     })();
 
