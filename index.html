@@ -430,6 +430,44 @@
 
     /* Canvas Architecture */
     .canvas-infobar { padding: 8px 24px; background: var(--midnight); display: flex; justify-content: space-between; font-size: var(--text-xs); font-weight: 600; color: var(--cloud); flex-shrink: 0; }
+    .board-concept-banner { display: block; width: 100%; box-sizing: border-box; text-align: left;
+      padding: 7px 24px; border: none; border-bottom: 1px solid var(--cloud); cursor: pointer;
+      background: rgba(0,148,160,0.07); color: var(--midnight); font: inherit; font-size: var(--text-xs);
+      line-height: var(--lead-sm); flex-shrink: 0; transition: background 0.15s; }
+    .board-concept-banner:hover { background: rgba(0,148,160,0.14); }
+    .board-concept-banner .bcb-key { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--primary-teal); margin-right: 8px; }
+    .board-concept-banner .bcb-edit { float: right; opacity: 0.6; font-weight: 600; }
+    @media (max-width: 600px) { .board-concept-banner { display: none; } }
+    /* --- Classify-phase guide (the 7 types, one at a time, Dorst order) --- */
+    #classify-guide { position: absolute; left: 50%; transform: translateX(-50%); bottom: 16px;
+      z-index: 40; width: min(560px, calc(100vw - 32px)); }
+    .classify-guide-inner { background: var(--midnight); color: var(--ghost-white);
+      border-radius: var(--radius-3); box-shadow: 0 12px 32px rgba(16,24,32,0.35);
+      padding: 14px 18px; border: 1px solid rgba(255,255,255,0.12); }
+    .classify-guide-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .classify-guide-step { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--cloud); }
+    .classify-guide-skip { background: none; border: none; color: var(--primary-teal); font: inherit; font-size: var(--text-xs); font-weight: 600; cursor: pointer; }
+    .classify-guide-skip:hover { text-decoration: underline; }
+    .classify-guide-body { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px; }
+    .classify-guide-glyph { width: 28px; height: 28px; flex: none; }
+    .classify-guide-glyph svg { width: 28px; height: 28px; }
+    .classify-guide-title { margin: 0 0 4px; font-size: var(--text-md); }
+    .classify-guide-desc { margin: 0; font-size: var(--text-sm); line-height: var(--lead-sm); color: var(--cloud); }
+    .classify-guide-count { color: var(--primary-teal); font-weight: 600; }
+    .classify-guide-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .classify-guide-foot .btn { padding: 6px 14px; font-size: var(--text-sm); }
+    .classify-guide-hint { font-size: var(--text-xs); color: var(--cloud); opacity: 0.6; margin-left: auto; }
+    @media (max-width: 600px) { .classify-guide-hint { display: none; } }
+    /* Spotlight: dim non-active type chips, lift the active one. */
+    #board-workspace[data-classify-type] .card-type-chip { opacity: 0.4; }
+    #board-workspace[data-classify-type="history"]        .card-type-chip[data-type="history"],
+    #board-workspace[data-classify-type="counterfactual"] .card-type-chip[data-type="counterfactual"],
+    #board-workspace[data-classify-type="problem"]        .card-type-chip[data-type="problem"],
+    #board-workspace[data-classify-type="boundary"]       .card-type-chip[data-type="boundary"],
+    #board-workspace[data-classify-type="flux"]           .card-type-chip[data-type="flux"],
+    #board-workspace[data-classify-type="player"]         .card-type-chip[data-type="player"],
+    #board-workspace[data-classify-type="value"]          .card-type-chip[data-type="value"] {
+      opacity: 1; box-shadow: 0 0 0 2px var(--chip-color, var(--primary-teal)); }
     .canvas-grid { padding: 32px; display: flex; flex-wrap: wrap; gap: 24px; overflow-y: auto; flex: 1; align-items: flex-start; min-height: 0; }
     
     /* Inline Workspace Nodes */
@@ -2016,14 +2054,72 @@
 </head>
 <body>
 
+  <style>
+    /* --- Global step indicator (the loop) --- */
+    /* A self-contained dark strip so it stays legible on both the dark intro
+       screens and the light canvas/workspace screens. */
+    .step-indicator-mount:empty { display: none; }
+    .step-indicator { display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+      gap: 4px 2px; padding: 7px 16px; background: var(--midnight); width: 100%; box-sizing: border-box; }
+    .step-indicator .step-loop-note { flex-basis: 100%; text-align: center; font-size: var(--text-xs);
+      color: var(--cloud); opacity: 0.6; margin: 3px 0 0; }
+    @media (max-width: 600px) {
+      #board-workspace .step-indicator, #workspace-screen .step-indicator { display: none; }
+      .step-indicator .step-loop-note { display: none; }
+    }
+    .step-chip { display: inline-flex; align-items: center; gap: 6px; border: none; background: none;
+      cursor: pointer; font: inherit; font-size: var(--text-xs); letter-spacing: 0.02em;
+      color: var(--cloud); opacity: 0.45; padding: 4px 8px; border-radius: var(--radius-2);
+      transition: opacity 0.15s, color 0.15s, background 0.15s; }
+    .step-chip[data-reached="1"] { opacity: 1; }
+    .step-chip[data-reached="1"]:hover { background: rgba(255,255,255,0.07); }
+    .step-chip[data-active="1"] { color: var(--ghost-white); opacity: 1; font-weight: 600; }
+    .step-chip[data-active="1"] .step-dot { background: var(--primary-teal); box-shadow: 0 0 0 3px rgba(0,191,179,0.22); }
+    .step-chip[disabled] { cursor: default; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cloud);
+      opacity: 0.55; flex: none; }
+    .step-chip[data-reached="1"] .step-dot { background: var(--primary-teal); opacity: 1; }
+    .step-sep { color: var(--cloud); opacity: 0.3; font-size: var(--text-xs); }
+    .step-loop-icon { color: var(--primary-teal); opacity: 0.8; font-size: var(--text-sm); }
+    /* --- Concept screen --- */
+    #concept-screen { min-height: 100vh; display: flex; flex-direction: column; }
+    .concept-wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 64px; width: 100%; box-sizing: border-box; }
+    .concept-eyebrow { font-size: var(--text-xs); letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--primary-teal); margin-bottom: 12px; }
+    .concept-wrap h1 { font-size: var(--text-2xl); line-height: var(--lead-2xl); margin: 0 0 16px; color: var(--ghost-white); }
+    .concept-wrap .concept-lede { color: var(--cloud); margin-bottom: 8px; }
+    .concept-wrap .concept-loop { color: var(--cloud); opacity: 0.7; font-size: var(--text-sm); margin-bottom: 24px; }
+    #concept-input { width: 100%; box-sizing: border-box; min-height: 140px; resize: vertical;
+      font: inherit; font-size: var(--text-md); line-height: 1.55; padding: 16px 18px;
+      border: 1px solid rgba(255,255,255,0.18); border-radius: var(--radius-3);
+      background: rgba(0,0,0,0.25); color: var(--ghost-white); margin-bottom: 24px; }
+    .concept-actions { display: flex; justify-content: flex-end; }
+  </style>
+
+  <div id="concept-screen" class="hidden">
+    <div class="step-indicator-mount"></div>
+    <div class="concept-wrap">
+      <p class="concept-eyebrow">Start of the loop · Your initial concept</p>
+      <h1>What's your initial problem concept?</h1>
+      <p class="concept-lede">Before you touch a single source, name the starting hunch you're going to put to the test — the problem as you currently understand it. A sentence or two is plenty.</p>
+      <p class="concept-loop">This is provisional on purpose. As you validate it against your sources and signals, you'll come back and revise it — that's the whole point.</p>
+      <label for="concept-input" class="sr-only">Initial problem concept</label>
+      <textarea id="concept-input" placeholder="Right now I think the problem is…" oninput="updateConcept(this.value)"></textarea>
+      <div class="concept-actions">
+        <button class="btn btn-primary" onclick="goToSources()" style="min-width: 220px;">Continue → load your sources</button>
+      </div>
+    </div>
+  </div>
+
   <div id="setup-screen">
+    <div class="step-indicator-mount"></div>
     <div class="config-container">
       <header class="config-header landing-hero">
         <p class="hero-eyebrow"><span>A problem&#8209;framing canvas</span><span class="hero-eyebrow-rule" aria-hidden="true"></span><span>After Kees Dorst's Frame Creation</span></p>
         <h1>The<br>Triangulator<span class="hero-accent">-inator</span></h1>
         <p class="hero-lede">Some people find a better answer. Others find a better question — and change everything. You're about to become the second kind.</p>
         <div class="hero-cta">
-          <a href="#landing-h-start" class="btn btn-primary">Get started with your own pool ↓</a>
+          <a href="#" class="btn btn-primary" onclick="startConcept(); return false;">Get started</a>
           <a href="#" class="hero-cta-note" onclick="openImportModal(); return false;">or open a shared working folder</a>
         </div>
       </header>
@@ -2074,6 +2170,10 @@
         <h2 class="landing-statement" id="landing-h-journey">Triangulate the chaos and launch.</h2>
         <ol class="journey-steps">
           <li>
+            <h3>Name your initial concept</h3>
+            <p>Before you touch a single source, state the starting hunch you're going to put to the test — the problem as you currently understand it. It's provisional on purpose: the whole point is to let the evidence push back on it.</p>
+          </li>
+          <li>
             <h3>Load the pool</h3>
             <p>You begin with chaos. The app ingests a cloud of qualitative survey data — like the included Civics &amp; Elections field survey — or your own observations via CSV, with a built-in AI prompt to convert any dataset.</p>
           </li>
@@ -2082,19 +2182,23 @@
             <p>Work the pool one card at a time: discard the noise, keep the signals, flag the ★ supers that might reframe everything. You learn to analyze the sector's historical routines and isolate the core structural paradoxes causing the current deadlock.</p>
           </li>
           <li>
-            <h3>Triangulate on the canvas</h3>
-            <p>Step into the visual workspace and explore the expanded field. Connect signals that point at the same thing to mint evidence, classify each claim with one of Dorst's seven types, and actively build out the foundational lattice of your relational database.</p>
+            <h3>Validate on the canvas</h3>
+            <p>Step into the visual workspace and test your concept against the field. Connect signals that point at the same thing to mint plain evidence and name the claim — building out the foundational lattice of your relational database. (No type labels yet — that comes later.)</p>
           </li>
           <li>
-            <h3>Extract themes, craft the frame</h3>
-            <p>Extract the profound, universal human values sitting beneath the data. Once your themes are named, the problem-situation workbook helps you craft the precise, structural propositions — frames — needed to spark radical new solutions.</p>
+            <h3>Map the situation &amp; its themes</h3>
+            <p>Climb the ladder until the open, networked condition underneath comes into view. Name and describe the patterns and themes, then map them into a single Problem Situation. You're mapping and understanding here — not yet framing.</p>
+          </li>
+          <li>
+            <h3>Classify the evidence</h3>
+            <p>Only now do the seven evidence types appear — introduced one at a time in Kees Dorst's order, from Archaeology (History, Counterfactual) through the paradox (Problem, Boundary, Flux) out to the Field (Player, Value). Tag each card and see where your coverage is thin.</p>
           </li>
           <li>
             <h3>Export and launch</h3>
             <p>Walk away with a print-ready artifact, or the full .zip working folder — the exact, data-rich bones of your project, completely organized into a clean file structure.</p>
           </li>
         </ol>
-        <div class="landing-callout"><strong>The ultimate benefit:</strong> because this data model is standardized, you can immediately take your structural outline, your context-rich notes, and your source folders and plug them into <strong>any AI tool, vibe-coding environment, or tech stack of your own choosing</strong>. Stop reacting to symptoms. Start architecting the future. (Just watch out for that self-destruct button.)</div>
+        <div class="landing-callout"><strong>This is a loop, not a line.</strong> Nothing here is ever "done." As each step teaches you something, you'll circle back — revise the concept, add sources, re-sort, reconnect, re-map, re-classify. And because the data model is standardized, you can take your structural outline, your context-rich notes, and your source folders into <strong>any AI tool, vibe-coding environment, or tech stack of your own choosing</strong>. Stop reacting to symptoms. Start architecting the future. (Just watch out for that self-destruct button.)</div>
       </section>
 
       <section class="landing-section" aria-labelledby="landing-h-theory">
@@ -2132,7 +2236,7 @@
           <p>The breakthrough of expert design practice lies in <strong>design abduction</strong>. With open, networked societal and organizational problems, you only possess a deep understanding of the desired value — the OUTCOME. Both the WHAT and the HOW are completely unknown. Because two variables are missing, the problem cannot be solved sequentially: you must simultaneously propose a new pattern of relationships (the HOW) and the corresponding elements (the WHAT), testing them in conjunction.</p>
           <p><strong>The act of proposing this hypothetical, novel pattern of relationships is the definition of "framing."</strong> A frame is a strategic thought tool — often expressed as a metaphor or an organizational principle — that rearticulates the entire problem arena, creating an entirely new standpoint from which the problem becomes solvable. As organizational theorist Armand Hatchuel notes, it is the difference between relying on known alternatives to find "a good movie to see" and creatively expanding concepts to design "a good time."</p>
           <p>Why go through all this cognitive heavy lifting? Because at the core of the most intractable challenges lies a <strong>paradox</strong> — conflicting, mutually exclusive requirements that are all fundamentally valid. Traditional problem-solving leaves an organization with two unsatisfactory options: prioritize one side at the expense of the other, or negotiate a mediocre compromise.</p>
-          <p>Frame Creation offers a third path: <strong>transcending the paradox altogether</strong>. A paradox is only insurmountable within the boundaries of its original, predefined context — so you deliberately widen that context. You look at the broader field of actors, extract the universal human themes beneath, and establish a new frame that satisfies the conflicting considerations simultaneously. The Triangulator-inator does not let you bypass this genius: it isolates the paradox, maps the field, forces you to extract the themes, and links your new frame directly back to your raw data lattice.</p>
+          <p>Frame Creation offers a third path: <strong>transcending the paradox altogether</strong>. A paradox is only insurmountable within the boundaries of its original, predefined context — so you deliberately widen that context. You look at the broader field of actors, extract the universal human themes beneath, and establish a new frame that satisfies the conflicting considerations simultaneously. The Triangulator-inator does not let you bypass this groundwork: it isolates the paradox, maps the field, and forces you to extract the themes — assembling the rigorous, evidence-backed map a frame has to stand on. Framing itself comes after, once that map is sound.</p>
         </div>
       </section>
 
@@ -2156,7 +2260,7 @@
           <span class="explainer-step-num" aria-hidden="true">02</span>
           <div>
             <h3>Evidence</h3>
-            <p>Two or more signals pointing at the same thing, triangulated and classified with one of Dorst's seven types. Where a hunch becomes a defensible claim.</p>
+            <p>Two or more signals pointing at the same thing, triangulated into a single claim. Where a hunch becomes defensible. (You'll classify each into Dorst's seven types later, once the situation is mapped.)</p>
           </div>
         </li>
         <li class="explainer-step" data-step="3">
@@ -2174,7 +2278,7 @@
           </div>
         </li>
       </ol>
-        <p class="landing-footnote">Higher tiers stay locked until every card beneath them is named and described — every claim rests on examined ones. And the frames themselves are deliberately not a canvas card: when your themes are named, you push the map into the problem-situation workbook, where your conditional "if/then" propositions — wrapped in sharp structural metaphors — emerge with their whole evidence trail attached.</p>
+        <p class="landing-footnote">Higher tiers stay locked until every card beneath them is named and described — every claim rests on examined ones. When your themes are named, you push the map into the problem-situation workbook and synthesize the whole ladder into one open, complex condition — mapped, with its full evidence trail attached. That mapped situation is the launchpad for framing, which comes later, in your own tools.</p>
       </section>
 
       <section class="landing-section" aria-labelledby="landing-h-intuition">
@@ -2255,6 +2359,7 @@
   </div>
 
   <div id="sorting-screen" class="hidden">
+    <div class="step-indicator-mount"></div>
     <div class="sorting-top">
       <button class="sorting-back-link" onclick="sortingBackToSetup()">← back</button>
       <div class="sorting-progress-bar">
@@ -2293,6 +2398,7 @@
 
   <div id="board-workspace" class="hidden">
     <main class="panel-center webmap-panel">
+      <div class="step-indicator-mount"></div>
       <div class="panel-header webmap-header">
         <h2 id="board-title-display">Your Web Map <span id="save-status" aria-live="polite"></span></h2>
         <div class="webmap-header-actions" id="webmap-header-actions">
@@ -2327,6 +2433,7 @@
           </div>
         </div>
       </div>
+      <button type="button" id="board-concept-banner" class="board-concept-banner hidden" onclick="goToScreen('concept')" title="Revise your initial concept — nothing on the board is lost"></button>
       <div class="canvas-infobar">
         <div class="view-tabs" id="view-tabs">
           <button class="view-tab is-active" data-view="all" onclick="setCanvasView('all')">All</button>
@@ -2416,10 +2523,12 @@
   </div>
 
   <div id="workspace-screen" class="hidden">
+    <div class="step-indicator-mount"></div>
     <div class="workspace-header">
-      <div style="font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label); color: var(--primary-teal); margin-bottom: 8px;">Map</div>
+      <div style="font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label); color: var(--primary-teal); margin-bottom: 8px;">Deepen</div>
       <div class="workspace-title-row">
         <button class="btn btn-outline" onclick="backToBoard()">← Back to Board</button>
+        <button class="btn btn-outline" onclick="enterClassifyPhase()" title="Re-open the evidence type classification on the board">↩ Revisit classification</button>
         <h2 id="workspace-title">Build the case</h2>
       </div>
       <p class="workspace-intro">Work through the four stages in order: solidify the situation, take honest stock of your evidence, name who you still need to reach, then find the paradox at the core. The stages generate research demand on purpose — each one should send you back out to the field, to your sources, or to your AI thinking partner before you write what you actually believe.</p>
@@ -2698,11 +2807,18 @@
     // Colors live in the :root token block; JS resolves them once at startup
     // so canvas chrome and CSS rules can never disagree.
     const cssToken = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    // Ordered to follow Kees Dorst's frame-creation sequence: Archaeology
+    // (History, Counterfactual) → the paradox & its hard limits (Problem,
+    // Boundary, Flux) → widening to the Field (Player, Value). This order drives
+    // the type picker, the dock flyout, the classify-phase stepper, and every
+    // derived enumeration.
     const CARD_TYPES = [
       { id: 'history',        label: 'History',        color: cssToken('--type-history'), phase: 'arch',  desc: 'What happened / what was done',
         icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><path d="M8 4.8V8l2.4 1.6"/></svg>' },
       { id: 'counterfactual', label: 'Counterfactual', color: cssToken('--type-counterfactual'), phase: 'arch',  desc: 'The path not taken',
         icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 14V8.5"/><path d="M8 8.5 3.6 2.6"/><path d="M8 8.5 12.4 2.6" stroke-dasharray="2.2 1.8"/></svg>' },
+      { id: 'problem',        label: 'Problem',        color: cssToken('--type-problem'), phase: 'arch',  desc: 'A bounded difficulty, solvable conventionally',
+        icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.7" y="2.7" width="10.6" height="10.6" rx="2.6"/><path d="M8 5v4" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.95" fill="currentColor" stroke="none"/></svg>' },
       { id: 'boundary',       label: 'Boundary',       color: cssToken('--type-boundary'), phase: 'arch',  desc: 'A "they will never…" nonnegotiable',
         icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.5"/><path d="M4.2 8h7.6" stroke-linecap="round"/></svg>' },
       { id: 'flux',           label: 'Flux',           color: cssToken('--type-flux'), phase: 'arch',  desc: 'A point of movement or potential change',
@@ -2710,9 +2826,7 @@
       { id: 'player',         label: 'Player',         color: cssToken('--type-player'), phase: 'field', desc: 'A stakeholder, by practices & currency',
         icon: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="5" r="2.7"/><path d="M2.8 13.6c0-3 2.3-4.7 5.2-4.7s5.2 1.7 5.2 4.7z"/></svg>' },
       { id: 'value',          label: 'Value',          color: cssToken('--type-value'), phase: 'field', desc: 'A deeper or universal value from the field',
-        icon: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2.2 13.2 6 8 13.8 2.8 6z"/></svg>' },
-      { id: 'problem',        label: 'Problem',        color: cssToken('--type-problem'), phase: 'arch',  desc: 'A bounded difficulty, solvable conventionally',
-        icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.7" y="2.7" width="10.6" height="10.6" rx="2.6"/><path d="M8 5v4" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.95" fill="currentColor" stroke="none"/></svg>' }
+        icon: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2.2 13.2 6 8 13.8 2.8 6z"/></svg>' }
     ];
     console.assert(CARD_TYPES.every(t => t.color), 'Design tokens failed to resolve — check the :root token block.');
     // Plain/undefined evidence card — created when two signals are first
@@ -2729,7 +2843,7 @@
 
     function defaultState() {
       return {
-        settings: { title: '' },
+        settings: { title: '', concept: '' },
         items: [],
         // Unified tiered cards. tier 1 = evidence (childIds = signal ids, has
         // cardType ∈ 7 types); tier 2 = pattern; 3 = theme; 4 = super-theme;
@@ -2747,6 +2861,10 @@
         exportedAt: null,
         currentScreen: 'setup',
         boardIntroSeen: false, // first-canvas assignment popup shown once
+        // Classify phase: the 7 evidence types are introduced only AFTER the
+        // problem situation is mapped. False during the validate phase so the
+        // type picker stays hidden; flipped true by enterClassifyPhase().
+        classifyPhase: false,
         sorting: { currentIndex: 0, decisions: {} }
       };
     }
@@ -2904,7 +3022,9 @@
         });
       });
       if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
+      if (typeof parsed.settings.concept !== 'string') parsed.settings.concept = '';
       parsed.boardIntroSeen = parsed.boardIntroSeen === true;
+      parsed.classifyPhase = parsed.classifyPhase === true;
       // --- Migrate singular situation + committedCardIds → situations[] ---
       const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization',
         'openness', 'evidenceCoverage', 'researchAgenda', 'voicesNeeded', 'accessNeeds', 'paradox', 'statusQuoBeneficiaries'];
@@ -2948,7 +3068,8 @@
       parsed.cards.forEach(c => { if (typeof c.source !== 'string' || !c.source) delete c.source; });
       if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
       if (typeof parsed.exportedAt === 'undefined') parsed.exportedAt = null;
-      if (!parsed.currentScreen) parsed.currentScreen = 'setup';
+      const VALID_SCREENS = ['concept', 'setup', 'sorting', 'board', 'workspace', 'artifact'];
+      if (!parsed.currentScreen || !VALID_SCREENS.includes(parsed.currentScreen)) parsed.currentScreen = 'setup';
       if (!parsed.nodes || typeof parsed.nodes !== 'object') parsed.nodes = {};
       if (!parsed.view || typeof parsed.view !== 'object') parsed.view = { zoom: 1, panX: 0, panY: 0 };
       if (typeof parsed.view.zoom !== 'number') parsed.view.zoom = 1;
@@ -3243,24 +3364,135 @@
 
     function goToScreen(name) {
       appState.currentScreen = name;
+      document.getElementById('concept-screen').classList.toggle('hidden', name !== 'concept');
       document.getElementById('setup-screen').classList.toggle('hidden', name !== 'setup');
       document.getElementById('sorting-screen').classList.toggle('hidden', name !== 'sorting');
       document.getElementById('board-workspace').classList.toggle('hidden', name !== 'board');
       document.getElementById('workspace-screen').classList.toggle('hidden', name !== 'workspace');
       document.getElementById('artifact-screen').classList.toggle('hidden', name !== 'artifact');
-      if (name === 'sorting') {
+      if (name === 'concept') {
+        renderConceptScreen();
+      } else if (name === 'sorting') {
         renderSortingScreen();
       } else if (name === 'board') {
         renderBoard();
         updateClusterProgressChip();
+        updateBoardConceptBanner();
+        if (appState.classifyPhase) renderClassifyGuide(); else removeClassifyGuide();
       } else if (name === 'workspace') {
         renderWorkspace();
       } else if (name === 'artifact') {
         renderSubmittedArtifact();
       }
+      renderStepIndicator();
       scheduleSave();
       if (typeof maybeShowTour === 'function') maybeShowTour(name);
       tutorialNotify('screen', { name });
+    }
+
+    // --- The initial problem concept (start of the loop) ---
+    function startConcept() { goToScreen('concept'); }
+    // Setup screen doubles as the marketing landing; send "Sources" navigation
+    // to the pool builder near the bottom rather than the top of the hero.
+    function goToSources() {
+      goToScreen('setup');
+      requestAnimationFrame(() => {
+        const anchor = document.getElementById('landing-h-start');
+        if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+    function updateConcept(value) {
+      appState.settings.concept = value;
+      updateBoardConceptBanner();
+      scheduleSave();
+    }
+    function renderConceptScreen() {
+      const ta = document.getElementById('concept-input');
+      if (ta) ta.value = appState.settings.concept || '';
+    }
+    function updateBoardConceptBanner() {
+      const el = document.getElementById('board-concept-banner');
+      if (!el) return;
+      const concept = tutorialMode ? '' : (appState.settings.concept || '').trim();
+      el.classList.toggle('hidden', !concept);
+      if (concept) {
+        el.innerHTML = `<span class="bcb-edit">edit ✎</span><span class="bcb-key">Validating</span>${escapeHtml(concept)}`;
+      }
+    }
+
+    // --- Global step indicator: a loop the user re-runs, not a finish line ---
+    // Every reached step is clickable to jump back to, non-destructively.
+    const STEP_DEFS = [
+      { id: 'concept',  label: 'Concept',  screen: 'concept' },
+      { id: 'sources',  label: 'Sources',  screen: 'setup' },
+      { id: 'sort',     label: 'Sort',     screen: 'sorting' },
+      { id: 'validate', label: 'Validate', screen: 'board' },
+      { id: 'map',      label: 'Map',      screen: 'board' },
+      { id: 'classify', label: 'Classify', screen: 'board' },
+      { id: 'deepen',   label: 'Deepen',   screen: 'workspace' }
+    ];
+    // Which step is active given the current screen/state.
+    function currentStepId() {
+      switch (appState.currentScreen) {
+        case 'concept': return 'concept';
+        case 'setup':   return 'sources';
+        case 'sorting': return 'sort';
+        case 'workspace':
+        case 'artifact': return 'deepen';
+        case 'board':
+          if (appState.classifyPhase) return 'classify';
+          if (hasSituations()) return 'map';
+          return 'validate';
+        default: return 'concept';
+      }
+    }
+    // A step is "reached" (clickable) once the user has progressed at least to
+    // it. We gate on available data so jumping back never lands on an empty
+    // screen: Sort/Validate need items; Map/Classify/Deepen need a situation.
+    function stepReached(id) {
+      const hasItems = appState.items.length > 0;
+      const framed = hasSituations();
+      switch (id) {
+        case 'concept':  return true;
+        case 'sources':  return true;
+        case 'sort':     return hasItems;
+        case 'validate': return hasItems;
+        case 'map':      return framed;
+        case 'classify': return framed;
+        case 'deepen':   return framed;
+        default: return false;
+      }
+    }
+    function goToStep(id) {
+      if (!stepReached(id)) return;
+      if (id === 'classify') { enterClassifyPhase(); return; }
+      if (id === 'sources') { if (appState.classifyPhase) appState.classifyPhase = false; goToSources(); return; }
+      const def = STEP_DEFS.find(s => s.id === id);
+      if (!def) return;
+      // Any non-classify step leaves classify mode (the guide is torn down in
+      // goToScreen's board branch / on the next render).
+      if (appState.classifyPhase) appState.classifyPhase = false;
+      goToScreen(def.screen);
+    }
+    function renderStepIndicator() {
+      const mounts = document.querySelectorAll('.step-indicator-mount');
+      if (!mounts.length) return;
+      // Hidden during the sandboxed tutorial — it runs its own scripted flow.
+      if (tutorialMode) { mounts.forEach(m => { m.innerHTML = ''; }); return; }
+      const active = currentStepId();
+      const chips = STEP_DEFS.map((s, i) => {
+        const reached = stepReached(s.id);
+        const isActive = s.id === active;
+        const sep = i > 0 ? '<span class="step-sep" aria-hidden="true">→</span>' : '';
+        return `${sep}<button type="button" class="step-chip" data-step="${s.id}" data-reached="${reached ? 1 : 0}" data-active="${isActive ? 1 : 0}"${reached ? '' : ' disabled'}${isActive ? ' aria-current="step"' : ''}><span class="step-dot" aria-hidden="true"></span>${escapeHtml(s.label)}</button>`;
+      }).join('');
+      const html = `<div class="step-indicator">${chips}<span class="step-loop-note"><span class="step-loop-icon" aria-hidden="true">↺</span> This is a loop — revisit any step as you learn more.</span></div>`;
+      mounts.forEach(m => {
+        m.innerHTML = html;
+        m.querySelectorAll('.step-chip').forEach(btn => {
+          btn.addEventListener('click', () => goToStep(btn.getAttribute('data-step')));
+        });
+      });
     }
 
     function backToBoard() { goToScreen('board'); }
@@ -3825,6 +4057,10 @@
       });
     }
 
+    // The evidence type picker is live only in the classify phase. The tutorial
+    // sets classifyPhase=true for its canvas beat so its "classify it" step works.
+    function typePickerEnabled() { return appState.classifyPhase === true; }
+
     function buildCardNode(card) {
       if (card.tier >= 2) return buildHigherCardNode(card);
       const el = document.createElement('div');
@@ -3861,7 +4097,12 @@
            <span class="card-type-group-label">Field mapping</span>
            <div class="card-type-chips">${fieldChips}</div>
          </div>`;
-      const typePickerHtml = undefinedType
+      // The 7 evidence types are introduced only in the classify phase (after
+      // the situation is mapped). During the validate phase the card is kept
+      // simple: no picker, no reclassify link.
+      const typePickerHtml = !typePickerEnabled()
+        ? ''
+        : undefinedType
         ? `<div class="card-type-inline" data-expanded="1">
              <p class="card-type-hint">What kind of evidence is this? Decide the movement first — are you excavating the known problem (<strong>Archaeology &amp; Context</strong>) or widening to the players and values of the field (<strong>Field mapping</strong>)? The ✨ AI button can help.</p>
              <div class="card-type-groups">${groupedChips}</div>
@@ -3916,6 +4157,7 @@
           scheduleSave();
           renderAllNodes();
           renderAllEdges();
+          if (appState.classifyPhase) renderClassifyGuide();
         });
       });
       wireNodeEditing(el, card, () => deleteCard(card.id));
@@ -4469,7 +4711,10 @@
 
     // The 7 claim types + unclassified; picking one arms the evidence tool.
     function buildEvidenceFlyout(fly) {
-      [...CARD_TYPES, EVIDENCE_TYPE].forEach(t => {
+      // Types stay hidden until the classify phase: during validation the dock
+      // only offers a plain, unclassified evidence card.
+      const options = typePickerEnabled() ? [...CARD_TYPES, EVIDENCE_TYPE] : [EVIDENCE_TYPE];
+      options.forEach(t => {
         const chip = document.createElement('button');
         chip.type = 'button';
         chip.className = 'add-node-chip';
@@ -5123,6 +5368,9 @@
 
     // ---- Spotlight Tour (per-screen) ----
     const SCREEN_TOURS = {
+      concept: [
+        { targetSelector: '#concept-input', title: 'Your initial concept', body: 'Name the starting hunch you\'re going to test — the problem as you currently understand it. It\'s provisional: you\'ll revise it as the evidence pushes back. This is a loop, not a one-way street.', tooltipPlacement: 'bottom-left', spotlightPadding: 8 }
+      ],
       setup: [
         { targetId: 'config-title', title: 'Name your project', body: 'Give your signal pool a descriptive title. This carries through to the workspace and artifact.', tooltipPlacement: 'bottom-left', spotlightPadding: 8 },
         { targetSelector: '.sample-data-btn', title: 'Load signals', body: 'Start with the 44 sample signals, upload a CSV of your own, or add signals manually below. You need raw evidence from the world.', tooltipPlacement: 'bottom-left', spotlightPadding: 8 },
@@ -5134,15 +5382,15 @@
       ],
       board: [
         { targetId: 'canvas-viewport', title: 'The Canvas', body: 'Your signals are laid out here. Drag empty space to pan, scroll to zoom, and drag any signal card to reposition it.', tooltipPlacement: 'bottom-right', spotlightPadding: 0 },
-        { targetSelector: '.signal-node', title: 'Signal Cards', body: 'Hover a signal to reveal dots on its edges. Drag from any dot onto another signal to connect them — a plain evidence card appears. Keep adding signals, then classify the card into one of the seven types when the pattern is clear.', tooltipPlacement: 'bottom-right', spotlightPadding: 8 },
+        { targetSelector: '.signal-node', title: 'Signal Cards', body: 'Hover a signal to reveal dots on its edges. Drag from any dot onto another signal to connect them — a plain evidence card appears. Keep adding signals and name the claim. You\'re validating your concept here; you\'ll classify the evidence into Dorst\'s seven types later, after you\'ve mapped the situation.', tooltipPlacement: 'bottom-right', spotlightPadding: 8 },
         { targetSelector: '#view-tabs', title: 'Levels', body: 'Jump between levels of the ladder: All, Signals, then Evidence, Pattern, Theme, and up. Each level highlights its cards and fades the rest.', tooltipPlacement: 'bottom-left', spotlightPadding: 4 },
         { targetSelector: '.btn-ai-prompt', title: '✨ AI Prompt', body: "Copy this prompt into your LLM. Look for patterns it names that surprise you, then ask it to defend the ones that feel too neat.", tooltipPlacement: 'bottom-left', spotlightPadding: 6 },
-        { targetSelector: 'button[onclick="openCommitModal()"]', title: 'Commit to a Problem Situation', body: 'Once every card is named and described, commit it to a Problem Situation — a framed box on the canvas you can name, describe, and export.', tooltipPlacement: 'bottom-left', spotlightPadding: 6 }
+        { targetSelector: 'button[onclick="openCommitModal()"]', title: 'Map the Problem Situation', body: 'Once every card is named and described, map it into a Problem Situation — a box on the canvas you can name and describe. Right after, you\'ll classify your evidence into Dorst\'s seven types, introduced in order.', tooltipPlacement: 'bottom-left', spotlightPadding: 6 }
       ],
       workspace: [
-        { targetSelector: '.workspace-cluster-card', title: 'The Problem Situation', body: 'One open, complex condition synthesized from your whole ladder. Name it, describe it, and frame it.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '.workspace-cluster-card', title: 'The Problem Situation', body: 'One open, complex condition synthesized from your whole ladder. Name it, describe it, and map the themes beneath it.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
         { targetSelector: '.prompt-cta', title: 'AI thinking partner', body: 'Copy these prompts into your LLM. Talk back to it. Write your answers in your own words — this is about YOUR thinking, not the AI\'s output.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
-        { targetSelector: '#submit-for-voting-btn', title: 'Submit', body: 'Complete every section — name, description, frame, stakeholders, problematization — then submit to generate your artifact.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
+        { targetSelector: '#submit-for-voting-btn', title: 'Submit', body: 'Work through every section — name, description, openness, evidence landscape, paradox — then submit to generate your artifact.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
       ],
       artifact: [
         { targetSelector: '.submission-cluster', title: 'Your artifact', body: 'Your framed Problem Situation with its full evidence trail — ready for peer review.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
@@ -5370,6 +5618,9 @@
       TUT_CANVAS_ITEMS.forEach(i => { appState.sorting.decisions[i.id] = (i.id === 'tut-s8') ? 'super' : 'signal'; });
       Object.entries(TUT_CANVAS_POS).forEach(([id, [x, y]]) => setNodePos(id, x, y));
       appState.viewInitialized = false; // renderBoard will fit-all on entry
+      // The tutorial teaches classification mid-canvas as a simplification; in
+      // the real app the 7 types are introduced after the situation is mapped.
+      appState.classifyPhase = true;
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
@@ -5555,11 +5806,11 @@
           <ul>
             <li><strong>History</strong> — what happened / was already tried</li>
             <li><strong>Counterfactual</strong> — the path not taken</li>
+            <li><strong>Problem</strong> — a bounded, conventionally solvable difficulty</li>
             <li><strong>Boundary</strong> — a "they will never…" nonnegotiable</li>
             <li><strong>Flux</strong> — a point of movement or change</li>
             <li><strong>Player</strong> — a stakeholder, by practices &amp; currency</li>
             <li><strong>Value</strong> — a deeper value at work in the field</li>
-            <li><strong>Problem</strong> — a bounded, conventionally solvable difficulty</li>
           </ul>
           <p>Two failed grocery attempts are about <em>what already happened</em>.</p>
           <div class="tut-do">Click the <strong>History</strong> chip on the new card.</div>`,
@@ -6517,7 +6768,7 @@ ${AI_RULES}
       el.textContent = v.ready
         ? `Ready to commit — ${v.total} card${v.total === 1 ? '' : 's'} named & described${selectedNodeIds.size ? ' (selection)' : ''}`
         : (!v.total && framed)
-          ? `${framed} situation${framed === 1 ? '' : 's'} framed`
+          ? `${framed} situation${framed === 1 ? '' : 's'} mapped`
           : (!v.missing.length && v.total && !v.hasTheme)
             ? 'Climb to a named & described theme to commit'
             : `${v.named}/${v.total} cards named & described`;
@@ -6644,13 +6895,13 @@ For each of 3–5 key signals:
         task: `Audit this problem situation's evidence base and produce a research brief. Read the full evidence trail, the card inventory (titles, descriptions, types, tiers), and the epistemics notes the user wrote on each card ("where I'm not sure", "whose voice is still missing"). Your job is not to strengthen the framing — it is to expose exactly where the evidence is thin, whose perspective is absent, and what the user must go find before the framing can be trusted.`,
         thinking: [
           'Walk the evidence trail card by card. Note each card\'s Dorst evidence type (or its absence) and how many independent signals sit beneath it.',
-          'Tally the seven evidence types — history, counterfactual, boundary, flux, player, value, problem — present vs. absent across all cards.',
+          'Tally the seven evidence types — history, counterfactual, problem, boundary, flux, player, value — present vs. absent across all cards.',
           'Cross-reference the epistemics notes against the situation description, the openness statement, and the problematization: which admitted uncertainties were never followed up?',
           'For every gap, formulate the single question that would close it, then pick the cheapest credible method for answering it.',
           'For each method, identify what access it demands — people, datasets, channels — and whether the user plausibly has it today.'
         ],
         output: `## Coverage map
-Which of the seven Dorst evidence types (history, counterfactual, boundary, flux, player, value, problem) are present vs. absent across this situation's cards. If there are no flux cards, that's a blind spot about what's changing. If there are no player cards, the field hasn't been mapped. Name each gap explicitly.
+Which of the seven Dorst evidence types (history, counterfactual, problem, boundary, flux, player, value) are present vs. absent across this situation's cards. If there are no flux cards, that's a blind spot about what's changing. If there are no player cards, the field hasn't been mapped. Name each gap explicitly.
 
 ## Perspective audit
 Whose lived experience is represented in the signals and whose isn't. Cross-reference the "whose voice is still missing" entries from the card notes. Name specific populations, roles, or viewpoints that are absent.
@@ -6946,7 +7197,7 @@ ${AI_RULES}
       updateAddButtonVisibility();
       updateClusterProgressChip();
       scheduleSave();
-      toast('Unframed — its cards can be committed again.');
+      toast('Unmapped — its cards can be committed again.');
     }
 
     // --- Commit to a Problem Situation ---
@@ -6991,8 +7242,8 @@ ${AI_RULES}
       const warningEl = document.getElementById('validation-warning');
       if (!group.roots.length) {
         const msg = selectedNodeIds.size
-          ? 'Nothing in your selection is left to commit — it’s already framed.'
-          : 'Everything on the board is already framed. Build new cards to commit another situation.';
+          ? 'Nothing in your selection is left to commit — it’s already mapped.'
+          : 'Everything on the board is already mapped. Build new cards to commit another situation.';
         warningEl.textContent = '';
         toast(msg);
         return;
@@ -7022,7 +7273,9 @@ ${AI_RULES}
       updateClusterProgressChip();
       resetView();   // zoom out to fit all lattices + boxes
       scheduleSave();
-      toast('Framed. Name and describe the problem situation on the box, then export.');
+      // The situation is mapped. Now introduce the 7 evidence types — in
+      // Dorst's order — via the guided classify phase.
+      enterClassifyPhase();
     }
     // Kept as no-ops for any lingering references in the (now-unused) modal.
     function onCommitRowChange() {}
@@ -7030,13 +7283,104 @@ ${AI_RULES}
     function updateCommitContinueButton() {}
     function confirmCommit() { closeModal('commit-modal'); }
 
+    // --- Classify phase: introduce the 7 evidence types in Dorst's order ---
+    // A guided, one-type-at-a-time stepper that runs ON the board after the
+    // situation is mapped. Classification is encouraged but skippable, and the
+    // phase is re-enterable from the board and the workspace. Nothing here is
+    // terminal — it feeds back into the loop.
+    let classifyStepIndex = 0;
+    function enterClassifyPhase() {
+      if (tutorialMode) return;
+      if (!hasSituations()) {
+        toast('Map a problem situation first — then you can classify its evidence.');
+        return;
+      }
+      appState.classifyPhase = true;
+      classifyStepIndex = 0;
+      if (appState.currentScreen !== 'board') {
+        goToScreen('board'); // renders nodes + step indicator
+      } else {
+        renderAllNodes();
+        renderAllEdges();
+        renderStepIndicator();
+      }
+      renderClassifyGuide();
+      scheduleSave();
+    }
+    function exitClassifyPhase(toWorkspace) {
+      appState.classifyPhase = false;
+      removeClassifyGuide();
+      const board = document.getElementById('board-workspace');
+      if (board) board.removeAttribute('data-classify-type');
+      renderAllNodes();
+      renderAllEdges();
+      scheduleSave();
+      if (toWorkspace) {
+        goToScreen('workspace');
+      } else {
+        renderStepIndicator();
+      }
+    }
+    function setClassifyStep(i) {
+      classifyStepIndex = Math.max(0, Math.min(CARD_TYPES.length - 1, i));
+      renderClassifyGuide();
+    }
+    function removeClassifyGuide() {
+      const g = document.getElementById('classify-guide');
+      if (g) g.remove();
+      const board = document.getElementById('board-workspace');
+      if (board) board.removeAttribute('data-classify-type');
+    }
+    function renderClassifyGuide() {
+      // The tutorial sets classifyPhase to expose the picker, but it runs its
+      // own scripted coaching — never overlay the product guide on top of it.
+      if (tutorialMode || !appState.classifyPhase) { removeClassifyGuide(); return; }
+      let g = document.getElementById('classify-guide');
+      if (!g) {
+        g = document.createElement('div');
+        g.id = 'classify-guide';
+        // Anchor to the positioned canvas panel so bottom/left resolve to it.
+        const host = document.querySelector('#board-workspace .panel-center') || document.getElementById('board-workspace');
+        host.appendChild(g);
+      }
+      const t = CARD_TYPES[classifyStepIndex];
+      const n = classifyStepIndex + 1;
+      const total = CARD_TYPES.length;
+      const phaseLabel = t.phase === 'arch' ? 'Archaeology &amp; Context' : 'Field mapping';
+      const typedCount = appState.cards.filter(c => c.tier === 1 && c.cardType === t.id).length;
+      // Spotlight the current type's chips on every card.
+      const board = document.getElementById('board-workspace');
+      if (board) board.setAttribute('data-classify-type', t.id);
+      g.innerHTML = `
+        <div class="classify-guide-inner">
+          <div class="classify-guide-head">
+            <span class="classify-guide-step">Type ${n} of ${total} · ${phaseLabel}</span>
+            <button type="button" class="classify-guide-skip" onclick="exitClassifyPhase(true)">Continue to deepen →</button>
+          </div>
+          <div class="classify-guide-body">
+            <span class="classify-guide-glyph type-glyph" style="color:${t.color};" aria-hidden="true">${t.icon}</span>
+            <div>
+              <h3 class="classify-guide-title" style="color:${t.color};">${escapeHtml(t.label)}</h3>
+              <p class="classify-guide-desc">${escapeHtml(t.desc)}. <strong>Tag any evidence card that is a ${escapeHtml(t.label)}</strong> using its type picker.${typedCount ? ` <span class="classify-guide-count">${typedCount} tagged</span>` : ''}</p>
+            </div>
+          </div>
+          <div class="classify-guide-foot">
+            <button type="button" class="btn btn-outline" ${classifyStepIndex === 0 ? 'disabled' : ''} onclick="setClassifyStep(${classifyStepIndex - 1})">‹ Back</button>
+            ${n < total
+              ? `<button type="button" class="btn btn-primary" onclick="setClassifyStep(${classifyStepIndex + 1})">Next type ›</button>`
+              : `<button type="button" class="btn btn-primary" onclick="exitClassifyPhase(true)">Done — continue to deepen →</button>`}
+            <span class="classify-guide-hint">You can come back and re-classify anytime.</span>
+          </div>
+        </div>`;
+    }
+
     // --- Workspace (per-committed-cluster deepening) ---
     // --- Workspace = the single Problem Situation ---
     function renderWorkspace() {
       const titleEl = document.getElementById('workspace-title');
       if (titleEl) titleEl.textContent = appState.settings.title
         ? `Problem Situation: ${appState.settings.title}`
-        : 'Frame the Problem Situation';
+        : 'Map the Problem Situation';
 
       const container = document.getElementById('workspace-cards-container');
       const jumpBar = document.getElementById('workspace-jump-bar');
@@ -7072,7 +7416,7 @@ ${AI_RULES}
             <span class="ws-card-tier" style="background:var(--tier-4);color:var(--ghost-white);">Problem Situation${many ? ' ' + n : ''}</span>
             ${many && (s.title || '').trim() ? `<h3 style="margin:0;">${escapeHtml(s.title)}</h3>` : ''}
           </div>
-          <p class="field-hint">An open, complex, networked condition synthesized from what you framed. This is not a problem to solve yet — it's a situation to frame.</p>
+          <p class="field-hint">An open, complex, networked condition synthesized from what you mapped. This is not a problem to solve yet — it's a situation to map and understand.</p>
         </header>
 
         <section class="workspace-section">
@@ -7092,7 +7436,7 @@ ${AI_RULES}
         <section class="workspace-section">
           <div class="ws-stage-label">Stage 2 — Evidence landscape &amp; research agenda</div>
           <label for="sit-coverage-${n}">What the evidence covers</label>
-          <p class="field-hint">Look at your evidence trail. Which of Dorst's seven types do you have? (History, counterfactual, boundary, flux, player, value, problem.) Which are thin or missing entirely?</p>
+          <p class="field-hint">Look at your evidence trail. Which of Dorst's seven types do you have? (History, counterfactual, problem, boundary, flux, player, value.) Which are thin or missing entirely?</p>
           <textarea id="sit-coverage-${n}" placeholder="Strong on ___, thin on ___, nothing at all on ___" oninput="updateSituationField('${s.id}', 'evidenceCoverage', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.evidenceCoverage || '')}</textarea>
           <label for="sit-agenda-${n}" style="margin-top:12px;">Research agenda — what I think is still missing</label>
           <p class="field-hint">Name the gaps as you see them: who you'd want to interview, what you'd survey, what you'd send into a deep-research tool (NotebookLM, Claude, Perplexity), what secondary sources you'd pull. Be specific — each gap is a named question with a method, not a vague "more research needed."</p>
@@ -7370,7 +7714,7 @@ ${AI_RULES}
           }).join('\n') || '(no cards yet)';
         return `# ${s.title || 'Untitled Problem Situation'}
 
-> A problem situation framed using Kees Dorst's Frame Creation method.
+> A problem situation mapped using Kees Dorst's Frame Creation method.
 > Built from ${cards.length} card${cards.length === 1 ? '' : 's'} covering ${sigSet.size} signal${sigSet.size === 1 ? '' : 's'} across the evidence ladder.
 > Exported ${appState.exportedAt || new Date().toISOString()}.
 
@@ -7412,11 +7756,11 @@ ${w(s.statusQuoBeneficiaries, '(not yet written)')}
 ### Pressure-testing the framing
 ${w(s.problematization, '(not yet written)')}`;
       });
-      if (!blocks.length) blocks.push('# Untitled Problem Situation\n\n(no problem situation framed yet)');
+      if (!blocks.length) blocks.push('# Untitled Problem Situation\n\n(no problem situation mapped yet)');
       const next = `---
 
 ## What comes next
-This situation is framed but not solved — and solving it is not the next step. The next steps in Frame Creation are:
+This situation is mapped but not solved — and solving it is not the next step. The next steps in Frame Creation are:
 
 1. **Map the field** — identify every player connected to this situation or a future resolution. Define each by their practices and currency, not their title. Look especially for players who share the values your themes surfaced — even in distant, unexpected domains.
 2. **Identify a client** — from the potential problem owners, who could own this situation or adopt a resolution? What would they need to see?
@@ -7459,7 +7803,7 @@ Upload this whole folder to Claude or ChatGPT and start with:
 
 ## Getting started with this folder
 
-This is a problem situation framed using Kees Dorst's Frame Creation method. The evidence trail runs from raw observations (signals) through typed evidence, patterns, and themes up to the situation itself.
+This is a problem situation mapped using Kees Dorst's Frame Creation method. The evidence trail runs from raw observations (signals) through typed evidence, patterns, and themes up to the situation itself.
 
 ### If you're picking up where someone left off
 Read \`problem-situation.md\` first — it has the situation description, the paradox, the evidence trail, and an honest accounting of what's still thin. Then browse the \`cards/\` folder: each card has a \`notes.md\` workbook, a \`deepen.md\` AI prompt, and an \`evidence.md\` trail. Start with the highest-tier cards and work down. Read critically — where is the evidence strong? Where is it a single source dressed up as triangulation?
@@ -7968,7 +8312,7 @@ ${AI_RULES}
 *Two or more signals triangulating on one claim. State the claim they make together.*
 
 ## What kind of evidence is this?
-*Decide the movement first — are you excavating the known problem (Archaeology & Context: history, counterfactual, boundary, flux, problem) or widening to the players and values of the field (Field mapping: player, value)? Classify it on the canvas, then deepen with the matching prompts.*
+*Decide the movement first — are you excavating the known problem (Archaeology & Context: history, counterfactual, problem, boundary, flux) or widening to the players and values of the field (Field mapping: player, value)? Classify it once the situation is mapped, then deepen with the matching prompts.*
 `,
       pattern: `## The mechanism
 *Not a topic — a mechanism. Cause → effect, with moving parts. What makes this happen?*
@@ -8524,6 +8868,8 @@ ${AI_RULES}
       const totalItems = appState.items.length;
       const sortedCount = Object.keys(appState.sorting.decisions).length;
       if (totalItems > 0 && sortedCount > 0 && sortedCount < totalItems) return 'sorting';
+      // Mid-concept refresh (no pool loaded yet): resume on the concept screen.
+      if (appState.currentScreen === 'concept' && totalItems === 0) return 'concept';
       return 'setup';
     }
 
