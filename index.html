@@ -2059,7 +2059,7 @@
     /* A self-contained dark strip so it stays legible on both the dark intro
        screens and the light canvas/workspace screens. */
     .step-indicator-mount:empty { display: none; }
-    .step-indicator { display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    .step-indicator { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
       gap: 4px 2px; padding: 7px 16px; background: var(--midnight); width: 100%; box-sizing: border-box; }
     .step-indicator .step-loop-note { flex-basis: 100%; text-align: center; font-size: var(--text-xs);
       color: var(--cloud); opacity: 0.6; margin: 3px 0 0; }
@@ -2081,220 +2081,255 @@
     .step-chip[data-reached="1"] .step-dot { background: var(--primary-teal); opacity: 1; }
     .step-sep { color: var(--cloud); opacity: 0.3; font-size: var(--text-xs); }
     .step-loop-icon { color: var(--primary-teal); opacity: 0.8; font-size: var(--text-sm); }
-    /* --- Concept screen --- */
-    #concept-screen { min-height: 100vh; display: flex; flex-direction: column; }
-    .concept-wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 64px; width: 100%; box-sizing: border-box; }
-    .concept-eyebrow { font-size: var(--text-xs); letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--primary-teal); margin-bottom: 12px; }
-    .concept-wrap h1 { font-size: var(--text-2xl); line-height: var(--lead-2xl); margin: 0 0 16px; color: var(--ghost-white); }
-    .concept-wrap .concept-lede { color: var(--cloud); margin-bottom: 8px; }
-    .concept-wrap .concept-loop { color: var(--cloud); opacity: 0.7; font-size: var(--text-sm); margin-bottom: 24px; }
-    #concept-input { width: 100%; box-sizing: border-box; min-height: 140px; resize: vertical;
-      font: inherit; font-size: var(--text-md); line-height: 1.55; padding: 16px 18px;
+
+    /* ====================================================================
+       Onboarding deck — a slideshow of full-screen panels (intro slides,
+       concept, sources) sharing one typographic system. Dark surface, a
+       single centred measure, generous vertical rhythm.
+       ==================================================================== */
+    #intro-screen, #concept-screen, #setup-screen {
+      position: fixed; inset: 0; padding: 0; background: var(--midnight); color: var(--ghost-white);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    /* Subtle, calm radial wash so panels don't read as flat black. */
+    #intro-screen::before, #concept-screen::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(120% 90% at 50% -10%, color-mix(in srgb, var(--primary-teal) 12%, transparent), transparent 60%),
+        radial-gradient(90% 70% at 110% 120%, color-mix(in srgb, var(--primary-teal) 8%, transparent), transparent 55%);
+    }
+
+    /* Shared chrome: a slim top bar and a bottom navigation rail. */
+    .deck-topbar { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-4); padding: clamp(16px, 3vh, 28px) clamp(20px, 5vw, 56px); flex: none; }
+    .deck-brand { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.16em; color: var(--cloud); opacity: 0.62; }
+    .deck-brand b { color: var(--primary-teal); font-weight: 700; }
+    .deck-skip { background: none; border: none; cursor: pointer; font: inherit;
+      font-size: var(--text-sm); font-weight: 600; color: var(--cloud); opacity: 0.7;
+      padding: 6px 10px; border-radius: var(--radius-2); transition: opacity 0.15s, background 0.15s; }
+    .deck-skip:hover { opacity: 1; background: rgba(255,255,255,0.06); }
+
+    /* The stage holds one centred measure; panels swap inside it. Auto margins
+       centre the content when there's room and let it scroll from the top when
+       it overflows (avoids the classic centred-flex clipping). */
+    .deck-stage { position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column;
+      align-items: center; padding: clamp(8px, 2vh, 24px) clamp(20px, 5vw, 56px); overflow-y: auto; }
+    .deck-stage > * { margin-block: auto; width: 100%; max-width: 720px; }
+    .deck-measure.is-wide, .deck-stage > .is-wide { max-width: 920px; }
+    #setup-screen .deck-stage > .config-container { margin-block: clamp(8px, 3vh, 28px) auto; }
+
+    .deck-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: var(--text-xs);
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--primary-teal);
+      margin: 0 0 clamp(14px, 2.4vh, 22px); }
+    .deck-eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--primary-teal); opacity: 0.7; }
+    .deck-kicker { font-variant-numeric: tabular-nums; color: var(--cloud); opacity: 0.55; font-weight: 700; }
+    .deck-title { font-weight: 500; letter-spacing: var(--track-tight);
+      font-size: clamp(1.9rem, 1.2rem + 3.4vw, 3.4rem); line-height: 1.05; margin: 0 0 clamp(16px, 2.6vh, 26px);
+      color: var(--ghost-white); text-wrap: balance; }
+    .deck-title .accent { color: var(--primary-teal); }
+    .deck-lede { font-size: clamp(1.05rem, 0.95rem + 0.7vw, 1.4rem); line-height: 1.5; color: var(--cloud);
+      margin: 0 0 var(--space-4); max-width: 60ch; }
+    .deck-body p { font-size: var(--text-lg); line-height: 1.62; color: var(--cloud); opacity: 0.92;
+      max-width: 64ch; margin: 0 0 var(--space-4); }
+    .deck-body p:last-child { margin-bottom: 0; }
+    .deck-body strong { color: var(--ghost-white); font-weight: 600; }
+    .deck-body em { color: var(--ghost-white); font-style: italic; opacity: 0.92; }
+    .deck-note { margin-top: clamp(18px, 3vh, 28px); padding: var(--space-4) var(--space-5);
+      border-left: 3px solid var(--primary-teal); border-radius: 0 var(--radius-2) var(--radius-2) 0;
+      background: color-mix(in srgb, var(--primary-teal) 10%, transparent);
+      font-size: var(--text-base); line-height: var(--lead-base); color: var(--cloud); max-width: 64ch; }
+    .deck-note strong { color: var(--ghost-white); }
+
+    /* Compact triad for the theory / power panels. */
+    .deck-triad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(14px, 1.6vw, 22px);
+      margin-top: clamp(20px, 3.2vh, 32px); }
+    .deck-triad .cell { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: var(--radius-3); padding: clamp(14px, 1.6vw, 20px); }
+    .deck-triad .cell-eyebrow { font-size: var(--text-2xs); font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.14em; color: var(--primary-teal); display: block; margin-bottom: 6px; }
+    .deck-triad .cell h3 { font-size: var(--text-base); font-weight: 600; color: var(--ghost-white); margin: 0 0 6px; }
+    .deck-triad .cell p { font-size: var(--text-sm); line-height: var(--lead-sm); color: var(--cloud); opacity: 0.85; margin: 0; }
+    @media (max-width: 720px) { .deck-triad { grid-template-columns: 1fr; } }
+
+    /* Numbered journey list (the loop). */
+    .deck-flow { list-style: none; margin: clamp(18px, 2.6vh, 26px) 0 0; padding: 0;
+      display: grid; gap: var(--space-3); counter-reset: flow; max-width: 64ch; }
+    .deck-flow li { counter-increment: flow; display: grid; grid-template-columns: auto 1fr; gap: 14px;
+      align-items: baseline; font-size: var(--text-base); line-height: var(--lead-base); color: var(--cloud); }
+    .deck-flow li::before { content: counter(flow, decimal-leading-zero); font-variant-numeric: tabular-nums;
+      font-weight: 700; font-size: var(--text-sm); color: var(--primary-teal); opacity: 0.9; }
+    .deck-flow b { color: var(--ghost-white); font-weight: 600; }
+
+    /* Slides: only the active one shows, with a soft entrance. */
+    .intro-slide { display: none; }
+    .intro-slide.is-active { display: block; animation: deckIn 0.42s cubic-bezier(0.2,0.7,0.2,1); }
+    @keyframes deckIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .intro-slide.is-active { animation: none; } }
+
+    /* Bottom navigation rail: Back · dots · Next. */
+    .deck-nav { position: relative; z-index: 2; flex: none; display: grid;
+      grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--space-4);
+      padding: clamp(14px, 2.4vh, 24px) clamp(20px, 5vw, 56px) clamp(20px, 3vh, 34px);
+      border-top: 1px solid rgba(255,255,255,0.08); }
+    .deck-nav .nav-left { justify-self: start; }
+    .deck-nav .nav-right { justify-self: end; }
+    .deck-counter { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em;
+      font-variant-numeric: tabular-nums; color: var(--cloud); opacity: 0.55; margin-left: 12px; }
+    .deck-dots { display: flex; align-items: center; gap: 9px; justify-self: center; }
+    .deck-dot { width: 8px; height: 8px; border-radius: 50%; border: none; padding: 0; cursor: pointer;
+      background: var(--cloud); opacity: 0.32; transition: opacity 0.18s, transform 0.18s, background 0.18s; }
+    .deck-dot:hover { opacity: 0.6; }
+    .deck-dot[aria-current="true"] { opacity: 1; background: var(--primary-teal); transform: scale(1.25); }
+    .deck-ghost-btn { background: none; border: none; cursor: pointer; font: inherit; font-weight: 600;
+      font-size: var(--text-sm); color: var(--cloud); opacity: 0.8; padding: 9px 12px; border-radius: var(--radius-2);
+      transition: opacity 0.15s, background 0.15s; }
+    .deck-ghost-btn:hover { opacity: 1; background: rgba(255,255,255,0.06); }
+    .deck-ghost-btn[disabled] { opacity: 0.25; cursor: default; }
+    .deck-nav .btn { padding: 12px 26px; }
+
+    /* Concept & sources reuse the deck measure inside the stage. */
+    #concept-input { width: 100%; box-sizing: border-box; min-height: 132px; resize: vertical;
+      font: inherit; font-size: var(--text-lg); line-height: 1.55; padding: 16px 18px;
       border: 1px solid rgba(255,255,255,0.18); border-radius: var(--radius-3);
-      background: rgba(0,0,0,0.25); color: var(--ghost-white); margin-bottom: 24px; }
-    .concept-actions { display: flex; justify-content: flex-end; }
+      background: rgba(0,0,0,0.28); color: var(--ghost-white); margin: clamp(18px,3vh,26px) 0 0; }
+    #concept-input:focus { outline: none; border-color: var(--primary-teal); }
+    .concept-loop { color: var(--cloud); opacity: 0.7; font-size: var(--text-sm); line-height: var(--lead-sm); margin: 12px 0 0; }
+
+    /* Sources panel: the pool builder lives in a calm card on the stage. */
+    #setup-screen .config-container { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      padding: clamp(22px, 3vw, 34px); border-radius: var(--radius-3); width: 100%; max-width: 720px; }
+    #setup-screen .sources-head { margin-bottom: var(--space-6); }
+    #setup-screen .sources-title { font-size: clamp(1.55rem, 1.2rem + 1.4vw, 2.1rem); line-height: 1.1; margin-bottom: 10px; }
+    #setup-screen .sources-lede { font-size: var(--text-base); line-height: var(--lead-base); margin-bottom: 0; max-width: none; opacity: 0.85; }
+    #setup-screen .config-field label { font-size: var(--text-sm); }
+    @media (max-width: 600px) {
+      .deck-title { font-size: clamp(1.7rem, 1.2rem + 5vw, 2.2rem); }
+      .deck-nav { grid-template-columns: auto 1fr auto; }
+      .deck-counter { display: none; }
+    }
   </style>
 
-  <div id="concept-screen" class="hidden">
-    <div class="step-indicator-mount"></div>
-    <div class="concept-wrap">
-      <p class="concept-eyebrow">Start of the loop · Your initial concept</p>
-      <h1>What's your initial problem concept?</h1>
-      <p class="concept-lede">Before you touch a single source, name the starting hunch you're going to put to the test — the problem as you currently understand it. A sentence or two is plenty.</p>
-      <p class="concept-loop">This is provisional on purpose. As you validate it against your sources and signals, you'll come back and revise it — that's the whole point.</p>
-      <label for="concept-input" class="sr-only">Initial problem concept</label>
-      <textarea id="concept-input" placeholder="Right now I think the problem is…" oninput="updateConcept(this.value)"></textarea>
-      <div class="concept-actions">
-        <button class="btn btn-primary" onclick="goToSources()" style="min-width: 220px;">Continue → load your sources</button>
-      </div>
+  <div id="intro-screen">
+    <div class="deck-topbar">
+      <span class="deck-brand">The <b>Triangulator-inator</b></span>
+      <button type="button" class="deck-skip" onclick="introSkip()">Skip intro →</button>
     </div>
+    <div class="deck-stage" id="intro-stage">
+
+      <section class="intro-slide is-active" data-slide="0">
+        <p class="deck-eyebrow">A situation-mapping canvas <span class="deck-kicker">· after Kees Dorst</span></p>
+        <h1 class="deck-title">The Triangulator<span class="accent">-inator</span></h1>
+        <p class="deck-lede">Some people find a better answer. Others find a better question — and change everything. You're about to become the second kind.</p>
+        <div class="deck-body"><p>A field-mapping and theme-identification instrument by <strong>The Upskilling Labs</strong>, designed by <strong>Levy Strategic Design</strong>. Five short ideas, then you start.</p></div>
+      </section>
+
+      <section class="intro-slide" data-slide="1">
+        <p class="deck-eyebrow">The vibe-coding trap <span class="deck-kicker">· 01</span></p>
+        <h1 class="deck-title">Context is the ultimate flex.</h1>
+        <div class="deck-body">
+          <p>What you get out of an AI tool is entirely a function of what you put in. Feed it a shallow, industrial-era problem definition and it just hands you a mediocre, legacy solution — <em>faster</em>. When execution is free and instant, context is the only edge left.</p>
+          <p>So there's no magic AI in here doing the thinking for you. This is a simulator and a launchpad: it trains you to wade into chaos, extract the real human themes, and structure a problem worth solving — then carry that to any tool you like.</p>
+        </div>
+      </section>
+
+      <section class="intro-slide is-wide" data-slide="2">
+        <p class="deck-eyebrow">Your secret power <span class="deck-kicker">· 02</span></p>
+        <h1 class="deck-title">A stealth relational database.</h1>
+        <div class="deck-body"><p>It looks and feels like a fluid visual canvas. Underneath, it's a relational database engine — every card you connect builds a structured, many-to-many lattice, translating your intuition into a real data architecture beneath the surface.</p></div>
+        <div class="deck-triad">
+          <div class="cell"><span class="cell-eyebrow">Structure</span><h3>Web maps as lattices</h3><p>Connecting cards links your themes down through patterns and evidence to the exact signals you started with.</p></div>
+          <div class="cell"><span class="cell-eyebrow">Depth</span><h3>Enriched nodes</h3><p>Every card is a vault — markdown notes and primary/secondary sources bonded to the claim they support.</p></div>
+          <div class="cell"><span class="cell-eyebrow">Output</span><h3>Tech-ready export</h3><p>One export traverses the whole database into a clean .zip working folder, ready for any stack.</p></div>
+        </div>
+      </section>
+
+      <section class="intro-slide is-wide" data-slide="3">
+        <p class="deck-eyebrow">The method behind the madness <span class="deck-kicker">· 03</span></p>
+        <h1 class="deck-title">Experts reason differently.</h1>
+        <div class="deck-body"><p>We owe this paradigm to design scholar <strong>Kees Dorst</strong>. Every challenge has a <strong>WHAT</strong> (the elements), a <strong>HOW</strong> (the pattern connecting them), and an <strong>OUTCOME</strong>. Which you know determines how your brain reasons:</p></div>
+        <div class="deck-triad">
+          <div class="cell"><span class="cell-eyebrow">Deduction</span><h3>The Scientist</h3><p>Knows the WHAT and HOW; predicts the OUTCOME. Perfect for physics, useless for societal flux.</p></div>
+          <div class="cell"><span class="cell-eyebrow">Induction</span><h3>The Detective</h3><p>Knows the WHAT and OUTCOME; infers the missing HOW. Holmes reading a crime scene.</p></div>
+          <div class="cell"><span class="cell-eyebrow">Normal abduction</span><h3>The Reactive Fixer</h3><p>Knows the HOW and OUTCOME; engineers a WHAT to fix the symptom.</p></div>
+        </div>
+        <p class="deck-note"><strong>The trap:</strong> normal abduction is efficient for closed problems but fails in complex ones — it refuses to question the underlying HOW.</p>
+      </section>
+
+      <section class="intro-slide" data-slide="4">
+        <p class="deck-eyebrow">The breakthrough <span class="deck-kicker">· 04</span></p>
+        <h1 class="deck-title">Transcend the paradox.</h1>
+        <div class="deck-body">
+          <p>At the core of every intractable challenge is a <strong>paradox</strong> — valid requirements that mutually exclude each other. You can't compromise your way out; you have to widen the context until a new pattern becomes possible.</p>
+          <p>This tool gets you to a rigorous, evidence-backed <strong>map</strong> of the situation and the human themes beneath it — the groundwork a frame has to stand on. <em>Framing itself comes later</em>, in your own tools, once that map is sound.</p>
+        </div>
+      </section>
+
+      <section class="intro-slide" data-slide="5">
+        <p class="deck-eyebrow">The journey <span class="deck-kicker">· 05</span></p>
+        <h1 class="deck-title">Triangulate the chaos.</h1>
+        <ol class="deck-flow">
+          <li><span><b>Concept</b> — name the hunch you'll test.</span></li>
+          <li><span><b>Sources</b> — load the raw observation pool.</span></li>
+          <li><span><b>Sort</b> — separate signal from noise.</span></li>
+          <li><span><b>Validate</b> — triangulate signals into evidence.</span></li>
+          <li><span><b>Map</b> — synthesize the situation and its themes.</span></li>
+          <li><span><b>Classify</b> — tag evidence with Dorst's seven types.</span></li>
+          <li><span><b>Export</b> — leave with the data-rich bones.</span></li>
+        </ol>
+        <p class="deck-note"><strong>A loop, not a line.</strong> Nothing here is ever "done" — and you build the mental model by hand, so your intuition can later tell a real insight from confident nonsense.</p>
+      </section>
+
+    </div>
+    <nav class="deck-nav" aria-label="Intro navigation">
+      <div class="nav-left">
+        <button type="button" class="deck-ghost-btn" id="intro-back" onclick="introPrev()">← Back</button>
+        <span class="deck-counter" id="intro-counter"></span>
+      </div>
+      <div class="deck-dots" id="intro-dots" role="tablist" aria-label="Slides"></div>
+      <div class="nav-right">
+        <button type="button" class="btn btn-primary" id="intro-next" onclick="introNext()">Next →</button>
+      </div>
+    </nav>
   </div>
 
-  <div id="setup-screen">
+  <div id="concept-screen" class="hidden">
+    <div class="deck-topbar">
+      <span class="deck-brand">The <b>Triangulator-inator</b></span>
+      <button type="button" class="deck-skip" onclick="goToSources()">Skip → load sources</button>
+    </div>
     <div class="step-indicator-mount"></div>
-    <div class="config-container">
-      <header class="config-header landing-hero">
-        <p class="hero-eyebrow"><span>A problem&#8209;framing canvas</span><span class="hero-eyebrow-rule" aria-hidden="true"></span><span>After Kees Dorst's Frame Creation</span></p>
-        <h1>The<br>Triangulator<span class="hero-accent">-inator</span></h1>
-        <p class="hero-lede">Some people find a better answer. Others find a better question — and change everything. You're about to become the second kind.</p>
-        <div class="hero-cta">
-          <a href="#" class="btn btn-primary" onclick="startConcept(); return false;">Get started</a>
-          <a href="#" class="hero-cta-note" onclick="openImportModal(); return false;">or open a shared working folder</a>
-        </div>
+    <div class="deck-stage">
+      <div class="deck-measure">
+        <p class="deck-eyebrow">Start of the loop <span class="deck-kicker">· your concept</span></p>
+        <h1 class="deck-title">What's your initial problem concept?</h1>
+        <p class="deck-lede">Before you touch a single source, name the starting hunch you're going to put to the test — the problem as you understand it right now. A sentence or two is plenty.</p>
+        <label for="concept-input" class="sr-only">Initial problem concept</label>
+        <textarea id="concept-input" placeholder="Right now I think the problem is…" oninput="updateConcept(this.value)"></textarea>
+        <p class="concept-loop">Provisional on purpose — as the evidence pushes back, you'll come back and revise it. That's the whole point.</p>
+      </div>
+    </div>
+    <nav class="deck-nav" aria-label="Concept navigation">
+      <div class="nav-left"><button type="button" class="deck-ghost-btn" onclick="goToScreen('intro')">← Intro</button></div>
+      <div class="deck-dots"></div>
+      <div class="nav-right"><button type="button" class="btn btn-primary" onclick="goToSources()">Continue → sources</button></div>
+    </nav>
+  </div>
+
+  <div id="setup-screen" class="hidden">
+    <div class="deck-topbar">
+      <span class="deck-brand">The <b>Triangulator-inator</b></span>
+      <button type="button" class="deck-skip" onclick="openImportModal()">Open a shared folder</button>
+    </div>
+    <div class="step-indicator-mount"></div>
+    <div class="deck-stage">
+      <div class="config-container">
+      <header class="sources-head">
+        <p class="deck-eyebrow">Step two <span class="deck-kicker">· your sources &amp; signals</span></p>
+        <h1 class="deck-title sources-title">Load the raw material.</h1>
+        <p class="deck-lede sources-lede">Field notes, interview fragments, articles, statistics, policies, anecdotes — the cloud you'll sift for signal. Start with the sample survey or bring your own.</p>
       </header>
 
-      <section class="landing-section" aria-labelledby="landing-h-behold">
-        <div class="landing-section-head"><span class="landing-index">01</span><span class="landing-kicker">Behold!</span></div>
-        <h2 class="landing-statement" id="landing-h-behold">You are going to need the right gadget.</h2>
-        <div class="landing-cols">
-          <p>Right now, everyone wants to dive straight into building. You are likely here because you want to upskill in AI, and the internet is currently obsessed with "vibe coding" — jumping into an LLM, firing off a few natural language prompts, and watching the machine generate code, workflows, and entire applications in seconds. It is incredibly tempting to skip the messy, ambiguous work of problem-framing and go straight to the magic.</p>
-          <p>But if you are going to untangle the deeply networked chaos of modern problems — or, you know, take over the Tri-State Area — you are going to need the right gadget.</p>
-          <p>Welcome to <strong>The Triangulator-inator</strong>, a field mapping and theme identification tool by The Upskilling Labs, designed by Levy Strategic Design. And yes, true to its namesake, it <em>does</em> actually have a self-destruct button where you can vaporize your entire board with ease if you need a clean slate.</p>
-          <p>But unlike a certain mad scientist's inventions, the underlying architecture actually works — and your progress will absolutely not be thwarted by a semi-aquatic egg-laying mammal in a fedora.</p>
-        </div>
-      </section>
-
-      <section class="landing-section" aria-labelledby="landing-h-trap">
-        <div class="landing-section-head"><span class="landing-index">02</span><span class="landing-kicker">The vibe-coding trap</span></div>
-        <h2 class="landing-statement" id="landing-h-trap">Context is the ultimate flex.</h2>
-        <div class="landing-cols">
-          <p>Here is the hard truth of the AI era: <strong>what you get out of an AI tool is entirely a function of what you put into it.</strong> If you feed an AI a shallow, industrial-era problem definition, it will not give you a paradigm-shifting innovation. It will just give you a mediocre, legacy solution <em>faster</em>. In a world where execution is effectively free and instant, context is the ultimate flex.</p>
-          <p>We start here — before you write a single line of code or build an automation — because having deep, accurate, structurally sound context is the single most critical skill you can develop today. The professionals who win tomorrow won't be the ones who type the fastest prompts; they will be the ones who can wade into chaos, extract the true human themes, and feed the machine a fundamentally superior problem frame.</p>
-        </div>
-        <div class="landing-callout"><strong>And before you ask: no, there is no magic AI inside this app doing the thinking for you.</strong> The Triangulator-inator is a simulator and an architectural launchpad. It is designed to teach you <em>how</em> to think about chaotic data, <em>how</em> to build the high-level cognitive context required to decode complexity, and <em>how</em> to perfectly structure an intractable problem so that you can feed it into <em>any</em> modern tech stack. (The ✨ buttons you'll meet along the way generate method-grounded prompts you carry to the LLM of your choice — the thinking stays yours.)</div>
-      </section>
-
-      <section class="landing-section" aria-labelledby="landing-h-power">
-        <div class="landing-section-head"><span class="landing-index">03</span><span class="landing-kicker">Your secret power</span></div>
-        <h2 class="landing-statement" id="landing-h-power">A stealth relational database.</h2>
-        <p class="landing-intro">Navigating the messy reality of a complex problem shouldn't mean losing your best ideas to scattered sticky notes, lost documents, and photos of a whiteboard you will never look at again. While the Triangulator-inator looks and feels like a fluid, visual canvas, it is actually a stealthy, high-powered relational database engine. As you work, the app captures your cognitive leaps in real time, translating your human intuition into a strict, actionable data architecture — building the "bones" of your project invisibly beneath the surface.</p>
-        <div class="triad-grid">
-          <div class="triad-cell">
-            <h3>Web maps as data lattices</h3>
-            <p>When you drag, drop, and connect cards on the canvas, you aren't just drawing lines on a screen. You are actively building a structured, many-to-many data lattice — linking your themes down through patterns and classified evidence to the exact granular survey signals you started with.</p>
-          </div>
-          <div class="triad-cell">
-            <h3>Deeply enriched nodes</h3>
-            <p>Every card on your web map is a vault. As you explore the problem, you enrich these nodes with deep context — writing extensive markdown notes and attaching primary and secondary source documents directly to the cards they support. Your raw evidence is permanently, structurally bonded to your strategic claims.</p>
-          </div>
-          <div class="triad-cell">
-            <h3>Instant tech-ready architecture</h3>
-            <p>You never have to manually transcribe a brainstorm again. With a single export, the tool traverses your database into a .zip working folder: a discrete sub-folder for every card, auto-generated notes.md files, an evidence trail tracing its roots, and your attached sources perfectly organized.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="landing-section" aria-labelledby="landing-h-journey">
-        <div class="landing-section-head"><span class="landing-index">04</span><span class="landing-kicker">The journey</span></div>
-        <h2 class="landing-statement" id="landing-h-journey">Triangulate the chaos and launch.</h2>
-        <ol class="journey-steps">
-          <li>
-            <h3>Name your initial concept</h3>
-            <p>Before you touch a single source, state the starting hunch you're going to put to the test — the problem as you currently understand it. It's provisional on purpose: the whole point is to let the evidence push back on it.</p>
-          </li>
-          <li>
-            <h3>Load the pool</h3>
-            <p>You begin with chaos. The app ingests a cloud of qualitative survey data — like the included Civics &amp; Elections field survey — or your own observations via CSV, with a built-in AI prompt to convert any dataset.</p>
-          </li>
-          <li>
-            <h3>Sort signal from noise</h3>
-            <p>Work the pool one card at a time: discard the noise, keep the signals, flag the ★ supers that might reframe everything. You learn to analyze the sector's historical routines and isolate the core structural paradoxes causing the current deadlock.</p>
-          </li>
-          <li>
-            <h3>Validate on the canvas</h3>
-            <p>Step into the visual workspace and test your concept against the field. Connect signals that point at the same thing to mint plain evidence and name the claim — building out the foundational lattice of your relational database. (No type labels yet — that comes later.)</p>
-          </li>
-          <li>
-            <h3>Map the situation &amp; its themes</h3>
-            <p>Climb the ladder until the open, networked condition underneath comes into view. Name and describe the patterns and themes, then map them into a single Problem Situation. You're mapping and understanding here — not yet framing.</p>
-          </li>
-          <li>
-            <h3>Classify the evidence</h3>
-            <p>Only now do the seven evidence types appear — introduced one at a time in Kees Dorst's order, from Archaeology (History, Counterfactual) through the paradox (Problem, Boundary, Flux) out to the Field (Player, Value). Tag each card and see where your coverage is thin.</p>
-          </li>
-          <li>
-            <h3>Export and launch</h3>
-            <p>Walk away with a print-ready artifact, or the full .zip working folder — the exact, data-rich bones of your project, completely organized into a clean file structure.</p>
-          </li>
-        </ol>
-        <div class="landing-callout"><strong>This is a loop, not a line.</strong> Nothing here is ever "done." As each step teaches you something, you'll circle back — revise the concept, add sources, re-sort, reconnect, re-map, re-classify. And because the data model is standardized, you can take your structural outline, your context-rich notes, and your source folders into <strong>any AI tool, vibe-coding environment, or tech stack of your own choosing</strong>. Stop reacting to symptoms. Start architecting the future. (Just watch out for that self-destruct button.)</div>
-      </section>
-
-      <section class="landing-section" aria-labelledby="landing-h-theory">
-        <div class="landing-section-head"><span class="landing-index">05</span><span class="landing-kicker">The theory</span></div>
-        <h2 class="landing-statement" id="landing-h-theory">The method behind the madness.</h2>
-        <div class="landing-cols">
-          <p>Now that you're properly terrified of vibe coding yourself into a ditch, let's look under the hood at the cognitive science of how experts solve problems — and give credit where credit is profoundly due. We owe this entire paradigm shift to design scholar <strong>Kees Dorst</strong>, who systematically articulated the practice of Frame Creation — out of longitudinal studies of expert designers, architectural practices, and artistic interventions — to rescue organizations from their own cognitive deadlocks.</p>
-          <p>If you've ever felt like your projects get stuck in an endless loop of organizational whack-a-mole, you aren't crazy — you're experiencing an <strong>ontological mismatch</strong>: you're trying to use industrial-era, linear logic to solve post-industrial, hyper-connected problems.</p>
-        </div>
-        <p class="landing-intro">To elucidate the genius of expert designers, Dorst used formal logic to compare how different professions approach the fundamental equation of causality. Every professional challenge consists of three interacting elements: the <strong>WHAT</strong> (the elements — physical things, actors, systems), the <strong>HOW</strong> (the working method — the pattern of relationships connecting them), and the <strong>OUTCOME</strong> (the final observed value). Depending on how many of these variables you know, your brain defaults to one of three reasoning patterns:</p>
-        <div class="triad-grid">
-          <div class="triad-cell">
-            <span class="triad-eyebrow">Deduction</span>
-            <h3>The Scientist</h3>
-            <p><strong>Knows:</strong> the WHAT and the HOW. <strong>Goal:</strong> predict the OUTCOME. Know the mass of planets and the laws of gravity, and you can safely deduce exact future planetary positions. Great for the hard sciences — useless for navigating dynamic societal shifts.</p>
-          </div>
-          <div class="triad-cell">
-            <span class="triad-eyebrow">Induction</span>
-            <h3>The Detective</h3>
-            <p><strong>Knows:</strong> the WHAT and the OUTCOME. <strong>Goal:</strong> hypothesize the missing HOW. Sherlock Holmes observes a crime scene (OUTCOME) and suspects (WHAT), and creatively induces the narrative of the crime (HOW).</p>
-          </div>
-          <div class="triad-cell">
-            <span class="triad-eyebrow">Normal abduction</span>
-            <h3>The Reactive Fixer</h3>
-            <p><strong>Knows:</strong> the HOW and the OUTCOME. <strong>Goal:</strong> engineer the missing WHAT. Desired outcome: an energy rush in the morning. Known method: chemical stimulation via caffeine. The WHAT simply becomes the engineering of a coffee machine.</p>
-          </div>
-        </div>
-        <div class="landing-callout"><strong>The trap:</strong> normal abduction is highly efficient for closed problems, but fails catastrophically in complex, dynamic environments because it stubbornly refuses to question the underlying HOW. When handed a messy problem, your brain locks down an established institutional logic and frantically tries to engineer a WHAT to fix the symptom.</div>
-      </section>
-
-      <section class="landing-section" aria-labelledby="landing-h-abduction">
-        <div class="landing-section-head"><span class="landing-index">06</span><span class="landing-kicker">The breakthrough</span></div>
-        <h2 class="landing-statement" id="landing-h-abduction">Transcending the paradox.</h2>
-        <div class="landing-cols">
-          <p>The breakthrough of expert design practice lies in <strong>design abduction</strong>. With open, networked societal and organizational problems, you only possess a deep understanding of the desired value — the OUTCOME. Both the WHAT and the HOW are completely unknown. Because two variables are missing, the problem cannot be solved sequentially: you must simultaneously propose a new pattern of relationships (the HOW) and the corresponding elements (the WHAT), testing them in conjunction.</p>
-          <p><strong>The act of proposing this hypothetical, novel pattern of relationships is the definition of "framing."</strong> A frame is a strategic thought tool — often expressed as a metaphor or an organizational principle — that rearticulates the entire problem arena, creating an entirely new standpoint from which the problem becomes solvable. As organizational theorist Armand Hatchuel notes, it is the difference between relying on known alternatives to find "a good movie to see" and creatively expanding concepts to design "a good time."</p>
-          <p>Why go through all this cognitive heavy lifting? Because at the core of the most intractable challenges lies a <strong>paradox</strong> — conflicting, mutually exclusive requirements that are all fundamentally valid. Traditional problem-solving leaves an organization with two unsatisfactory options: prioritize one side at the expense of the other, or negotiate a mediocre compromise.</p>
-          <p>Frame Creation offers a third path: <strong>transcending the paradox altogether</strong>. A paradox is only insurmountable within the boundaries of its original, predefined context — so you deliberately widen that context. You look at the broader field of actors, extract the universal human themes beneath, and establish a new frame that satisfies the conflicting considerations simultaneously. The Triangulator-inator does not let you bypass this groundwork: it isolates the paradox, maps the field, and forces you to extract the themes — assembling the rigorous, evidence-backed map a frame has to stand on. Framing itself comes after, once that map is sound.</p>
-        </div>
-      </section>
-
-      <section class="landing-section" aria-labelledby="landing-h-canvas">
-        <div class="landing-section-head"><span class="landing-index">07</span><span class="landing-kicker">The canvas</span></div>
-        <h2 class="landing-statement" id="landing-h-canvas">Not a whiteboard. A data lattice.</h2>
-        <div class="landing-cols">
-          <p>When you first open the workspace, you will be confronted with a vast cloud of observation cards pulled from expert, practitioner, and public survey data. It looks like chaos, because modern problem environments are a cacophony of voices. But this canvas is not a generic brainstorming whiteboard — it is a strict data model: a directed acyclic graph where every card type represents a different layer of cognitive abstraction.</p>
-          <p><strong>Step zero: sift the cloud.</strong> Before you connect a single line, you must sort every observation into signal or noise. Swipe left (←) to discard <strong>noise</strong> — superficial complaints, ad-hoc reactions, out-of-scope venting. Swipe right (→) to keep a <strong>signal</strong> — real evidence of systemic behavior, a practitioner insight, a hard environmental reality. Swipe up (↑) to flag a <strong>★ super signal</strong>: one that reframes the situation rather than merely confirming it. Clear the static, and your foundation is pure, high-fidelity ground truth.</p>
-        </div>
-        <p class="landing-intro">With your signals locked in, you climb the four tiers of the lattice, transforming raw observations into strategic paradigms:</p>
-        <ol class="explainer-steps">
-        <li class="explainer-step" data-step="1">
-          <span class="explainer-step-num" aria-hidden="true">01</span>
-          <div>
-            <h3>Signal</h3>
-            <p>Your verified, high-fidelity observations — the survey data points and practitioner notes that survived the sort. Your anchor to reality: the final strategy can never be accused of being "fluffy," because it is structurally bonded to the exact words of people in the field.</p>
-          </div>
-        </li>
-        <li class="explainer-step" data-step="2">
-          <span class="explainer-step-num" aria-hidden="true">02</span>
-          <div>
-            <h3>Evidence</h3>
-            <p>Two or more signals pointing at the same thing, triangulated into a single claim. Where a hunch becomes defensible. (You'll classify each into Dorst's seven types later, once the situation is mapped.)</p>
-          </div>
-        </li>
-        <li class="explainer-step" data-step="3">
-          <span class="explainer-step-num" aria-hidden="true">03</span>
-          <div>
-            <h3>Pattern</h3>
-            <p>Clusters of connected evidence — stakeholder groups repeating the same systemic actions and historical routines. Hundreds of data points become distinct, visible institutional and cultural behaviors.</p>
-          </div>
-        </li>
-        <li class="explainer-step" data-step="4">
-          <span class="explainer-step-num" aria-hidden="true">04</span>
-          <div>
-            <h3>Theme</h3>
-            <p>The deep, universal human conditions beneath your patterns — neutral realities like identity preservation, fear of risk, or spatial isolation. The core pivot of Dorst's philosophy, enriched with your notes and sources.</p>
-          </div>
-        </li>
-      </ol>
-        <p class="landing-footnote">Higher tiers stay locked until every card beneath them is named and described — every claim rests on examined ones. When your themes are named, you push the map into the problem-situation workbook and synthesize the whole ladder into one open, complex condition — mapped, with its full evidence trail attached. That mapped situation is the launchpad for framing, which comes later, in your own tools.</p>
-      </section>
-
-      <section class="landing-section" aria-labelledby="landing-h-intuition">
-        <div class="landing-section-head"><span class="landing-index">08</span><span class="landing-kicker">The intuition engine</span></div>
-        <h2 class="landing-statement" id="landing-h-intuition">Why you must do this by hand.</h2>
-        <div class="landing-cols">
-          <p>In an era where you could easily upload a CSV of survey data into an LLM and ask it to "find the themes," why are we forcing you to manually drag, drop, read, and connect these cards yourself? <strong>Because you are building something vastly more important than a database: you are building a mental model.</strong> By physically wrestling with the data, touching the individual signals, and making the deliberate choice to connect <em>this</em> pattern to <em>that</em> theme, you are mapping the entire field directly into your own brain.</p>
-          <p>This deep, manual cognitive immersion primes your intuition — and when you eventually take this architecture into an AI tool, your intuition is the only defense you have. It is the finely tuned radar that will tell you if the AI's generated output is actually a brilliant, paradigm-shifting solution, or just confidently delivered, hallucinated nonsense. You cannot outsource the context-building phase to a machine without outsourcing your own strategic judgment.</p>
-        </div>
-        <div class="landing-callout"><strong>Let's be completely candid, though: there are absolutely no guarantees.</strong> AI tools are still prone to hallucinations, logic loops, and occasional bouts of utter nonsense. If you give it garbage context, it will generate hyper-accelerated garbage solutions. But if you feed it the data-rich, human-validated bones generated by this tool — backed by your fully primed intuition — you drastically stack the deck in your favor. You give the machine a fighting chance to generate something truly exceptional.</div>
-      </section>
-
-      <section class="landing-section" aria-labelledby="landing-h-start">
-        <div class="landing-section-head"><span class="landing-index">09</span><span class="landing-kicker">Start here</span></div>
-        <h2 class="landing-statement" id="landing-h-start">Start with what you know.</h2>
-        <div class="setup-card">
       <div class="config-field">
         <label for="config-title">Name your web map</label>
         <input type="text" id="config-title" class="config-input" value="Civics &amp; Elections: Signal Pool">
@@ -2345,17 +2380,16 @@
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
-        <button class="btn btn-outline" onclick="skipSortingToBoard()" style="min-width: 120px;">Skip to Canvas</button>
-        <button class="btn btn-primary" onclick="startSorting()" style="min-width: 160px;">Start Sorting</button>
       </div>
-        </div>
-      </section>
-
-      <footer class="landing-colophon">
-        <p>An open-source project created for <a href="https://github.com/TheUpskillingLabs/triangles" target="_blank" rel="noopener">The Upskilling Labs</a> by Levy Strategic Design</p>
-      </footer>
     </div>
+    <nav class="deck-nav" aria-label="Sources navigation">
+      <div class="nav-left"><button type="button" class="deck-ghost-btn" onclick="goToScreen('concept')">← Concept</button></div>
+      <div class="deck-dots"></div>
+      <div class="nav-right">
+        <button type="button" class="btn btn-outline" onclick="skipSortingToBoard()">Skip to Canvas</button>
+        <button type="button" class="btn btn-primary" onclick="startSorting()">Start Sorting →</button>
+      </div>
+    </nav>
   </div>
 
   <div id="sorting-screen" class="hidden">
@@ -2563,7 +2597,7 @@
         <h3 id="commit-modal-title">Pick the patterns you'll defend</h3>
       </div>
       <div class="modal-body">
-        <p>These are the patterns you're willing to stand behind. Choose 2–3 with enough signal density to build a real case — you'll map the stakeholders and pressure-test the framing before submitting.</p>
+        <p>These are the patterns you're willing to stand behind. Choose 2–3 with enough signal density to build a real case — you'll map the stakeholders and pressure-test the map before submitting.</p>
         <div id="commit-warning" class="commit-warning hidden"></div>
         <div id="commit-cluster-list" class="commit-cluster-list" role="group" aria-label="Clusters available to commit"></div>
         <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
@@ -2859,7 +2893,7 @@
         canvasViewState: 'all',
         submittedAt: null,
         exportedAt: null,
-        currentScreen: 'setup',
+        currentScreen: 'intro',
         boardIntroSeen: false, // first-canvas assignment popup shown once
         // Classify phase: the 7 evidence types are introduced only AFTER the
         // problem situation is mapped. False during the validate phase so the
@@ -3068,8 +3102,8 @@
       parsed.cards.forEach(c => { if (typeof c.source !== 'string' || !c.source) delete c.source; });
       if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
       if (typeof parsed.exportedAt === 'undefined') parsed.exportedAt = null;
-      const VALID_SCREENS = ['concept', 'setup', 'sorting', 'board', 'workspace', 'artifact'];
-      if (!parsed.currentScreen || !VALID_SCREENS.includes(parsed.currentScreen)) parsed.currentScreen = 'setup';
+      const VALID_SCREENS = ['intro', 'concept', 'setup', 'sorting', 'board', 'workspace', 'artifact'];
+      if (!parsed.currentScreen || !VALID_SCREENS.includes(parsed.currentScreen)) parsed.currentScreen = 'intro';
       if (!parsed.nodes || typeof parsed.nodes !== 'object') parsed.nodes = {};
       if (!parsed.view || typeof parsed.view !== 'object') parsed.view = { zoom: 1, panX: 0, panY: 0 };
       if (typeof parsed.view.zoom !== 'number') parsed.view.zoom = 1;
@@ -3364,13 +3398,16 @@
 
     function goToScreen(name) {
       appState.currentScreen = name;
+      document.getElementById('intro-screen').classList.toggle('hidden', name !== 'intro');
       document.getElementById('concept-screen').classList.toggle('hidden', name !== 'concept');
       document.getElementById('setup-screen').classList.toggle('hidden', name !== 'setup');
       document.getElementById('sorting-screen').classList.toggle('hidden', name !== 'sorting');
       document.getElementById('board-workspace').classList.toggle('hidden', name !== 'board');
       document.getElementById('workspace-screen').classList.toggle('hidden', name !== 'workspace');
       document.getElementById('artifact-screen').classList.toggle('hidden', name !== 'artifact');
-      if (name === 'concept') {
+      if (name === 'intro') {
+        renderIntro();
+      } else if (name === 'concept') {
         renderConceptScreen();
       } else if (name === 'sorting') {
         renderSortingScreen();
@@ -3390,17 +3427,40 @@
       tutorialNotify('screen', { name });
     }
 
+    // --- Intro slideshow (the onboarding deck) ---
+    let introSlide = 0;
+    function introSlides() { return [...document.querySelectorAll('#intro-stage .intro-slide')]; }
+    function renderIntro() {
+      const slides = introSlides();
+      const total = slides.length;
+      if (!total) return;
+      introSlide = Math.max(0, Math.min(total - 1, introSlide));
+      slides.forEach((el, i) => el.classList.toggle('is-active', i === introSlide));
+      const back = document.getElementById('intro-back');
+      if (back) back.disabled = introSlide === 0;
+      const next = document.getElementById('intro-next');
+      if (next) next.textContent = introSlide >= total - 1 ? 'Name your concept →' : 'Next →';
+      const pad = n => String(n).padStart(2, '0');
+      const counter = document.getElementById('intro-counter');
+      if (counter) counter.textContent = `${pad(introSlide + 1)} / ${pad(total)}`;
+      const dots = document.getElementById('intro-dots');
+      if (dots) dots.innerHTML = slides.map((_, i) =>
+        `<button type="button" class="deck-dot" role="tab" aria-label="Slide ${i + 1}"${i === introSlide ? ' aria-current="true"' : ''} onclick="introGoTo(${i})"></button>`).join('');
+      const stage = document.getElementById('intro-stage');
+      if (stage) stage.scrollTop = 0;
+    }
+    function introGoTo(i) { introSlide = i; renderIntro(); }
+    function introNext() {
+      if (introSlide >= introSlides().length - 1) { goToScreen('concept'); return; }
+      introSlide++; renderIntro();
+    }
+    function introPrev() { if (introSlide > 0) { introSlide--; renderIntro(); } }
+    function introSkip() { goToScreen('concept'); }
+
     // --- The initial problem concept (start of the loop) ---
     function startConcept() { goToScreen('concept'); }
-    // Setup screen doubles as the marketing landing; send "Sources" navigation
-    // to the pool builder near the bottom rather than the top of the hero.
-    function goToSources() {
-      goToScreen('setup');
-      requestAnimationFrame(() => {
-        const anchor = document.getElementById('landing-h-start');
-        if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
+    // The sources panel is its own screen now (no marketing scroll).
+    function goToSources() { goToScreen('setup'); }
     function updateConcept(value) {
       appState.settings.concept = value;
       updateBoardConceptBanner();
@@ -4209,7 +4269,7 @@
       if (card.tier === 3) {
         themeQuality = `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`;
       } else if (card.tier === 4) {
-        themeQuality = `<div class="quality-check"><em>Convergence test:</em> Does this sit at the intersection of all your patterns — not just summarize them?<br><em>Frame readiness:</em> Could "if this situation is approached as if it is [this]…" open new possibilities?</div>`;
+        themeQuality = `<div class="quality-check"><em>Convergence test:</em> Does this sit at the intersection of all your patterns — not just summarize them?<br><em>Situation test:</em> Could "if this situation is approached as if it is [this]…" open new possibilities?</div>`;
       } else if (card.tier >= 5) {
         themeQuality = `<div class="quality-check"><em>Lens test:</em> Could someone outside your field understand this as a way of seeing the whole situation?</div>`;
       }
@@ -5393,7 +5453,7 @@
         { targetSelector: '#submit-for-voting-btn', title: 'Submit', body: 'Work through every section — name, description, openness, evidence landscape, paradox — then submit to generate your artifact.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
       ],
       artifact: [
-        { targetSelector: '.submission-cluster', title: 'Your artifact', body: 'Your framed Problem Situation with its full evidence trail — ready for peer review.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '.submission-cluster', title: 'Your artifact', body: 'Your mapped Problem Situation with its full evidence trail — ready for peer review.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
         { targetSelector: '.peer-review-section', title: 'Peer review prep', body: 'Use this checklist before your review. Can you defend every decision? Whose voice is missing?', tooltipPlacement: 'top-right', spotlightPadding: 8 }
       ]
     };
@@ -7368,7 +7428,7 @@ ${AI_RULES}
             <button type="button" class="btn btn-outline" ${classifyStepIndex === 0 ? 'disabled' : ''} onclick="setClassifyStep(${classifyStepIndex - 1})">‹ Back</button>
             ${n < total
               ? `<button type="button" class="btn btn-primary" onclick="setClassifyStep(${classifyStepIndex + 1})">Next type ›</button>`
-              : `<button type="button" class="btn btn-primary" onclick="exitClassifyPhase(true)">Done — continue to deepen →</button>`}
+              : `<button type="button" class="btn btn-primary" onclick="exitClassifyPhase(true)">Continue to deepen →</button>`}
             <span class="classify-guide-hint">You can come back and re-classify anytime.</span>
           </div>
         </div>`;
@@ -8868,9 +8928,10 @@ ${AI_RULES}
       const totalItems = appState.items.length;
       const sortedCount = Object.keys(appState.sorting.decisions).length;
       if (totalItems > 0 && sortedCount > 0 && sortedCount < totalItems) return 'sorting';
-      // Mid-concept refresh (no pool loaded yet): resume on the concept screen.
-      if (appState.currentScreen === 'concept' && totalItems === 0) return 'concept';
-      return 'setup';
+      if (totalItems > 0) return 'setup';   // pool loaded, not yet sorted → sources
+      // No pool yet: resume the onboarding screen they were on; default to the intro deck.
+      if (['intro', 'concept', 'setup'].includes(appState.currentScreen)) return appState.currentScreen;
+      return 'intro';
     }
 
     (function bootstrapResume() {
@@ -8878,17 +8939,28 @@ ${AI_RULES}
       const titleEl = document.getElementById('config-title');
       if (titleEl && appState.settings.title) titleEl.value = appState.settings.title;
       updateTutorialLaunchBtn();
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const onboarding = (target === 'intro' || target === 'concept' || target === 'setup');
 
-      if (target === 'setup') {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          // First-ever visit: offer the guided tutorial up front.
-          if (!localStorage.getItem('olos.tutorial.offered') && !localStorage.getItem('olos.tutorial.done')) {
-            setTimeout(showTutorialOffer, 600);
-          }
-          return;
+      if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
+      setBoardTitleDisplay();
+      if (!onboarding && target !== 'sorting') ensureCanvasInitialized();
+      goToScreen(target);
+
+      const resumeHelpBtn = document.getElementById('tour-help-btn');
+      if (resumeHelpBtn) resumeHelpBtn.classList.remove('hidden');
+      if (target === 'board') maybeShowBoardIntro();
+
+      if (!raw) {
+        // First-ever visit: offer the guided tutorial up front.
+        if (!localStorage.getItem('olos.tutorial.offered') && !localStorage.getItem('olos.tutorial.done')) {
+          setTimeout(showTutorialOffer, 600);
         }
-        setTimeout(() => {
+        return;
+      }
+      // Returning visitor: gentle resume. On onboarding screens, offer a clean start.
+      setTimeout(() => {
+        if (onboarding) {
           toast('Picked up where you left off.', {
             actionLabel: 'Start fresh',
             duration: 6000,
@@ -8897,23 +8969,14 @@ ${AI_RULES}
               appState = defaultState();
               if (titleEl) titleEl.value = 'Upskilling Labs: Signal Pool';
               renderConfigItems();
+              goToScreen('intro');
               toast('Cleared.');
             }
           });
-        }, 200);
-        return;
-      }
-
-      if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
-      setBoardTitleDisplay();
-      if (target !== 'sorting') ensureCanvasInitialized();
-      goToScreen(target);
-      // Show tour help button for return visitors resuming to the board
-      const resumeHelpBtn = document.getElementById('tour-help-btn');
-      if (resumeHelpBtn) resumeHelpBtn.classList.remove('hidden');
-      // If they reloaded before ever dismissing the assignment popup, re-show it.
-      if (target === 'board') maybeShowBoardIntro();
-      setTimeout(() => toast('Picked up where you left off.', { duration: 4000 }), 200);
+        } else {
+          toast('Picked up where you left off.', { duration: 4000 });
+        }
+      }, 200);
     })();
 
     // Warn before unload if there's in-progress, unsubmitted work.

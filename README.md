@@ -73,7 +73,7 @@ The ✨ AI button on every evidence card generates a type-specific prompt ground
 
 Open `index.html` in any modern browser. No build step, no server, no dependencies — everything is in one file.
 
-1. Click **Get started** and name your initial problem concept
+1. Step through the short intro deck (or **Skip intro →**) and name your initial problem concept
 2. Load observations — use the 44 sample observations, upload a CSV, or add manually
 3. Click **Start Sorting** to enter the swipe-based sorting phase
 4. After sorting, the canvas opens with your surviving signals ready to triangulate and validate your concept
