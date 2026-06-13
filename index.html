@@ -15,18 +15,51 @@
     /* --- BRAND DESIGN SYSTEM TOKENS --- */
     :root {
       --primary-teal: #0094a0;
+      --teal-deep: #007882;
       --action-red: #ee1c25;
       --midnight: #101820;
       --ghost-white: #ffffff;
       --cloud: #e6e6e6;
-      /* Type scale, tracking, leading, spacing rhythm */
-      --text-xs: 0.6875rem; --text-sm: 0.8125rem; --text-base: 0.9375rem;
-      --text-lg: 1.0625rem; --text-xl: 1.3125rem; --text-2xl: 1.6875rem;
+      /* Tier colors — single source of truth; JS reads these via cssToken(). */
+      --tier-1: #8a93a3;            /* Evidence (unclassified) */
+      --tier-2: var(--action-red);  /* Pattern */
+      --tier-3: #f4b400;            /* Theme */
+      --tier-4: #8a4fff;            /* Super-theme */
+      --tier-5: #6231cf;            /* Mega-theme */
+      --tier-6: #4b2fa0;
+      --tier-deep: #3a2580;
+      /* AA ink variants: darker for small text on light grounds, lighter on midnight */
+      --tier-2-ink: #c81420;
+      --tier-3-ink: #b07b00;
+      --tier-4-plus-ink-light: #6231cf;
+      --tier-4-ink-dark: #b18dff;
+      /* Evidence-type colors — Dorst's seven */
+      --type-history: #4a6fa5;
+      --type-counterfactual: #7b5ea7;
+      --type-boundary: #c0392b;
+      --type-flux: #d4a017;
+      --type-player: var(--primary-teal);
+      --type-value: #27ae60;
+      --type-problem: #e67e22;
+      --type-evidence: var(--tier-1);
+      /* Type scale with paired baseline-grid leading (8px baseline, 4px half-step) */
+      --text-2xs: 0.625rem;   --lead-2xs: 1rem;     /* 10/16 — tags, counts, badges */
+      --text-xs: 0.6875rem;   --lead-xs: 1rem;      /* 11/16 — labels, hints */
+      --text-sm: 0.8125rem;   --lead-sm: 1.25rem;   /* 13/20 — UI body */
+      --text-base: 0.9375rem; --lead-base: 1.5rem;  /* 15/24 — prose */
+      --text-lg: 1.0625rem;   --lead-lg: 1.5rem;    /* 17/24 */
+      --text-xl: 1.3125rem;   --lead-xl: 1.75rem;   /* 21/28 */
+      --text-2xl: 1.6875rem;  --lead-2xl: 2rem;     /* 27/32 */
       --track-tight: -0.02em; --track-snug: -0.01em; --track-label: 0.08em;
       --lh-tight: 1.25; --lh-snug: 1.4; --lh-body: 1.6;
       --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
       --space-5: 20px; --space-6: 24px; --space-7: 32px; --space-8: 48px;
       --measure: 66ch;
+      /* Chrome scale — shared by floating toolbars, flyouts, menus */
+      --radius-1: 4px; --radius-2: 8px; --radius-3: 12px; --radius-pill: 999px;
+      --rule-hair: 1px; --rule-card: 2px;
+      --shadow-float: 0 8px 16px rgba(16,24,32,0.08);
+      --shadow-pop: 0 12px 24px rgba(16,24,32,0.14);
     }
 
     * { 
@@ -76,7 +109,7 @@
       color: var(--ghost-white); 
     }
     .btn-primary:hover {
-      background: #007882;
+      background: var(--teal-deep);
       transform: translateY(-1px);
     }
     .btn-primary:active { transform: translateY(0); }
@@ -236,9 +269,9 @@
       font-variant-numeric: tabular-nums;
     }
     .explainer-step[data-step="1"] .explainer-step-num { color: var(--primary-teal); }
-    .explainer-step[data-step="2"] .explainer-step-num { color: #8a93a3; }
-    .explainer-step[data-step="3"] .explainer-step-num { color: #e74c3c; }
-    .explainer-step[data-step="4"] .explainer-step-num { color: #f4b400; }
+    .explainer-step[data-step="2"] .explainer-step-num { color: var(--tier-1); }
+    .explainer-step[data-step="3"] .explainer-step-num { color: var(--tier-2); }
+    .explainer-step[data-step="4"] .explainer-step-num { color: var(--tier-3); }
     .explainer-step h3 {
       font-size: 0.72rem; font-weight: 700; color: var(--ghost-white);
       text-transform: uppercase; letter-spacing: var(--track-label);
@@ -562,11 +595,11 @@
       padding: 4px 12px;
       border-radius: 999px;
     }
-    .workspace-cluster-card .ws-card-tier.tier-2 { color: var(--action-red); background: rgba(238,28,37,0.10); }
-    .workspace-cluster-card .ws-card-tier.tier-3 { color: #b07b00; background: rgba(244,180,0,0.16); }
+    .workspace-cluster-card .ws-card-tier.tier-2 { color: var(--tier-2-ink); background: color-mix(in srgb, var(--tier-2) 10%, transparent); }
+    .workspace-cluster-card .ws-card-tier.tier-3 { color: var(--tier-3-ink); background: color-mix(in srgb, var(--tier-3) 16%, transparent); }
     .workspace-cluster-card .ws-card-tier.tier-4,
     .workspace-cluster-card .ws-card-tier.tier-5,
-    .workspace-cluster-card .ws-card-tier.tier-6 { color: #6231cf; background: rgba(138,79,255,0.14); }
+    .workspace-cluster-card .ws-card-tier.tier-6 { color: var(--tier-4-plus-ink-light); background: color-mix(in srgb, var(--tier-4) 14%, transparent); }
     .workspace-cluster-card h3 { color: var(--midnight); font-size: 1.5rem; font-weight: 700; margin: 0; }
 
     /* Jump bar */
@@ -631,11 +664,11 @@
       letter-spacing: 0.08em;
       color: var(--primary-teal);
     }
-    .workspace-jump-chip.tier-2 .ws-jump-tier { color: var(--action-red); }
-    .workspace-jump-chip.tier-3 .ws-jump-tier { color: #b07b00; }
+    .workspace-jump-chip.tier-2 .ws-jump-tier { color: var(--tier-2-ink); }
+    .workspace-jump-chip.tier-3 .ws-jump-tier { color: var(--tier-3-ink); }
     .workspace-jump-chip.tier-4 .ws-jump-tier,
     .workspace-jump-chip.tier-5 .ws-jump-tier,
-    .workspace-jump-chip.tier-6 .ws-jump-tier { color: #6231cf; }
+    .workspace-jump-chip.tier-6 .ws-jump-tier { color: var(--tier-4-plus-ink-light); }
 
     @media (prefers-reduced-motion: reduce) {
       .workspace-cluster-card, .workspace-cluster-card > header, .workspace-jump-chip {
@@ -960,7 +993,7 @@
       font-family: sans-serif;
     }
     .edge-delete-btn:hover {
-      background: #c0392b;
+      background: var(--action-red);
       transform: translate(-50%, -50%) scale(1.15);
     }
     .edge-delete-btn.hidden { display: none; }
@@ -1035,44 +1068,53 @@
     .section-tool:hover { background: rgba(0,148,160,0.35); }
     .section-tool .st-glyph { font-size: 1rem; line-height: 1; }
     .section-tool-primary { background: var(--primary-teal); border-color: transparent; box-shadow: 0 8px 24px rgba(0,148,160,0.35); }
-    .section-tool-primary:hover { background: #007882; }
+    .section-tool-primary:hover { background: var(--teal-deep); }
     .section-tool-danger:hover { background: rgba(196,30,58,0.45); }
     .section-tool.is-disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
-    /* FigJam-style bottom dock: arm a tool, then click the canvas to place. */
+    /* FigJam-style bottom dock: arm a tool, then click the canvas to place.
+       Floating chrome shares one recipe with the zoom toolbar: white, hairline
+       border + shadow — the 2px border weight is reserved for canvas cards. */
     .canvas-dock {
       position: absolute; left: 50%; transform: translateX(-50%);
-      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-      display: flex; align-items: stretch; gap: 4px;
-      background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px;
-      padding: 6px; box-shadow: 0 8px 16px rgba(16,24,32,0.08);
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      display: flex; align-items: stretch; gap: var(--space-1);
+      background: var(--ghost-white);
+      border: var(--rule-hair) solid color-mix(in srgb, var(--midnight) 16%, transparent);
+      border-radius: var(--radius-3);
+      padding: var(--space-1); box-shadow: var(--shadow-float);
       z-index: 10;
     }
     .canvas-dock.hidden { display: none; }
     .dock-flyout-anchor { position: relative; display: flex; }
     .dock-tool {
       display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-      min-width: 56px; padding: 6px 8px;
-      border: none; border-radius: 8px; background: transparent;
+      min-width: 56px; min-height: 48px; padding: var(--space-1) var(--space-2);
+      border: none; border-radius: var(--radius-2); background: transparent;
       color: var(--midnight); cursor: pointer;
-      font-family: 'Geologica', sans-serif; font-size: 0.65rem; font-weight: 700;
+      font-family: 'Geologica', sans-serif; font-size: var(--text-2xs); font-weight: 700;
+      text-transform: uppercase; letter-spacing: var(--track-label);
       transition: background 0.12s ease, color 0.12s ease;
     }
     .dock-tool:hover { background: var(--cloud); }
     .dock-tool:focus-visible { outline: 3px solid var(--primary-teal); outline-offset: -3px; }
     .dock-tool.is-armed { background: var(--primary-teal); color: var(--ghost-white); }
-    .dock-glyph { font-size: 0.95rem; line-height: 1; }
+    .dock-glyph { font-size: 0.95rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+    .dock-glyph svg { width: 16px; height: 16px; display: block; }
     .dock-tool[data-tool="signal"] .dock-glyph { color: var(--primary-teal); }
-    .dock-tool[data-tool="tier-2"] .dock-glyph { color: #7b5ea7; }
-    .dock-tool[data-tool="tier-3"] .dock-glyph { color: #d4a017; }
-    .dock-tool[data-tool="tier-4"] .dock-glyph { color: #c0392b; }
+    #dock-evidence-btn .dock-glyph { color: var(--type-evidence); }
+    .dock-tool[data-tool="tier-2"] .dock-glyph { color: var(--tier-2); }
+    .dock-tool[data-tool="tier-3"] .dock-glyph { color: var(--tier-3); }
+    .dock-tool[data-tool="tier-4"] .dock-glyph { color: var(--tier-4); }
     .dock-tool.is-armed .dock-glyph { color: inherit; }
     .dock-flyout {
       position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%);
       width: max-content; max-width: min(420px, calc(100vw - 24px));
-      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-      background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: 12px;
-      padding: 12px; box-shadow: 0 12px 24px rgba(16,24,32,0.14);
+      display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: center;
+      background: var(--ghost-white);
+      border: var(--rule-hair) solid color-mix(in srgb, var(--midnight) 16%, transparent);
+      border-radius: var(--radius-3);
+      padding: var(--space-3); box-shadow: var(--shadow-pop);
     }
     .dock-flyout.hidden { display: none; }
     .canvas-viewport.tool-armed { cursor: crosshair; }
@@ -1080,6 +1122,7 @@
       .dock-label { display: none; }
       .dock-tool { min-width: 44px; min-height: 40px; }
       .dock-glyph { font-size: 1.1rem; }
+      .dock-glyph svg { width: 18px; height: 18px; }
       /* The zoom toolbar owns the bottom-right corner on phones; the dock
          floats one row above it so the two never overlap. */
       .canvas-dock { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
@@ -1217,20 +1260,20 @@
       40%  { box-shadow: 0 0 0 6px rgba(0,148,160,0.45), 0 12px 32px rgba(16,24,32,0.25); }
       100% { box-shadow: 0 8px 24px rgba(16,24,32,0.18); }
     }
-    .hub-node.tier-up.tier-2 { animation-name: tier-up-pulse-red; }
-    .hub-node.tier-up.tier-3 { animation-name: tier-up-pulse-amber; }
-    .hub-node.tier-up.tier-4, .hub-node.tier-up.tier-5, .hub-node.tier-up.tier-6 { animation-name: tier-up-pulse-purple; }
+    .hub-node.tier-up[data-tier="2"] { animation-name: tier-up-pulse-red; }
+    .hub-node.tier-up[data-tier="3"] { animation-name: tier-up-pulse-amber; }
+    .hub-node.tier-up[data-tier="4"], .hub-node.tier-up[data-tier="5"], .hub-node.tier-up[data-tier="6"] { animation-name: tier-up-pulse-purple; }
     @keyframes tier-up-pulse-red {
       0%, 100% { box-shadow: 0 8px 24px rgba(16,24,32,0.18); }
-      40% { box-shadow: 0 0 0 6px rgba(238,28,37,0.45), 0 12px 32px rgba(16,24,32,0.25); }
+      40% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tier-2) 45%, transparent), 0 12px 32px rgba(16,24,32,0.25); }
     }
     @keyframes tier-up-pulse-amber {
       0%, 100% { box-shadow: 0 8px 24px rgba(16,24,32,0.18); }
-      40% { box-shadow: 0 0 0 6px rgba(244,180,0,0.50), 0 12px 32px rgba(16,24,32,0.25); }
+      40% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tier-3) 50%, transparent), 0 12px 32px rgba(16,24,32,0.25); }
     }
     @keyframes tier-up-pulse-purple {
       0%, 100% { box-shadow: 0 8px 24px rgba(16,24,32,0.18); }
-      40% { box-shadow: 0 0 0 6px rgba(138,79,255,0.50), 0 12px 32px rgba(16,24,32,0.25); }
+      40% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tier-4) 50%, transparent), 0 12px 32px rgba(16,24,32,0.25); }
     }
     .hub-node .hub-tag {
       font-size: 0.6rem;
@@ -1354,97 +1397,86 @@
     }
     .hub-node .hub-actions { gap: 8px; }
 
-    /* Tier styling: accent color and width step up as hubs get more abstract. */
-    .hub-node.tier-1 { border-color: var(--primary-teal); }
-    .hub-node.tier-2 { width: 320px; border-color: var(--action-red); }
-    .hub-node.tier-2 .hub-tag { color: var(--action-red); }
-    .hub-node.tier-2 input.hub-title:focus,
-    .hub-node.tier-2 textarea.hub-desc:focus { border-bottom-color: var(--action-red); }
-    .hub-node.tier-2 .hub-count { background: var(--action-red); color: var(--ghost-white); }
-    .hub-node.tier-2 .connect-handle { background: var(--action-red); box-shadow: 0 2px 6px rgba(238,28,37,0.55); }
+    /* Tier styling: accent color and width step up as hubs get more abstract.
+       Keyed to the data-tier attribute the renderer sets — these rules are the
+       single owner of tier color (no inline styles from JS). */
+    .hub-node[data-tier="1"] { border-color: var(--tier-1); }
+    .hub-node[data-tier="2"] { width: 300px; border-color: var(--tier-2); }
+    .hub-node[data-tier="2"] .hub-tag { color: var(--tier-2); }
+    .hub-node[data-tier="2"] input.hub-title:focus,
+    .hub-node[data-tier="2"] textarea.hub-desc:focus { border-bottom-color: var(--tier-2); }
+    .hub-node[data-tier="2"] .hub-count { background: var(--tier-2); color: var(--ghost-white); }
+    .hub-node[data-tier="2"] .connect-handle { background: var(--tier-2); box-shadow: 0 2px 6px color-mix(in srgb, var(--tier-2) 55%, transparent); }
 
-    .hub-node.tier-3 { width: 360px; border-color: #f4b400; }
-    .hub-node.tier-3 .hub-tag { color: #f4b400; }
-    .hub-node.tier-3 input.hub-title:focus,
-    .hub-node.tier-3 textarea.hub-desc:focus { border-bottom-color: #f4b400; }
-    .hub-node.tier-3 .hub-count { background: #f4b400; color: var(--midnight); }
-    .hub-node.tier-3 .connect-handle { background: #f4b400; box-shadow: 0 2px 6px rgba(244,180,0,0.55); }
+    .hub-node[data-tier="3"] { width: 340px; border-color: var(--tier-3); }
+    .hub-node[data-tier="3"] .hub-tag { color: var(--tier-3); }
+    .hub-node[data-tier="3"] input.hub-title:focus,
+    .hub-node[data-tier="3"] textarea.hub-desc:focus { border-bottom-color: var(--tier-3); }
+    .hub-node[data-tier="3"] .hub-count { background: var(--tier-3); color: var(--midnight); }
+    .hub-node[data-tier="3"] .connect-handle { background: var(--tier-3); box-shadow: 0 2px 6px color-mix(in srgb, var(--tier-3) 55%, transparent); }
 
-    .hub-node.tier-4, .hub-node.tier-5, .hub-node.tier-6 {
-      width: 400px; border-color: #8a4fff;
+    .hub-node[data-tier="4"], .hub-node[data-tier="5"], .hub-node[data-tier="6"] {
+      width: 400px; border-color: var(--tier-4);
     }
-    .hub-node.tier-4 .hub-tag, .hub-node.tier-5 .hub-tag, .hub-node.tier-6 .hub-tag { color: #b18dff; }
-    .hub-node.tier-4 input.hub-title:focus, .hub-node.tier-4 textarea.hub-desc:focus,
-    .hub-node.tier-5 input.hub-title:focus, .hub-node.tier-5 textarea.hub-desc:focus,
-    .hub-node.tier-6 input.hub-title:focus, .hub-node.tier-6 textarea.hub-desc:focus { border-bottom-color: #b18dff; }
-    .hub-node.tier-4 .hub-count, .hub-node.tier-5 .hub-count, .hub-node.tier-6 .hub-count { background: #8a4fff; color: var(--ghost-white); }
-    .hub-node.tier-4 .connect-handle, .hub-node.tier-5 .connect-handle, .hub-node.tier-6 .connect-handle {
-      background: #b18dff; box-shadow: 0 2px 6px rgba(138,79,255,0.55);
+    .hub-node[data-tier="4"] .hub-tag, .hub-node[data-tier="5"] .hub-tag, .hub-node[data-tier="6"] .hub-tag { color: var(--tier-4-ink-dark); }
+    .hub-node[data-tier="4"] input.hub-title:focus, .hub-node[data-tier="4"] textarea.hub-desc:focus,
+    .hub-node[data-tier="5"] input.hub-title:focus, .hub-node[data-tier="5"] textarea.hub-desc:focus,
+    .hub-node[data-tier="6"] input.hub-title:focus, .hub-node[data-tier="6"] textarea.hub-desc:focus { border-bottom-color: var(--tier-4-ink-dark); }
+    .hub-node[data-tier="4"] .hub-count, .hub-node[data-tier="5"] .hub-count, .hub-node[data-tier="6"] .hub-count { background: var(--tier-4); color: var(--ghost-white); }
+    .hub-node[data-tier="4"] .connect-handle, .hub-node[data-tier="5"] .connect-handle, .hub-node[data-tier="6"] .connect-handle {
+      background: var(--tier-4-ink-dark); box-shadow: 0 2px 6px color-mix(in srgb, var(--tier-4) 55%, transparent);
     }
 
     /* Card-type color overrides (applied via data-card-type attribute) */
-    .hub-node[data-card-type="history"]        { border-color: #4a6fa5; }
-    .hub-node[data-card-type="history"] .hub-tag { color: #4a6fa5; }
-    .hub-node[data-card-type="history"] .hub-count { background: #4a6fa5; }
-    .hub-node[data-card-type="history"] .connect-handle { background: #4a6fa5; box-shadow: 0 2px 6px rgba(74,111,165,0.55); }
+    .hub-node[data-card-type="history"]        { border-color: var(--type-history); }
+    .hub-node[data-card-type="history"] .hub-tag { color: var(--type-history); }
+    .hub-node[data-card-type="history"] .hub-count { background: var(--type-history); }
+    .hub-node[data-card-type="history"] .connect-handle { background: var(--type-history); box-shadow: 0 2px 6px color-mix(in srgb, var(--type-history) 55%, transparent); }
 
-    .hub-node[data-card-type="counterfactual"]  { border-color: #7b5ea7; }
-    .hub-node[data-card-type="counterfactual"] .hub-tag { color: #7b5ea7; }
-    .hub-node[data-card-type="counterfactual"] .hub-count { background: #7b5ea7; }
-    .hub-node[data-card-type="counterfactual"] .connect-handle { background: #7b5ea7; box-shadow: 0 2px 6px rgba(123,94,167,0.55); }
+    .hub-node[data-card-type="counterfactual"]  { border-color: var(--type-counterfactual); }
+    .hub-node[data-card-type="counterfactual"] .hub-tag { color: var(--type-counterfactual); }
+    .hub-node[data-card-type="counterfactual"] .hub-count { background: var(--type-counterfactual); }
+    .hub-node[data-card-type="counterfactual"] .connect-handle { background: var(--type-counterfactual); box-shadow: 0 2px 6px color-mix(in srgb, var(--type-counterfactual) 55%, transparent); }
 
-    .hub-node[data-card-type="boundary"]       { border-color: #c0392b; }
-    .hub-node[data-card-type="boundary"] .hub-tag { color: #c0392b; }
-    .hub-node[data-card-type="boundary"] .hub-count { background: #c0392b; }
-    .hub-node[data-card-type="boundary"] .connect-handle { background: #c0392b; box-shadow: 0 2px 6px rgba(192,57,43,0.55); }
+    .hub-node[data-card-type="boundary"]       { border-color: var(--type-boundary); }
+    .hub-node[data-card-type="boundary"] .hub-tag { color: var(--type-boundary); }
+    .hub-node[data-card-type="boundary"] .hub-count { background: var(--type-boundary); }
+    .hub-node[data-card-type="boundary"] .connect-handle { background: var(--type-boundary); box-shadow: 0 2px 6px color-mix(in srgb, var(--type-boundary) 55%, transparent); }
 
-    .hub-node[data-card-type="flux"]           { border-color: #d4a017; }
-    .hub-node[data-card-type="flux"] .hub-tag { color: #d4a017; }
-    .hub-node[data-card-type="flux"] .hub-count { background: #d4a017; color: var(--midnight); }
-    .hub-node[data-card-type="flux"] .connect-handle { background: #d4a017; box-shadow: 0 2px 6px rgba(212,160,23,0.55); }
+    .hub-node[data-card-type="flux"]           { border-color: var(--type-flux); }
+    .hub-node[data-card-type="flux"] .hub-tag { color: var(--type-flux); }
+    .hub-node[data-card-type="flux"] .hub-count { background: var(--type-flux); color: var(--midnight); }
+    .hub-node[data-card-type="flux"] .connect-handle { background: var(--type-flux); box-shadow: 0 2px 6px color-mix(in srgb, var(--type-flux) 55%, transparent); }
 
-    .hub-node[data-card-type="player"]         { border-color: #0094a0; }
-    .hub-node[data-card-type="player"] .hub-tag { color: #0094a0; }
-    .hub-node[data-card-type="player"] .hub-count { background: #0094a0; }
-    .hub-node[data-card-type="player"] .connect-handle { background: #0094a0; box-shadow: 0 2px 6px rgba(0,148,160,0.55); }
+    .hub-node[data-card-type="player"]         { border-color: var(--type-player); }
+    .hub-node[data-card-type="player"] .hub-tag { color: var(--type-player); }
+    .hub-node[data-card-type="player"] .hub-count { background: var(--type-player); }
+    .hub-node[data-card-type="player"] .connect-handle { background: var(--type-player); box-shadow: 0 2px 6px color-mix(in srgb, var(--type-player) 55%, transparent); }
 
-    .hub-node[data-card-type="value"]          { border-color: #27ae60; }
-    .hub-node[data-card-type="value"] .hub-tag { color: #27ae60; }
-    .hub-node[data-card-type="value"] .hub-count { background: #27ae60; }
-    .hub-node[data-card-type="value"] .connect-handle { background: #27ae60; box-shadow: 0 2px 6px rgba(39,174,96,0.55); }
+    .hub-node[data-card-type="value"]          { border-color: var(--type-value); }
+    .hub-node[data-card-type="value"] .hub-tag { color: var(--type-value); }
+    .hub-node[data-card-type="value"] .hub-count { background: var(--type-value); }
+    .hub-node[data-card-type="value"] .connect-handle { background: var(--type-value); box-shadow: 0 2px 6px color-mix(in srgb, var(--type-value) 55%, transparent); }
 
-    .hub-node[data-card-type="problem"]        { border-color: #e67e22; }
-    .hub-node[data-card-type="problem"] .hub-tag { color: #e67e22; }
-    .hub-node[data-card-type="problem"] .hub-count { background: #e67e22; }
-    .hub-node[data-card-type="problem"] .connect-handle { background: #e67e22; box-shadow: 0 2px 6px rgba(230,126,34,0.55); }
+    .hub-node[data-card-type="problem"]        { border-color: var(--type-problem); }
+    .hub-node[data-card-type="problem"] .hub-tag { color: var(--type-problem); }
+    .hub-node[data-card-type="problem"] .hub-count { background: var(--type-problem); }
+    .hub-node[data-card-type="problem"] .connect-handle { background: var(--type-problem); box-shadow: 0 2px 6px color-mix(in srgb, var(--type-problem) 55%, transparent); }
 
     /* Tier lightness: evidence (tier-1) cards sit lighter than the pattern/theme
        cards above them, and a classified card carries a tint of its own type hue
        (same hexes, mixed into the body — lightness does the work, not new colors). */
     .hub-node[data-tier="1"] { background: color-mix(in srgb, var(--midnight) 86%, var(--ghost-white)); }
-    .hub-node[data-card-type="history"]        { background: color-mix(in srgb, #4a6fa5 22%, var(--midnight)); }
-    .hub-node[data-card-type="counterfactual"] { background: color-mix(in srgb, #7b5ea7 22%, var(--midnight)); }
-    .hub-node[data-card-type="boundary"]       { background: color-mix(in srgb, #c0392b 22%, var(--midnight)); }
-    .hub-node[data-card-type="flux"]           { background: color-mix(in srgb, #d4a017 22%, var(--midnight)); }
-    .hub-node[data-card-type="player"]         { background: color-mix(in srgb, #0094a0 22%, var(--midnight)); }
-    .hub-node[data-card-type="value"]          { background: color-mix(in srgb, #27ae60 22%, var(--midnight)); }
-    .hub-node[data-card-type="problem"]        { background: color-mix(in srgb, #e67e22 22%, var(--midnight)); }
-
-    /* Theme nodes */
-    .hub-node[data-layer="theme"]              { border-color: #f4b400; width: 320px; }
-    .hub-node[data-layer="theme"] .hub-tag     { color: #f4b400; }
-    .hub-node[data-layer="theme"] .hub-count   { background: #f4b400; color: var(--midnight); }
-    .hub-node[data-layer="theme"] .connect-handle { background: #f4b400; box-shadow: 0 2px 6px rgba(244,180,0,0.55); }
-    .hub-node[data-layer="theme"].is-super     { border-color: #ffd700; box-shadow: 0 0 18px rgba(255,215,0,0.3); }
-
-    /* Situation nodes */
-    .hub-node[data-layer="situation"]           { border-color: #8a4fff; width: 400px; }
-    .hub-node[data-layer="situation"] .hub-tag  { color: #b18dff; }
-    .hub-node[data-layer="situation"] .hub-count { background: #8a4fff; color: var(--ghost-white); }
-    .hub-node[data-layer="situation"] .connect-handle { background: #b18dff; box-shadow: 0 2px 6px rgba(138,79,255,0.55); }
+    .hub-node[data-card-type="history"]        { background: color-mix(in srgb, var(--type-history) 22%, var(--midnight)); }
+    .hub-node[data-card-type="counterfactual"] { background: color-mix(in srgb, var(--type-counterfactual) 22%, var(--midnight)); }
+    .hub-node[data-card-type="boundary"]       { background: color-mix(in srgb, var(--type-boundary) 22%, var(--midnight)); }
+    .hub-node[data-card-type="flux"]           { background: color-mix(in srgb, var(--type-flux) 22%, var(--midnight)); }
+    .hub-node[data-card-type="player"]         { background: color-mix(in srgb, var(--type-player) 22%, var(--midnight)); }
+    .hub-node[data-card-type="value"]          { background: color-mix(in srgb, var(--type-value) 22%, var(--midnight)); }
+    .hub-node[data-card-type="problem"]        { background: color-mix(in srgb, var(--type-problem) 22%, var(--midnight)); }
 
     /* Player role badge */
-    .player-role-badge { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 6px; background: rgba(0,148,160,0.2); color: #0094a0; margin-top: 4px; display: inline-block; }
+    .player-role-badge { font-size: var(--text-2xs); line-height: var(--lead-2xs); font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label); padding: 2px var(--space-2); border-radius: var(--radius-1); background: color-mix(in srgb, var(--type-player) 20%, transparent); color: var(--type-player); margin-top: var(--space-1); display: inline-block; }
 
     /* View-state tab bar */
     .view-tabs { display: flex; gap: 2px; }
@@ -1513,30 +1545,30 @@
       right: calc(20px + env(safe-area-inset-right, 0px));
       bottom: calc(20px + env(safe-area-inset-bottom, 0px));
       display: flex;
-      gap: 4px;
+      gap: var(--space-1);
       background: var(--ghost-white);
-      border: 2px solid var(--cloud);
-      border-radius: 10px;
-      padding: 4px;
-      box-shadow: 0 8px 16px rgba(16,24,32,0.08);
+      border: var(--rule-hair) solid color-mix(in srgb, var(--midnight) 16%, transparent);
+      border-radius: var(--radius-3);
+      padding: var(--space-1);
+      box-shadow: var(--shadow-float);
       z-index: 10;
     }
     .zoom-btn {
       min-width: 36px;
       height: 32px;
-      padding: 0 8px;
+      padding: 0 var(--space-2);
       border: none;
       background: transparent;
       color: var(--midnight);
       font-weight: 700;
-      font-size: 0.95rem;
+      font-size: var(--text-base);
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: var(--radius-2);
       font-family: 'Geologica', sans-serif;
       transition: background 0.12s ease;
     }
     .zoom-btn:hover { background: var(--cloud); }
-    .zoom-btn.zoom-level { font-size: 0.78rem; min-width: 56px; }
+    .zoom-btn.zoom-level { font-size: var(--text-sm); min-width: 56px; }
     /* Panel toggle button — highlighted when header is hidden */
     #board-workspace.header-collapsed #panel-toggle-btn { background: var(--cloud); }
     /* Collapsed header state — hides top chrome, canvas expands to fill */
@@ -1647,7 +1679,7 @@
       cursor: pointer;
       transition: background 0.15s ease, opacity 0.15s ease;
     }
-    #tutorial-coach-next:hover:not(:disabled) { background: #007882; }
+    #tutorial-coach-next:hover:not(:disabled) { background: var(--teal-deep); }
     #tutorial-coach-next:disabled { opacity: 0.35; cursor: default; }
 
 
@@ -1700,7 +1732,7 @@
       padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;
       cursor: pointer; transition: background 0.15s ease, transform 0.12s ease;
     }
-    .tour-btn-next:hover { background: #007882; transform: translateY(-1px); }
+    .tour-btn-next:hover { background: var(--teal-deep); transform: translateY(-1px); }
 
     #tour-help-btn {
       position: absolute;
@@ -1745,13 +1777,13 @@
     .sort-card.exit-left { transform: translateX(-150%) rotate(-14deg); opacity: 0; transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease; pointer-events: none; }
     .sort-card.exit-up { transform: translateY(-160%) scale(1.18); opacity: 0; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; pointer-events: none; }
     .sort-card.exit-up::before { content: ''; position: absolute; inset: -20px; border-radius: 28px; background: radial-gradient(circle, rgba(244,180,0,0.4) 0%, rgba(244,180,0,0) 70%); animation: super-ring 0.7s ease-out forwards; pointer-events: none; }
-    .sort-card.exit-up::after { content: '\2605'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #f4b400; text-shadow: 0 0 30px rgba(244,180,0,0.8), 0 0 60px rgba(244,180,0,0.4); animation: starburst 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; pointer-events: none; }
+    .sort-card.exit-up::after { content: '\2605'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: var(--tier-3); text-shadow: 0 0 30px color-mix(in srgb, var(--tier-3) 80%, transparent), 0 0 60px color-mix(in srgb, var(--tier-3) 40%, transparent); animation: starburst 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; pointer-events: none; }
     @keyframes starburst { 0% { transform: scale(0.3) rotate(0deg); opacity: 1; } 40% { transform: scale(1.8) rotate(20deg); opacity: 1; } 100% { transform: scale(5) rotate(36deg); opacity: 0; } }
     @keyframes super-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
     .super-flash { position: fixed; inset: 0; background: radial-gradient(circle at 50% 40%, rgba(244,180,0,0.18) 0%, transparent 65%); z-index: 9999; pointer-events: none; animation: flash-fade 0.5s ease-out forwards; }
     @keyframes flash-fade { 0% { opacity: 1; } 100% { opacity: 0; } }
     .super-particles { position: fixed; inset: 0; z-index: 9998; pointer-events: none; overflow: hidden; }
-    .super-particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #f4b400; animation: particle-fly 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .super-particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--tier-3); animation: particle-fly 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     .super-particle:nth-child(odd) { width: 4px; height: 4px; background: #ffe082; }
     .super-particle:nth-child(3n) { width: 3px; height: 8px; border-radius: 2px; background: #fff3c4; }
     @keyframes particle-fly { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { opacity: 0; } }
@@ -1766,8 +1798,8 @@
     .sorting-summary { font-size: 0.95rem; color: var(--cloud); line-height: 1.6; margin-bottom: 8px; }
     .sorting-reflection { font-size: 0.85rem; color: var(--primary-teal); font-style: italic; margin-bottom: 24px; }
 
-    .signal-node.super-signal { border-left: 3px solid #f4b400; box-shadow: 0 2px 8px rgba(244,180,0,0.2); }
-    .signal-node.super-signal .card-tag { color: #f4b400; }
+    .signal-node.super-signal { border-left: 3px solid var(--tier-3); box-shadow: 0 2px 8px color-mix(in srgb, var(--tier-3) 20%, transparent); }
+    .signal-node.super-signal .card-tag { color: var(--tier-3); }
 
     .quality-check { font-size: 0.65rem; color: rgba(255,255,255,0.55); line-height: 1.5; padding: 6px 8px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); }
     .quality-check em { color: rgba(255,255,255,0.75); font-style: normal; font-weight: 600; }
@@ -1775,10 +1807,10 @@
     .player-role-picker { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
     .role-pill { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.15s; background: none; }
     .role-pill:hover { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.8); }
-    .role-pill.active, .role-pill:has(input:checked) { background: rgba(0,148,160,0.3); border-color: #0094a0; color: #0094a0; }
+    .role-pill.active, .role-pill:has(input:checked) { background: color-mix(in srgb, var(--primary-teal) 30%, transparent); border-color: var(--primary-teal); color: var(--primary-teal); }
     .role-pill input[type="radio"] { display: none; }
 
-    .super-toggle { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(255,215,0,0.3); background: rgba(255,215,0,0.1); color: #f4b400; cursor: pointer; transition: all 0.15s; }
+    .super-toggle { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 6px; border: var(--rule-hair) solid color-mix(in srgb, var(--tier-3) 30%, transparent); background: color-mix(in srgb, var(--tier-3) 10%, transparent); color: var(--tier-3); cursor: pointer; transition: all 0.15s; }
     .super-toggle:hover { background: rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.5); }
 
     /* Inline card-type picker (on the card node itself) */
@@ -1827,10 +1859,10 @@
     .card-type-chip[data-type="problem"]:hover, .card-type-chip[data-type="problem"].active { color: var(--midnight); }
 
     /* Undefined evidence card — neutral slate with a subtle dashed border */
-    .hub-node.card-undefined { border-color: #8a93a3; border-style: dashed; }
-    .hub-node[data-card-type="evidence"] .hub-tag { color: #8a93a3; }
-    .hub-node[data-card-type="evidence"] .hub-count { background: #8a93a3; }
-    .hub-node[data-card-type="evidence"] .connect-handle { background: #8a93a3; box-shadow: 0 2px 6px rgba(138,147,163,0.55); }
+    .hub-node.card-undefined { border-color: var(--type-evidence); border-style: dashed; }
+    .hub-node[data-card-type="evidence"] .hub-tag { color: var(--type-evidence); }
+    .hub-node[data-card-type="evidence"] .hub-count { background: var(--type-evidence); }
+    .hub-node[data-card-type="evidence"] .connect-handle { background: var(--type-evidence); box-shadow: 0 2px 6px color-mix(in srgb, var(--type-evidence) 55%, transparent); }
 
     /* Count-pill text colors, measured for WCAG AA against each type fill */
     .hub-node[data-card-type="history"] .hub-count,
@@ -1847,11 +1879,7 @@
       .card-type-chip { border-width: 2px; }
     }
 
-    /* Higher tiers get progressively wider cards. */
-    .hub-node.tiernode-2 { width: 300px; }
-    .hub-node.tiernode-3 { width: 340px; }
-    .hub-node.tiernode-4, .hub-node.tiernode-5, .hub-node.tiernode-6 { width: 400px; }
-    .hub-node[data-tier="4"], .hub-node[data-tier="5"], .hub-node[data-tier="6"] { width: 400px; }
+    /* Higher-tier widths live with the [data-tier] color rules above. */
 
     @media (max-width: 480px) {
       .sorting-top { padding: 12px 16px 0; }
@@ -2658,25 +2686,29 @@
     }
 
     // --- Card type constants ---
+    // Colors live in the :root token block; JS resolves them once at startup
+    // so canvas chrome and CSS rules can never disagree.
+    const cssToken = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
     const CARD_TYPES = [
-      { id: 'history',        label: 'History',        color: '#4a6fa5', phase: 'arch',  desc: 'What happened / what was done',
+      { id: 'history',        label: 'History',        color: cssToken('--type-history'), phase: 'arch',  desc: 'What happened / what was done',
         icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><path d="M8 4.8V8l2.4 1.6"/></svg>' },
-      { id: 'counterfactual', label: 'Counterfactual', color: '#7b5ea7', phase: 'arch',  desc: 'The path not taken',
+      { id: 'counterfactual', label: 'Counterfactual', color: cssToken('--type-counterfactual'), phase: 'arch',  desc: 'The path not taken',
         icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 14V8.5"/><path d="M8 8.5 3.6 2.6"/><path d="M8 8.5 12.4 2.6" stroke-dasharray="2.2 1.8"/></svg>' },
-      { id: 'boundary',       label: 'Boundary',       color: '#c0392b', phase: 'arch',  desc: 'A "they will never…" nonnegotiable',
+      { id: 'boundary',       label: 'Boundary',       color: cssToken('--type-boundary'), phase: 'arch',  desc: 'A "they will never…" nonnegotiable',
         icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.5"/><path d="M4.2 8h7.6" stroke-linecap="round"/></svg>' },
-      { id: 'flux',           label: 'Flux',           color: '#d4a017', phase: 'arch',  desc: 'A point of movement or potential change',
+      { id: 'flux',           label: 'Flux',           color: cssToken('--type-flux'), phase: 'arch',  desc: 'A point of movement or potential change',
         icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.8 9q2-4.4 4 0t4 0 4 0"/></svg>' },
-      { id: 'player',         label: 'Player',         color: '#0094a0', phase: 'field', desc: 'A stakeholder, by practices & currency',
+      { id: 'player',         label: 'Player',         color: cssToken('--type-player'), phase: 'field', desc: 'A stakeholder, by practices & currency',
         icon: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="5" r="2.7"/><path d="M2.8 13.6c0-3 2.3-4.7 5.2-4.7s5.2 1.7 5.2 4.7z"/></svg>' },
-      { id: 'value',          label: 'Value',          color: '#27ae60', phase: 'field', desc: 'A deeper or universal value from the field',
+      { id: 'value',          label: 'Value',          color: cssToken('--type-value'), phase: 'field', desc: 'A deeper or universal value from the field',
         icon: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2.2 13.2 6 8 13.8 2.8 6z"/></svg>' },
-      { id: 'problem',        label: 'Problem',        color: '#e67e22', phase: 'arch',  desc: 'A bounded difficulty, solvable conventionally',
+      { id: 'problem',        label: 'Problem',        color: cssToken('--type-problem'), phase: 'arch',  desc: 'A bounded difficulty, solvable conventionally',
         icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.7" y="2.7" width="10.6" height="10.6" rx="2.6"/><path d="M8 5v4" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.95" fill="currentColor" stroke="none"/></svg>' }
     ];
+    console.assert(CARD_TYPES.every(t => t.color), 'Design tokens failed to resolve — check the :root token block.');
     // Plain/undefined evidence card — created when two signals are first
     // connected, before the user classifies it into one of the seven types.
-    const EVIDENCE_TYPE = { id: null, label: 'Evidence', color: '#8a93a3', phase: null, desc: 'Raw evidence — classify it once the pattern is clear',
+    const EVIDENCE_TYPE = { id: null, label: 'Evidence', color: cssToken('--type-evidence'), phase: null, desc: 'Raw evidence — classify it once the pattern is clear',
         icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5" stroke-dasharray="2 2"/></svg>' };
     const CARD_TYPE_MAP = Object.fromEntries(CARD_TYPES.map(t => [t.id, t]));
     function cardTypeInfo(cardType) { return CARD_TYPE_MAP[cardType] || EVIDENCE_TYPE; }
@@ -3240,11 +3272,32 @@
 
     const TIER_NAMES = { 0: 'Signal', 1: 'Evidence', 2: 'Pattern', 3: 'Theme', 4: 'Super-theme', 5: 'Mega-theme', 6: 'Meta-theme' };
     function tierName(t) { return TIER_NAMES[t] || ('Level-' + t + ' theme'); }
-    const TIER_COLORS = { 1: '#8a93a3', 2: '#e74c3c', 3: '#f4b400', 4: '#8a4fff', 5: '#6231cf', 6: '#4b2fa0' };
-    function tierColor(t) { return TIER_COLORS[t] || '#3a2580'; }
+    const TIER_COLORS = { 1: cssToken('--tier-1'), 2: cssToken('--tier-2'), 3: cssToken('--tier-3'),
+                          4: cssToken('--tier-4'), 5: cssToken('--tier-5'), 6: cssToken('--tier-6') };
+    function tierColor(t) { return TIER_COLORS[t] || cssToken('--tier-deep'); }
+    // Tier glyphs: one shape language across the dock and the cards it creates.
+    // Polygon progression — dot, dashed circle, triangle, square, four-point star.
+    const TIER_GLYPHS = {
+      0: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3.2"/></svg>',
+      1: EVIDENCE_TYPE.icon,
+      2: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M8 3 13.4 12.4H2.6Z"/></svg>',
+      3: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="10" height="10"/></svg>',
+      4: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.6 9.9 6.1 14.4 8 9.9 9.9 8 14.4 6.1 9.9 1.6 8 6.1 6.1Z"/></svg>'
+    };
+    function tierGlyph(t) { return TIER_GLYPHS[Math.min(t, 4)] || TIER_GLYPHS[4]; }
+    // The dock buttons show the same glyph a placed card will carry.
+    (function hydrateDockGlyphs() {
+      const map = { 'signal': 0, 'tier-2': 2, 'tier-3': 3, 'tier-4': 4 };
+      document.querySelectorAll('#canvas-dock .dock-glyph').forEach(g => {
+        const tool = g.closest('.dock-tool');
+        if (!tool) return;
+        const t = tool.dataset.tool ? map[tool.dataset.tool] : 1; // no data-tool = Evidence
+        if (t !== undefined) g.innerHTML = TIER_GLYPHS[t];
+      });
+    })();
     // Color for a card: tier-1 evidence uses its 7-type color; higher tiers use the tier color.
     function cardColor(card) {
-      if (!card) return '#8a93a3';
+      if (!card) return cssToken('--tier-1');
       if (card.tier === 1) return cardTypeInfo(card.cardType).color;
       return tierColor(card.tier);
     }
@@ -3777,7 +3830,6 @@
       const pos = getNodePos(card.id);
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
-      el.style.borderColor = ct.color;
       const count = card.childIds.length;
       const roleHtml = card.cardType === 'player' ? `
         <div class="player-role-picker">
@@ -3823,7 +3875,7 @@
         ${typePickerHtml}
         ${roleHtml}
         <div class="hub-actions">
-          <button type="button" class="hub-expand" title="Open this card's page">⤢ Open</button>
+          <button type="button" class="hub-expand" title="Open this card's page">↗ Open</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
         ${connectHandlesHtml(card.id)}
@@ -3896,10 +3948,12 @@
       const pos = getNodePos(card.id);
       el.style.left = pos.x + 'px';
       el.style.top = pos.y + 'px';
-      el.style.borderColor = color;
+      // Tier color is owned by the [data-tier] CSS rules; only unmapped deep
+      // tiers (≥ 7) fall back to an inline accent.
+      const deepTier = card.tier > 6;
+      if (deepTier) el.style.borderColor = color;
       const childCount = card.childIds.length;
       const sigCount = signalsUnder(card.id).length;
-      const lightText = (card.tier === 2 || card.tier === 3); // red + amber pills need dark text for AA
       let themeQuality = '';
       if (card.tier === 3) {
         themeQuality = `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`;
@@ -3910,16 +3964,16 @@
       }
       el.innerHTML = `
         ${sourceBadgeHtml(card)}
-        <div class="hub-tag" style="color: ${color};">
-          <span class="hub-tag-label"><span class="type-name">${escapeHtml(label)}</span></span>
-          <span class="hub-count" style="background:${color}; color:${lightText ? 'var(--midnight)' : 'var(--ghost-white)'};">${childCount} ${escapeHtml(childWord)}${childCount === 1 ? '' : 's'} · ${sigCount} signal${sigCount === 1 ? '' : 's'}</span>
+        <div class="hub-tag"${deepTier ? ` style="color: ${color};"` : ''}>
+          <span class="hub-tag-label"><span class="type-glyph" aria-hidden="true">${tierGlyph(card.tier)}</span><span class="type-name">${escapeHtml(label)}</span></span>
+          <span class="hub-count"${deepTier ? ` style="background:${color}; color:var(--ghost-white);"` : ''}>${childCount} ${escapeHtml(childWord)}${childCount === 1 ? '' : 's'} · ${sigCount} signal${sigCount === 1 ? '' : 's'}</span>
         </div>
         <input type="text" class="hub-title" placeholder="Name this ${escapeHtml(label.toLowerCase())}" value="${escapeHtml(card.title || '')}" ${locked ? 'disabled' : ''} />
         <textarea class="hub-desc" placeholder="What deeper condition do these ${escapeHtml(childWord)}s point toward?" rows="2" ${locked ? 'disabled' : ''}>${escapeHtml(card.description || '')}</textarea>
         <p class="hub-lock-note"${locked ? '' : ' hidden'}>Name &amp; describe each ${escapeHtml(childWord)} below before editing this ${escapeHtml(label.toLowerCase())} — a higher claim rests on examined ones.</p>
         ${themeQuality}
         <div class="hub-actions">
-          <button type="button" class="hub-expand" title="Open this card's page">⤢ Open</button>
+          <button type="button" class="hub-expand" title="Open this card's page">↗ Open</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
         ${connectHandlesHtml(card.id)}
@@ -7006,7 +7060,7 @@ ${AI_RULES}
       card.innerHTML = `
         <header>
           <div class="ws-card-titlerow">
-            <span class="ws-card-tier" style="background:#8a4fff;color:#fff;">Problem Situation${many ? ' ' + n : ''}</span>
+            <span class="ws-card-tier" style="background:var(--tier-4);color:var(--ghost-white);">Problem Situation${many ? ' ' + n : ''}</span>
             ${many && (s.title || '').trim() ? `<h3 style="margin:0;">${escapeHtml(s.title)}</h3>` : ''}
           </div>
           <p class="field-hint">An open, complex, networked condition synthesized from what you framed. This is not a problem to solve yet — it's a situation to frame.</p>
@@ -7192,7 +7246,7 @@ ${AI_RULES}
         const article = document.createElement('article');
         article.className = 'submission-cluster';
         article.innerHTML = `
-          <h3>${escapeHtml(s.title || 'Untitled Problem Situation')} <span style="font-size:0.7rem; color:#8a4fff; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-left:8px;">Problem Situation</span></h3>
+          <h3>${escapeHtml(s.title || 'Untitled Problem Situation')} <span style="font-size:var(--text-2xs); color:var(--tier-4-plus-ink-light); font-weight:700; text-transform:uppercase; letter-spacing:var(--track-label); margin-left:var(--space-2);">Problem Situation</span></h3>
           ${s.description ? `<p class="cluster-desc">${escapeHtml(s.description)}</p>` : ''}
           ${answer('Why this is open, not bounded', s.openness, true)}
           <ul class="signal-chips">
