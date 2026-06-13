@@ -1,6 +1,8 @@
 # The Triangulator-inator
 
-A problem-framing instrument built on Kees Dorst's Frame Creation method. Load a pool of raw observations, sort them into signals and noise, triangulate the signals up a ladder of evidence, and synthesize the open condition worth framing.
+A problem-framing instrument built on Kees Dorst's Frame Creation method. State your initial problem concept, load a pool of raw observations, sort them into signals and noise, triangulate the signals up a ladder of evidence to validate that concept, map the open condition underneath, and classify the evidence into Dorst's seven types. It maps the situation and surfaces its themes — the groundwork a frame stands on; framing itself comes later, in your own tools.
+
+The whole sequence is a **loop, not a pipeline**: nothing is ever "done." As each step teaches you something, you circle back — revise the concept, add sources, re-sort, reconnect, re-map, re-classify.
 
 Try it: **theupskillinglabs.github.io/triangles/**
 
@@ -10,17 +12,21 @@ An open-source project created for **The Upskilling Labs** by **Levy Strategic D
 
 ## What it does
 
-You start with an **observation pool**: raw material from the world — field notes, interview fragments, articles, statistics, policies, anecdotes. Your job is to work through them, surface the real signals hiding inside, triangulate those signals into layered evidence, and climb until you can name the open condition underneath it all.
+You start by naming your **initial problem concept** — the starting hunch you'll put to the test — then work an **observation pool** of raw material from the world (field notes, interview fragments, articles, statistics, policies, anecdotes), surface the real signals hiding inside, triangulate them into layered evidence that validates or challenges your concept, and climb until you can name the open condition underneath it all.
 
-The tool walks you through four stages:
+The tool walks you through these stages (and you can revisit any of them at any time — it's a loop):
 
-1. **Sort the observations** — swipe through each observation card to classify it as **noise** (left), **signal** (right), or **★ super signal** (up). The binary forces intellectual commitment. Super signals mark what you consider most urgent or revelatory. Your sorting decisions become analytical data — the AI uses what you kept versus discarded to challenge your instincts.
+1. **Name your initial concept** — before you load a single source, state the problem as you currently understand it. It's provisional: the evidence will push back on it, and you're expected to come back and revise it.
 
-2. **Triangulate on the canvas** — drag surviving signals onto a web map and connect them up a ladder of cards. Connecting two of anything creates the next level: two **signals** → an **evidence card**; two evidence cards → a **pattern**; two patterns → a **theme**; two themes → a **super-theme**; and on up. Evidence cards start unclassified — classify each into one of seven types when the pattern is clear. Nodes can have multiple parents: this is a **many-to-many lattice**, not a strict tree. A card at any level is locked for editing until every card it rests on is named and described — every claim must stand on examined ones.
+2. **Sort the observations** — swipe through each observation card to classify it as **noise** (left), **signal** (right), or **★ super signal** (up). The binary forces intellectual commitment. Super signals mark what you consider most urgent or revelatory. Your sorting decisions become analytical data — the AI uses what you kept versus discarded to challenge your instincts.
 
-3. **Push to the Problem Situation** — once every card is named and described, push forward and synthesize the whole ladder into a single **Problem Situation**: name it, frame it, map its stakeholders, and pressure-test it. AI prompts grounded in Dorst's methodology serve as thinking partners throughout.
+3. **Validate on the canvas** — drag surviving signals onto a web map and connect them up a ladder of cards. Connecting two of anything creates the next level: two **signals** → an **evidence card**; two evidence cards → a **pattern**; two patterns → a **theme**; two themes → a **super-theme**; and on up. Evidence cards stay **simple here — no type labels yet**: you're testing your concept, naming the claim each cluster makes. Nodes can have multiple parents: this is a **many-to-many lattice**, not a strict tree. A card at any level is locked for editing until every card it rests on is named and described — every claim must stand on examined ones.
 
-4. **Artifact** — your framed Problem Situation with its full evidence trail, ready to print or download as Markdown.
+4. **Map the Problem Situation** — once every card is named and described and you've climbed to at least one theme, push forward and synthesize the whole ladder into a single **Problem Situation**: name it, describe it, map its stakeholders and themes, and pressure-test it. You're mapping and understanding the situation here — not yet framing it.
+
+5. **Classify the evidence** — only now do the seven evidence types appear, introduced **one at a time in Dorst's order** via a guided stepper. Tag each evidence card and see where your coverage is thin.
+
+6. **Artifact** — your mapped Problem Situation with its full evidence trail, ready to print or download as Markdown.
 
 ---
 
@@ -30,7 +36,7 @@ The tool walks you through four stages:
 |---|---|---|
 | **Observation** | Raw, unsorted material — the full pool you load at the start | Imported from CSV, sample data, or manual entry |
 | **Signal** | An observation that survived sorting — a pattern of action or behavior, not an opinion | Sorting right or up |
-| **Evidence** | An intermediate evidence card — created plain, then classified into one of seven types | Connecting two signals |
+| **Evidence** | An intermediate evidence card — created plain; you classify it into one of seven types *after* the situation is mapped | Connecting two signals |
 | **Pattern** | A specific, named mechanism that 2+ evidence cards triangulate toward | Connecting two evidence cards |
 | **Theme** | A deeper universal that 2+ patterns triangulate toward — bridging human experience and structural/systemic factors | Connecting two patterns |
 | **Super-theme / Mega-theme / …** | Higher convergences pointing toward a frame | Connecting two of the level below |
@@ -38,17 +44,17 @@ The tool walks you through four stages:
 
 ### The seven evidence types
 
-Evidence cards are organized into two analytical phases:
+The types are introduced only **after** you've mapped the situation, in a guided classify phase that walks them **one at a time in Kees Dorst's frame-creation order**: Archaeology first, then the paradox and its hard limits, then the wider field.
 
-**Archaeology & Context** — excavating the problem's history and hard limits:
+**Archaeology & Context** — excavating the problem's history, paradox, and hard limits:
 
 | Type | Color | What it captures |
 |---|---|---|
 | **History** | Slate blue | What happened / what was done |
 | **Counterfactual** | Violet | The path not taken |
+| **Problem** | Orange | A bounded difficulty, solvable conventionally |
 | **Boundary** | Deep red | A "they will never…" nonnegotiable |
 | **Flux** | Amber | A point of movement or potential change |
-| **Problem** | Orange | A bounded difficulty, solvable conventionally |
 
 **Field mapping** — mapping the wider field of players and values:
 
@@ -67,9 +73,10 @@ The ✨ AI button on every evidence card generates a type-specific prompt ground
 
 Open `index.html` in any modern browser. No build step, no server, no dependencies — everything is in one file.
 
-1. Load observations — use the 44 sample observations, upload a CSV, or add manually
-2. Click **Start Sorting** to enter the swipe-based sorting phase
-3. After sorting, the canvas opens with your surviving signals ready to triangulate
+1. Click **Get started** and name your initial problem concept
+2. Load observations — use the 44 sample observations, upload a CSV, or add manually
+3. Click **Start Sorting** to enter the swipe-based sorting phase
+4. After sorting, the canvas opens with your surviving signals ready to triangulate and validate your concept
 
 Your session is saved automatically to `localStorage`, so you can close and reopen without losing work.
 
@@ -78,9 +85,9 @@ Your session is saved automatically to `localStorage`, so you can close and reop
 First-time visitors are offered a **5-minute interactive tutorial** (also available any time via the **Tutorial** button). It runs on a self-contained worked example — *neighborhood food access* — completely sandboxed from your own data:
 
 1. **Sorting practice** — swipe three example observation cards (an opinion that's noise, an observed pattern that's a signal, and a reframing super signal), with an explanation after each swipe of *why* it sorts that way.
-2. **Canvas walkthrough** — eight pre-placed signals. You connect two into an evidence card, classify it using the two-phase type picker, and name the claim. The tutorial fast-forwards sibling cards, then you build a pattern, climb to a theme, and reach the Push gate.
+2. **Canvas walkthrough** — eight pre-placed signals. You connect two into an evidence card, classify it using the two-phase type picker, and name the claim. (As a teaching simplification the tutorial classifies mid-canvas; in the real app the seven types are introduced only after you've mapped the situation.) The tutorial fast-forwards sibling cards, then you build a pattern, climb to a theme, and reach the Push gate.
 
-Along the way it teaches the Frame Creation reasoning behind each step: why binary sorting forces commitment, why two signals beat one anecdote, why patterns must name mechanisms, and why you frame before you solve. Exit at any step — nothing touches your workspace or saved state.
+Along the way it teaches the Frame Creation reasoning behind each step: why binary sorting forces commitment, why two signals beat one anecdote, why patterns must name mechanisms, and why you map and understand before you solve. Exit at any step — nothing touches your workspace or saved state.
 
 ---
 
@@ -122,13 +129,13 @@ The sorting screen is a pure gesture interface:
 
 1. Hover any signal card to reveal **dots** on its edges.
 2. Drag from a dot to another signal — a plain **evidence card** appears at the midpoint. The signals stay where you placed them; connecting never reshuffles your layout.
-3. Drag more signals onto the card to grow it. When the pattern is clear, classify the evidence card using the two-phase type picker (Archaeology & Context / Field mapping). You can reclassify any time via "Change type".
+3. Drag more signals onto the card to grow it. Evidence cards stay **simple while you validate** — name the claim the cluster makes against your concept. The seven evidence types are introduced later, in the classify phase that follows mapping the situation.
 4. **Name and describe the card** — higher-tier cards are locked until every card they rest on is named and described. Every claim must stand on examined ones.
 5. Connect two evidence cards to create a **Pattern**, two patterns to create a **Theme**, and so on. You always build one level at a time.
 6. **Theme** cards show quality-check prompts:
    - *Bridge test:* Does this describe both a structural condition AND a human experience?
    - *Depth test:* Is this hidden beneath the surface of everyday professional life?
-7. Nodes are color-coded by tier (and, for evidence cards, by type).
+7. Nodes are color-coded by tier (and, once classified, evidence cards by type).
 
 ### Levels view
 
@@ -142,16 +149,16 @@ Every card has a **✨ AI** button. Prompts are level- and type-aware — an unc
 
 ---
 
-## Push to the Problem Situation
+## Map the Problem Situation
 
-Once every card on the board is named and described — and the ladder has climbed to **at least one named and described theme** — the **Push to Problem Situation** button opens the synthesis screen:
+Once every card on the board is named and described — and the ladder has climbed to **at least one named and described theme** — the **Commit** button maps the ladder into a single **Problem Situation** box on the canvas, then drops you into the **classify phase**: the seven evidence types are introduced one at a time, in Dorst's order, and you tag each evidence card. Classification is encouraged but skippable, and you can re-enter it anytime. From there the synthesis screen lets you:
 
-- **Name & describe** the open condition
-- **Frame it** — "If this situation is approached as if it is ___, then ___"
-- **Map its stakeholders** — inner-circle, wider-field, owners/clients, gatekeepers
-- **Pressure-test the framing** — hidden assumptions, structural biases, who benefits from the status quo
+- **Name & describe** the open condition and why it's open, not bounded
+- **Take stock of the evidence landscape** — which of the seven types you have, and the research gaps
+- **Map who you still need to reach** and the access barriers
+- **Find the paradox** — the structural deadlock, who benefits from the status quo, and a pressure-test of your own thinking
 
-Each section has an AI prompt to take to your own AI tool — think with it, then come back and write in your own words. Once all sections are complete, you can submit.
+You're mapping and understanding the situation here — not yet framing it. Each section has an AI prompt to take to your own AI tool — think with it, then come back and write in your own words. Once the core sections are complete, you can submit.
 
 ---
 
