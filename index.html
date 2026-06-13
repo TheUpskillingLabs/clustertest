@@ -2218,7 +2218,7 @@
     <div class="deck-stage" id="intro-stage">
 
       <section class="intro-slide is-active" data-slide="0">
-        <p class="deck-eyebrow">A problem-framing canvas <span class="deck-kicker">· after Kees Dorst</span></p>
+        <p class="deck-eyebrow">A situation-mapping canvas <span class="deck-kicker">· after Kees Dorst</span></p>
         <h1 class="deck-title">The Triangulator<span class="accent">-inator</span></h1>
         <p class="deck-lede">Some people find a better answer. Others find a better question — and change everything. You're about to become the second kind.</p>
         <div class="deck-body"><p>A field-mapping and theme-identification instrument by <strong>The Upskilling Labs</strong>, designed by <strong>Levy Strategic Design</strong>. Five short ideas, then you start.</p></div>
@@ -2597,7 +2597,7 @@
         <h3 id="commit-modal-title">Pick the patterns you'll defend</h3>
       </div>
       <div class="modal-body">
-        <p>These are the patterns you're willing to stand behind. Choose 2–3 with enough signal density to build a real case — you'll map the stakeholders and pressure-test the framing before submitting.</p>
+        <p>These are the patterns you're willing to stand behind. Choose 2–3 with enough signal density to build a real case — you'll map the stakeholders and pressure-test the map before submitting.</p>
         <div id="commit-warning" class="commit-warning hidden"></div>
         <div id="commit-cluster-list" class="commit-cluster-list" role="group" aria-label="Clusters available to commit"></div>
         <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
@@ -4269,7 +4269,7 @@
       if (card.tier === 3) {
         themeQuality = `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`;
       } else if (card.tier === 4) {
-        themeQuality = `<div class="quality-check"><em>Convergence test:</em> Does this sit at the intersection of all your patterns — not just summarize them?<br><em>Frame readiness:</em> Could "if this situation is approached as if it is [this]…" open new possibilities?</div>`;
+        themeQuality = `<div class="quality-check"><em>Convergence test:</em> Does this sit at the intersection of all your patterns — not just summarize them?<br><em>Situation test:</em> Could "if this situation is approached as if it is [this]…" open new possibilities?</div>`;
       } else if (card.tier >= 5) {
         themeQuality = `<div class="quality-check"><em>Lens test:</em> Could someone outside your field understand this as a way of seeing the whole situation?</div>`;
       }
@@ -5453,7 +5453,7 @@
         { targetSelector: '#submit-for-voting-btn', title: 'Submit', body: 'Work through every section — name, description, openness, evidence landscape, paradox — then submit to generate your artifact.', tooltipPlacement: 'top-left', spotlightPadding: 8 }
       ],
       artifact: [
-        { targetSelector: '.submission-cluster', title: 'Your artifact', body: 'Your framed Problem Situation with its full evidence trail — ready for peer review.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
+        { targetSelector: '.submission-cluster', title: 'Your artifact', body: 'Your mapped Problem Situation with its full evidence trail — ready for peer review.', tooltipPlacement: 'top-right', spotlightPadding: 8 },
         { targetSelector: '.peer-review-section', title: 'Peer review prep', body: 'Use this checklist before your review. Can you defend every decision? Whose voice is missing?', tooltipPlacement: 'top-right', spotlightPadding: 8 }
       ]
     };
@@ -7428,7 +7428,7 @@ ${AI_RULES}
             <button type="button" class="btn btn-outline" ${classifyStepIndex === 0 ? 'disabled' : ''} onclick="setClassifyStep(${classifyStepIndex - 1})">‹ Back</button>
             ${n < total
               ? `<button type="button" class="btn btn-primary" onclick="setClassifyStep(${classifyStepIndex + 1})">Next type ›</button>`
-              : `<button type="button" class="btn btn-primary" onclick="exitClassifyPhase(true)">Done — continue to deepen →</button>`}
+              : `<button type="button" class="btn btn-primary" onclick="exitClassifyPhase(true)">Continue to deepen →</button>`}
             <span class="classify-guide-hint">You can come back and re-classify anytime.</span>
           </div>
         </div>`;
