@@ -172,6 +172,8 @@ From the Artifact screen:
 - Unified tiered data model: a single `cards[]` array where each card has a `tier` (1 = evidence … up) and a `childIds` array; the Problem Situation is one synthesized object
 - Older state shapes (clusters, and the cards/themes/situations lattice) are auto-migrated on load
 - Seven evidence types organized into two analytical phases (Archaeology & Context; Field mapping) with per-type SVG glyphs and Dorst-grounded AI prompts
+- Design tokens: all tier colors (`--tier-1`…`--tier-6`), evidence-type colors (`--type-history` … `--type-problem`), the type scale with paired baseline-grid leading (`--text-*`/`--lead-*`, 8px baseline), spacing (`--space-*`), radii, rules, and shadows live in the `:root` block of `index.html`; JavaScript resolves colors from CSS at startup (`cssToken()`), so the canvas, dock, and cards can never disagree
+- One tier-glyph language (dot → dashed circle → triangle → square → four-point star for Signal → Evidence → Pattern → Theme → Super-theme) shared by the bottom dock and card tags
 - Hub locking: a card is locked for editing until every card it rests on is named and described; unlocks live as you type
 - WCAG-AA contrast maintained across all evidence type color treatments; redundant shape channel (per-type glyph) for colorblind accessibility
 - Per-screen onboarding tours with spotlight engine
