@@ -2063,9 +2063,17 @@
       gap: 4px 2px; padding: 7px 16px; background: var(--midnight); width: 100%; box-sizing: border-box; }
     .step-indicator .step-loop-note { flex-basis: 100%; text-align: center; font-size: var(--text-xs);
       color: var(--cloud); opacity: 0.6; margin: 3px 0 0; }
+    .step-why { flex-basis: 100%; max-width: 72ch; margin: 8px auto 0; text-align: left;
+      background: rgba(0,148,160,0.14); border-left: 3px solid var(--primary-teal);
+      border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 8px 14px;
+      font-size: var(--text-sm); line-height: 1.55; color: var(--ghost-white); }
+    .step-why .step-why-label { color: var(--primary-teal); text-transform: uppercase;
+      font-size: var(--text-2xs); font-weight: 800; letter-spacing: var(--track-label);
+      display: block; margin-bottom: 3px; }
     @media (max-width: 600px) {
       #board-workspace .step-indicator, #workspace-screen .step-indicator { display: none; }
       .step-indicator .step-loop-note { display: none; }
+      .step-why { font-size: var(--text-xs); padding: 7px 12px; }
     }
     .step-chip { display: inline-flex; align-items: center; gap: 6px; border: none; background: none;
       cursor: pointer; font: inherit; font-size: var(--text-xs); letter-spacing: 0.02em;
@@ -2140,6 +2148,10 @@
       background: color-mix(in srgb, var(--primary-teal) 10%, transparent);
       font-size: var(--text-base); line-height: var(--lead-base); color: var(--cloud); max-width: 64ch; }
     .deck-note strong { color: var(--ghost-white); }
+    /* Forward hook: the closing line of a slide that tees up the next one. */
+    .deck-handoff { margin-top: clamp(14px, 2.4vh, 22px); font-size: var(--text-base);
+      line-height: var(--lead-base); color: var(--primary-teal); font-weight: 600; max-width: 60ch; }
+    .deck-handoff em { color: var(--primary-teal); font-style: italic; }
 
     /* Compact triad for the theory / power panels. */
     .deck-triad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(14px, 1.6vw, 22px);
@@ -2221,7 +2233,7 @@
         <p class="deck-eyebrow">A situation-mapping canvas <span class="deck-kicker">· after Kees Dorst</span></p>
         <h1 class="deck-title">The Triangulator<span class="accent">-inator</span></h1>
         <p class="deck-lede">Some people find a better answer. Others find a better question — and change everything. You're about to become the second kind.</p>
-        <div class="deck-body"><p>A field-mapping and theme-identification instrument by <strong>The Upskilling Labs</strong>, designed by <strong>Levy Strategic Design</strong>. Five short ideas, then you start.</p></div>
+        <div class="deck-body"><p>A field-mapping and theme-identification instrument by <strong>The Upskilling Labs</strong>, designed by <strong>Levy Strategic Design</strong>. Five short ideas — each one a reason the hard part isn't solving, it's seeing. Then you start.</p></div>
       </section>
 
       <section class="intro-slide" data-slide="1">
@@ -2230,13 +2242,14 @@
         <div class="deck-body">
           <p>What you get out of an AI tool is entirely a function of what you put in. Feed it a shallow, industrial-era problem definition and it just hands you a mediocre, legacy solution — <em>faster</em>. When execution is free and instant, context is the only edge left.</p>
           <p>So there's no magic AI in here doing the thinking for you. This is a simulator and a launchpad: it trains you to wade into chaos, extract the real human themes, and structure a problem worth solving — then carry that to any tool you like.</p>
+          <p class="deck-handoff">But how does a <em>canvas</em> train that judgment? Look at what's running underneath it.</p>
         </div>
       </section>
 
       <section class="intro-slide is-wide" data-slide="2">
         <p class="deck-eyebrow">Your secret power <span class="deck-kicker">· 02</span></p>
         <h1 class="deck-title">A stealth relational database.</h1>
-        <div class="deck-body"><p>It looks and feels like a fluid visual canvas. Underneath, it's a relational database engine — every card you connect builds a structured, many-to-many lattice, translating your intuition into a real data architecture beneath the surface.</p></div>
+        <div class="deck-body"><p>It looks and feels like a fluid visual canvas. Underneath, it's a relational database engine — every card you connect builds a structured, many-to-many lattice, translating your intuition into a real data architecture beneath the surface. That structure is what makes a claim <em>defensible</em> instead of merely felt.</p></div>
         <div class="deck-triad">
           <div class="cell"><span class="cell-eyebrow">Structure</span><h3>Web maps as lattices</h3><p>Connecting cards links your themes down through patterns and evidence to the exact signals you started with.</p></div>
           <div class="cell"><span class="cell-eyebrow">Depth</span><h3>Enriched nodes</h3><p>Every card is a vault — markdown notes and primary/secondary sources bonded to the claim they support.</p></div>
@@ -2253,7 +2266,7 @@
           <div class="cell"><span class="cell-eyebrow">Induction</span><h3>The Detective</h3><p>Knows the WHAT and OUTCOME; infers the missing HOW. Holmes reading a crime scene.</p></div>
           <div class="cell"><span class="cell-eyebrow">Normal abduction</span><h3>The Reactive Fixer</h3><p>Knows the HOW and OUTCOME; engineers a WHAT to fix the symptom.</p></div>
         </div>
-        <p class="deck-note"><strong>The trap:</strong> normal abduction is efficient for closed problems but fails in complex ones — it refuses to question the underlying HOW.</p>
+        <p class="deck-note"><strong>The trap:</strong> normal abduction is efficient for closed problems but fails in complex ones — it refuses to question the underlying HOW. So what do experts do instead when the HOW itself is broken?</p>
       </section>
 
       <section class="intro-slide" data-slide="4">
@@ -2261,7 +2274,8 @@
         <h1 class="deck-title">Transcend the paradox.</h1>
         <div class="deck-body">
           <p>At the core of every intractable challenge is a <strong>paradox</strong> — valid requirements that mutually exclude each other. You can't compromise your way out; you have to widen the context until a new pattern becomes possible.</p>
-          <p>This tool gets you to a rigorous, evidence-backed <strong>map</strong> of the situation and the human themes beneath it — the groundwork a frame has to stand on. <em>Framing itself comes later</em>, in your own tools, once that map is sound.</p>
+          <p>This tool gets you to a rigorous, evidence-backed <strong>map</strong> of the situation and the human themes beneath it — the groundwork a frame has to stand on. <em>Framing itself comes later</em>, in your own tools, once that map is sound. That's the prize: not a faster answer, but the standing to ask a better question.</p>
+          <p class="deck-handoff">Here's the path that gets you there — seven moves, on a loop.</p>
         </div>
       </section>
 
@@ -2565,7 +2579,7 @@
         <button class="btn btn-outline" onclick="enterClassifyPhase()" title="Re-open the evidence type classification on the board">↩ Revisit classification</button>
         <h2 id="workspace-title">Build the case</h2>
       </div>
-      <p class="workspace-intro">Work through the four stages in order: solidify the situation, take honest stock of your evidence, name who you still need to reach, then find the paradox at the core. The stages generate research demand on purpose — each one should send you back out to the field, to your sources, or to your AI thinking partner before you write what you actually believe.</p>
+      <p class="workspace-intro">Work through the four stages in order: solidify the situation, take honest stock of your evidence, name who you still need to reach, then find the paradox at the core.</p>
     </div>
     <nav class="workspace-jump-bar" id="workspace-jump-bar" aria-label="Jump to a committed cluster"></nav>
     <div class="workspace-cards" id="workspace-cards-container"></div>
@@ -3491,6 +3505,24 @@
       { id: 'classify', label: 'Classify', screen: 'board' },
       { id: 'deepen',   label: 'Deepen',   screen: 'workspace' }
     ];
+    // The underlying "why" for each step, in a consistent 3-beat scaffold:
+    // recall (what you just did) → why now → payoff (what it earns next).
+    const STEP_WHY = {
+      concept: { label: 'Why start here',
+        body: "No evidence is loaded yet — on purpose. Naming your hunch first makes your bias visible, so the sources can argue with a position instead of filling a blank. Everything downstream measures itself against this sentence; revise it the moment the evidence earns it." },
+      sources: { label: 'Why a pool, not a search',
+        body: "You've named what you expect. Now gather raw material wide — including what could contradict you — because a pool you can sift beats a query that only returns what you already believe. The breadth here sets the ceiling on every signal you'll find." },
+      sort: { label: 'Why force a binary',
+        body: "These are the observations you just gathered. Signal-or-noise forces fast commitment, and commitment surfaces instinct — where you hesitate is data about a belief you haven't earned. Only what survives becomes raw material for the map." },
+      validate: { label: 'Why connect, not collect',
+        body: "Your signals are still isolated facts. Connecting two into an evidence card is the first real test of your concept: a claim two independent signals support is defensible; one anecdote isn't. This ladder is the spine of everything above it." },
+      map: { label: 'Why synthesize now',
+        body: "You've climbed to a theme that bridges human experience and structure. Synthesizing the whole ladder into one Problem Situation forces you to say what it all amounts to — an open condition, not a tidy problem. This is the groundwork a real frame later stands on." },
+      classify: { label: 'Why type the evidence now',
+        body: "The situation is mapped, so Dorst's seven types can finally earn their keep. Typing each card turns an undifferentiated pile into a coverage map — gaps leap out (“lots of History, no Flux — do we know what's changing?”). Skippable, and re-typable anytime." },
+      deepen: { label: 'Why keep going',
+        body: "You have a mapped situation — now pressure it. Each stage (evidence landscape, access, paradox) is built to generate research demand, sending you back to the field, your sources, or your AI partner before you write what you believe. The loop doesn't end here; it tightens." }
+    };
     // Which step is active given the current screen/state.
     function currentStepId() {
       switch (appState.currentScreen) {
@@ -3546,7 +3578,11 @@
         const sep = i > 0 ? '<span class="step-sep" aria-hidden="true">→</span>' : '';
         return `${sep}<button type="button" class="step-chip" data-step="${s.id}" data-reached="${reached ? 1 : 0}" data-active="${isActive ? 1 : 0}"${reached ? '' : ' disabled'}${isActive ? ' aria-current="step"' : ''}><span class="step-dot" aria-hidden="true"></span>${escapeHtml(s.label)}</button>`;
       }).join('');
-      const html = `<div class="step-indicator">${chips}<span class="step-loop-note"><span class="step-loop-icon" aria-hidden="true">↺</span> This is a loop — revisit any step as you learn more.</span></div>`;
+      const why = STEP_WHY[active];
+      const whyHtml = why
+        ? `<div class="step-why"><span class="step-why-label">${escapeHtml(why.label)}</span>${escapeHtml(why.body)}</div>`
+        : '';
+      const html = `<div class="step-indicator">${chips}<span class="step-loop-note"><span class="step-loop-icon" aria-hidden="true">↺</span> This is a loop — revisit any step as you learn more.</span>${whyHtml}</div>`;
       mounts.forEach(m => {
         m.innerHTML = html;
         m.querySelectorAll('.step-chip').forEach(btn => {
