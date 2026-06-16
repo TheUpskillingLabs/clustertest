@@ -2088,6 +2088,44 @@
       .view-tab { padding: 12px; }
       .sorting-undo-link { padding: 12px 16px; }
     }
+
+    /* --- v2.2: methodological "why" surfacing (Deliverables 2 & 5) --- */
+    .step-why strong { color: var(--primary-teal); font-weight: 700; }
+    .lock-why { display: block; margin-top: 4px; font-size: var(--text-2xs);
+      line-height: var(--lh-snug); color: rgba(255,255,255,0.5); }
+    .lock-why .lock-why-syndrome { color: var(--primary-teal); font-weight: 700; }
+    .validation-why-syndrome { color: var(--primary-teal); font-weight: 700; }
+
+    /* --- v2.2: Adversarial Blind-Spot Audit drawer (Deliverable 3) --- */
+    .blindspot-scrim { position: fixed; inset: 0; background: rgba(16,24,32,0.5); z-index: 70; }
+    .blindspot-scrim.hidden { display: none; }
+    .blindspot-drawer { position: fixed; top: 0; right: 0; height: 100%;
+      width: min(560px, calc(100vw - 24px)); z-index: 80;
+      background: var(--ghost-white); color: var(--midnight);
+      box-shadow: -12px 0 40px rgba(0,0,0,0.35);
+      transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2,0.7,0.2,1);
+      display: flex; flex-direction: column; }
+    .blindspot-drawer.is-open { transform: translateX(0); }
+    @media (prefers-reduced-motion: reduce) { .blindspot-drawer { transition: none; } }
+    .blindspot-head { display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-3); padding: var(--space-5) var(--space-5) var(--space-4);
+      border-bottom: 1px solid var(--cloud); }
+    .blindspot-eyebrow { font-size: var(--text-2xs); font-weight: 700; text-transform: uppercase;
+      letter-spacing: var(--track-label); color: var(--primary-teal); margin: 0 0 4px; }
+    .blindspot-title { font-size: var(--text-xl); font-weight: 600; color: var(--midnight); margin: 0; line-height: 1.15; }
+    .blindspot-close { background: none; border: none; cursor: pointer; font-size: 26px;
+      line-height: 1; color: var(--midnight); opacity: 0.55; padding: 0 4px; }
+    .blindspot-close:hover { opacity: 1; }
+    .blindspot-close:focus-visible { outline: 2px solid var(--primary-teal); outline-offset: 2px; opacity: 1; }
+    .blindspot-body { padding: var(--space-5); overflow-y: auto; flex: 1;
+      display: flex; flex-direction: column; gap: var(--space-4); }
+    .blindspot-attr { font-size: var(--text-sm); line-height: var(--lead-sm); color: var(--midnight); opacity: 0.8; margin: 0; }
+    .blindspot-attr a { color: var(--primary-teal); }
+    .blindspot-prompt { width: 100%; box-sizing: border-box; resize: vertical; min-height: 280px;
+      background: var(--midnight); color: var(--cloud); border: none; border-radius: var(--radius-2);
+      padding: 20px; font-family: monospace; font-size: var(--text-sm); line-height: var(--lead-sm); white-space: pre; }
+    .blindspot-actions { display: flex; gap: var(--space-3); }
+    .blindspot-coach { font-size: var(--text-sm); line-height: var(--lead-sm); color: var(--primary-teal); font-weight: 600; margin: 0; }
   </style>
 </head>
 <body>
@@ -2283,19 +2321,19 @@
       </section>
 
       <section class="intro-slide" data-slide="1">
-        <p class="deck-eyebrow">The vibe-coding trap <span class="deck-kicker">· 01</span></p>
-        <h1 class="deck-title">Context is the ultimate flex.</h1>
+        <p class="deck-eyebrow">Your assignment <span class="deck-kicker">· 01</span></p>
+        <h1 class="deck-title">You're part of a <span class="accent">Pod</span>.</h1>
         <div class="deck-body">
-          <p>What you get out of an AI tool is entirely a function of what you put in. Feed it a shallow, industrial-era problem definition and it just hands you a mediocre, legacy solution — <em>faster</em>. When execution is free and instant, context is the only edge left.</p>
-          <p>So there's no magic AI in here doing the thinking for you. This is a simulator and a launchpad: it trains you to wade into chaos, extract the real human themes, and structure a problem worth solving — then carry that to any tool you like.</p>
-          <p class="deck-handoff">But how does a <em>canvas</em> train that judgment? Look at what's running underneath it.</p>
+          <p>Twelve to thirty people, all investigating the same real-world problem from different angles. Each of you has gathered raw observations from the field. Over the next few weeks your job is to <strong>map the situation</strong> — to turn that pile into named Themes comprehensive enough to survive scrutiny from the entire community.</p>
+          <p>This isn't a private notebook. Everything you map gets merged with what your podmates map, and the bar is high: a claim you can't defend to a room of skeptical peers isn't a Theme yet — it's a hunch.</p>
+          <p class="deck-handoff">The hard part isn't the mapping. It's the five ways your own mind will try to sabotage it.</p>
         </div>
       </section>
 
       <section class="intro-slide is-wide" data-slide="2">
         <p class="deck-eyebrow">Your secret power <span class="deck-kicker">· 02</span></p>
         <h1 class="deck-title">A stealth relational database.</h1>
-        <div class="deck-body"><p>It looks and feels like a fluid visual canvas. Underneath, it's a relational database engine — every card you connect builds a structured, many-to-many lattice, translating your intuition into a real data architecture beneath the surface. That structure is what makes a claim <em>defensible</em> instead of merely felt.</p></div>
+        <div class="deck-body"><p>It looks and feels like a fluid visual canvas. Underneath, it's a relational database engine — every card you connect builds a structured, many-to-many lattice, translating your intuition into a real data architecture beneath the surface. That structure is what lets a Theme be <em>defensible</em> in front of your Pod, instead of merely felt.</p></div>
         <div class="deck-triad">
           <div class="cell"><span class="cell-eyebrow">Structure</span><h3>Web maps as lattices</h3><p>Connecting cards links your themes down through patterns and evidence to the exact signals you started with.</p></div>
           <div class="cell"><span class="cell-eyebrow">Depth</span><h3>Enriched nodes</h3><p>Every card is a vault — markdown notes and primary/secondary sources bonded to the claim they support.</p></div>
@@ -2304,40 +2342,43 @@
       </section>
 
       <section class="intro-slide is-wide" data-slide="3">
-        <p class="deck-eyebrow">The method behind the madness <span class="deck-kicker">· 03</span></p>
-        <h1 class="deck-title">Experts reason differently.</h1>
-        <div class="deck-body"><p>We owe this paradigm to design scholar <strong>Kees Dorst</strong>. Every challenge has a <strong>WHAT</strong> (the elements), a <strong>HOW</strong> (the pattern connecting them), and an <strong>OUTCOME</strong>. Which you know determines how your brain reasons:</p></div>
+        <p class="deck-eyebrow">Five enemies <span class="deck-kicker">· 03</span></p>
+        <h1 class="deck-title">The syndromes this tool fights.</h1>
+        <div class="deck-body"><p>Kees Dorst names the failure modes that wreck problem-framing. This canvas is engineered to make each one <em>mechanically hard</em> to commit — every lock you'll hit is one of these, headed off.</p></div>
         <div class="deck-triad">
-          <div class="cell"><span class="cell-eyebrow">Deduction</span><h3>The Scientist</h3><p>Knows the WHAT and HOW; predicts the OUTCOME. Perfect for physics, useless for societal flux.</p></div>
-          <div class="cell"><span class="cell-eyebrow">Induction</span><h3>The Detective</h3><p>Knows the WHAT and OUTCOME; infers the missing HOW. Holmes reading a crime scene.</p></div>
-          <div class="cell"><span class="cell-eyebrow">Normal abduction</span><h3>The Reactive Fixer</h3><p>Knows the HOW and OUTCOME; engineers a WHAT to fix the symptom.</p></div>
+          <div class="cell"><span class="cell-eyebrow">The Lone Warrior</span><h3>Framing in isolation</h3><p>One person deciding what it all means. The Git loop forces your map to merge with the Pod's — disagreements become conversations.</p></div>
+          <div class="cell"><span class="cell-eyebrow">Freeze the World</span><h3>Treating flux as fixed</h3><p>Pretending a moving situation will hold still. The app is a loop, not a pipeline — nothing here is ever "done."</p></div>
+          <div class="cell"><span class="cell-eyebrow">The Self-Made Box</span><h3>Untested assumptions</h3><p>Repeating a guess until it feels true. A Blind-Spot Audit turns an AI into a hostile critic, hunting the blind spots you can't see.</p></div>
         </div>
-        <p class="deck-note"><strong>The trap:</strong> normal abduction is efficient for closed problems but fails in complex ones — it refuses to question the underlying HOW. So what do experts do instead when the HOW itself is broken?</p>
+        <div class="deck-triad">
+          <div class="cell"><span class="cell-eyebrow">The Rational High Ground</span><h3>Claims you never grounded</h3><p>Naming a Theme you "just felt." You can't name Evidence without two signals, or a Theme without examined Patterns.</p></div>
+          <div class="cell"><span class="cell-eyebrow">Identification</span><h3>Your slice = the whole</h3><p>Mistaking your corner of the field for all of it. This tool refuses to do framing — forcing you to leave its identity behind.</p></div>
+          <div class="cell"><span class="cell-eyebrow">The remedy</span><h3>Earn every level</h3><p>The locks aren't friction for its own sake — each one is a syndrome the app won't let you walk into.</p></div>
+        </div>
       </section>
 
       <section class="intro-slide" data-slide="4">
-        <p class="deck-eyebrow">The breakthrough <span class="deck-kicker">· 04</span></p>
-        <h1 class="deck-title">Transcend the paradox.</h1>
-        <div class="deck-body">
-          <p>At the core of every intractable challenge is a <strong>paradox</strong> — valid requirements that mutually exclude each other. You can't compromise your way out; you have to widen the context until a new pattern becomes possible.</p>
-          <p>This tool gets you to a rigorous, evidence-backed <strong>map</strong> of the situation and the human themes beneath it — the groundwork a frame has to stand on. <em>Framing itself comes later</em>, in your own tools, once that map is sound. That's the prize: not a faster answer, but the standing to ask a better question.</p>
-          <p class="deck-handoff">Here's the path that gets you there — seven moves, on a loop.</p>
-        </div>
+        <p class="deck-eyebrow">The ladder <span class="deck-kicker">· 04</span></p>
+        <h1 class="deck-title">You can't skip a rung.</h1>
+        <div class="deck-body"><p>Sensemaking here is a strict sequence. Each level is <em>earned</em> from the one below — and the app physically prevents you from naming a higher claim before its foundation is solid.</p></div>
+        <ol class="deck-flow">
+          <li><span><b>Load raw field data</b> — pour in everything your Pod observed, contradictions included.</span></li>
+          <li><span><b>Sort it</b> — fast binary decisions, signal or noise. Where you hesitate is where your instincts surface.</span></li>
+          <li><span><b>Triangulate the survivors</b> — two independent signals make <b>Evidence</b>; evidence makes <b>Patterns</b>; patterns make <b>Themes</b>.</span></li>
+        </ol>
+        <p class="deck-note"><strong>The lock is the point.</strong> Try to name an Evidence card from one signal, or a Theme on an unexamined Pattern, and the field stays disabled — with a note telling you which syndrome you were about to walk into.</p>
       </section>
 
       <section class="intro-slide" data-slide="5">
-        <p class="deck-eyebrow">The journey <span class="deck-kicker">· 05</span></p>
-        <h1 class="deck-title">Triangulate the chaos.</h1>
+        <p class="deck-eyebrow">Sync, then hand off <span class="deck-kicker">· 05</span></p>
+        <h1 class="deck-title">How a Pod merges minds.</h1>
+        <div class="deck-body"><p>This app runs locally in your browser — there's no server. The Pod syncs through Git, and that's deliberate.</p></div>
         <ol class="deck-flow">
-          <li><span><b>Concept</b> — name the hunch you'll test.</span></li>
-          <li><span><b>Sources</b> — load the raw observation pool.</span></li>
-          <li><span><b>Sort</b> — separate signal from noise.</span></li>
-          <li><span><b>Validate</b> — triangulate signals into evidence.</span></li>
-          <li><span><b>Map</b> — synthesize the situation and its themes.</span></li>
-          <li><span><b>Classify</b> — tag evidence with Dorst's seven types.</span></li>
-          <li><span><b>Export</b> — leave with the data-rich bones.</span></li>
+          <li><span><b>Export</b> a <b>.zip</b>, unzip it into your local clone of the Pod's shared repository, then <b>commit</b>.</span></li>
+          <li><span><b>Git merges</b> everyone's maps — and where two of you mapped the same thing differently, the conflict <b>makes you talk it out</b>. That's how thirty people build one map without a Lone Warrior.</span></li>
+          <li><span><b>Meet the Pods</b> — your mapped Themes are what you present to the community. After that, you'll use them to generate <b>Frames</b> and propose solutions, in other tools.</span></li>
         </ol>
-        <p class="deck-note"><strong>A loop, not a line.</strong> Nothing here is ever "done" — and you build the mental model by hand, so your intuition can later tell a real insight from confident nonsense.</p>
+        <p class="deck-note"><strong>This tool does the groundwork a frame has to stand on.</strong> It maps the situation and the human themes beneath it. The framing comes next — and it'll have something real to push against.</p>
       </section>
 
     </div>
@@ -2521,6 +2562,7 @@
             </div>
             <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openBoardCsvModal()">Import CSV</button>
             <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openImportModal()">Open shared folder</button>
+            <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openBlindSpotDrawer()">🔍 Blind-Spot Audit</button>
             <button id="menu-compile-concept" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); compileConcept()">Compile Concept ⤓</button>
             <button id="menu-graduate" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); graduateToPod()">▲ Graduate to Pod Mode</button>
             <button id="menu-export-canvas" type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); exportModular()">Export site (.zip) ⤓</button>
@@ -2731,14 +2773,15 @@
 
   <div id="board-intro-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="board-intro-title">
     <div class="modal-content" style="max-width: 560px;">
-      <div class="modal-header"><h3 id="board-intro-title">Your assignment</h3></div>
+      <div class="modal-header"><h3 id="board-intro-title">Map the Problem Situation</h3></div>
       <div class="modal-body">
-        <p class="intro-lede">You've got a pile of observations from real people. Your mission: figure out what's really going on underneath them — and back it up.</p>
+        <p class="intro-lede">Your Pod collected raw observations from the field. Your mission over the next few weeks: figure out what's really going on underneath them, back it up with evidence, and map the Problem Situation so your Themes can survive scrutiny at Meet the Pods.</p>
+        <p class="intro-hint" style="margin-top:0;">The canvas enforces Kees Dorst's Frame Creation method, made physical: every level is <em>earned</em> from the one below. The app won't let you name a Theme until the evidence beneath it is solid — that's how it keeps you off <strong>The Rational High Ground</strong> (defending claims you never grounded), out of <strong>The Self-Made Box</strong> (repeating untested assumptions), and away from the <strong>Lone Warrior</strong>'s private certainty. This isn't bureaucracy; it's how expert designers reason.</p>
         <ol class="intro-steps">
-          <li><strong>Connect the dots.</strong> Drag observations that seem related next to each other and link them. Two observations pointing at the same thing make an evidence card.</li>
-          <li><strong>Build up.</strong> Link evidence cards together to find a pattern. Link patterns together to find a theme — the hidden force driving all of it.</li>
-          <li><strong>Name every card.</strong> Say what you actually think is happening, not just a topic. Cards higher up stay locked until the ones below them are solid.</li>
-          <li><strong>Commit.</strong> When you have at least one theme that's named &amp; described, hit <strong>Commit</strong> to lock in what you found.</li>
+          <li><strong>Connect the dots.</strong> Drag related observations together and link them. Two signals pointing at the same condition make an Evidence card.</li>
+          <li><strong>Build up.</strong> Link Evidence into a Pattern — a named mechanism. Link Patterns into a Theme — the deeper force that bridges human experience and structural conditions.</li>
+          <li><strong>Name every card.</strong> Say what you actually think is happening, not just a topic. Cards higher up stay locked until the ones below them are named &amp; described.</li>
+          <li><strong>Commit.</strong> Once you have at least one Theme that's named, described, and passes the Bridge &amp; Depth tests, hit <strong>Commit</strong> — synthesizing the whole ladder into a Problem Situation. Then you'll classify your evidence into Dorst's seven types and deepen the map.</li>
         </ol>
         <p class="intro-hint">The chip above the canvas shows how close you are.</p>
         <div class="modal-actions">
@@ -2747,6 +2790,50 @@
       </div>
     </div>
   </div>
+
+  <div id="git-handoff-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="git-handoff-title">
+    <div class="modal-content" style="max-width: 580px;">
+      <div class="modal-header"><h3 id="git-handoff-title">Your working folder is downloaded — here's the Git handoff</h3></div>
+      <div class="modal-body">
+        <p class="intro-lede">This .zip is your complete evidence map — the semantic graph, the narrative Markdown, the AI-ready prompts, and a deployable static site. The tool has no server; your Pod syncs through one shared Git repo, and the manual loop is what keeps any one person from framing alone.</p>
+        <ol class="intro-steps">
+          <li><strong>Unzip</strong> the folder into your local clone of the Pod's shared repository (overwriting your previous version).</li>
+          <li><strong>Commit &amp; push</strong> with three commands:
+            <pre class="prompt-text" id="git-handoff-cmds">git add .
+git commit -m "Update situation map — [your name]"
+git push</pre>
+          </li>
+          <li><strong>Git merges</strong> your map with your podmates'. A merge conflict isn't an error — it's a <em>conversation</em>: two of you saw the same thing differently, so talk it out, then commit the resolution.</li>
+          <li><strong>Publish</strong> when ready: push to a GitHub repository, then open <strong>Settings → Pages</strong> and pick the branch. Your mapped Problem Situation becomes a public knowledge graph at <code>https://&lt;user&gt;.github.io/&lt;repo&gt;/</code>.</li>
+        </ol>
+        <p class="intro-hint">This manual loop is intentional. It teaches enterprise version control and prevents the <strong>Lone Warrior</strong> syndrome — no single person's export overwrites everyone else's work without Git making you negotiate.</p>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="copyGitCommands()">Copy git commands</button>
+          <button class="btn btn-primary" onclick="closeModal('git-handoff-modal')" data-autofocus>Got it</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="blindspot-scrim" class="blindspot-scrim hidden" onclick="closeBlindSpotDrawer()"></div>
+  <aside id="blindspot-drawer" class="blindspot-drawer" role="dialog" aria-modal="true" aria-labelledby="blindspot-title" aria-hidden="true">
+    <header class="blindspot-head">
+      <div>
+        <p class="blindspot-eyebrow">Combating The Self-Made Box</p>
+        <h2 id="blindspot-title" class="blindspot-title">Adversarial Blind-Spot Audit</h2>
+      </div>
+      <button type="button" class="blindspot-close" aria-label="Close audit" onclick="closeBlindSpotDrawer()">&times;</button>
+    </header>
+    <div class="blindspot-body">
+      <p class="blindspot-attr">Dorst's Frame Creation requires you to have your own perceptions challenged before finalizing the map. This compiles your entire canvas into one hostile critique. Copy it, then paste into <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>.</p>
+      <label class="sr-only" for="blindspot-prompt">Adversarial audit prompt</label>
+      <textarea id="blindspot-prompt" class="blindspot-prompt" readonly rows="16"></textarea>
+      <div class="blindspot-actions">
+        <button type="button" class="btn btn-primary" onclick="copyBlindSpotPrompt()">Copy this prompt</button>
+      </div>
+      <p class="blindspot-coach">Read the AI's response out loud to your Pod. If everyone agrees with the critique, you haven't pushed hard enough. Use it to find the signals you missed, the stakeholders you haven't reached, and the assumptions you've been hiding behind — then come back and revise your map. That's what the loop is for.</p>
+    </div>
+  </aside>
 
   <div id="add-signal-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="add-signal-title-h">
     <div class="modal-content" style="max-width: 480px;">
@@ -3621,8 +3708,8 @@
       { id: 'concept',  label: 'Concept',  screen: 'concept' },
       { id: 'sources',  label: 'Sources',  screen: 'setup' },
       { id: 'sort',     label: 'Sort',     screen: 'sorting' },
-      { id: 'validate', label: 'Validate', screen: 'board' },
-      { id: 'map',      label: 'Map',      screen: 'board' },
+      { id: 'validate', label: 'Validate (Steps 1–4)', screen: 'board' },
+      { id: 'map',      label: 'Map (Step 5)',      screen: 'board' },
       { id: 'classify', label: 'Classify', screen: 'board' },
       { id: 'deepen',   label: 'Deepen',   screen: 'workspace' }
     ];
@@ -3630,19 +3717,19 @@
     // recall (what you just did) → why now → payoff (what it earns next).
     const STEP_WHY = {
       concept: { label: 'Why start here',
-        body: "No evidence is loaded yet — on purpose. Naming your hunch first makes your bias visible, so the sources can argue with a position instead of filling a blank. Everything downstream measures itself against this sentence; revise it the moment the evidence earns it." },
+        body: "No evidence is loaded yet — on purpose. Naming your hunch first makes your bias **visible**, so the sources argue with a position instead of filling a blank. This is your first guard against **The Self-Made Box** — committing to a stale assumption before you've actually looked. Everything downstream measures itself against this sentence; revise it the moment the evidence earns it." },
       sources: { label: 'Why a pool, not a search',
-        body: "You've named what you expect. Now gather raw material wide — including what could contradict you — because a pool you can sift beats a query that only returns what you already believe. The breadth here sets the ceiling on every signal you'll find." },
+        body: "You've named what you expect. Now gather raw material **wide** — including what could contradict you — because a search only returns what you already believe. This widening is **Dorst's Field Mapping** in miniature, and it starves **The Self-Made Box** before it forms. The breadth here sets the ceiling on every signal you'll find." },
       sort: { label: 'Why force a binary',
-        body: "These are the observations you just gathered. Signal-or-noise forces fast commitment, and commitment surfaces instinct — where you hesitate is data about a belief you haven't earned. Only what survives becomes raw material for the map." },
+        body: "These are the observations you just gathered. Signal-or-noise forces fast commitment, and commitment surfaces instinct — where you hesitate is data about a belief you haven't earned. Refusing to keep everything is how you avoid **Freeze the World**: drowning the map in undifferentiated noise. Only what survives becomes raw material." },
       validate: { label: 'Why connect, not collect',
-        body: "Your signals are still isolated facts. Connecting two into an evidence card is the first real test of your concept: a claim two independent signals support is defensible; one anecdote isn't. This ladder is the spine of everything above it." },
+        body: "Your signals are still isolated facts. Connecting two into evidence is the first real test of your concept: a claim two independent signals support is **triangulated**; one anecdote is not. This is **Dorst Steps 1–4 (Archaeology → Paradox)**, and it's what keeps you off **The Rational High Ground** — defending a position you never grounded. This ladder is the spine of everything above it." },
       map: { label: 'Why synthesize now',
-        body: "You've climbed to a theme that bridges human experience and structure. Synthesizing the whole ladder into one Problem Situation forces you to say what it all amounts to — an open condition, not a tidy problem. This is the groundwork a real frame later stands on." },
+        body: "You've climbed to a theme that bridges human experience and structure. Synthesizing the whole ladder into one Problem Situation is **Dorst Step 5 (Themes)** — it forces you to say what it all amounts to: an **open condition**, not a tidy problem. Skip it and you stay on **The Rational High Ground**, naming a theme you only felt. This is the groundwork a real frame later stands on." },
       classify: { label: 'Why type the evidence now',
-        body: "The situation is mapped, so Dorst's seven types can finally earn their keep. Typing each card turns an undifferentiated pile into a coverage map — gaps leap out (“lots of History, no Flux — do we know what's changing?”). Skippable, and re-typable anytime." },
+        body: "The situation is mapped, so Dorst's **seven evidence types** can finally earn their keep. Typing each card turns an undifferentiated pile into a **coverage map** — gaps leap out (“lots of History, no Flux — do we know what's changing?”). Naming those gaps is how you fight **Identification**: mistaking your slice of the field for the whole. Skippable, and re-typable anytime." },
       deepen: { label: 'Why keep going',
-        body: "You have a mapped situation — now pressure it. Each stage (evidence landscape, access, paradox) is built to generate research demand, sending you back to the field, your sources, or your AI partner before you write what you believe. The loop doesn't end here; it tightens." }
+        body: "You have a mapped situation — now pressure it. Each stage (evidence landscape, access, paradox) generates **research demand**, sending you back to the field, your sources, or your AI partner before you write what you believe. This is the discipline against **The Lone Warrior** — never letting a private conviction stand un-challenged. The loop doesn't end here; it tightens." }
     };
     // Which step is active given the current screen/state.
     function currentStepId() {
@@ -3701,7 +3788,7 @@
       }).join('');
       const why = STEP_WHY[active];
       const whyHtml = why
-        ? `<div class="step-why"><span class="step-why-label">${escapeHtml(why.label)}</span>${escapeHtml(why.body)}</div>`
+        ? `<div class="step-why"><span class="step-why-label">${escapeHtml(why.label)}</span>${escapeHtml(why.body).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</div>`
         : '';
       const html = `<div class="step-indicator">${chips}<span class="step-loop-note"><span class="step-loop-icon" aria-hidden="true">↺</span> This is a loop — revisit any step as you learn more.</span>${whyHtml}</div>`;
       mounts.forEach(m => {
@@ -4379,7 +4466,7 @@
              <div class="card-type-groups" hidden>${groupedChips}</div>
            </div>`;
       const lockNoteHtml = labelLocked
-        ? `<p class="hub-lock-note">Link at least two Extracted Signals before naming this Evidence — a claim rests on triangulated signals.</p>`
+        ? `<p class="hub-lock-note">Link at least two Extracted Signals before naming this Evidence — a claim rests on triangulated signals.<span class="lock-why">One signal is an anecdote. Two independent signals pointing at the same condition is evidence of a mechanism — that's triangulation. Without it you're on <span class="lock-why-syndrome">The Rational High Ground</span>: defending a position you never grounded. (Dorst, Step 1: Archaeology)</span></p>`
         : '';
       el.innerHTML = `
         ${sourceBadgeHtml(card)}
@@ -4495,7 +4582,7 @@
         </div>
         <input type="text" class="hub-title" placeholder="Name this ${escapeHtml(label.toLowerCase())}" value="${escapeHtml(card.title || '')}" ${locked ? 'disabled' : ''} />
         <textarea class="hub-desc" placeholder="What deeper condition do these ${escapeHtml(childWord)}s point toward?" rows="2" ${locked ? 'disabled' : ''}>${escapeHtml(card.description || '')}</textarea>
-        <p class="hub-lock-note"${locked ? '' : ' hidden'}>Name &amp; describe each ${escapeHtml(childWord)} below before editing this ${escapeHtml(label.toLowerCase())} — a higher claim rests on examined ones.</p>
+        <p class="hub-lock-note"${locked ? '' : ' hidden'}>Name &amp; describe each ${escapeHtml(childWord)} below before editing this ${escapeHtml(label.toLowerCase())} — a higher claim rests on examined ones.<span class="lock-why">Themes bridge human experience and structural conditions; each rests on examined patterns, traceable down to raw signals. A Theme you "just felt" puts you on <span class="lock-why-syndrome">The Rational High Ground</span> — a conviction with no ladder beneath it. (Dorst, Step 5: Themes)</span></p>
         ${themeQuality}
         <div class="hub-actions">
           <button type="button" class="hub-expand" title="Open this card's page">↗ Open</button>
@@ -5125,7 +5212,7 @@
         if (sT === 1) {
           const a = findCard(sourceId), b = findCard(targetId);
           if (!isNamedAndDescribed(a) || !isNamedAndDescribed(b)) {
-            toast('Name and describe both Evidence cards before grouping them into a Pattern.');
+            toast('Name and describe both Evidence cards before grouping them into a Pattern. A Pattern names a mechanism — cause, effect, and moving parts. If the Evidence beneath it is unexamined, the mechanism is a guess wearing a lab coat. This prevents The Self-Made Box: repeating untested assumptions.', { duration: 9000 });
             return;
           }
         }
@@ -6426,6 +6513,11 @@
     document.addEventListener('keydown', (e) => {
       // Tour escape shortcut (runs before modal-overlay check)
       if (e.key === 'Escape' && _tourActive) { e.preventDefault(); tourSkip(); return; }
+      // Blind-Spot Audit drawer is an <aside>, not a .modal-overlay — close it here.
+      if (e.key === 'Escape') {
+        const bsd = document.getElementById('blindspot-drawer');
+        if (bsd && bsd.classList.contains('is-open')) { e.preventDefault(); closeBlindSpotDrawer(); return; }
+      }
       const open = Array.from(document.querySelectorAll('.modal-overlay'))
         .find(m => !m.classList.contains('hidden'));
       if (!open) return;
@@ -7052,6 +7144,12 @@ ${AI_RULES}
       const ok = await clipboardCopy(t.value);
       toast(ok ? 'Copied.' : 'Copy failed — select and copy manually.');
     }
+    async function copyGitCommands() {
+      // The <pre> is the single source of truth for the three-line sequence.
+      const pre = document.getElementById('git-handoff-cmds');
+      const ok = await clipboardCopy(pre ? pre.textContent : '');
+      toast(ok ? 'Git commands copied.' : 'Copy failed — select and copy manually.');
+    }
     async function copyText(elementId) {
       const text = document.getElementById(elementId).innerText;
       const ok = await clipboardCopy(text);
@@ -7344,6 +7442,131 @@ ${AI_RULES}
 </rules>`;
     }
 
+    // --- Adversarial Blind-Spot Audit (Deliverable 3) ---
+    // Compiles the WHOLE canvas — ladder, situations, epistemics — into one
+    // hostile-critic prompt. Combats The Self-Made Box: Dorst's method requires
+    // your own perceptions to be challenged before the map is finalized.
+    function buildBlindSpotPrompt() {
+      // Full evidence ladder: every top-level card, its own line, then its lineage.
+      const tops = topLevelCards().filter(c => (c.title || '').trim() || c.childIds.length);
+      const ladder = tops.length
+        ? tops.map(c => {
+            const head = `• ${nodeLabel(c.id)}: ${c.title || 'Untitled'}${c.description ? ' — ' + c.description : ''}`;
+            const sub = formatTreeOutline(c.id, 0);
+            return sub ? head + '\n' + sub : head;
+          }).join('\n\n')
+        : '(no cards mapped yet)';
+
+      // Every mapped Problem Situation with its synthesis notes.
+      const situations = appState.situations.length
+        ? appState.situations.map((s, i) => {
+            const parts = [`Situation ${i + 1}: ${s.title || '(unnamed)'}`];
+            if (s.description) parts.push(`  Description: ${s.description}`);
+            if (s.openness) parts.push(`  Why it's open, not bounded: ${s.openness}`);
+            if (s.problematization) parts.push(`  Problematization: ${s.problematization}`);
+            if (s.paradox) parts.push(`  Paradox: ${s.paradox}`);
+            if (s.statusQuoBeneficiaries) parts.push(`  Status-quo beneficiaries the team noted: ${s.statusQuoBeneficiaries}`);
+            if (s.stakeholderMap) parts.push(`  Stakeholder notes: ${s.stakeholderMap}`);
+            return parts.join('\n');
+          }).join('\n\n')
+        : '(no Problem Situation committed yet)';
+
+      // Card-level epistemics the team already flagged as uncertain.
+      const epistemics = appState.cards.map(c => {
+        const unsure = extractDocSection(c.doc, "Where I'm not sure");
+        const missing = extractDocSection(c.doc, 'Whose voice is still missing');
+        if (!unsure && !missing) return null;
+        const tag = c.tier === 1 ? `${tierName(c.tier)} · ${cardTypeInfo(c.cardType).label}` : tierName(c.tier);
+        const bits = [`Card "${c.title || 'Untitled'}" (${tag})`];
+        if (unsure) bits.push(`  Where I'm not sure: ${unsure}`);
+        if (missing) bits.push(`  Whose voice is still missing: ${missing}`);
+        return bits.join('\n');
+      }).filter(Boolean).join('\n\n') || '(the team has not flagged any uncertainties or missing voices on any card)';
+
+      const concept = (appState.settings.concept || '').trim() || '(no starting concept recorded)';
+
+      return `<role>
+You are a hostile institutional reviewer — a senior critic who has sat through hundreds of problem-framing presentations and watched every one of Kees Dorst's five syndromes sink a project: the Lone Warrior (framing in isolation), Freeze the World (treating a moving situation as fixed), the Self-Made Box (repeating untested assumptions), the Rational High Ground (defending claims that were never grounded), and Identification (mistaking one's own slice of the field for the whole).
+
+You are not here to encourage. You are here to find what this team cannot see about their own map. Be specific, be skeptical, and assume the most flattering reading is the wrong one.
+</role>
+
+<what_you_are_auditing>
+A team has triangulated raw field observations up a ladder of cards — signals → evidence → patterns → themes — into one or more Problem Situations. Everything below is their ENTIRE canvas.
+</what_you_are_auditing>
+
+<starting_concept>
+${concept}
+</starting_concept>
+
+<evidence_ladder>
+${ladder}
+</evidence_ladder>
+
+<problem_situations>
+${situations}
+</problem_situations>
+
+<team_flagged_uncertainties>
+${epistemics}
+</team_flagged_uncertainties>
+
+<your_task>
+Interrogate this map. Work through each point and answer concretely, naming specific cards, signals, and themes by their titles:
+
+1. MISSING STAKEHOLDERS. Whose lived experience is absent from this map and would most complicate it? Name the specific people, roles, or communities the team never gathered a signal from — and say what those voices would likely contradict.
+
+2. EVIDENCE MADE TO FIT. Find the cards where signals were stretched to support a conclusion they don't really earn. Which Evidence cards rest on signals that actually point elsewhere? Where is a single anecdote being treated as triangulated evidence?
+
+3. HIDDEN ASSUMPTIONS. Name the unexamined assumptions baked into this map — economic, geographic, demographic, technological. For each, state the assumption explicitly and what it would take to falsify it.
+
+4. THEMES vs RESTATED PATTERNS. For each Theme, judge honestly: does it genuinely BRIDGE human experience and structural conditions, or is it a Pattern restated at a higher altitude with grander words? Name the ones that fail the bridge test.
+
+5. THE STRONGEST COUNTER-FRAMING. From the very same signals on this map, construct the most compelling ALTERNATIVE reading — a different through-line the team did not see. Make it strong enough that they should be worried.
+
+6. WHO BENEFITS FROM THE STATUS QUO. Who profits from this situation staying exactly as it is? Did the team investigate those actors' incentives, or leave them off the map? Name them.
+
+7. WHICH SYNDROME IS WINNING. Of Dorst's five syndromes, which one is this map most guilty of right now, and what is the single piece of evidence in the map itself that proves it?
+</your_task>
+
+<rules>
+- Do NOT propose solutions, interventions, products, or features.
+- Do NOT reassure. This team benefits from being challenged, not validated.
+- Name actors, contexts, mechanisms, and consequences specifically. Avoid category words like "ecosystem", "experience", "journey".
+- Where the map is too thin to judge, say so explicitly and name exactly what the team must go find.
+- Do NOT fill gaps with assumptions of your own. Name what is missing and tell the team where to look.
+</rules>`;
+    }
+
+    let _blindspotLastFocus = null;
+    function openBlindSpotDrawer() {
+      const drawer = document.getElementById('blindspot-drawer');
+      const scrim = document.getElementById('blindspot-scrim');
+      const ta = document.getElementById('blindspot-prompt');
+      if (!drawer || !ta) return;
+      _blindspotLastFocus = document.activeElement;
+      ta.value = buildBlindSpotPrompt();
+      if (scrim) scrim.classList.remove('hidden');
+      drawer.classList.add('is-open');
+      drawer.setAttribute('aria-hidden', 'false');
+      const copyBtn = drawer.querySelector('.btn-primary');
+      setTimeout(() => { if (copyBtn) copyBtn.focus(); }, 0);
+    }
+    function closeBlindSpotDrawer() {
+      const drawer = document.getElementById('blindspot-drawer');
+      const scrim = document.getElementById('blindspot-scrim');
+      if (!drawer) return;
+      drawer.classList.remove('is-open');
+      drawer.setAttribute('aria-hidden', 'true');
+      if (scrim) scrim.classList.add('hidden');
+      if (_blindspotLastFocus && typeof _blindspotLastFocus.focus === 'function') _blindspotLastFocus.focus();
+    }
+    async function copyBlindSpotPrompt() {
+      const ta = document.getElementById('blindspot-prompt');
+      const ok = await clipboardCopy(ta.value);
+      toast(ok ? 'Audit prompt copied — paste it into your LLM.' : 'Copy failed — select and copy manually.');
+    }
+
     // --- Problem Situation section box (FigJam-style frame behind the lattice) ---
 
     // Every card + every signal beneath any card = the lattice.
@@ -7398,6 +7621,9 @@ ${AI_RULES}
               <button type="button" class="section-tool section-workbook" title="Open the full workbook for this situation" aria-label="Open workbook">
                 <span class="st-glyph" aria-hidden="true">📖</span><span class="st-label">Workbook</span>
               </button>
+              <button type="button" class="section-tool section-blindspot" title="Adversarial audit — compile the whole canvas into a hostile critique" aria-label="Blind-Spot Audit">
+                <span class="st-glyph" aria-hidden="true">🔍</span><span class="st-label">Audit</span>
+              </button>
               <button type="button" class="section-tool section-tool-primary section-export ${ready ? '' : 'is-disabled'}"${legacy ? ' id="section-export"' : ''}
                 title="${ready ? 'Export working folder' : 'Name and describe the situation to export'}" aria-disabled="${ready ? 'false' : 'true'}" aria-label="Export working folder">
                 <span class="st-glyph" aria-hidden="true">⤓</span><span class="st-label">Export</span>
@@ -7451,10 +7677,11 @@ ${AI_RULES}
       if (desc) { desc.addEventListener('pointerdown', e => e.stopPropagation());
         desc.addEventListener('input', () => { sit.description = desc.value; scheduleSave(); updateSectionReadyState(boxEl, sit); }); }
       const actions = [
-        ['.section-ai',       () => openSituationAIModal(sit.id)],
-        ['.section-workbook', () => openSituationWorkbook(sit.id)],
-        ['.section-export',   () => exportWorkingFolder(sit.id)],
-        ['.section-unframe',  () => confirmUnframeSituation(sit.id)]
+        ['.section-ai',        () => openSituationAIModal(sit.id)],
+        ['.section-workbook',  () => openSituationWorkbook(sit.id)],
+        ['.section-blindspot', () => openBlindSpotDrawer()],
+        ['.section-export',    () => exportWorkingFolder(sit.id)],
+        ['.section-unframe',   () => confirmUnframeSituation(sit.id)]
       ];
       actions.forEach(([sel, action]) => {
         const btn = boxEl.querySelector(sel); if (!btn) return;
@@ -7564,18 +7791,24 @@ ${AI_RULES}
         const msg = selectedNodeIds.size
           ? 'Nothing in your selection is left to commit — it’s already mapped.'
           : 'Everything on the board is already mapped. Build new cards to commit another situation.';
-        warningEl.textContent = '';
+        warningEl.innerHTML = '';
         toast(msg);
         return;
       }
       const v = validateBoard(group.cards);
       if (!v.ready) {
         const msg = v.warnings[0] || 'Name and describe every card before pushing.';
-        warningEl.textContent = msg;
-        toast(msg);
+        // The methodological "why" pairs with the named-Theme gate specifically.
+        const why = !v.hasTheme
+          ? "The Problem Situation is an open, complex, networked condition — not a bounded problem. You can't synthesize one without at least one Theme that bridges the human and the structural. If you're stuck, the AI prompts on each card can help you find the through-line."
+          : '';
+        warningEl.innerHTML = why
+          ? `${escapeHtml(msg)} <span class="validation-why-syndrome">Why this gate:</span> ${escapeHtml(why)}`
+          : escapeHtml(msg);
+        toast(why ? msg + ' ' + why : msg, why ? { duration: 9000 } : {});
         return;
       }
-      warningEl.textContent = '';
+      warningEl.innerHTML = '';
       const sit = {
         id: uid('sit'),
         title: '', description: '', frame: '', stakeholderMap: '', problematization: '',
@@ -8605,7 +8838,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       a.click();
       URL.revokeObjectURL(url);
       scheduleSave();
-      toast('Site exported — unzip and host on GitHub Pages.');
+      openModal('git-handoff-modal');
     }
 
     function exportWorkingFolder(sitId) {
@@ -8627,7 +8860,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       a.click();
       URL.revokeObjectURL(url);
       scheduleSave();
-      toast('Working folder exported.');
+      openModal('git-handoff-modal');
     }
 
     // Whole-canvas export from the board menu: same folder, but no
