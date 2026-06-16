@@ -1847,6 +1847,13 @@
     .signal-node.super-signal { border-left: 3px solid var(--tier-3); box-shadow: 0 2px 8px color-mix(in srgb, var(--tier-3) 20%, transparent); }
     .signal-node.super-signal .card-tag { color: var(--tier-3); }
 
+    /* Unverified Source Extracts: a dashed edge until they pass the QA gate. */
+    .signal-node.unverified { border-left: 3px dashed var(--action-red); }
+    .signal-node.unverified .card-tag { color: var(--action-red); }
+    /* Clickable provenance link on extract nodes. */
+    .node-source-link { display: inline-block; margin-top: 4px; font-size: var(--text-2xs); font-weight: 600; color: var(--primary-teal); text-decoration: none; letter-spacing: var(--track-label); }
+    .node-source-link:hover { text-decoration: underline; }
+
     .quality-check { font-size: var(--text-2xs); color: rgba(255,255,255,0.55); line-height: var(--lead-2xs); padding: 6px 8px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); }
     .quality-check em { color: rgba(255,255,255,0.75); font-style: normal; font-weight: 600; }
 
@@ -2357,7 +2364,7 @@
         <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: var(--radius-2); padding: 16px; margin-bottom: 16px;">
           <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px;">
             <strong style="color: var(--ghost-white); font-size: var(--text-sm);">Load your own observations</strong>
-            <span style="font-size: var(--text-xs); color: var(--cloud); opacity: 0.7;">Columns: <code>title,summary</code> (header row required)</span>
+            <span style="font-size: var(--text-xs); color: var(--cloud); opacity: 0.7;">Columns: <code>title,summary,source_url</code> (header row required; <code>source_url</code> optional)</span>
           </div>
           <details style="margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-2); overflow: hidden;">
             <summary style="padding: 9px 13px; font-size: var(--text-sm); font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; color: var(--ghost-white); background: rgba(255,255,255,0.05); user-select: none;">
@@ -2475,7 +2482,9 @@
             </div>
             <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openBoardCsvModal()">Import CSV</button>
             <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openImportModal()">Open shared folder</button>
-            <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); exportCanvasZip()">Export canvas ⤓</button>
+            <button id="menu-compile-concept" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); compileConcept()">Compile Concept ⤓</button>
+            <button id="menu-graduate" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); graduateToPod()">▲ Graduate to Pod Mode</button>
+            <button id="menu-export-canvas" type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); exportModular()">Export site (.zip) ⤓</button>
             <div class="divider"></div>
             <button type="button" class="menu-item menu-item-danger" role="menuitem" onclick="resetFromMenu()">💥 Self-destruct (reset workspace)</button>
           </div>
@@ -2720,13 +2729,29 @@
     </div>
   </div>
 
+  <div id="qa-verify-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="qa-verify-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="qa-verify-title">⚠️ Data Verification Required</h3>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: var(--text-base); color: var(--midnight); margin-bottom: 16px; line-height: var(--lead-base);">The AI gathered these extracts, but you own the strategic analysis. You must verify these extracts against your original source documents.</p>
+        <p style="font-size: var(--text-sm); color: var(--midnight); opacity: 0.75; margin-bottom: 20px;">About to import <strong id="qa-extract-count">these extracts</strong>. Only confirm once you've checked them against your sources — they'll be marked verified.</p>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+          <button class="btn btn-outline" onclick="qaCancelImport()">Cancel</button>
+          <button class="btn btn-primary" onclick="qaConfirmImport()" data-autofocus>I have verified these against my sources</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="board-csv-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="board-csv-title">
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="board-csv-title">Import more observations</h3>
       </div>
       <div class="modal-body">
-        <p style="font-size: var(--text-base); color: var(--midnight); opacity: 0.85; margin-bottom: 16px;">Add observations from a CSV to this canvas. New signals land together in open space beside your current map — nothing you've built moves. Columns: <code>title,summary</code> (header row required), or <a href="#" onclick="downloadCsvTemplate(); return false;">download the template</a>.</p>
+        <p style="font-size: var(--text-base); color: var(--midnight); opacity: 0.85; margin-bottom: 16px;">Add observations from a CSV to this canvas. New signals land together in open space beside your current map — nothing you've built moves. Columns: <code>title,summary,source_url</code> (header row required; <code>source_url</code> optional), or <a href="#" onclick="downloadCsvTemplate(); return false;">download the template</a>.</p>
         <details style="margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.12); border-radius: var(--radius-2); overflow: hidden;">
           <summary style="padding: 10px 14px; font-size: var(--text-sm); font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; color: var(--midnight); background: rgba(0,0,0,0.04); user-select: none;">
             <span>✨</span><span>Convert any dataset with AI</span>
@@ -2913,6 +2938,12 @@
         // problem situation is mapped. False during the validate phase so the
         // type picker stays hidden; flipped true by enterClassifyPhase().
         classifyPhase: false,
+        // Two-phase routing. Brand-new users start in Seed Mode (Phase 1:
+        // simplified canvas, map a few extracts to a provisional Hunch).
+        // One-way graduation to Pod Mode (Phase 2/3: full engine) — see
+        // isSeedMode()/graduateToPod(). Existing saved boards default to 'pod'
+        // in normalizeState() so nothing they built disappears.
+        mode: 'seed',
         sorting: { currentIndex: 0, decisions: {} }
       };
     }
@@ -3111,7 +3142,18 @@
           .filter(id => parsed.cards.some(c => c.id === id));
         if (typeof s.createdAt !== 'string') s.createdAt = new Date().toISOString();
       });
+      // Two-phase routing: existing saved boards default to 'pod' (full engine)
+      // so previously-built deep structure stays visible. Only defaultState()
+      // starts new users in 'seed'.
+      if (parsed.mode !== 'seed' && parsed.mode !== 'pod') parsed.mode = 'pod';
       // Source provenance (merged boards): keep only non-empty strings.
+      // v2.1: every item carries source_url (the document it was extracted from)
+      // and verified (set true only once the user passes the QA Intercept gate).
+      // Pre-existing items were never QA-gated → default verified=false.
+      parsed.items.forEach(it => {
+        if (typeof it.source_url !== 'string') it.source_url = '';
+        if (typeof it.verified !== 'boolean') it.verified = false;
+      });
       parsed.items.forEach(it => { if (typeof it.source !== 'string' || !it.source) delete it.source; });
       parsed.cards.forEach(c => { if (typeof c.source !== 'string' || !c.source) delete c.source; });
       if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
@@ -3247,6 +3289,8 @@
       const header = rows[0].map(h => h.trim().toLowerCase());
       const titleIdx = header.indexOf('title');
       const summaryIdx = header.indexOf('summary');
+      // source_url is optional — keeps backward-compat with 2-column CSVs.
+      const urlIdx = header.indexOf('source_url');
       if (titleIdx === -1 || summaryIdx === -1) {
         return { error: 'CSV header must include "title" and "summary" columns.' };
       }
@@ -3256,11 +3300,19 @@
         const t = (row[titleIdx] || '').trim();
         const s = (row[summaryIdx] || '').trim();
         if (!t || !s) continue;
-        items.push({ id: uid('item'), tag: 'Friction Signal', title: t, summary: s });
+        let url = urlIdx > -1 ? (row[urlIdx] || '').trim() : '';
+        if (!/^https?:\/\//i.test(url)) url = '';
+        // verified is set true only after the QA Intercept gate (commitCsvImport).
+        items.push({ id: uid('item'), tag: 'Extracted Signal', title: t, summary: s, source_url: url, verified: false });
       }
       if (items.length === 0) return { error: 'No valid rows found in CSV.' };
       return { items };
     }
+
+    // --- QA Intercept: every CSV import must pass a verification consent gate
+    // before the extracts land in the workspace. Both upload paths stash the
+    // parsed items here, then commitCsvImport() runs on the user's confirmation.
+    let pendingCsvImport = null; // { items, target: 'setup'|'board', mode }
 
     function handleCsvUpload(evt) {
       const file = evt.target.files && evt.target.files[0];
@@ -3271,9 +3323,21 @@
       reader.onload = () => {
         const result = csvRowsToItems(String(reader.result || ''));
         if (result.error) { toast(result.error); return; }
-        const newItems = result.items;
         const modeEl = document.querySelector('input[name="csv-mode"]:checked');
         const mode = modeEl ? modeEl.value : 'append';
+        pendingCsvImport = { items: result.items, target: 'setup', mode };
+        openQaModal(result.items.length);
+      };
+      reader.readAsText(file);
+    }
+
+    // Shared commit path for both upload flows. Stamps verified=true because the
+    // user has just confirmed they checked the extracts against their sources.
+    function commitCsvImport() {
+      if (!pendingCsvImport) return;
+      const { items: newItems, target, mode } = pendingCsvImport;
+      newItems.forEach(it => { it.verified = true; });
+      if (target === 'setup') {
         if (mode === 'replace') {
           appState.items = newItems;
           appState.cards.forEach(c => { if (c.tier === 1) c.childIds = []; });
@@ -3282,9 +3346,22 @@
         }
         renderConfigItems();
         scheduleSave();
-        toast(`${newItems.length} signal${newItems.length === 1 ? '' : 's'} loaded (${mode}).`);
-      };
-      reader.readAsText(file);
+        toast(`${newItems.length} extract${newItems.length === 1 ? '' : 's'} loaded (${mode}).`);
+      } else {
+        appState.items = appState.items.concat(newItems);
+        // Mark them sorted as signals and keep the sorting cursor at the end,
+        // otherwise pickInitialScreen() bounces the next reload into sorting.
+        newItems.forEach(it => { appState.sorting.decisions[it.id] = 'signal'; });
+        appState.sorting.currentIndex = appState.items.length;
+        placeNodesInFreeSpace(newItems.map(it => it.id));
+        renderAllNodes();
+        renderAllEdges();
+        updateClusterProgressChip();
+        closeModal('board-csv-modal');
+        scheduleSave();
+        toast(`${newItems.length} extract${newItems.length === 1 ? '' : 's'} added to the canvas.`);
+      }
+      pendingCsvImport = null;
     }
 
     function copyCsvPrompt(btn) {
@@ -3312,21 +3389,25 @@
       reader.onload = () => {
         const result = csvRowsToItems(String(reader.result || ''));
         if (result.error) { toast(result.error); return; }
-        const newItems = result.items;
-        appState.items = appState.items.concat(newItems);
-        // Mark them sorted as signals and keep the sorting cursor at the end,
-        // otherwise pickInitialScreen() bounces the next reload into sorting.
-        newItems.forEach(it => { appState.sorting.decisions[it.id] = 'signal'; });
-        appState.sorting.currentIndex = appState.items.length;
-        placeNodesInFreeSpace(newItems.map(it => it.id));
-        renderAllNodes();
-        renderAllEdges();
-        updateClusterProgressChip();
-        closeModal('board-csv-modal');
-        scheduleSave();
-        toast(`${newItems.length} signal${newItems.length === 1 ? '' : 's'} added to the canvas.`);
+        pendingCsvImport = { items: result.items, target: 'board', mode: 'append' };
+        openQaModal(result.items.length);
       };
       reader.readAsText(file);
+    }
+
+    // --- QA Intercept modal: data-verification consent before extracts land ---
+    function openQaModal(count) {
+      const c = document.getElementById('qa-extract-count');
+      if (c) c.textContent = count + ' extract' + (count === 1 ? '' : 's');
+      openModal('qa-verify-modal');
+    }
+    function qaConfirmImport() {
+      closeModal('qa-verify-modal');
+      commitCsvImport();
+    }
+    function qaCancelImport() {
+      pendingCsvImport = null;
+      closeModal('qa-verify-modal');
     }
 
     function csvEscape(s) {
@@ -3336,9 +3417,9 @@
 
     function downloadCsvTemplate() {
       const rows = [
-        ['title', 'summary'],
-        ['Short label for the signal', 'A 1–3 sentence description of the friction or frustration as observed.'],
-        ['Another signal', 'Describe what is broken, who feels it, and the context where it shows up.']
+        ['title', 'summary', 'source_url'],
+        ['Short label for the extract', 'A 1–3 sentence description of the friction or frustration as observed.', 'https://example.com/source-document'],
+        ['Another extract', 'Describe what is broken, who feels it, and the context where it shows up.', 'https://example.com/another-source']
       ];
       const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n') + '\n';
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -3429,6 +3510,7 @@
         renderBoard();
         updateClusterProgressChip();
         updateBoardConceptBanner();
+        renderModeChrome();
         if (appState.classifyPhase) renderClassifyGuide(); else removeClassifyGuide();
       } else if (name === 'workspace') {
         renderWorkspace();
@@ -3607,7 +3689,7 @@
     function allObjects() { return appState.cards.slice(); }
     function nodeTier(id) { const c = findCard(id); return c ? c.tier : 0; }
 
-    const TIER_NAMES = { 0: 'Signal', 1: 'Evidence', 2: 'Pattern', 3: 'Theme', 4: 'Super-theme', 5: 'Mega-theme', 6: 'Meta-theme' };
+    const TIER_NAMES = { 0: 'Extracted Signal', 1: 'Evidence', 2: 'Pattern', 3: 'Theme', 4: 'Super-theme', 5: 'Mega-theme', 6: 'Meta-theme' };
     function tierName(t) { return TIER_NAMES[t] || ('Level-' + t + ' theme'); }
     const TIER_COLORS = { 1: cssToken('--tier-1'), 2: cssToken('--tier-2'), 3: cssToken('--tier-3'),
                           4: cssToken('--tier-4'), 5: cssToken('--tier-5'), 6: cssToken('--tier-6') };
@@ -4070,11 +4152,28 @@
       return `<span class="node-source-badge" title="Imported from ${s}">${s}</span>`;
     }
 
+    // v2.1 nomenclature: a raw, not-yet-verified row is a "Source Extract";
+    // once it passes the QA Intercept it becomes an "Extracted Signal", and a
+    // swipe-up promotes it to a "Strong Extracted Signal".
+    function signalTagLabel(item) {
+      const isSuper = appState.sorting.decisions[item.id] === 'super';
+      if (item.verified === false) return 'Source Extract';
+      return isSuper ? 'Strong Extracted Signal' : 'Extracted Signal';
+    }
+
+    // Clickable provenance: the source document an extract was parsed from.
+    function sourceUrlHtml(item) {
+      const url = (item && typeof item.source_url === 'string') ? item.source_url.trim() : '';
+      if (!/^https?:\/\//i.test(url)) return '';
+      return `<a class="node-source-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Open source: ${escapeHtml(url)}">↗ source</a>`;
+    }
+
     function buildSignalNode(item) {
       const el = document.createElement('div');
       const parked = !parentHubId(item.id);
       const isSuper = appState.sorting.decisions[item.id] === 'super';
-      el.className = 'canvas-node signal-node' + (parked ? ' parked' : '') + (isSuper ? ' super-signal' : '') + (item.source ? ' has-source' : '');
+      const unverified = item.verified === false;
+      el.className = 'canvas-node signal-node' + (parked ? ' parked' : '') + (isSuper ? ' super-signal' : '') + (unverified ? ' unverified' : '') + (item.source ? ' has-source' : '');
       el.id = 'node-' + item.id;
       el.setAttribute('data-node-id', item.id);
       el.setAttribute('data-kind', 'signal');
@@ -4083,9 +4182,10 @@
       el.style.top = pos.y + 'px';
       el.innerHTML = `
         ${sourceBadgeHtml(item)}
-        <span class="card-tag">${isSuper ? '★ ' : ''}${escapeHtml(item.tag || 'Signal')}</span>
+        <span class="card-tag">${isSuper ? '★ ' : ''}${escapeHtml(signalTagLabel(item))}</span>
         <h3>${escapeHtml(item.title)}</h3>
         <p class="summary-text">${escapeHtml(item.summary)}</p>
+        ${sourceUrlHtml(item)}
         <div class="connect-handle side-top"    data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
         <div class="connect-handle side-right"  data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
         <div class="connect-handle side-bottom" data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
@@ -4095,6 +4195,12 @@
         <div class="connect-handle side-bl"     data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
         <div class="connect-handle side-br"     data-connect-from="${escapeHtml(item.id)}" aria-label="Drag to connect"></div>
       `;
+      // Let the source link be clicked without starting a node drag.
+      const link = el.querySelector('.node-source-link');
+      if (link) {
+        link.addEventListener('pointerdown', (e) => e.stopPropagation());
+        link.addEventListener('click', (e) => e.stopPropagation());
+      }
       attachNodeDrag(el, item.id);
       return el;
     }
@@ -4153,9 +4259,25 @@
       });
     }
 
-    // The evidence type picker is live only in the classify phase. The tutorial
-    // sets classifyPhase=true for its canvas beat so its "classify it" step works.
-    function typePickerEnabled() { return appState.classifyPhase === true; }
+    // Two-phase routing. Seed Mode (Phase 1) is a simplified canvas: advanced
+    // classification and the deep hierarchy locks are hidden, and the single
+    // tier-1 card is a provisional "Hunch". Pod Mode (Phase 2/3) is the full
+    // engine. Read live — appState is swapped wholesale during the tutorial.
+    function isSeedMode() { return appState.mode === 'seed'; }
+
+    // The evidence type picker is live only in the classify phase, and never in
+    // Seed Mode (provisional work isn't classified). The tutorial sets
+    // classifyPhase=true for its canvas beat so its "classify it" step works.
+    function typePickerEnabled() { return appState.classifyPhase === true && !isSeedMode(); }
+
+    // Lock 1: an Evidence card cannot be labelled until it links ≥2 Extracted
+    // Signals. (Creation already requires two children via createCardBetween;
+    // this gates naming/typing so a single-signal card can't masquerade as
+    // triangulated Evidence.) Off in Seed Mode, where tier-1 is a free Hunch.
+    function evidenceLabelLocked(card) {
+      if (isSeedMode()) return false;
+      return card.tier === 1 && (card.childIds || []).length < 2;
+    }
 
     function buildCardNode(card) {
       if (card.tier >= 2) return buildHigherCardNode(card);
@@ -4193,10 +4315,20 @@
            <span class="card-type-group-label">Field mapping</span>
            <div class="card-type-chips">${fieldChips}</div>
          </div>`;
+      // Seed Mode: tier-1 is a provisional "Hunch" — no evidence typing.
+      const seed = isSeedMode();
+      // Lock 1: block labelling Evidence until it links ≥2 Extracted Signals.
+      const labelLocked = evidenceLabelLocked(card);
+      const labelText = seed ? 'Hunch' : ct.label;
+      const titlePlaceholder = seed ? 'Name your hunch' : ct.desc;
+      const descPlaceholder = seed
+        ? 'What do these extracts make you suspect?'
+        : 'What does this evidence constitute?';
       // The 7 evidence types are introduced only in the classify phase (after
-      // the situation is mapped). During the validate phase the card is kept
-      // simple: no picker, no reclassify link.
-      const typePickerHtml = !typePickerEnabled()
+      // the situation is mapped), never in Seed Mode, and never while the card
+      // is still below the 2-signal triangulation threshold (Lock 1). During
+      // the validate phase the card is kept simple: no picker, no reclassify link.
+      const typePickerHtml = (!typePickerEnabled() || labelLocked)
         ? ''
         : undefinedType
         ? `<div class="card-type-inline" data-expanded="1">
@@ -4207,17 +4339,21 @@
              <button type="button" class="card-type-reclassify">Change type ▾</button>
              <div class="card-type-groups" hidden>${groupedChips}</div>
            </div>`;
+      const lockNoteHtml = labelLocked
+        ? `<p class="hub-lock-note">Link at least two Extracted Signals before naming this Evidence — a claim rests on triangulated signals.</p>`
+        : '';
       el.innerHTML = `
         ${sourceBadgeHtml(card)}
         <div class="hub-tag">
           <span class="hub-tag-label">
             <span class="type-glyph" style="color: ${ct.color};" aria-hidden="true">${ct.icon}</span>
-            <span class="type-name">${escapeHtml(ct.label)}</span>
+            <span class="type-name">${escapeHtml(labelText)}</span>
           </span>
           <span class="hub-count">${count} signal${count === 1 ? '' : 's'}</span>
         </div>
-        <input type="text" class="hub-title" placeholder="${escapeHtml(ct.desc)}" value="${escapeHtml(card.title || '')}" />
-        <textarea class="hub-desc" placeholder="What does this evidence constitute?" rows="2">${escapeHtml(card.description || '')}</textarea>
+        <input type="text" class="hub-title" placeholder="${escapeHtml(titlePlaceholder)}" value="${escapeHtml(card.title || '')}" ${labelLocked ? 'disabled' : ''} />
+        <textarea class="hub-desc" placeholder="${escapeHtml(descPlaceholder)}" rows="2" ${labelLocked ? 'disabled' : ''}>${escapeHtml(card.description || '')}</textarea>
+        ${lockNoteHtml}
         ${typePickerHtml}
         ${roleHtml}
         <div class="hub-actions">
@@ -4266,7 +4402,10 @@
     // built from has been named and described — claims rest on examined claims.
     function isNamedAndDescribed(c) { return !!(c && (c.title || '').trim() && (c.description || '').trim()); }
     function hubLocked(card) {
+      if (isSeedMode()) return false; // provisional work is ungated in Seed Mode
       if (!card || card.tier < 2) return false;
+      // Lock 3 (Themes) and the same rule for every higher tier: a higher claim
+      // can't be named until each child it rests on is named and described.
       return card.childIds.map(findCard).filter(Boolean).some(ch => !isNamedAndDescribed(ch));
     }
     function refreshParentLocks(childId) {
@@ -4759,6 +4898,17 @@
       const dock = document.getElementById('canvas-dock');
       if (dock) dock.classList.toggle('hidden', !hasSituations());
       if (!hasSituations()) disarmTool();
+      // Seed Mode: only the signal and a single tier-1 ("Hunch") tool. Hide the
+      // Pattern/Theme/Super-theme tools — those belong to Pod Mode.
+      const seed = isSeedMode();
+      ['tier-2', 'tier-3', 'tier-4'].forEach(tool => {
+        const b = document.querySelector(`#canvas-dock .dock-tool[data-tool="${tool}"]`);
+        if (b) b.classList.toggle('hidden', seed);
+      });
+      const evLabel = document.querySelector('#dock-evidence-btn .dock-label');
+      if (evLabel) evLabel.textContent = seed ? 'Hunch' : 'Evidence';
+      const evBtn = document.getElementById('dock-evidence-btn');
+      if (evBtn) evBtn.title = seed ? 'Add a hunch' : 'Add evidence';
     }
 
     function armTool(tool, btn) {
@@ -4925,6 +5075,21 @@
 
       // Same tier → create the next tier up. (Two signals → a plain evidence card.)
       if (sT === tT) {
+        // Seed Mode: only signals → a provisional Hunch (tier-1). The deep
+        // ladder (Pattern, Theme, …) belongs to Pod Mode.
+        if (isSeedMode() && sT >= 1) {
+          toast('Graduate to Pod Mode to build Patterns and Themes from your Hunches.');
+          return;
+        }
+        // Lock 2: a Pattern can only be formed from established Evidence —
+        // both tier-1 cards must be named and described first.
+        if (sT === 1) {
+          const a = findCard(sourceId), b = findCard(targetId);
+          if (!isNamedAndDescribed(a) || !isNamedAndDescribed(b)) {
+            toast('Name and describe both Evidence cards before grouping them into a Pattern.');
+            return;
+          }
+        }
         const card = createCardBetween(sourceId, targetId, null);
         spawnHubUI(card, card.id);
         tutorialNotify('card-created', { cardId: card.id, tier: card.tier });
@@ -5701,6 +5866,7 @@
 
     function buildTutorialState() {
       const s = defaultState();
+      s.mode = 'pod'; // the tutorial teaches the full engine, incl. classification
       s.settings.title = 'Tutorial: Neighborhood Food Access';
       s.items = TUT_SORT_ITEMS.map(i => ({ ...i }));
       s.currentScreen = 'sorting';
@@ -6314,14 +6480,15 @@
     }
 
     const CSV_TRANSFORM_PROMPT = `You are helping format observations for a Frame Creation web map.
-Convert the data below into a CSV with exactly two columns:
+Convert the data below into a CSV with exactly three columns:
 
-  title,summary
+  title,summary,source_url
 
 Rules:
 • title — 5–8 words naming the core friction (what is broken or stuck)
 • summary — 1–3 sentences describing the situation factually: who is affected, what breaks down, why it matters. No proposed solutions.
-• One row per distinct friction signal. Merge near-duplicates.
+• source_url — the URL of the document, page, or transcript this extract came from (must start with http:// or https://). Leave blank if there is no source URL.
+• One row per distinct source extract. Merge near-duplicates.
 • Return ONLY valid CSV, starting with the header row. No explanation, no code fences. Wrap values containing commas in double quotes.
 
 [PASTE YOUR DATA HERE]`;
@@ -7387,6 +7554,10 @@ ${AI_RULES}
     let classifyStepIndex = 0;
     function enterClassifyPhase() {
       if (tutorialMode) return;
+      if (isSeedMode()) {
+        toast('Classification is a Pod Mode step — graduate first to type your evidence.');
+        return;
+      }
       if (!hasSituations()) {
         toast('Map a problem situation first — then you can classify its evidence.');
         return;
@@ -7771,6 +7942,76 @@ ${AI_RULES}
       URL.revokeObjectURL(url);
     }
 
+    // ======================== TWO-PHASE MODE (Seed ↔ Pod) ========================
+
+    // Show/hide the mode-specific board controls.
+    function renderModeChrome() {
+      const seed = isSeedMode();
+      const board = document.getElementById('board-workspace');
+      if (board) board.setAttribute('data-mode', seed ? 'seed' : 'pod');
+      const toggle = (id, hidden) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', hidden); };
+      toggle('menu-compile-concept', !seed); // Seed-only lightweight export
+      toggle('menu-graduate', !seed);        // Seed-only graduation
+      toggle('menu-export-canvas', seed);    // Pod-only modular site export
+      updateAddButtonVisibility();
+    }
+
+    // One-way graduation from Seed Mode (Phase 1) to Pod Mode (Phase 2/3).
+    function graduateToPod() {
+      if (tutorialMode) { toast('Graduation is for your real board — finish the tutorial first.'); return; }
+      if (!isSeedMode()) { toast('You are already in Pod Mode.'); return; }
+      if (!window.confirm('Graduate to Pod Mode?\n\nThis unlocks the full engine — evidence typing, the Pattern → Theme ladder, and the GitHub-Pages site export.\n\nIt is one-way: you cannot return to Seed Mode.')) return;
+      appState.mode = 'pod';
+      save();
+      renderModeChrome();
+      renderAllNodes();
+      renderAllEdges();
+      toast('Graduated to Pod Mode — the full engine is unlocked.');
+    }
+
+    // Seed-mode export: a lightweight Markdown summary of the provisional concept
+    // and the Hunches mapped beneath it.
+    function compileConcept() {
+      if (tutorialMode) { toast('Compiling is for your real board — finish the tutorial first.'); return; }
+      const title = appState.settings.title || 'Untitled concept';
+      let md = `# ${title}\n\n`;
+      md += `*Seed Mode concept — compiled ${new Date().toLocaleString()}*\n\n`;
+      if ((appState.settings.concept || '').trim()) {
+        md += `## Provisional hunch\n${appState.settings.concept.trim()}\n\n`;
+      }
+      const hunches = appState.cards.filter(c => c.tier === 1);
+      const linked = new Set();
+      if (hunches.length) {
+        md += `## Hunches\n\n`;
+        hunches.forEach(c => {
+          md += `### ${c.title || 'Unnamed hunch'}\n`;
+          if ((c.description || '').trim()) md += `${c.description.trim()}\n\n`;
+          const sigs = signalsUnder(c.id).map(id => appState.items.find(x => x.id === id)).filter(Boolean);
+          sigs.forEach(it => {
+            linked.add(it.id);
+            md += `- **${it.title}** — ${it.summary}${it.source_url ? ` ([source](${it.source_url}))` : ''}\n`;
+          });
+          md += `\n`;
+        });
+      }
+      // Extracted Signals on the board that aren't under a hunch yet.
+      const loose = appState.items.filter(it =>
+        appState.sorting.decisions[it.id] && appState.sorting.decisions[it.id] !== 'noise' && !linked.has(it.id));
+      if (loose.length) {
+        md += `## Unlinked extracted signals\n\n`;
+        loose.forEach(it => { md += `- **${it.title}** — ${it.summary}${it.source_url ? ` ([source](${it.source_url}))` : ''}\n`; });
+        md += `\n`;
+      }
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = folderSlug(title) + '-concept.md';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Concept compiled.');
+    }
+
     // ======================== WORKING-FOLDER EXPORT ========================
 
     function sanitizeFileName(n) {
@@ -8062,6 +8303,252 @@ ${AI_RULES}
       eocd.setUint32(12, cdSize, true);
       eocd.setUint32(16, offset, true);
       return new Blob([...chunks, ...central, new Uint8Array(eocd.buffer)], { type: 'application/zip' });
+    }
+
+    // ============ MODULAR EXPORT: GitHub-Pages-ready minisite ============
+    // Produces a deployable static site (index.html at the zip root) with a
+    // clean separation of concerns: machine-readable /data, human-readable
+    // /content, and presentation in /assets. The page hydrates via fetch() when
+    // served and falls back to a /data/site-data.js shim on file://.
+
+    // Every positioned node (surviving signals + cards) as plain objects.
+    function modularNodes() {
+      const out = [];
+      appState.items.forEach(it => {
+        if (!appState.nodes[it.id]) return;
+        const dec = appState.sorting.decisions[it.id];
+        if (dec === 'noise') return; // discarded extracts don't ship
+        const p = appState.nodes[it.id];
+        const sz = nodeSize('signal', it.id);
+        out.push({
+          id: it.id, type: 'Extracted Signal', tier: 0,
+          title: it.title || '', description: it.summary || '',
+          x: p.x, y: p.y, w: sz.w, h: sz.h,
+          verified: it.verified === true, strong: dec === 'super',
+          source_url: it.source_url || '', children: []
+        });
+      });
+      appState.cards.forEach(c => {
+        if (!appState.nodes[c.id]) return;
+        const p = appState.nodes[c.id];
+        const sz = nodeSize('hub', c.id);
+        out.push({
+          id: c.id, type: tierName(c.tier), tier: c.tier,
+          title: c.title || '', description: c.description || '',
+          x: p.x, y: p.y, w: sz.w, h: sz.h,
+          cardType: c.tier === 1 ? (c.cardType || null) : null,
+          locked: hubLocked(c),
+          children: c.childIds.filter(k => appState.nodes[k])
+        });
+      });
+      return out;
+    }
+
+    function buildProjectJsonld() {
+      const nodes = modularNodes();
+      const doc = {
+        '@context': {
+          '@vocab': 'https://schema.org/',
+          tg: 'https://theupskillinglabs.github.io/triangles/ns#',
+          tier: 'tg:tier', x: 'tg:x', y: 'tg:y', w: 'tg:w', h: 'tg:h',
+          verified: 'tg:verified', locked: 'tg:locked', strong: 'tg:strong',
+          source_url: 'tg:sourceUrl', children: { '@id': 'tg:hasChild', '@type': '@id' }
+        },
+        title: appState.settings.title || 'Untitled',
+        concept: appState.settings.concept || '',
+        generatedAt: new Date().toISOString(),
+        '@graph': nodes.map(n => Object.assign({ '@id': n.id }, n))
+      };
+      return JSON.stringify(doc, null, 2);
+    }
+
+    function buildExtractsCsv() {
+      const rows = [['title', 'summary', 'source_url', 'verified']];
+      appState.items.forEach(it => {
+        if (it.verified !== true) return; // only validated Extracted Signals
+        rows.push([it.title || '', it.summary || '', it.source_url || '', 'true']);
+      });
+      return rows.map(r => r.map(csvEscape).join(',')).join('\n') + '\n';
+    }
+
+    function buildThemesMd() {
+      const upper = appState.cards.filter(c => c.tier >= 2).sort((a, b) => b.tier - a.tier);
+      let md = '# Themes & Patterns\n\n';
+      if (!upper.length) { md += '_No patterns or themes have been built yet._\n'; return md; }
+      upper.forEach(c => {
+        md += `## ${tierName(c.tier)}: ${c.title || 'Untitled'}\n`;
+        if ((c.description || '').trim()) md += `${c.description.trim()}\n\n`;
+        const trail = formatTreeOutline(c.id, 0);
+        if (trail) md += trail + '\n\n';
+      });
+      return md;
+    }
+
+    function buildSiteReadme() {
+      return `# ${appState.settings.title || 'Sensemaking site'}
+
+A static, read-only presentation of a Frame Creation web map, exported from The
+Labs Sensemaking Engine. It is self-contained and ready to host on GitHub Pages.
+
+## Layout
+- \`index.html\` — the presentation shell (hydrates from the files below)
+- \`assets/\` — \`style.css\` and \`viewer.js\` (renders the report + spatial map)
+- \`data/\` — \`project.jsonld\` (semantic graph + coordinates), \`extracts.csv\`
+  (validated extracted signals), and \`site-data.js\` (a fallback so the page also
+  renders when opened directly via \`file://\`)
+- \`content/\` — \`situation.md\` and \`themes.md\` (the human-readable narrative)
+
+## Publish on GitHub Pages
+1. Commit this folder to a repository (root or a \`/docs\` folder, or a \`gh-pages\` branch).
+2. In the repo: **Settings → Pages**, pick the branch (and \`/docs\` if you used it).
+3. Visit \`https://<user>.github.io/<repo>/\` — the report and web map render there.
+
+Opening \`index.html\` by double-click works too (via \`data/site-data.js\`), but for
+full fidelity serve it over HTTP — locally that's \`python3 -m http.server\`.
+`;
+    }
+
+    // --- Static assets (no backticks or \${} inside these payloads) ---
+    const SITE_STYLE_CSS = `:root{--teal:#0094a0;--red:#ee1c25;--ink:#101820;--bg:#ffffff;--cloud:#e6e6e6;--muted:#5b6470}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#f7f8fa;line-height:1.55}
+#report{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+.loading{color:var(--muted)}
+.site-head h1{font-size:2rem;margin:0 0 8px}
+.site-head .concept{font-size:1.1rem;color:var(--muted);margin:0 0 8px}
+section{background:#fff;border:1px solid var(--cloud);border-radius:12px;padding:20px 24px;margin:20px 0;box-shadow:0 1px 3px rgba(16,24,32,.06)}
+section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);padding-bottom:8px}
+.narrative h1,.narrative h2,.narrative h3{margin:14px 0 6px}
+.narrative ul{margin:6px 0 6px 18px}
+.narrative p{margin:6px 0}
+.map{width:100%;height:auto;max-height:70vh;border:1px solid var(--cloud);border-radius:8px;background:#fbfbfd}
+.extracts ul{list-style:none;margin:0;padding:0}
+.extracts li{padding:8px 0;border-bottom:1px solid var(--cloud)}
+.extracts a{color:var(--teal)}
+@media print{body{background:#fff}section{box-shadow:none;border:none}}`;
+
+    const SITE_VIEWER_JS = `(function(){
+  function byId(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function tierColor(t){var m={0:'#8a93a3',1:'#8a93a3',2:'#ee1c25',3:'#f4b400',4:'#8a4fff',5:'#6231cf',6:'#4b2fa0'};return m[t]||'#3a2580';}
+  function parseCsvRows(text){
+    var rows=[],row=[],field='',i=0,q=false,ch;
+    for(i=0;i<text.length;i++){ch=text[i];
+      if(q){ if(ch==='"'){ if(text[i+1]==='"'){field+='"';i++;} else {q=false;} } else {field+=ch;} }
+      else { if(ch==='"'){q=true;} else if(ch===','){row.push(field);field='';}
+        else if(ch==='\\n'||ch==='\\r'){ if(ch==='\\r'&&text[i+1]==='\\n')i++; if(field!==''||row.length){row.push(field);rows.push(row);row=[];field='';} }
+        else {field+=ch;} } }
+    if(field!==''||row.length){row.push(field);rows.push(row);}
+    return rows;
+  }
+  function mdToHtml(md){
+    var lines=String(md||'').split(/\\r?\\n/),out=[],inList=false;
+    function closeList(){ if(inList){out.push('</ul>');inList=false;} }
+    for(var i=0;i<lines.length;i++){var ln=lines[i];
+      if(/^### /.test(ln)){closeList();out.push('<h3>'+esc(ln.slice(4))+'</h3>');}
+      else if(/^## /.test(ln)){closeList();out.push('<h2>'+esc(ln.slice(3))+'</h2>');}
+      else if(/^# /.test(ln)){closeList();out.push('<h1>'+esc(ln.slice(2))+'</h1>');}
+      else if(/^\\s*[-•] /.test(ln)){ if(!inList){out.push('<ul>');inList=true;} out.push('<li>'+esc(ln.replace(/^\\s*[-•] /,''))+'</li>');}
+      else if(/^\\s*>/.test(ln)){closeList();out.push('<blockquote>'+esc(ln.replace(/^\\s*>\\s?/,''))+'</blockquote>');}
+      else if(ln.trim()===''){closeList();}
+      else {closeList();out.push('<p>'+esc(ln)+'</p>');} }
+    closeList();
+    return out.join('\\n');
+  }
+  function renderMap(graph){
+    if(!graph||!graph.length) return '<p>No nodes to display.</p>';
+    var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9,byIdMap={},i;
+    for(i=0;i<graph.length;i++){var n=graph[i];byIdMap[n['@id']||n.id]=n;
+      minX=Math.min(minX,n.x);minY=Math.min(minY,n.y);maxX=Math.max(maxX,n.x+n.w);maxY=Math.max(maxY,n.y+n.h);}
+    var pad=60,vb=(minX-pad)+' '+(minY-pad)+' '+((maxX-minX)+2*pad)+' '+((maxY-minY)+2*pad);
+    var edges='',rects='';
+    for(i=0;i<graph.length;i++){var p=graph[i],kids=p.children||[];
+      for(var j=0;j<kids.length;j++){var c=byIdMap[kids[j]];if(!c)continue;
+        edges+='<line x1="'+(p.x+p.w/2)+'" y1="'+(p.y+p.h/2)+'" x2="'+(c.x+c.w/2)+'" y2="'+(c.y+c.h/2)+'" stroke="#b8c0cc" stroke-width="2"/>';}}
+    for(i=0;i<graph.length;i++){var nn=graph[i],col=tierColor(nn.tier);
+      rects+='<g><rect x="'+nn.x+'" y="'+nn.y+'" width="'+nn.w+'" height="'+nn.h+'" rx="10" fill="#ffffff" stroke="'+col+'" stroke-width="3"/>'
+        +'<text x="'+(nn.x+12)+'" y="'+(nn.y+24)+'" font-size="13" font-weight="700" fill="'+col+'">'+esc(nn.type)+'</text>'
+        +'<text x="'+(nn.x+12)+'" y="'+(nn.y+46)+'" font-size="14" fill="#101820">'+esc((nn.title||'').slice(0,42))+'</text></g>';}
+    return '<svg class="map" viewBox="'+vb+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Spatial web map">'+edges+rects+'</svg>';
+  }
+  function render(data){
+    var p=data.project||{},graph=p['@graph']||[],html='';
+    html+='<header class="site-head"><h1>'+esc(p.title||'Untitled')+'</h1>';
+    if(p.concept)html+='<p class="concept">'+esc(p.concept)+'</p>';
+    html+='</header>';
+    html+='<section class="map-wrap"><h2>Web map</h2>'+renderMap(graph)+'</section>';
+    var content=data.content||{};
+    html+='<section class="narrative"><h2>Themes</h2>'+mdToHtml(content.themes)+'</section>';
+    html+='<section class="narrative"><h2>Problem situation</h2>'+mdToHtml(content.situation)+'</section>';
+    var rows=parseCsvRows(data.extractsCsv||'');
+    if(rows.length>1){html+='<section class="extracts"><h2>Extracted signals</h2><ul>';
+      for(var i=1;i<rows.length;i++){var r=rows[i],t=r[0]||'',s=r[1]||'',u=r[2]||'';
+        html+='<li><strong>'+esc(t)+'</strong> — '+esc(s)+(/^https?:\\/\\//.test(u)?' <a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">source ↗</a>':'')+'</li>';}
+      html+='</ul></section>';}
+    byId('report').innerHTML=html;
+  }
+  function fetchText(url){return fetch(url).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.text();});}
+  function hydrate(){
+    return Promise.all([fetchText('./data/project.jsonld'),fetchText('./data/extracts.csv'),
+      fetchText('./content/situation.md'),fetchText('./content/themes.md')]).then(function(res){
+      return {project:JSON.parse(res[0]),extractsCsv:res[1],content:{situation:res[2],themes:res[3]}};});
+  }
+  hydrate().then(render).catch(function(){
+    if(window.SITE_DATA){render(window.SITE_DATA);}
+    else{byId('report').innerHTML='<p>Could not load site data. Serve this folder over HTTP (e.g. python3 -m http.server).</p>';}
+  });
+})();`;
+
+    function buildSiteIndexHtml(title) {
+      return '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+        + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        + '<title>' + escapeHtml(title) + '</title>\n'
+        + '<link rel="stylesheet" href="./assets/style.css">\n</head>\n<body>\n'
+        + '<main id="report"><p class="loading">Loading…</p></main>\n'
+        + '<script src="./data/site-data.js"><\/script>\n'
+        + '<script src="./assets/viewer.js"><\/script>\n</body>\n</html>\n';
+    }
+
+    function buildSiteDataJs(projectJson, extractsCsv, situationMd, themesMd) {
+      const data = {
+        project: JSON.parse(projectJson),
+        extractsCsv: extractsCsv,
+        content: { situation: situationMd, themes: themesMd }
+      };
+      return 'window.SITE_DATA = ' + JSON.stringify(data) + ';\n';
+    }
+
+    function buildModularExportFiles() {
+      const title = appState.settings.title || 'Untitled';
+      const projectJson = buildProjectJsonld();
+      const extractsCsv = buildExtractsCsv();
+      const situationMd = exportSituationDoc();
+      const themesMd = buildThemesMd();
+      return [
+        { path: 'index.html', content: buildSiteIndexHtml(title) },
+        { path: 'README.md', content: buildSiteReadme() },
+        { path: 'assets/style.css', content: SITE_STYLE_CSS },
+        { path: 'assets/viewer.js', content: SITE_VIEWER_JS },
+        { path: 'data/project.jsonld', content: projectJson },
+        { path: 'data/extracts.csv', content: extractsCsv },
+        { path: 'data/site-data.js', content: buildSiteDataJs(projectJson, extractsCsv, situationMd, themesMd) },
+        { path: 'content/situation.md', content: situationMd },
+        { path: 'content/themes.md', content: themesMd }
+      ];
+    }
+
+    function exportModular() {
+      if (tutorialMode) { toast('Exporting is for your real board — finish the tutorial first.'); return; }
+      if (isSeedMode()) { toast('The site export is a Pod Mode feature — graduate first.'); return; }
+      appState.exportedAt = new Date().toISOString();
+      const blob = buildZip(buildModularExportFiles());
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = folderSlug(appState.settings.title || (appState.situations[0] && appState.situations[0].title)) + '-site.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+      scheduleSave();
+      toast('Site exported — unzip and host on GitHub Pages.');
     }
 
     function exportWorkingFolder(sitId) {
