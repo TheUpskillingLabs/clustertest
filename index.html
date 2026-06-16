@@ -2108,6 +2108,12 @@
     .step-why .step-why-label { color: var(--primary-teal); text-transform: uppercase;
       font-size: var(--text-2xs); font-weight: 800; letter-spacing: var(--track-label);
       display: block; margin-bottom: 3px; }
+    /* On the working canvas/workspace the per-step "why" scaffold and loop note
+       ate ~20% of the viewport. Keep only the slim step-chip progress bar here;
+       the full "why" stays on the onboarding screens where there's room. */
+    #board-workspace .step-why, #board-workspace .step-loop-note,
+    #workspace-screen .step-why, #workspace-screen .step-loop-note { display: none; }
+    #board-workspace .step-indicator, #workspace-screen .step-indicator { padding: 5px 16px; }
     @media (max-width: 600px) {
       #board-workspace .step-indicator, #workspace-screen .step-indicator { display: none; }
       .step-indicator .step-loop-note { display: none; }
