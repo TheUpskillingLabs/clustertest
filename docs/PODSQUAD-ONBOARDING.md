@@ -6,40 +6,30 @@
 
 ## Three weeks from now
 
-Picture July 28. A room at DC Public Library. Twenty-four to forty of your neighbors — organizers, poll workers, librarians, people who filled out a field survey because something in their civic life feels stuck — are about to spend a day turning a pile of raw evidence into shared maps. Their first Evidence card. The moment the whole room unlocks Patterns & Themes together. The first time someone looks at their own ladder and says *"oh — that's what's actually going on."*
+Picture July 25. Dozens of your neighbors — organizers, poll workers, librarians, people who filled out a field survey because something in their civic life feels stuck — are about to spend a day turning a pile of raw evidence into shared maps. Their first Evidence card. The moment the whole room unlocks Patterns & Themes together. The first time someone looks at their own ladder and says *"oh — that's what's actually going on."*
 
 The tool they'll use for all of it is open in your browser right now.
 
 **And it is not finished.** It's a starting place — a working, tested, honest first draft of a method turned into software. You're not being onboarded to *operate* it. You're being invited to *rebuild* it.
 
-Here's the unflinching part, because you'd smell anything less: **some of what's in this app will not survive contact with your room.** A hint that reads clearly to its builders will confuse a real person at a real table. A gate that enforces the method beautifully will land as a wall on a tired Tuesday evening. We know this the way you know it — because you've watched software meet the public before, and you've been the one standing next to the person it confused. That's exactly why it's you being handed the keys, and why now, while there's still time to change everything.
+**Some of what's in this app will not survive contact with your room.** A hint that reads clearly to its builders will confuse a real person at a real table. A gate that enforces the method beautifully will land as a wall on a tired Tuesday evening. We know this the way you know it — because you've watched software meet the public before, and you've been the one standing next to the person it confused. That's exactly why it's you being handed the keys, and why now, while there's still time to change everything.
 
 ## What you're actually holding
 
-Don't mistake "starting place" for "sketch." What's in this repo works, end to end, today:
+Don't mistake "starting place" for "sketch." What's in this repo works (mostly), end to end, today:
 
 - The full arc runs: gather source extracts → sort signal from noise → triangulate up a ladder of Evidence, Patterns, Themes → map a Problem Situation → find the paradox that keeps it stuck → discover who could own breaking it → export a ready-to-host site and slide deck that seeds a pod's repository for Meet the Pods.
 - It's **one HTML file**. No build, no server, no dependencies. Open `index.html`, and you're holding the entire application — every word of copy, every gate, every screen. The file *is* the spec. That's not a limitation; it's the invitation. There is nothing in this tool you can't reach.
 - It's tested by a battery of headless-browser drivers that walk the whole flow and demand zero errors — so when you change something, you can know quickly whether you broke something else.
 - And you're not the first to mod it. Keep reading.
 
-## Where you come from (you've done this before)
-
-On June 22, the moderators of the flagship wrote a memo — a lived-needs wish-list from the people actually standing in the room. That memo reshaped the platform: its features got built, its central question got answered in the participants' favor, and "Pod Squad" became a name for something that works. **You are the continuation of that memo.** Same move, bigger target: last time your field notes rebuilt a dashboard. This time you're being handed the method itself.
-
-And your posture carries over word for word:
-
-> *You're the shepherd here… unblock what you can, grade nothing — and when the process itself trips someone, that's a signal about the process, never a mark against the member.*
-
-One extension, now that you hold the keys: **shepherd in the room, builder of the room.** When the process trips someone, you're no longer limited to filing the signal. You can fix the process.
-
-## The framework is already modded — so you can mod it too
+## The framework is already modded — so you have permission to test your own mods too
 
 The app is built on Kees Dorst's **Frame Innovation**. You'll need enough of it to argue with it — not to obey it. Here's the crash course.
 
 Dorst's method, in one breath: a *client* arrives with a problem they can't solve → you dig into its history (*archaeology*) → you find the *paradox* that makes it unsolvable as framed → you map who's directly implicated (*context*) and the wider network around them (*field*) → you surface the deeper *themes* → and from those themes you craft new *frames* — new ways of seeing that make new actions possible.
 
-Now here's the thing that makes this repo different from a book club: **this app has already broken Dorst's rules, on purpose, and it works.** That's your proof that the framework is moddable — and your license to keep modding:
+Now here's the thing that makes this repo different from a book club: **this app has already broken Dorst's rules on purpose.** That's your proof that the framework is moddable — and your license to keep modding:
 
 | Dorst says | This app does | What you might mod |
 |---|---|---|
@@ -70,7 +60,7 @@ Then — week two — you play each other's builds. The way pods will play the t
 
 And on July 28, you watch a first-timer sail through the exact moment that used to snag — *because you rebuilt it.* That feeling is what "co-building the prototype tools and methods" means when it isn't a slogan. It's also, not incidentally, the same feeling the participants are supposed to have at Meet the Pods. You get it first. You'll facilitate it better because you've felt it.
 
-**The three-week rhythm** (July 7 → 28):
+**The three-week rhythm** (July 7 → 25):
 - **Week 1 — diverge.** Fork or branch, prototype fast, ship your live URL. No permission needed. Wild is welcome.
 - **Week 2 — harvest (converge).** Play each other's builds. Nominate keepers. Feature-harvest PRs into main.
 - **Week 3 — freeze & rehearse.** Main is what the room runs. Drivers green. Walk the [sprint run-of-show](SENSEMAKING-SPRINT.md) with the real tool.
@@ -111,8 +101,8 @@ Your builds have a deadline with a room attached. The Summer 2026 cycle runs on 
 
 ```
 Kickoff Summit ──► SENSEMAKING SPRINT ──► Meet the Pods ──► Frame Sprint ──► Meet the Projects ──► Showcase Summit
-   Jul 14           Jul 28 — your tool's     Aug 18          (Hackathon)         Sep 15               Oct 13
-                    opening night                              Sep 8
+   Jul 14           Jul 25 — your tool's     Aug 11          (Hackathon)         Sep 8               Oct 13
+                    opening night                              Aug 15
 ```
 
 The pipeline you're building for:
@@ -127,7 +117,7 @@ Hold onto the one method idea under all of it: **we start with no client and no 
 
 ## Facilitation moves, by stage
 
-You'll still be the one standing next to a stuck participant on July 28 — and by then, you'll be facilitating a tool you helped build. The bar at the bottom of their screen always shows the next move; the corner coach explains why. When someone stalls, look at their bar *with* them. You carry the why behind the why.
+You'll still be the one standing next to a stuck participant on July 25 — and by then, you'll be facilitating a tool you helped build. The bar at the bottom of their screen always shows the next move; the corner coach explains why. When someone stalls, look at their bar *with* them. You carry the why behind the why.
 
 | They're… | What's happening | Your move |
 |---|---|---|
@@ -198,12 +188,12 @@ A good field report: *what they were trying to do → what actually happened →
 4. **The deck export has gates:** Pod Mode + a completed workbook + a real project title. The bar's hint names exactly what's missing — read it to them.
 5. **Offline is fine.** After first load, no network needed. Venue wifi is a non-event.
 6. **"Self-destruct" means it.** The reset on the Sources screen clears the saved board. Export first if in doubt.
-7. **Nothing uploads anywhere, ever.** Their data is in their browser and in whatever zips *they choose* to commit. That's the entire privacy story, and it's a good one — tell it proudly.
+7. **Nothing uploads anywhere, ever.** Their data is in their browser and in whatever zips *they choose* to commit. That's the entire privacy story — tell it proudly.
 
 ---
 
 Three weeks. A working starting place. Write access. A method that's already proven it can be modded, a squad that's already proven it can rebuild what the field says is broken — and a room full of your neighbors arriving July 28 to use whatever you make of it.
 
-**Fork it. Change one thing. Ship the link.**
+**Fork it. Change something. Ship the link.**
 
 *Questions this doc didn't answer are gaps in this doc — file a 🧠 issue and we'll fix the doc, not just the answer.*
