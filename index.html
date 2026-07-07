@@ -2401,24 +2401,23 @@
   <div id="concept-screen" class="hidden">
     <div class="deck-topbar">
       <span class="deck-brand">The <b>Triangulator-inator</b></span>
-      <button type="button" class="deck-skip" onclick="goToSources()">Skip → load sources</button>
+      <button type="button" class="deck-skip" onclick="goToScreen('board')">← Back to the canvas</button>
     </div>
     <div class="step-indicator-mount"></div>
     <div class="deck-stage">
       <div class="deck-measure">
-        <p class="deck-eyebrow">Start of the loop <span class="deck-kicker">· your concept</span></p>
-        <h1 class="deck-title">What's your initial problem concept?</h1>
-        <p class="deck-lede">Before you touch a single source, name the starting hunch you're going to put to the test — the problem as you understand it right now. A sentence or two is plenty.</p>
-        <label for="concept-input" class="sr-only">Initial problem concept</label>
-        <textarea id="concept-input" placeholder="Right now I think the problem is…" oninput="updateConcept(this.value)"></textarea>
-        <p class="concept-loop">Provisional on purpose — as the evidence pushes back, you'll come back and revise it. That's the whole point.</p>
-        <button type="button" onclick="tgxGuidedStart()" style="margin-top:18px; background:none; border:1px solid rgba(255,255,255,0.22); color:var(--ghost-white); font-family:'Geologica',sans-serif; font-size:var(--text-sm); padding:8px 16px; border-radius:var(--radius-2); cursor:pointer;">✨ New here? Turn on step-by-step guidance</button>
+        <p class="deck-eyebrow">Optional <span class="deck-kicker">· the concept, emerging</span></p>
+        <h1 class="deck-title">What problem are you starting to see?</h1>
+        <p class="deck-lede">You've worked through your source extracts. If a problem is taking shape, name it — it's optional, and it stays provisional. Leave it blank and keep building; you can name it anytime.</p>
+        <label for="concept-input" class="sr-only">The problem concept emerging</label>
+        <textarea id="concept-input" placeholder="The problem I'm starting to see is…" oninput="updateConcept(this.value)"></textarea>
+        <p class="concept-loop">Optional and provisional — the evidence keeps reshaping it. Skip it entirely if nothing's crystallized yet.</p>
       </div>
     </div>
     <nav class="deck-nav" aria-label="Concept navigation">
-      <div class="nav-left"><button type="button" class="deck-ghost-btn" onclick="goToScreen('intro')">← Intro</button></div>
+      <div class="nav-left"></div>
       <div class="deck-dots"></div>
-      <div class="nav-right"><button type="button" class="btn btn-primary" onclick="goToSources()">Continue → sources</button></div>
+      <div class="nav-right"><button type="button" class="btn btn-primary" onclick="goToScreen('board')">Done → back to the canvas</button></div>
     </nav>
   </div>
 
@@ -2431,9 +2430,10 @@
     <div class="deck-stage">
       <div class="config-container">
       <header class="sources-head">
-        <p class="deck-eyebrow">Step two <span class="deck-kicker">· your sources &amp; signals</span></p>
+        <p class="deck-eyebrow">Start here <span class="deck-kicker">· your source extracts</span></p>
         <h1 class="deck-title sources-title">Load the raw material.</h1>
-        <p class="deck-lede sources-lede">Field notes, interview fragments, articles, statistics, policies, anecdotes — the cloud you'll sift for signal. Start with the sample survey or bring your own.</p>
+        <p class="deck-lede sources-lede">Field notes, interview fragments, articles, statistics, policies, anecdotes — the raw material you'll sift for signal. Start with the sample survey or bring your own. A problem concept comes later, once the evidence has something to say.</p>
+        <button type="button" onclick="tgxGuidedStart()" style="margin-top:14px; background:none; border:1px solid rgba(255,255,255,0.22); color:var(--ghost-white); font-family:'Geologica',sans-serif; font-size:var(--text-sm); padding:8px 16px; border-radius:var(--radius-2); cursor:pointer;">✨ New here? Turn on step-by-step guidance</button>
       </header>
 
       <div class="config-field">
@@ -2492,7 +2492,7 @@
       </div>
     </div>
     <nav class="deck-nav" aria-label="Sources navigation">
-      <div class="nav-left"><button type="button" class="deck-ghost-btn" onclick="goToScreen('concept')">← Concept</button></div>
+      <div class="nav-left"><button type="button" class="deck-ghost-btn" onclick="goToScreen('intro')">← Intro</button></div>
       <div class="deck-dots"></div>
       <div class="nav-right">
         <button type="button" class="btn btn-outline" onclick="skipSortingToBoard()">Skip to Canvas</button>
@@ -2524,7 +2524,7 @@
         <span class="sort-zone-label">★ super</span>
       </div>
       <div class="sort-card" id="sort-card">
-        <span class="sort-card-tag" id="sort-card-tag">Signal</span>
+        <span class="sort-card-tag" id="sort-card-tag">Source Extract</span>
         <h3 class="sort-card-title" id="sort-card-title"></h3>
         <p class="sort-card-desc" id="sort-card-desc"></p>
         <span class="sort-card-number" id="sort-card-number"></span>
@@ -2579,7 +2579,25 @@
           </div>
         </div>
       </div>
-      <button type="button" id="board-concept-banner" class="board-concept-banner hidden" onclick="goToScreen('concept')" title="Revise your initial concept — nothing on the board is lost"></button>
+      <button type="button" id="board-concept-banner" class="board-concept-banner hidden" onclick="goToScreen('concept')" title="Edit the concept — nothing on the board is lost"></button>
+      <style>
+        .board-concept-invite { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 7px 24px; border-bottom: 1px solid var(--cloud); background: rgba(0,148,160,0.07); color: var(--midnight); font-size: var(--text-xs); line-height: var(--lead-sm); flex-shrink: 0; }
+        .board-concept-invite.hidden { display: none; }
+        .board-concept-invite .bci-text { flex: 1; }
+        .board-concept-invite .bci-actions { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+        .board-concept-invite .bci-name { background: var(--primary-teal); color: var(--ghost-white); border: none; border-radius: var(--radius-1); font: inherit; font-size: var(--text-xs); font-weight: 700; padding: 4px 12px; cursor: pointer; }
+        .board-concept-invite .bci-name:hover { background: var(--teal-deep); }
+        .board-concept-invite .bci-x { background: none; border: none; color: var(--midnight); opacity: 0.5; cursor: pointer; font-size: 12px; padding: 4px 6px; border-radius: var(--radius-1); }
+        .board-concept-invite .bci-x:hover { opacity: 1; background: rgba(0,0,0,0.06); }
+        @media (max-width: 600px) { .board-concept-invite { display: none; } }
+      </style>
+      <div id="board-concept-invite" class="board-concept-invite hidden">
+        <span class="bci-text"></span>
+        <span class="bci-actions">
+          <button type="button" class="bci-name" onclick="goToScreen('concept')">Name it →</button>
+          <button type="button" class="bci-x" onclick="tgxDismissConceptInvite()" aria-label="Dismiss for now">✕</button>
+        </span>
+      </div>
       <div class="canvas-infobar">
         <div class="view-tabs" id="view-tabs">
           <button class="view-tab is-active" data-view="all" onclick="setCanvasView('all')">All</button>
@@ -3062,27 +3080,27 @@ git push</pre>
     const activeCanvasTouches = new Map(); // non-mouse pointers tracked for pinch
     let pinchActive = false;
     const DEFAULT_ITEMS = [
-        { id: "item_01", tag: "Friction Signal", title: "Restructuring the Political System", summary: "A high-level desire to shift the fundamental political structure of the United States to model other international systems." },
-        { id: "item_02", tag: "Friction Signal", title: "Media Misinformation", summary: "Broad concerns regarding how misleading media and digital influencing are negatively impacting civic engagement." },
-        { id: "item_03", tag: "Friction Signal", title: "Campaign Finance & District Competitiveness", summary: "Observations that financial influence and gerrymandering have reduced the competitiveness of congressional districts." },
-        { id: "item_04", tag: "Friction Signal", title: "Ranked Choice Voting Education", summary: "The implementation of ranked choice voting lacks sufficient public education to help voters understand its systemic benefits and how it changes voting behaviors." },
-        { id: "item_05", tag: "Friction Signal", title: "Targeting Legislative Influence", summary: "It is currently too labor-intensive and expensive to identify the most effective individuals or groups to lobby specific legislators on specific issues at the right time." },
-        { id: "item_06", tag: "Friction Signal", title: "Local Candidate Information Gaps", summary: "Voters lack easily accessible, actionable information about local county-level candidates, often relying heavily on name recognition from campaign signs." },
-        { id: "item_07", tag: "Friction Signal", title: "Public Engagement on Government AI", summary: "Citizens lack the tools and platforms to provide feedback on or inform how government agencies and companies deploy artificial intelligence in their communities." },
-        { id: "item_08", tag: "Friction Signal", title: "Recycling Contamination & Civic Decay", summary: "Improper recycling in public spaces leads to systemic waste and creates a visible, self-perpetuating belief that responsible civic behavior doesn't matter." },
-        { id: "item_09", tag: "Friction Signal", title: "Campaign Finance", summary: "Reform efforts consistently hit roadblocks like the Citizens United decision." },
-        { id: "item_10", tag: "Friction Signal", title: "Civic Distrust & Disinformation", summary: "A toxic combination of distrust in voting, a lack of civics literacy, and internet-era disinformation is allowing political entities to manipulate voters' worst instincts." },
-        { id: "item_11", tag: "Friction Signal", title: "Logistical & Educational Barriers to Voting", summary: "Voting is burdened by physical hurdles (childcare, time off work) and a lack of plain-language education on how local elections directly impact citizens' daily lives." },
-        { id: "item_12", tag: "Friction Signal", title: "The Death of Political Compromise", summary: "The electorate and activists are failing to recognize that compromise is a fundamental component of democracy, negatively impacting civic engagement." },
-        { id: "item_13", tag: "Friction Signal", title: "Civics Talent Pipeline Shortage", summary: "There is a noticeable shortage of talent to fill junior roles within the civics and elections workforce." },
-        { id: "item_14", tag: "Friction Signal", title: "False Transparency in Government", summary: "Government agencies and schools exhibit a disconnect with their constituencies, presenting a 'false flag' of transparency that leaves communities feeling ignored without understanding how aggregate sentiment is utilized." },
-        { id: "item_15", tag: "Friction Signal", title: "AI Bot Interference in Constituent Engagement", summary: "Artificial intelligence is being used to flood communication channels, rendering actual, organic constituent engagement ineffective." },
-        { id: "item_16", tag: "Friction Signal", title: "Hopelessness & Lack of Election Information", summary: "Voters feel hopeless and lack basic awareness of when local elections occur, relying on passive information like mailers or word of mouth." },
-        { id: "item_17", tag: "Friction Signal", title: "Structural Election Imbalances", summary: "The current electoral system features gerrymandering, dominant two-party privileges, and districts so large that politicians effectively choose their voters." },
-        { id: "item_18", tag: "Friction Signal", title: "Political Bubbles & NIMBYism", summary: "Citizens are highly polarized and isolated in social bubbles, proposing solutions or pushing back on reforms without understanding the broader impacts, trade-offs, or equity implications beyond their circles." },
-        { id: "item_19", tag: "Friction Signal", title: "Volunteer Burnout & Knowledge Transfer", summary: "Local volunteer roles, such as PTA leadership, fall on a few individuals. There is a need for tools to reduce the operational burden and retain institutional knowledge as volunteer leadership turns over." },
-        { id: "item_20", tag: "Friction Signal", title: "Aging Civic Leadership", summary: "Local civic organizations are heavily reliant on aging populations for leadership and membership, struggling to recruit younger generations who face competing career and family priorities." },
-        { id: "item_21", tag: "Friction Signal", title: "Uncontested Local Candidate Transparency", summary: "It is incredibly difficult to research the records of local election candidates, especially those running uncontested or without a communications budget, leaving voters feeling uninformed." }
+        { id: "item_01", tag: "Source Extract", title: "Restructuring the Political System", summary: "A high-level desire to shift the fundamental political structure of the United States to model other international systems." },
+        { id: "item_02", tag: "Source Extract", title: "Media Misinformation", summary: "Broad concerns regarding how misleading media and digital influencing are negatively impacting civic engagement." },
+        { id: "item_03", tag: "Source Extract", title: "Campaign Finance & District Competitiveness", summary: "Observations that financial influence and gerrymandering have reduced the competitiveness of congressional districts." },
+        { id: "item_04", tag: "Source Extract", title: "Ranked Choice Voting Education", summary: "The implementation of ranked choice voting lacks sufficient public education to help voters understand its systemic benefits and how it changes voting behaviors." },
+        { id: "item_05", tag: "Source Extract", title: "Targeting Legislative Influence", summary: "It is currently too labor-intensive and expensive to identify the most effective individuals or groups to lobby specific legislators on specific issues at the right time." },
+        { id: "item_06", tag: "Source Extract", title: "Local Candidate Information Gaps", summary: "Voters lack easily accessible, actionable information about local county-level candidates, often relying heavily on name recognition from campaign signs." },
+        { id: "item_07", tag: "Source Extract", title: "Public Engagement on Government AI", summary: "Citizens lack the tools and platforms to provide feedback on or inform how government agencies and companies deploy artificial intelligence in their communities." },
+        { id: "item_08", tag: "Source Extract", title: "Recycling Contamination & Civic Decay", summary: "Improper recycling in public spaces leads to systemic waste and creates a visible, self-perpetuating belief that responsible civic behavior doesn't matter." },
+        { id: "item_09", tag: "Source Extract", title: "Campaign Finance", summary: "Reform efforts consistently hit roadblocks like the Citizens United decision." },
+        { id: "item_10", tag: "Source Extract", title: "Civic Distrust & Disinformation", summary: "A toxic combination of distrust in voting, a lack of civics literacy, and internet-era disinformation is allowing political entities to manipulate voters' worst instincts." },
+        { id: "item_11", tag: "Source Extract", title: "Logistical & Educational Barriers to Voting", summary: "Voting is burdened by physical hurdles (childcare, time off work) and a lack of plain-language education on how local elections directly impact citizens' daily lives." },
+        { id: "item_12", tag: "Source Extract", title: "The Death of Political Compromise", summary: "The electorate and activists are failing to recognize that compromise is a fundamental component of democracy, negatively impacting civic engagement." },
+        { id: "item_13", tag: "Source Extract", title: "Civics Talent Pipeline Shortage", summary: "There is a noticeable shortage of talent to fill junior roles within the civics and elections workforce." },
+        { id: "item_14", tag: "Source Extract", title: "False Transparency in Government", summary: "Government agencies and schools exhibit a disconnect with their constituencies, presenting a 'false flag' of transparency that leaves communities feeling ignored without understanding how aggregate sentiment is utilized." },
+        { id: "item_15", tag: "Source Extract", title: "AI Bot Interference in Constituent Engagement", summary: "Artificial intelligence is being used to flood communication channels, rendering actual, organic constituent engagement ineffective." },
+        { id: "item_16", tag: "Source Extract", title: "Hopelessness & Lack of Election Information", summary: "Voters feel hopeless and lack basic awareness of when local elections occur, relying on passive information like mailers or word of mouth." },
+        { id: "item_17", tag: "Source Extract", title: "Structural Election Imbalances", summary: "The current electoral system features gerrymandering, dominant two-party privileges, and districts so large that politicians effectively choose their voters." },
+        { id: "item_18", tag: "Source Extract", title: "Political Bubbles & NIMBYism", summary: "Citizens are highly polarized and isolated in social bubbles, proposing solutions or pushing back on reforms without understanding the broader impacts, trade-offs, or equity implications beyond their circles." },
+        { id: "item_19", tag: "Source Extract", title: "Volunteer Burnout & Knowledge Transfer", summary: "Local volunteer roles, such as PTA leadership, fall on a few individuals. There is a need for tools to reduce the operational burden and retain institutional knowledge as volunteer leadership turns over." },
+        { id: "item_20", tag: "Source Extract", title: "Aging Civic Leadership", summary: "Local civic organizations are heavily reliant on aging populations for leadership and membership, struggling to recruit younger generations who face competing career and family priorities." },
+        { id: "item_21", tag: "Source Extract", title: "Uncontested Local Candidate Transparency", summary: "It is incredibly difficult to research the records of local election candidates, especially those running uncontested or without a communications budget, leaving voters feeling uninformed." }
     ];
 
     function uid(prefix) {
@@ -3450,7 +3468,7 @@ git push</pre>
         (t ? sEl : tEl).focus();
         return;
       }
-      appState.items.push({ id: uid('item'), tag: 'Friction Signal', title: t, summary: s });
+      appState.items.push({ id: uid('item'), tag: 'Source Extract', title: t, summary: s });
       tEl.value = '';
       sEl.value = '';
       renderConfigItems();
@@ -3465,7 +3483,7 @@ git push</pre>
       appState.items.push(...newItems.map(i => ({ ...i })));
       renderConfigItems();
       scheduleSave();
-      toast(`${newItems.length} sample signals loaded.`);
+      toast(`${newItems.length} sample source extracts loaded.`);
     }
 
     // --- CSV bulk upload ---
@@ -3517,7 +3535,7 @@ git push</pre>
         let url = urlIdx > -1 ? (row[urlIdx] || '').trim() : '';
         if (!/^https?:\/\//i.test(url)) url = '';
         // verified is set true only after the QA Intercept gate (commitCsvImport).
-        items.push({ id: uid('item'), tag: 'Extracted Signal', title: t, summary: s, source_url: url, verified: false });
+        items.push({ id: uid('item'), tag: 'Source Extract', title: t, summary: s, source_url: url, verified: false });
       }
       if (items.length === 0) return { error: 'No valid rows found in CSV.' };
       return { items };
@@ -3837,10 +3855,9 @@ git push</pre>
     // per screen. Opt-in via appState.seedGuide (additive, optional boolean);
     // Seed Mode is already the default first-run mode. Rewrites no screen.
     const TGX_COACH = {
-      concept: { t: 'Step 1 · Name your hunch', b: "Write the problem as you see it right now — a sentence or two. It's provisional; the evidence will push back." },
-      setup: { t: 'Step 2 · Gather raw material', b: 'Load the sample, upload a CSV, or ✨ Extract from sources. Go wide — include what might contradict you.' },
-      sorting: { t: 'Step 3 · Sort signal from noise', b: 'Right keeps a signal, left is noise, up is a super-signal. Commit fast — where you hesitate is data.' },
-      board: { t: 'Step 4 · Triangulate', b: 'Hover a card, drag from an edge dot to another card. Two signals make an evidence card; two of anything makes the next tier.' }
+      setup: { t: 'Step 1 · Gather source extracts', b: 'Load the sample, upload a CSV, or ✨ Extract from sources. Go wide — include what might contradict you. No concept yet; the problem comes into focus later.' },
+      sorting: { t: 'Step 2 · Sort signal from noise', b: 'Right keeps a signal, left is noise, up is a super-signal. Commit fast — where you hesitate is data.' },
+      board: { t: 'Step 3 · Triangulate', b: 'Hover a card, drag from an edge dot to another to connect two source extracts into evidence. Two of anything makes the next tier.' }
     };
     function tgxCoachRender(screen) {
       const bar = document.getElementById('tgx-coach');
@@ -3861,7 +3878,7 @@ git push</pre>
     function tgxGuidedStart() {
       if (appState) appState.seedGuide = true;
       if (typeof scheduleSave === 'function') scheduleSave();
-      tgxCoachRender((appState && appState.currentScreen) || 'concept');
+      tgxCoachRender((appState && appState.currentScreen) || 'setup');
       if (typeof toast === 'function') toast('Step-by-step guidance on — follow the coach in the corner.');
     }
 
@@ -3877,7 +3894,7 @@ git push</pre>
       const back = document.getElementById('intro-back');
       if (back) back.disabled = introSlide === 0;
       const next = document.getElementById('intro-next');
-      if (next) next.textContent = introSlide >= total - 1 ? 'Name your concept →' : 'Next →';
+      if (next) next.textContent = introSlide >= total - 1 ? 'Load your sources →' : 'Next →';
       const pad = n => String(n).padStart(2, '0');
       const counter = document.getElementById('intro-counter');
       if (counter) counter.textContent = `${pad(introSlide + 1)} / ${pad(total)}`;
@@ -3889,11 +3906,11 @@ git push</pre>
     }
     function introGoTo(i) { introSlide = i; renderIntro(); }
     function introNext() {
-      if (introSlide >= introSlides().length - 1) { goToScreen('concept'); return; }
+      if (introSlide >= introSlides().length - 1) { goToScreen('setup'); return; }
       introSlide++; renderIntro();
     }
     function introPrev() { if (introSlide > 0) { introSlide--; renderIntro(); } }
-    function introSkip() { goToScreen('concept'); }
+    function introSkip() { goToScreen('setup'); }
 
     // --- The initial problem concept (start of the loop) ---
     function startConcept() { goToScreen('concept'); }
@@ -3914,14 +3931,42 @@ git push</pre>
       const concept = tutorialMode ? '' : (appState.settings.concept || '').trim();
       el.classList.toggle('hidden', !concept);
       if (concept) {
-        el.innerHTML = `<span class="bcb-edit">edit ✎</span><span class="bcb-key">Validating</span>${escapeHtml(concept)}`;
+        el.innerHTML = `<span class="bcb-edit">edit ✎</span><span class="bcb-key">Concept</span>${escapeHtml(concept)}`;
+      }
+      updateConceptInvite();
+    }
+
+    // Evidence-first flow: the problem concept is optional and only invited once
+    // a critical mass of source extracts has been kept from sorting. Never
+    // required; fully dismissible. (Threshold tunable.)
+    const CONCEPT_UNLOCK_SIGNALS = 10;
+    function keptSignalCount() {
+      const d = (appState.sorting && appState.sorting.decisions) || {};
+      let n = 0;
+      for (const k in d) { if (d[k] === 'signal' || d[k] === 'super') n++; }
+      return n;
+    }
+    function conceptUnlocked() { return keptSignalCount() >= CONCEPT_UNLOCK_SIGNALS; }
+    function tgxDismissConceptInvite() {
+      appState.settings.conceptInviteDismissed = true;
+      if (typeof scheduleSave === 'function') scheduleSave();
+      updateConceptInvite();
+    }
+    function updateConceptInvite() {
+      const el = document.getElementById('board-concept-invite');
+      if (!el) return;
+      const hasConcept = !!(appState.settings.concept || '').trim();
+      const show = !tutorialMode && !hasConcept && conceptUnlocked() && !appState.settings.conceptInviteDismissed;
+      el.classList.toggle('hidden', !show);
+      if (show) {
+        const txt = el.querySelector('.bci-text');
+        if (txt) txt.textContent = `You've kept ${keptSignalCount()} source extracts — is a problem starting to take shape? Naming it is optional.`;
       }
     }
 
     // --- Global step indicator: a loop the user re-runs, not a finish line ---
     // Every reached step is clickable to jump back to, non-destructively.
     const STEP_DEFS = [
-      { id: 'concept',  label: 'Concept',  screen: 'concept' },
       { id: 'sources',  label: 'Sources',  screen: 'setup' },
       { id: 'sort',     label: 'Sort',     screen: 'sorting' },
       { id: 'validate', label: 'Validate (Steps 1–4)', screen: 'board' },
@@ -3932,8 +3977,8 @@ git push</pre>
     // The underlying "why" for each step, in a consistent 3-beat scaffold:
     // recall (what you just did) → why now → payoff (what it earns next).
     const STEP_WHY = {
-      concept: { label: 'Why start here',
-        body: "No evidence is loaded yet — on purpose. Naming your hunch first makes your bias **visible**, so the sources argue with a position instead of filling a blank. This is your first guard against **The Self-Made Box** — committing to a stale assumption before you've actually looked. Everything downstream measures itself against this sentence; revise it the moment the evidence earns it." },
+      concept: { label: 'Why now, not first',
+        body: "You've worked your source extracts and the shape of a problem is emerging. Naming it **now** — grounded in evidence you've actually sorted, not a blank-page hunch — is how you avoid **The Self-Made Box**, where a concept named too early quietly filters everything you let yourself see. It's optional and provisional: revise it, or skip it entirely, as the evidence keeps talking." },
       sources: { label: 'Why a pool, not a search',
         body: "You've named what you expect. Now gather raw material **wide** — including what could contradict you — because a search only returns what you already believe. This widening is **Dorst's Field Mapping** in miniature, and it starves **The Self-Made Box** before it forms. The breadth here sets the ceiling on every signal you'll find." },
       sort: { label: 'Why force a binary',
@@ -4037,7 +4082,7 @@ git push</pre>
     function allObjects() { return appState.cards.slice(); }
     function nodeTier(id) { const c = findCard(id); return c ? c.tier : 0; }
 
-    const TIER_NAMES = { 0: 'Extracted Signal', 1: 'Evidence', 2: 'Pattern', 3: 'Theme', 4: 'Super-theme', 5: 'Mega-theme', 6: 'Meta-theme' };
+    const TIER_NAMES = { 0: 'Source Extract', 1: 'Evidence', 2: 'Pattern', 3: 'Theme', 4: 'Super-theme', 5: 'Mega-theme', 6: 'Meta-theme' };
     function tierName(t) { return TIER_NAMES[t] || ('Level-' + t + ' theme'); }
     const TIER_COLORS = { 1: cssToken('--tier-1'), 2: cssToken('--tier-2'), 3: cssToken('--tier-3'),
                           4: cssToken('--tier-4'), 5: cssToken('--tier-5'), 6: cssToken('--tier-6') };
@@ -4160,7 +4205,7 @@ git push</pre>
     }
     function invalidateSituationIndex() { _sitIndex = null; }
     function nodeLabel(id) {
-      if (isSignalId(id)) return 'Signal';
+      if (isSignalId(id)) return 'Source Extract';
       const c = findCard(id);
       if (!c) return 'Signal';
       if (c.tier === 1) return cardTypeInfo(c.cardType).label;
@@ -4464,7 +4509,7 @@ git push</pre>
       if (!tabs) return;
       const vs = normalizedView();
       let html = `<button class="view-tab${vs === 'all' ? ' is-active' : ''}" data-view="all" onclick="setCanvasView('all')">All</button>`;
-      html += `<button class="view-tab${vs === 'signals' ? ' is-active' : ''}" data-view="signals" onclick="setCanvasView('signals')">Signals</button>`;
+      html += `<button class="view-tab${vs === 'signals' ? ' is-active' : ''}" data-view="signals" onclick="setCanvasView('signals')">Source Extracts</button>`;
       existingTiers().forEach(t => {
         const key = 'tier-' + t;
         html += `<button class="view-tab${vs === key ? ' is-active' : ''}" data-view="${key}" onclick="setCanvasView('${key}')">${escapeHtml(tierName(t))}</button>`;
@@ -4506,7 +4551,7 @@ git push</pre>
     function signalTagLabel(item) {
       const isSuper = appState.sorting.decisions[item.id] === 'super';
       if (item.verified === false) return 'Source Extract';
-      return isSuper ? 'Strong Extracted Signal' : 'Extracted Signal';
+      return isSuper ? 'Strong Source Extract' : 'Source Extract';
     }
 
     // Clickable provenance: the source document an extract was parsed from.
@@ -5384,7 +5429,7 @@ git push</pre>
       const t = (titleEl.value || '').trim();
       const s = (summaryEl.value || '').trim();
       if (!t || !s) { toast('A signal needs both a title and a summary.'); return; }
-      const item = { id: uid('item'), tag: 'Friction Signal', title: t, summary: s };
+      const item = { id: uid('item'), tag: 'Source Extract', title: t, summary: s };
       appState.items.push(item);
       // Same sorting bookkeeping as board CSV import — never resume sorting.
       appState.sorting.decisions[item.id] = 'signal';
@@ -6191,19 +6236,19 @@ git push</pre>
     // --- Example dataset: "Neighborhood food access" ---
     // Deliberately a different domain from the built-in sample signals.
     const TUT_SORT_ITEMS = [
-      { id: 'tut-n1', tag: 'Friction Signal', title: 'Just build a market-finder app', summary: '"Honestly the fix is obvious — someone should make an app showing where the farmers markets are." — comment at a community meeting.' },
-      { id: 'tut-g1', tag: 'Friction Signal', title: 'Corner-store cooler economics', summary: 'Field notes: 6 of 8 corner stores stock fresh produce for only ~2 days after delivery, then pull wilted stock. Owners independently cite spoilage losses exceeding produce margins.' },
-      { id: 'tut-u1', tag: 'Friction Signal', title: 'The two-bus tomato', summary: 'Diary study: carless residents plan grocery trips like commutes — two buses each way — so they bulk-buy shelf-stable food and skip produce entirely.' }
+      { id: 'tut-n1', tag: 'Source Extract', title: 'Just build a market-finder app', summary: '"Honestly the fix is obvious — someone should make an app showing where the farmers markets are." — comment at a community meeting.' },
+      { id: 'tut-g1', tag: 'Source Extract', title: 'Corner-store cooler economics', summary: 'Field notes: 6 of 8 corner stores stock fresh produce for only ~2 days after delivery, then pull wilted stock. Owners independently cite spoilage losses exceeding produce margins.' },
+      { id: 'tut-u1', tag: 'Source Extract', title: 'The two-bus tomato', summary: 'Diary study: carless residents plan grocery trips like commutes — two buses each way — so they bulk-buy shelf-stable food and skip produce entirely.' }
     ];
     const TUT_CANVAS_ITEMS = [
-      { id: 'tut-s1', tag: 'Friction Signal', title: 'Supermarket pullout (2019)', summary: 'The chain closed both neighborhood branches, citing shrink and thin margins. Nothing has replaced them.' },
-      { id: 'tut-s2', tag: 'Friction Signal', title: 'Co-op that folded (2021)', summary: 'A community grocery co-op opened with grant funding and closed after 14 months, undercapitalized and under-stocked.' },
-      { id: 'tut-s3', tag: 'Friction Signal', title: 'Wholesale collective forming', summary: 'Five corner-store owners are pooling orders to hit the distributor\'s minimum and bring back produce coolers.' },
-      { id: 'tut-s4', tag: 'Friction Signal', title: 'SNAP-doubling pilot extended', summary: 'The city renewed its produce-match program after redemptions rose 40% in a year.' },
-      { id: 'tut-s5', tag: 'Friction Signal', title: 'Corner stores as de facto grocers', summary: 'Owners extend informal credit, take custom orders for regulars, and hold deliveries behind the counter.' },
-      { id: 'tut-s6', tag: 'Friction Signal', title: 'Church van shuttle', summary: 'Volunteer drivers run an unofficial weekly grocery run for thirty elders. There is a waitlist.' },
-      { id: 'tut-s7', tag: 'Friction Signal', title: 'Cooking as care', summary: 'Interviews tie feeding family fresh-cooked meals to dignity and identity — "boxed food means I failed."' },
-      { id: 'tut-s8', tag: 'Friction Signal', title: 'Pantry stigma', summary: 'Residents skip the free food pantry out of embarrassment; they want to buy food, not receive it.' }
+      { id: 'tut-s1', tag: 'Source Extract', title: 'Supermarket pullout (2019)', summary: 'The chain closed both neighborhood branches, citing shrink and thin margins. Nothing has replaced them.' },
+      { id: 'tut-s2', tag: 'Source Extract', title: 'Co-op that folded (2021)', summary: 'A community grocery co-op opened with grant funding and closed after 14 months, undercapitalized and under-stocked.' },
+      { id: 'tut-s3', tag: 'Source Extract', title: 'Wholesale collective forming', summary: 'Five corner-store owners are pooling orders to hit the distributor\'s minimum and bring back produce coolers.' },
+      { id: 'tut-s4', tag: 'Source Extract', title: 'SNAP-doubling pilot extended', summary: 'The city renewed its produce-match program after redemptions rose 40% in a year.' },
+      { id: 'tut-s5', tag: 'Source Extract', title: 'Corner stores as de facto grocers', summary: 'Owners extend informal credit, take custom orders for regulars, and hold deliveries behind the counter.' },
+      { id: 'tut-s6', tag: 'Source Extract', title: 'Church van shuttle', summary: 'Volunteer drivers run an unofficial weekly grocery run for thirty elders. There is a waitlist.' },
+      { id: 'tut-s7', tag: 'Source Extract', title: 'Cooking as care', summary: 'Interviews tie feeding family fresh-cooked meals to dignity and identity — "boxed food means I failed."' },
+      { id: 'tut-s8', tag: 'Source Extract', title: 'Pantry stigma', summary: 'Residents skip the free food pantry out of embarrassment; they want to buy food, not receive it.' }
     ];
     const TUT_CANVAS_POS = {
       'tut-s1': [250, 250],  'tut-s2': [620, 250],
@@ -8897,7 +8942,7 @@ ${AI_RULES}
         const p = appState.nodes[it.id];
         const sz = nodeSize('signal', it.id);
         out.push({
-          id: it.id, type: 'Extracted Signal', tier: 0,
+          id: it.id, type: 'Source Extract', tier: 0,
           title: it.title || '', description: it.summary || '',
           x: p.x, y: p.y, w: sz.w, h: sz.h,
           verified: it.verified === true, strong: dec === 'super',
@@ -9056,7 +9101,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     html+='<section class="narrative"><h2>Themes</h2>'+mdToHtml(content.themes)+'</section>';
     html+='<section class="narrative"><h2>Problem situation</h2>'+mdToHtml(content.situation)+'</section>';
     var rows=parseCsvRows(data.extractsCsv||'');
-    if(rows.length>1){html+='<section class="extracts"><h2>Extracted signals</h2><ul>';
+    if(rows.length>1){html+='<section class="extracts"><h2>Source extracts</h2><ul>';
       for(var i=1;i<rows.length;i++){var r=rows[i],t=r[0]||'',s=r[1]||'',u=r[2]||'';
         html+='<li><strong>'+esc(t)+'</strong> — '+esc(s)+(/^https?:\\/\\//.test(u)?' <a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">source ↗</a>':'')+'</li>';}
       html+='</ul></section>';}
