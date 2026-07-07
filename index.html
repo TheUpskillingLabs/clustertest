@@ -2139,10 +2139,14 @@
       gap: 4px 2px; padding: 7px 16px; background: var(--midnight); width: 100%; box-sizing: border-box; }
     .step-indicator .step-loop-note { flex-basis: 100%; text-align: center; font-size: var(--text-xs);
       color: var(--cloud); opacity: 0.6; margin: 3px 0 0; }
-    .step-why { flex-basis: 100%; max-width: 72ch; margin: 8px auto 0; text-align: left;
+    .step-why { position: relative; flex-basis: 100%; max-width: 72ch; margin: 8px auto 0; text-align: left;
       background: rgba(0,148,160,0.14); border-left: 3px solid var(--primary-teal);
-      border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 8px 14px;
+      border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 8px 34px 8px 14px;
       font-size: var(--text-sm); line-height: 1.55; color: var(--ghost-white); }
+    .step-why-x { position: absolute; top: 5px; right: 7px; background: none; border: none; color: rgba(255,255,255,0.55); cursor: pointer; font-size: 13px; line-height: 1; padding: 4px 5px; border-radius: var(--radius-1); }
+    .step-why-x:hover { color: var(--ghost-white); background: rgba(255,255,255,0.08); }
+    .step-why-show { background: none; border: none; color: var(--primary-teal); cursor: pointer; font-size: var(--text-xs); font-family: inherit; padding: 0; text-decoration: underline; }
+    .step-why-show:hover { color: var(--ghost-white); }
     .step-why .step-why-label { color: var(--primary-teal); text-transform: uppercase;
       font-size: var(--text-2xs); font-weight: 800; letter-spacing: var(--track-label);
       display: block; margin-bottom: 3px; }
@@ -3999,10 +4003,12 @@ git push</pre>
         return `${sep}<button type="button" class="step-chip" data-step="${s.id}" data-reached="${reached ? 1 : 0}" data-active="${isActive ? 1 : 0}"${reached ? '' : ' disabled'}${isActive ? ' aria-current="step"' : ''}><span class="step-dot" aria-hidden="true"></span>${escapeHtml(s.label)}</button>`;
       }).join('');
       const why = STEP_WHY[active];
-      const whyHtml = why
-        ? `<div class="step-why"><span class="step-why-label">${escapeHtml(why.label)}</span>${escapeHtml(why.body).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</div>`
+      const hideWhy = !!appState.hideStepWhy;
+      const whyHtml = (why && !hideWhy)
+        ? `<div class="step-why"><button type="button" class="step-why-x" onclick="tgxDismissWhy()" aria-label="Hide this explanation" title="Hide — you can bring it back">✕</button><span class="step-why-label">${escapeHtml(why.label)}</span>${escapeHtml(why.body).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</div>`
         : '';
-      const html = `<div class="step-indicator">${chips}<span class="step-loop-note"><span class="step-loop-icon" aria-hidden="true">↺</span> This is a loop — revisit any step as you learn more.</span>${whyHtml}</div>`;
+      const whyToggle = (why && hideWhy) ? ` · <button type="button" class="step-why-show" onclick="tgxShowWhy()">Why this step?</button>` : '';
+      const html = `<div class="step-indicator">${chips}<span class="step-loop-note"><span class="step-loop-icon" aria-hidden="true">↺</span> This is a loop — revisit any step as you learn more.${whyToggle}</span>${whyHtml}</div>`;
       mounts.forEach(m => {
         m.innerHTML = html;
         m.querySelectorAll('.step-chip').forEach(btn => {
@@ -4010,6 +4016,10 @@ git push</pre>
         });
       });
     }
+    // Dismissible "why this step" scaffold — one close hides it on every screen
+    // (additive appState.hideStepWhy); a "Why this step?" link brings it back.
+    function tgxDismissWhy() { appState.hideStepWhy = true; if (typeof scheduleSave === 'function') scheduleSave(); renderStepIndicator(); }
+    function tgxShowWhy() { appState.hideStepWhy = false; if (typeof scheduleSave === 'function') scheduleSave(); renderStepIndicator(); }
 
     function backToBoard() { goToScreen('board'); }
     function backToWorkspaceFromArtifact() { goToScreen('workspace'); }
