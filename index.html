@@ -2139,10 +2139,14 @@
       gap: 4px 2px; padding: 7px 16px; background: var(--midnight); width: 100%; box-sizing: border-box; }
     .step-indicator .step-loop-note { flex-basis: 100%; text-align: center; font-size: var(--text-xs);
       color: var(--cloud); opacity: 0.6; margin: 3px 0 0; }
-    .step-why { flex-basis: 100%; max-width: 72ch; margin: 8px auto 0; text-align: left;
+    .step-why { position: relative; flex-basis: 100%; max-width: 72ch; margin: 8px auto 0; text-align: left;
       background: rgba(0,148,160,0.14); border-left: 3px solid var(--primary-teal);
-      border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 8px 14px;
+      border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 8px 34px 8px 14px;
       font-size: var(--text-sm); line-height: 1.55; color: var(--ghost-white); }
+    .step-why-x { position: absolute; top: 5px; right: 7px; background: none; border: none; color: rgba(255,255,255,0.55); cursor: pointer; font-size: 13px; line-height: 1; padding: 4px 5px; border-radius: var(--radius-1); }
+    .step-why-x:hover { color: var(--ghost-white); background: rgba(255,255,255,0.08); }
+    .step-why-show { background: none; border: none; color: var(--primary-teal); cursor: pointer; font-size: var(--text-xs); font-family: inherit; padding: 0; text-decoration: underline; }
+    .step-why-show:hover { color: var(--ghost-white); }
     .step-why .step-why-label { color: var(--primary-teal); text-transform: uppercase;
       font-size: var(--text-2xs); font-weight: 800; letter-spacing: var(--track-label);
       display: block; margin-bottom: 3px; }
@@ -2397,23 +2401,23 @@
   <div id="concept-screen" class="hidden">
     <div class="deck-topbar">
       <span class="deck-brand">The <b>Triangulator-inator</b></span>
-      <button type="button" class="deck-skip" onclick="goToSources()">Skip → load sources</button>
+      <button type="button" class="deck-skip" onclick="goToScreen('board')">← Back to the canvas</button>
     </div>
     <div class="step-indicator-mount"></div>
     <div class="deck-stage">
       <div class="deck-measure">
-        <p class="deck-eyebrow">Start of the loop <span class="deck-kicker">· your concept</span></p>
-        <h1 class="deck-title">What's your initial problem concept?</h1>
-        <p class="deck-lede">Before you touch a single source, name the starting hunch you're going to put to the test — the problem as you understand it right now. A sentence or two is plenty.</p>
-        <label for="concept-input" class="sr-only">Initial problem concept</label>
-        <textarea id="concept-input" placeholder="Right now I think the problem is…" oninput="updateConcept(this.value)"></textarea>
-        <p class="concept-loop">Provisional on purpose — as the evidence pushes back, you'll come back and revise it. That's the whole point.</p>
+        <p class="deck-eyebrow">Optional <span class="deck-kicker">· the concept, emerging</span></p>
+        <h1 class="deck-title">What problem are you starting to see?</h1>
+        <p class="deck-lede">You've worked through your source extracts. If a problem is taking shape, name it — it's optional, and it stays provisional. Leave it blank and keep building; you can name it anytime.</p>
+        <label for="concept-input" class="sr-only">The problem concept emerging</label>
+        <textarea id="concept-input" placeholder="The problem I'm starting to see is…" oninput="updateConcept(this.value)"></textarea>
+        <p class="concept-loop">Optional and provisional — the evidence keeps reshaping it. Skip it entirely if nothing's crystallized yet.</p>
       </div>
     </div>
     <nav class="deck-nav" aria-label="Concept navigation">
-      <div class="nav-left"><button type="button" class="deck-ghost-btn" onclick="goToScreen('intro')">← Intro</button></div>
+      <div class="nav-left"></div>
       <div class="deck-dots"></div>
-      <div class="nav-right"><button type="button" class="btn btn-primary" onclick="goToSources()">Continue → sources</button></div>
+      <div class="nav-right"><button type="button" class="btn btn-primary" onclick="goToScreen('board')">Done → back to the canvas</button></div>
     </nav>
   </div>
 
@@ -2426,9 +2430,10 @@
     <div class="deck-stage">
       <div class="config-container">
       <header class="sources-head">
-        <p class="deck-eyebrow">Step two <span class="deck-kicker">· your sources &amp; signals</span></p>
+        <p class="deck-eyebrow">Start here <span class="deck-kicker">· your source extracts</span></p>
         <h1 class="deck-title sources-title">Load the raw material.</h1>
-        <p class="deck-lede sources-lede">Field notes, interview fragments, articles, statistics, policies, anecdotes — the cloud you'll sift for signal. Start with the sample survey or bring your own.</p>
+        <p class="deck-lede sources-lede">Field notes, interview fragments, articles, statistics, policies, anecdotes — the raw material you'll sift for signal. Start with the sample survey or bring your own. A problem concept comes later, once the evidence has something to say.</p>
+        <button type="button" onclick="tgxGuidedStart()" style="margin-top:14px; background:none; border:1px solid rgba(255,255,255,0.22); color:var(--ghost-white); font-family:'Geologica',sans-serif; font-size:var(--text-sm); padding:8px 16px; border-radius:var(--radius-2); cursor:pointer;">✨ New here? Turn on step-by-step guidance</button>
       </header>
 
       <div class="config-field">
@@ -2437,13 +2442,16 @@
       </div>
 
       <div class="config-field">
-        <label id="pool-label">Observation pool — <span id="config-pool-count">0</span> observations <span style="opacity: 0.7; font-weight: 400;">(Civics & Elections cycle survey — replace with your own observations via CSV)</span></label>
+        <label id="pool-label">Source-extract pool — <span id="config-pool-count">0</span> source extracts <span style="opacity: 0.7; font-weight: 400;">(Civics & Elections cycle survey — replace with your own via CSV or ✨ Extract from sources)</span></label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
-        <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()" style="margin-bottom: 12px;">Load 21 Civics &amp; Elections observations</button>
+        <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()" style="margin-bottom: 12px;">Load 21 Civics &amp; Elections source extracts</button>
+
+        <button type="button" class="btn btn-primary" onclick="tgxExtractOpen()" style="margin-bottom: 6px;">✨ Extract from sources →</button>
+        <p style="font-size: var(--text-xs); color: var(--cloud); opacity: 0.75; margin: 0 0 14px;">Paste an article, notes, or a transcript and turn it into extract cards with your own AI — nothing leaves your browser.</p>
 
         <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: var(--radius-2); padding: 16px; margin-bottom: 16px;">
           <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px;">
-            <strong style="color: var(--ghost-white); font-size: var(--text-sm);">Load your own observations</strong>
+            <strong style="color: var(--ghost-white); font-size: var(--text-sm);">Load your own source extracts</strong>
             <span style="font-size: var(--text-xs); color: var(--cloud); opacity: 0.7;">Columns: <code>title,summary,source_url</code> (header row required; <code>source_url</code> optional)</span>
           </div>
           <details style="margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-2); overflow: hidden;">
@@ -2477,14 +2485,14 @@
           <input type="text" id="new-item-title" class="config-input" placeholder="Observation title..." style="flex:1;">
           <label class="sr-only" for="new-item-summary">New observation description</label>
           <input type="text" id="new-item-summary" class="config-input" placeholder="What's the friction? Who feels it?..." style="flex:2;">
-          <button class="btn btn-primary" onclick="addConfigItem()">Add Signal</button>
+          <button class="btn btn-primary" onclick="addConfigItem()">Add source extract</button>
         </div>
       </div>
 
       </div>
     </div>
     <nav class="deck-nav" aria-label="Sources navigation">
-      <div class="nav-left"><button type="button" class="deck-ghost-btn" onclick="goToScreen('concept')">← Concept</button></div>
+      <div class="nav-left"><button type="button" class="deck-ghost-btn" onclick="goToScreen('intro')">← Intro</button></div>
       <div class="deck-dots"></div>
       <div class="nav-right">
         <button type="button" class="btn btn-outline" onclick="skipSortingToBoard()">Skip to Canvas</button>
@@ -2516,7 +2524,7 @@
         <span class="sort-zone-label">★ super</span>
       </div>
       <div class="sort-card" id="sort-card">
-        <span class="sort-card-tag" id="sort-card-tag">Signal</span>
+        <span class="sort-card-tag" id="sort-card-tag">Source Extract</span>
         <h3 class="sort-card-title" id="sort-card-title"></h3>
         <p class="sort-card-desc" id="sort-card-desc"></p>
         <span class="sort-card-number" id="sort-card-number"></span>
@@ -2538,11 +2546,11 @@
         <h2 id="board-title-display">Your Web Map <span id="save-status" aria-live="polite"></span></h2>
         <div class="webmap-header-actions" id="webmap-header-actions">
           <div class="search-wrap webmap-search" id="search-wrap">
-            <label class="sr-only" for="search-input">Search signals</label>
-            <input type="text" id="search-input" class="search-input" placeholder="Search signals..." oninput="filterItems()">
+            <label class="sr-only" for="search-input">Search source extracts</label>
+            <input type="text" id="search-input" class="search-input" placeholder="Search source extracts..." oninput="filterItems()">
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
-          <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full collection of observations and insights with your AI thinking partner">✨ <span class="btn-label">LLM Field Analyis</span></button>
+          <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full collection of observations and insights with your AI thinking partner">✨ <span class="btn-label">LLM Field Analysis</span></button>
           <button class="btn btn-primary" onclick="openCommitModal()">Commit</button>
         </div>
         <span id="mobile-ready-dot" class="mobile-ready-dot" aria-hidden="true"></span>
@@ -2554,8 +2562,8 @@
           <div id="board-menu" class="board-menu hidden" role="menu" aria-label="Board menu">
             <div class="menu-mobile-only">
               <div class="menu-search">
-                <label class="sr-only" for="menu-search-input">Search signals</label>
-                <input type="text" id="menu-search-input" placeholder="Search signals..." oninput="syncMenuSearch(this)">
+                <label class="sr-only" for="menu-search-input">Search source extracts</label>
+                <input type="text" id="menu-search-input" placeholder="Search source extracts..." oninput="syncMenuSearch(this)">
               </div>
               <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openAIPromptModal()">✨ LLM Field Analysis</button>
               <div class="divider"></div>
@@ -2563,15 +2571,48 @@
             <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openBoardCsvModal()">Import CSV</button>
             <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openImportModal()">Open shared folder</button>
             <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openBlindSpotDrawer()">🔍 Blind-Spot Audit</button>
+            <button id="menu-concept" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); goToScreen('concept')">💡 Name the problem (optional)</button>
+            <button id="menu-deepen" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); goToScreen('workspace')">📖 Work the situation (Deepen)</button>
             <button id="menu-compile-concept" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); compileConcept()">Compile Concept ⤓</button>
             <button id="menu-graduate" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); graduateToPod()">▲ Graduate to Pod Mode</button>
-            <button id="menu-export-canvas" type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); exportModular()">Export site (.zip) ⤓</button>
+            <button id="menu-export-canvas" type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); exportModular()">Produce your “Meet the Pods” deck &amp; site (.zip) ⤓</button>
             <div class="divider"></div>
             <button type="button" class="menu-item menu-item-danger" role="menuitem" onclick="resetFromMenu()">💥 Self-destruct (reset workspace)</button>
           </div>
         </div>
       </div>
-      <button type="button" id="board-concept-banner" class="board-concept-banner hidden" onclick="goToScreen('concept')" title="Revise your initial concept — nothing on the board is lost"></button>
+      <button type="button" id="board-concept-banner" class="board-concept-banner hidden" onclick="goToScreen('concept')" title="Edit the concept — nothing on the board is lost"></button>
+      <style>
+        .board-concept-invite { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 7px 24px; border-bottom: 1px solid var(--cloud); background: rgba(0,148,160,0.07); color: var(--midnight); font-size: var(--text-xs); line-height: var(--lead-sm); flex-shrink: 0; }
+        .board-concept-invite.hidden { display: none; }
+        .board-concept-invite .bci-text { flex: 1; }
+        .board-concept-invite .bci-actions { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+        .board-concept-invite .bci-name { background: var(--primary-teal); color: var(--ghost-white); border: none; border-radius: var(--radius-1); font: inherit; font-size: var(--text-xs); font-weight: 700; padding: 4px 12px; cursor: pointer; }
+        .board-concept-invite .bci-name:hover { background: var(--teal-deep); }
+        .board-concept-invite .bci-x { background: none; border: none; color: var(--midnight); opacity: 0.5; cursor: pointer; font-size: 12px; padding: 4px 6px; border-radius: var(--radius-1); }
+        .board-concept-invite .bci-x:hover { opacity: 1; background: rgba(0,0,0,0.06); }
+        @media (max-width: 600px) { .board-concept-invite { display: none; } }
+      </style>
+      <div id="board-concept-invite" class="board-concept-invite hidden">
+        <span class="bci-text"></span>
+        <span class="bci-actions">
+          <button type="button" class="bci-name" onclick="goToScreen('concept')">Name it →</button>
+          <button type="button" class="bci-x" onclick="tgxDismissConceptInvite()" aria-label="Dismiss for now">✕</button>
+        </span>
+      </div>
+      <style>
+        /* Fix 1a — persistent Seed-Mode bar (shown only in Seed via the existing #board-workspace[data-mode]) */
+        #seed-mode-bar { display: none; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 8px 24px; border-bottom: 1px solid var(--cloud); background: rgba(39, 174, 96, 0.10); color: var(--midnight); font-size: var(--text-xs); line-height: var(--lead-sm); flex-shrink: 0; }
+        #board-workspace[data-mode="seed"] #seed-mode-bar { display: flex; }
+        #seed-mode-bar .smb-text { flex: 1; }
+        #seed-mode-bar .smb-text strong { color: #1a7f37; }
+        #seed-mode-bar .smb-graduate { background: var(--primary-teal); color: var(--ghost-white); border: none; border-radius: var(--radius-1); font: inherit; font-size: var(--text-xs); font-weight: 700; padding: 5px 13px; cursor: pointer; white-space: nowrap; flex: none; }
+        #seed-mode-bar .smb-graduate:hover { background: var(--teal-deep); }
+      </style>
+      <div id="seed-mode-bar">
+        <span class="smb-text"><strong>🌱 Seed Mode</strong> — building hunches &amp; evidence. Connect two source extracts into evidence; <strong>Patterns &amp; Themes unlock in Pod Mode.</strong></span>
+        <button type="button" class="smb-graduate" onclick="graduateToPod()">▲ Graduate to Pod Mode →</button>
+      </div>
       <div class="canvas-infobar">
         <div class="view-tabs" id="view-tabs">
           <button class="view-tab is-active" data-view="all" onclick="setCanvasView('all')">All</button>
@@ -2674,8 +2715,11 @@
     <nav class="workspace-jump-bar" id="workspace-jump-bar" aria-label="Jump to a committed cluster"></nav>
     <div class="workspace-cards" id="workspace-cards-container"></div>
     <div class="workspace-footer">
-      <span class="submit-status" id="submit-status-hint">To submit: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.</span>
-      <button class="btn btn-primary" id="submit-for-voting-btn" onclick="submitForVoting()" disabled>Submit for Voting</button>
+      <span class="submit-status" id="submit-status-hint">To finish: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.</span>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button class="btn btn-outline" id="submit-for-voting-btn" onclick="submitForVoting()" disabled>Submit for Voting</button>
+        <button class="btn btn-primary" id="produce-deck-btn" onclick="exportModular()" disabled>Produce your “Meet the Pods” deck &amp; site →</button>
+      </div>
     </div>
   </div>
 
@@ -2688,29 +2732,15 @@
         <button class="btn btn-outline" onclick="backToWorkspaceFromArtifact()">← Back to Workspace</button>
         <button class="btn btn-outline" onclick="window.print()">Print / Save PDF</button>
         <button class="btn btn-outline" onclick="downloadMarkdown()">Download Markdown (.md)</button>
-        <button class="btn btn-primary" onclick="openSubmitModal()">Re-submit</button>
+        <button class="btn btn-primary" onclick="exportModular()">Produce your “Meet the Pods” deck &amp; site →</button>
+        <button class="btn btn-outline" onclick="openSubmitModal()">Re-submit</button>
         <button class="btn btn-danger" onclick="startOver()" style="margin-left:auto;" aria-label="Start over — permanently clears your saved board">Start Over</button>
       </div>
     </div>
     <div id="submission-body"></div>
   </div>
 
-  <div id="commit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="commit-modal-title">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="commit-modal-title">Pick the patterns you'll defend</h3>
-      </div>
-      <div class="modal-body">
-        <p>These are the patterns you're willing to stand behind. Choose 2–3 with enough signal density to build a real case — you'll map the stakeholders and pressure-test the map before submitting.</p>
-        <div id="commit-warning" class="commit-warning hidden"></div>
-        <div id="commit-cluster-list" class="commit-cluster-list" role="group" aria-label="Clusters available to commit"></div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
-          <button class="btn btn-outline" onclick="closeModal('commit-modal')">Cancel</button>
-          <button class="btn btn-primary" id="commit-continue-btn" onclick="confirmCommit()" disabled data-autofocus>Continue</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- (removed) orphaned commit-modal — it was never opened; the live flow uses openCommitModal()/validateBoard() -->
 
   <div id="submit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="submit-modal-title">
     <div class="modal-content">
@@ -2775,15 +2805,15 @@
     <div class="modal-content" style="max-width: 560px;">
       <div class="modal-header"><h3 id="board-intro-title">Map the Problem Situation</h3></div>
       <div class="modal-body">
-        <p class="intro-lede">Your Pod collected raw observations from the field. Your mission over the next few weeks: figure out what's really going on underneath them, back it up with evidence, and map the Problem Situation so your Themes can survive scrutiny at Meet the Pods.</p>
-        <p class="intro-hint" style="margin-top:0;">The canvas enforces Kees Dorst's Frame Creation method, made physical: every level is <em>earned</em> from the one below. The app won't let you name a Theme until the evidence beneath it is solid — that's how it keeps you off <strong>The Rational High Ground</strong> (defending claims you never grounded), out of <strong>The Self-Made Box</strong> (repeating untested assumptions), and away from the <strong>Lone Warrior</strong>'s private certainty. This isn't bureaucracy; it's how expert designers reason.</p>
+        <p class="intro-lede">These are your sorted <strong>source extracts</strong>. Your mission: figure out what's really going on underneath them, build it up into evidence, and map the Problem Situation — the groundwork your Themes stand on at Meet the Pods.</p>
+        <p class="intro-hint" style="margin-top:0;">The canvas enforces Kees Dorst's Frame Creation method, made physical: every level is <em>earned</em> from the one below. You can't name a Theme until the evidence beneath it is solid — that's how it keeps you off <strong>The Rational High Ground</strong>, out of <strong>The Self-Made Box</strong>, and away from the <strong>Lone Warrior</strong>'s private certainty.</p>
         <ol class="intro-steps">
-          <li><strong>Connect the dots.</strong> Drag related observations together and link them. Two signals pointing at the same condition make an Evidence card.</li>
-          <li><strong>Build up.</strong> Link Evidence into a Pattern — a named mechanism. Link Patterns into a Theme — the deeper force that bridges human experience and structural conditions.</li>
-          <li><strong>Name every card.</strong> Say what you actually think is happening, not just a topic. Cards higher up stay locked until the ones below them are named &amp; described.</li>
-          <li><strong>Commit.</strong> Once you have at least one Theme that's named, described, and passes the Bridge &amp; Depth tests, hit <strong>Commit</strong> — synthesizing the whole ladder into a Problem Situation. Then you'll classify your evidence into Dorst's seven types and deepen the map.</li>
+          <li><strong>Connect the dots.</strong> Drag two related source extracts together to link them — two pointing at the same condition make an <strong>Evidence</strong> card.</li>
+          <li><strong>Graduate to Pod Mode.</strong> You start in <strong>Seed Mode</strong> (building hunches &amp; evidence). When you're ready to build <strong>Patterns &amp; Themes</strong>, hit <strong>▲ Graduate</strong> in the green bar above the canvas — it's one-way, and it unlocks the full ladder.</li>
+          <li><strong>Climb &amp; name.</strong> Link Evidence into a <strong>Pattern</strong> (a named mechanism), Patterns into a <strong>Theme</strong>. Every card stays locked until the ones below it are named &amp; described.</li>
+          <li><strong>Commit &amp; map.</strong> Once you have a named, described Theme, hit <strong>Commit</strong> to synthesize the Problem Situation — then deepen it and produce your <strong>Meet-the-Pods</strong> deck &amp; site.</li>
         </ol>
-        <p class="intro-hint">The chip above the canvas shows how close you are.</p>
+        <p class="intro-hint">The bar above the canvas shows which mode you're in and how close you are.</p>
         <div class="modal-actions">
           <button class="btn btn-primary" onclick="closeModal('board-intro-modal')" data-autofocus>Start mapping</button>
         </div>
@@ -2791,11 +2821,91 @@
     </div>
   </div>
 
+  <style>
+    /* A2 — Extract from sources (namespaced xtr-*); light modal surface */
+    .xtr-body { display: flex; flex-direction: column; gap: 16px; }
+    .xtr-step { border: 1px solid var(--cloud); border-radius: var(--radius-2); padding: 14px 16px; background: rgba(0,0,0,0.02); }
+    .xtr-step-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+    .xtr-step-n { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-teal); color: var(--ghost-white); font-size: var(--text-xs); font-weight: 700; flex: none; }
+    .xtr-step-t { font-size: var(--text-sm); font-weight: 600; color: var(--midnight); }
+    .xtr-ta { width: 100%; box-sizing: border-box; font-family: 'Geologica', sans-serif; font-size: var(--text-sm); line-height: 1.5; padding: 10px 12px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: var(--ghost-white); color: var(--midnight); resize: vertical; }
+    .xtr-ta.mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: var(--text-xs); }
+    .xtr-ta:focus, .xtr-input:focus { outline: none; border-color: var(--primary-teal); }
+    .xtr-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+    .xtr-hint { font-size: var(--text-xs); color: var(--text-muted); margin: 0; }
+    .xtr-input { font-family: 'Geologica', sans-serif; font-size: var(--text-sm); padding: 8px 12px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: var(--ghost-white); color: var(--midnight); flex: 1; min-width: 220px; box-sizing: border-box; }
+    .xtr-err { font-size: var(--text-sm); color: #c0392b; margin-top: 8px; display: none; }
+    .xtr-err.show { display: block; }
+    /* A4 — Field map & candidate owners (namespaced owner-*) */
+    .owner-rows { display: flex; flex-direction: column; gap: 10px; }
+    .owner-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: rgba(0,0,0,0.02); }
+    .owner-row .owner-name, .owner-row .owner-note, .owner-row .owner-role { font-family: 'Geologica', sans-serif; font-size: var(--text-sm); padding: 7px 10px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: var(--ghost-white); color: var(--midnight); }
+    .owner-row .owner-name { flex: 2 1 150px; }
+    .owner-row .owner-note { flex: 3 1 190px; }
+    .owner-row .owner-role { flex: 1 1 130px; }
+    .owner-row .owner-name:focus, .owner-row .owner-note:focus, .owner-row .owner-role:focus { outline: none; border-color: var(--primary-teal); }
+    .owner-cand { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-muted); white-space: nowrap; cursor: pointer; }
+    .owner-cand input { accent-color: var(--primary-teal); }
+    .owner-del { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 15px; line-height: 1; padding: 4px 8px; border-radius: var(--radius-1); }
+    .owner-del:hover { background: rgba(192,57,43,0.08); }
+    .owner-empty { font-size: var(--text-sm); color: var(--text-muted); font-style: italic; margin: 0; }
+  </style>
+  <div id="xtr-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="xtr-title">
+    <div class="modal-content" style="max-width: 680px;">
+      <div class="modal-header"><h3 id="xtr-title">✨ Extract from sources</h3></div>
+      <div class="modal-body">
+        <p style="font-size: var(--text-sm); color: var(--text-muted); margin: 0 0 14px;">Turn raw source material — an article, interview notes, a transcript, a report — into atomic <strong>extract cards</strong> for your pool. You run the AI in your own tool; nothing leaves your browser.</p>
+        <div class="xtr-body">
+          <div class="xtr-step">
+            <div class="xtr-step-h"><span class="xtr-step-n">1</span><span class="xtr-step-t">Add your source material</span></div>
+            <textarea id="xtr-source" class="xtr-ta" rows="6" oninput="tgxExtractRefreshPrompt()" placeholder="Paste an article, notes, a transcript, or any raw field material here…"></textarea>
+            <div class="xtr-row">
+              <input type="file" id="xtr-file" accept=".txt,.md,.csv,text/plain,text/markdown" class="sr-only" onchange="tgxExtractOnFile(event)">
+              <button type="button" class="btn btn-outline" style="font-size: var(--text-sm); padding: 6px 14px;" onclick="document.getElementById('xtr-file').click()">Upload a file</button>
+              <input type="url" id="xtr-url" class="xtr-input" placeholder="Source URL (optional) — https://…">
+            </div>
+          </div>
+          <div class="xtr-step">
+            <div class="xtr-step-h"><span class="xtr-step-n">2</span><span class="xtr-step-t">Copy the prompt into your own AI</span></div>
+            <p class="xtr-hint" style="margin-bottom: 8px;">Copy this, paste it into Claude or ChatGPT, and run it. It returns a JSON list of extracts.</p>
+            <textarea id="xtr-prompt" class="xtr-ta mono" rows="6" readonly onclick="this.select()"></textarea>
+            <div class="xtr-row"><button type="button" class="btn btn-outline" style="font-size: var(--text-sm); padding: 6px 14px;" onclick="tgxExtractCopyPrompt(this)">Copy prompt</button></div>
+          </div>
+          <div class="xtr-step">
+            <div class="xtr-step-h"><span class="xtr-step-n">3</span><span class="xtr-step-t">Paste the result back</span></div>
+            <textarea id="xtr-result" class="xtr-ta mono" rows="5" placeholder='Paste your AI&apos;s JSON output here — e.g. [ { "title": "…", "summary": "…", "kind": "observation" } ]'></textarea>
+            <div class="xtr-err" id="xtr-error"></div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('xtr-modal')">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="tgxExtractParseAndAdd()">Add extracts to pool →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* A1 — Guided-start coach (namespaced tgx-coach-*) */
+    .tgx-coach { position: fixed; left: 20px; bottom: 20px; z-index: 4000; max-width: 340px; display: flex; gap: 12px; align-items: flex-start; background: var(--midnight); color: var(--ghost-white); border: 1px solid rgba(255,255,255,0.14); border-left: 3px solid var(--primary-teal); border-radius: var(--radius-3); padding: 14px 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.28); }
+    .tgx-coach.hidden { display: none; }
+    .tgx-coach-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-teal); margin-top: 6px; flex: none; box-shadow: 0 0 0 4px rgba(0,148,160,0.2); }
+    .tgx-coach-text { font-size: var(--text-sm); line-height: 1.45; }
+    .tgx-coach-text strong { display: block; color: var(--primary-teal); font-size: var(--text-xs); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 3px; }
+    .tgx-coach-x { background: none; border: none; color: rgba(255,255,255,0.55); font-size: var(--text-xs); cursor: pointer; padding: 2px 4px; margin-left: 2px; white-space: nowrap; align-self: flex-start; }
+    .tgx-coach-x:hover { color: var(--ghost-white); }
+  </style>
+  <div id="tgx-coach" class="tgx-coach hidden" role="status" aria-live="polite">
+    <div class="tgx-coach-dot"></div>
+    <div class="tgx-coach-text"><strong id="tgx-coach-title"></strong><span id="tgx-coach-body"></span></div>
+    <button type="button" class="tgx-coach-x" onclick="tgxCoachDismiss()" aria-label="Turn off guidance">Skip guide ✕</button>
+  </div>
+
   <div id="git-handoff-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="git-handoff-title">
     <div class="modal-content" style="max-width: 580px;">
       <div class="modal-header"><h3 id="git-handoff-title">Your working folder is downloaded — here's the Git handoff</h3></div>
       <div class="modal-body">
-        <p class="intro-lede">This .zip is your complete evidence map — the semantic graph, the narrative Markdown, the AI-ready prompts, and a deployable static site. The tool has no server; your Pod syncs through one shared Git repo, and the manual loop is what keeps any one person from framing alone.</p>
+        <p class="intro-lede">This .zip is your complete Meet-the-Pods package — a deployable Pod website (<code>index.html</code>), a ready-to-present <strong>“Meet the Pods” slide deck</strong> (<code>slides.html</code>), the semantic graph, and the narrative Markdown. The tool has no server; your Pod syncs through one shared Git repo, and the manual loop is what keeps any one person from framing alone.</p>
         <ol class="intro-steps">
           <li><strong>Unzip</strong> the folder into your local clone of the Pod's shared repository (overwriting your previous version).</li>
           <li><strong>Commit &amp; push</strong> with three commands:
@@ -2846,7 +2956,7 @@ git push</pre>
           <input type="text" id="add-signal-title" class="config-input" placeholder="Signal title...">
           <label class="sr-only" for="add-signal-summary">New signal summary</label>
           <input type="text" id="add-signal-summary" class="config-input" placeholder="What's the friction? Who feels it?...">
-          <button class="btn btn-primary" onclick="createManualSignal()">Add signal</button>
+          <button class="btn btn-primary" onclick="createManualSignal()">Add source extract</button>
         </div>
         <div class="modal-actions">
           <button class="btn btn-outline" onclick="cancelAddSignal()">Cancel</button>
@@ -2874,7 +2984,7 @@ git push</pre>
   <div id="board-csv-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="board-csv-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="board-csv-title">Import more observations</h3>
+        <h3 id="board-csv-title">Import more source extracts</h3>
       </div>
       <div class="modal-body">
         <p style="font-size: var(--text-base); color: var(--midnight); opacity: 0.85; margin-bottom: 16px;">Add observations from a CSV to this canvas. New signals land together in open space beside your current map — nothing you've built moves. Columns: <code>title,summary,source_url</code> (header row required; <code>source_url</code> optional), or <a href="#" onclick="downloadCsvTemplate(); return false;">download the template</a>.</p>
@@ -2974,27 +3084,27 @@ git push</pre>
     const activeCanvasTouches = new Map(); // non-mouse pointers tracked for pinch
     let pinchActive = false;
     const DEFAULT_ITEMS = [
-        { id: "item_01", tag: "Friction Signal", title: "Restructuring the Political System", summary: "A high-level desire to shift the fundamental political structure of the United States to model other international systems." },
-        { id: "item_02", tag: "Friction Signal", title: "Media Misinformation", summary: "Broad concerns regarding how misleading media and digital influencing are negatively impacting civic engagement." },
-        { id: "item_03", tag: "Friction Signal", title: "Campaign Finance & District Competitiveness", summary: "Observations that financial influence and gerrymandering have reduced the competitiveness of congressional districts." },
-        { id: "item_04", tag: "Friction Signal", title: "Ranked Choice Voting Education", summary: "The implementation of ranked choice voting lacks sufficient public education to help voters understand its systemic benefits and how it changes voting behaviors." },
-        { id: "item_05", tag: "Friction Signal", title: "Targeting Legislative Influence", summary: "It is currently too labor-intensive and expensive to identify the most effective individuals or groups to lobby specific legislators on specific issues at the right time." },
-        { id: "item_06", tag: "Friction Signal", title: "Local Candidate Information Gaps", summary: "Voters lack easily accessible, actionable information about local county-level candidates, often relying heavily on name recognition from campaign signs." },
-        { id: "item_07", tag: "Friction Signal", title: "Public Engagement on Government AI", summary: "Citizens lack the tools and platforms to provide feedback on or inform how government agencies and companies deploy artificial intelligence in their communities." },
-        { id: "item_08", tag: "Friction Signal", title: "Recycling Contamination & Civic Decay", summary: "Improper recycling in public spaces leads to systemic waste and creates a visible, self-perpetuating belief that responsible civic behavior doesn't matter." },
-        { id: "item_09", tag: "Friction Signal", title: "Campaign Finance", summary: "Reform efforts consistently hit roadblocks like the Citizens United decision." },
-        { id: "item_10", tag: "Friction Signal", title: "Civic Distrust & Disinformation", summary: "A toxic combination of distrust in voting, a lack of civics literacy, and internet-era disinformation is allowing political entities to manipulate voters' worst instincts." },
-        { id: "item_11", tag: "Friction Signal", title: "Logistical & Educational Barriers to Voting", summary: "Voting is burdened by physical hurdles (childcare, time off work) and a lack of plain-language education on how local elections directly impact citizens' daily lives." },
-        { id: "item_12", tag: "Friction Signal", title: "The Death of Political Compromise", summary: "The electorate and activists are failing to recognize that compromise is a fundamental component of democracy, negatively impacting civic engagement." },
-        { id: "item_13", tag: "Friction Signal", title: "Civics Talent Pipeline Shortage", summary: "There is a noticeable shortage of talent to fill junior roles within the civics and elections workforce." },
-        { id: "item_14", tag: "Friction Signal", title: "False Transparency in Government", summary: "Government agencies and schools exhibit a disconnect with their constituencies, presenting a 'false flag' of transparency that leaves communities feeling ignored without understanding how aggregate sentiment is utilized." },
-        { id: "item_15", tag: "Friction Signal", title: "AI Bot Interference in Constituent Engagement", summary: "Artificial intelligence is being used to flood communication channels, rendering actual, organic constituent engagement ineffective." },
-        { id: "item_16", tag: "Friction Signal", title: "Hopelessness & Lack of Election Information", summary: "Voters feel hopeless and lack basic awareness of when local elections occur, relying on passive information like mailers or word of mouth." },
-        { id: "item_17", tag: "Friction Signal", title: "Structural Election Imbalances", summary: "The current electoral system features gerrymandering, dominant two-party privileges, and districts so large that politicians effectively choose their voters." },
-        { id: "item_18", tag: "Friction Signal", title: "Political Bubbles & NIMBYism", summary: "Citizens are highly polarized and isolated in social bubbles, proposing solutions or pushing back on reforms without understanding the broader impacts, trade-offs, or equity implications beyond their circles." },
-        { id: "item_19", tag: "Friction Signal", title: "Volunteer Burnout & Knowledge Transfer", summary: "Local volunteer roles, such as PTA leadership, fall on a few individuals. There is a need for tools to reduce the operational burden and retain institutional knowledge as volunteer leadership turns over." },
-        { id: "item_20", tag: "Friction Signal", title: "Aging Civic Leadership", summary: "Local civic organizations are heavily reliant on aging populations for leadership and membership, struggling to recruit younger generations who face competing career and family priorities." },
-        { id: "item_21", tag: "Friction Signal", title: "Uncontested Local Candidate Transparency", summary: "It is incredibly difficult to research the records of local election candidates, especially those running uncontested or without a communications budget, leaving voters feeling uninformed." }
+        { id: "item_01", tag: "Source Extract", title: "Restructuring the Political System", summary: "A high-level desire to shift the fundamental political structure of the United States to model other international systems." },
+        { id: "item_02", tag: "Source Extract", title: "Media Misinformation", summary: "Broad concerns regarding how misleading media and digital influencing are negatively impacting civic engagement." },
+        { id: "item_03", tag: "Source Extract", title: "Campaign Finance & District Competitiveness", summary: "Observations that financial influence and gerrymandering have reduced the competitiveness of congressional districts." },
+        { id: "item_04", tag: "Source Extract", title: "Ranked Choice Voting Education", summary: "The implementation of ranked choice voting lacks sufficient public education to help voters understand its systemic benefits and how it changes voting behaviors." },
+        { id: "item_05", tag: "Source Extract", title: "Targeting Legislative Influence", summary: "It is currently too labor-intensive and expensive to identify the most effective individuals or groups to lobby specific legislators on specific issues at the right time." },
+        { id: "item_06", tag: "Source Extract", title: "Local Candidate Information Gaps", summary: "Voters lack easily accessible, actionable information about local county-level candidates, often relying heavily on name recognition from campaign signs." },
+        { id: "item_07", tag: "Source Extract", title: "Public Engagement on Government AI", summary: "Citizens lack the tools and platforms to provide feedback on or inform how government agencies and companies deploy artificial intelligence in their communities." },
+        { id: "item_08", tag: "Source Extract", title: "Recycling Contamination & Civic Decay", summary: "Improper recycling in public spaces leads to systemic waste and creates a visible, self-perpetuating belief that responsible civic behavior doesn't matter." },
+        { id: "item_09", tag: "Source Extract", title: "Campaign Finance", summary: "Reform efforts consistently hit roadblocks like the Citizens United decision." },
+        { id: "item_10", tag: "Source Extract", title: "Civic Distrust & Disinformation", summary: "A toxic combination of distrust in voting, a lack of civics literacy, and internet-era disinformation is allowing political entities to manipulate voters' worst instincts." },
+        { id: "item_11", tag: "Source Extract", title: "Logistical & Educational Barriers to Voting", summary: "Voting is burdened by physical hurdles (childcare, time off work) and a lack of plain-language education on how local elections directly impact citizens' daily lives." },
+        { id: "item_12", tag: "Source Extract", title: "The Death of Political Compromise", summary: "The electorate and activists are failing to recognize that compromise is a fundamental component of democracy, negatively impacting civic engagement." },
+        { id: "item_13", tag: "Source Extract", title: "Civics Talent Pipeline Shortage", summary: "There is a noticeable shortage of talent to fill junior roles within the civics and elections workforce." },
+        { id: "item_14", tag: "Source Extract", title: "False Transparency in Government", summary: "Government agencies and schools exhibit a disconnect with their constituencies, presenting a 'false flag' of transparency that leaves communities feeling ignored without understanding how aggregate sentiment is utilized." },
+        { id: "item_15", tag: "Source Extract", title: "AI Bot Interference in Constituent Engagement", summary: "Artificial intelligence is being used to flood communication channels, rendering actual, organic constituent engagement ineffective." },
+        { id: "item_16", tag: "Source Extract", title: "Hopelessness & Lack of Election Information", summary: "Voters feel hopeless and lack basic awareness of when local elections occur, relying on passive information like mailers or word of mouth." },
+        { id: "item_17", tag: "Source Extract", title: "Structural Election Imbalances", summary: "The current electoral system features gerrymandering, dominant two-party privileges, and districts so large that politicians effectively choose their voters." },
+        { id: "item_18", tag: "Source Extract", title: "Political Bubbles & NIMBYism", summary: "Citizens are highly polarized and isolated in social bubbles, proposing solutions or pushing back on reforms without understanding the broader impacts, trade-offs, or equity implications beyond their circles." },
+        { id: "item_19", tag: "Source Extract", title: "Volunteer Burnout & Knowledge Transfer", summary: "Local volunteer roles, such as PTA leadership, fall on a few individuals. There is a need for tools to reduce the operational burden and retain institutional knowledge as volunteer leadership turns over." },
+        { id: "item_20", tag: "Source Extract", title: "Aging Civic Leadership", summary: "Local civic organizations are heavily reliant on aging populations for leadership and membership, struggling to recruit younger generations who face competing career and family priorities." },
+        { id: "item_21", tag: "Source Extract", title: "Uncontested Local Candidate Transparency", summary: "It is incredibly difficult to research the records of local election candidates, especially those running uncontested or without a communications budget, leaving voters feeling uninformed." }
     ];
 
     function uid(prefix) {
@@ -3362,7 +3472,7 @@ git push</pre>
         (t ? sEl : tEl).focus();
         return;
       }
-      appState.items.push({ id: uid('item'), tag: 'Friction Signal', title: t, summary: s });
+      appState.items.push({ id: uid('item'), tag: 'Source Extract', title: t, summary: s });
       tEl.value = '';
       sEl.value = '';
       renderConfigItems();
@@ -3377,7 +3487,7 @@ git push</pre>
       appState.items.push(...newItems.map(i => ({ ...i })));
       renderConfigItems();
       scheduleSave();
-      toast(`${newItems.length} sample signals loaded.`);
+      toast(`${newItems.length} sample source extracts loaded.`);
     }
 
     // --- CSV bulk upload ---
@@ -3429,7 +3539,7 @@ git push</pre>
         let url = urlIdx > -1 ? (row[urlIdx] || '').trim() : '';
         if (!/^https?:\/\//i.test(url)) url = '';
         // verified is set true only after the QA Intercept gate (commitCsvImport).
-        items.push({ id: uid('item'), tag: 'Extracted Signal', title: t, summary: s, source_url: url, verified: false });
+        items.push({ id: uid('item'), tag: 'Source Extract', title: t, summary: s, source_url: url, verified: false });
       }
       if (items.length === 0) return { error: 'No valid rows found in CSV.' };
       return { items };
@@ -3534,6 +3644,100 @@ git push</pre>
     function qaCancelImport() {
       pendingCsvImport = null;
       closeModal('qa-verify-modal');
+    }
+
+    // ── A2: Extract from sources (BYO-LLM) ───────────────────────────────
+    // Paste/upload raw source material, copy a deterministic prompt to run
+    // in your OWN model, paste the JSON back. Produces pool items in the exact
+    // csvRowsToItems shape and hands off to the existing QA-verify +
+    // commitCsvImport path — no in-app model call, no new commit logic.
+    function tgxExtractOpen() {
+      const src = document.getElementById('xtr-source'); if (src) src.value = '';
+      const url = document.getElementById('xtr-url'); if (url) url.value = '';
+      const res = document.getElementById('xtr-result'); if (res) res.value = '';
+      tgxExtractHideError();
+      tgxExtractRefreshPrompt();
+      openModal('xtr-modal');
+    }
+    function tgxExtractOnFile(evt) {
+      const file = evt.target.files && evt.target.files[0];
+      evt.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onerror = () => toast('Could not read that file.');
+      reader.onload = () => {
+        const ta = document.getElementById('xtr-source');
+        const text = String(reader.result || '');
+        ta.value = ta.value.trim() ? (ta.value.trim() + '\n\n' + text) : text;
+        tgxExtractRefreshPrompt();
+        toast('Added "' + file.name + '" to the source box.');
+      };
+      reader.readAsText(file);
+    }
+    function tgxExtractBuildPrompt(source) {
+      return 'You are helping build a Frame Creation evidence pool. Read the SOURCE material below and pull out the discrete, atomic observations, facts, and insights it contains.\n\n'
+        + 'Rules:\n'
+        + '- One card per distinct idea. Split compound points apart.\n'
+        + '- Each card must describe something OBSERVED in the field — a pattern of behaviour, a dynamic, or a verifiable fact — not an opinion, a solution, or a value judgment.\n'
+        + '- "title": 8 words or fewer, specific.\n'
+        + '- "summary": 1–2 sentences, concrete, able to stand on its own.\n'
+        + '- "kind": exactly one of "observation" (a pattern of action/behaviour), "fact" (a verifiable datum), or "insight" (a non-obvious connection or implication).\n'
+        + '- Discard filler, rhetoric, and anything not grounded in the source.\n\n'
+        + 'Return ONLY a JSON array — no prose, no markdown fences — in exactly this shape:\n'
+        + '[ { "title": "…", "summary": "…", "kind": "observation" } ]\n\n'
+        + '<source>\n'
+        + (source || '(paste your source material above, then copy this prompt again)')
+        + '\n</source>';
+    }
+    function tgxExtractRefreshPrompt() {
+      const src = document.getElementById('xtr-source');
+      const out = document.getElementById('xtr-prompt');
+      if (out) out.value = tgxExtractBuildPrompt(src ? src.value.trim() : '');
+    }
+    function tgxExtractCopyPrompt(btn) {
+      tgxExtractRefreshPrompt();
+      const el = document.getElementById('xtr-prompt');
+      const done = () => { const o = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(() => { btn.textContent = o; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(el.value).then(done).catch(() => { el.select(); toast('Press Ctrl/Cmd+C to copy.'); });
+      } else { el.select(); toast('Press Ctrl/Cmd+C to copy.'); }
+    }
+    function tgxExtractHideError() { const e = document.getElementById('xtr-error'); if (e) { e.classList.remove('show'); e.textContent = ''; } }
+    function tgxExtractShowError(msg) { const e = document.getElementById('xtr-error'); if (e) { e.textContent = msg; e.classList.add('show'); } }
+    function tgxExtractParseExtracts(raw) {
+      let t = String(raw || '').trim();
+      if (!t) return { error: 'Paste your AI\'s JSON output first.' };
+      t = t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      const first = t.indexOf('['), last = t.lastIndexOf(']');
+      if (first > -1 && last > first) t = t.slice(first, last + 1);
+      let arr;
+      try { arr = JSON.parse(t); } catch (e) { return { error: 'That doesn\'t look like valid JSON. Re-run the copied prompt and paste the whole result.' }; }
+      if (!Array.isArray(arr)) return { error: 'Expected a JSON array of extracts.' };
+      const kindTag = { observation: 'Observation', fact: 'Fact', insight: 'Insight' };
+      const urlEl = document.getElementById('xtr-url');
+      let url = urlEl ? urlEl.value.trim() : '';
+      if (!/^https?:\/\//i.test(url)) url = '';
+      const items = [];
+      arr.forEach(e => {
+        if (!e || typeof e !== 'object') return;
+        const title = String(e.title || '').trim();
+        const summary = String(e.summary || '').trim();
+        if (!title || !summary) return;
+        const kind = String(e.kind || '').trim().toLowerCase();
+        items.push({ id: uid('item'), tag: kindTag[kind] || 'Extract', title: title, summary: summary, source_url: url, verified: false });
+      });
+      if (!items.length) return { error: 'No valid extracts found — each needs a "title" and a "summary".' };
+      return { items: items };
+    }
+    function tgxExtractParseAndAdd() {
+      tgxExtractHideError();
+      const result = tgxExtractParseExtracts(document.getElementById('xtr-result').value);
+      if (result.error) { tgxExtractShowError(result.error); return; }
+      const modeEl = document.querySelector('input[name="csv-mode"]:checked');
+      const mode = modeEl ? modeEl.value : 'append';
+      pendingCsvImport = { items: result.items, target: 'setup', mode: mode };
+      closeModal('xtr-modal');
+      openQaModal(result.items.length);
     }
 
     function csvEscape(s) {
@@ -3647,6 +3851,39 @@ git push</pre>
       scheduleSave();
       if (typeof maybeShowTour === 'function') maybeShowTour(name);
       tutorialNotify('screen', { name });
+      if (typeof tgxCoachRender === 'function') tgxCoachRender(name);
+    }
+
+    // ── A1: Guided start — opt-in per-screen coach (ceiling-not-floor) ────
+    // A dismissible corner coach that gives a first-timer the ONE next action
+    // per screen. Opt-in via appState.seedGuide (additive, optional boolean);
+    // Seed Mode is already the default first-run mode. Rewrites no screen.
+    const TGX_COACH = {
+      setup: { t: 'Step 1 · Gather source extracts', b: 'Load the sample, upload a CSV, or ✨ Extract from sources. Go wide — include what might contradict you. No concept yet; the problem comes into focus later.' },
+      sorting: { t: 'Step 2 · Sort signal from noise', b: 'Right keeps a signal, left is noise, up is a super-signal. Commit fast — where you hesitate is data.' },
+      board: { t: 'Step 3 · Triangulate', b: 'Hover a card, drag from an edge dot to another to connect two source extracts into evidence. Building patterns and themes on top unlocks when you graduate to Pod Mode.' }
+    };
+    function tgxCoachRender(screen) {
+      const bar = document.getElementById('tgx-coach');
+      if (!bar) return;
+      const on = !!(appState && appState.seedGuide) && TGX_COACH[screen];
+      if (!on) { bar.classList.add('hidden'); return; }
+      const t = document.getElementById('tgx-coach-title');
+      const b = document.getElementById('tgx-coach-body');
+      if (t) t.textContent = TGX_COACH[screen].t;
+      if (b) b.textContent = ' ' + TGX_COACH[screen].b;
+      bar.classList.remove('hidden');
+    }
+    function tgxCoachDismiss() {
+      if (appState) appState.seedGuide = false;
+      const bar = document.getElementById('tgx-coach'); if (bar) bar.classList.add('hidden');
+      if (typeof scheduleSave === 'function') scheduleSave();
+    }
+    function tgxGuidedStart() {
+      if (appState) appState.seedGuide = true;
+      if (typeof scheduleSave === 'function') scheduleSave();
+      tgxCoachRender((appState && appState.currentScreen) || 'setup');
+      if (typeof toast === 'function') toast('Step-by-step guidance on — follow the coach in the corner.');
     }
 
     // --- Intro slideshow (the onboarding deck) ---
@@ -3661,7 +3898,7 @@ git push</pre>
       const back = document.getElementById('intro-back');
       if (back) back.disabled = introSlide === 0;
       const next = document.getElementById('intro-next');
-      if (next) next.textContent = introSlide >= total - 1 ? 'Name your concept →' : 'Next →';
+      if (next) next.textContent = introSlide >= total - 1 ? 'Load your sources →' : 'Next →';
       const pad = n => String(n).padStart(2, '0');
       const counter = document.getElementById('intro-counter');
       if (counter) counter.textContent = `${pad(introSlide + 1)} / ${pad(total)}`;
@@ -3673,11 +3910,11 @@ git push</pre>
     }
     function introGoTo(i) { introSlide = i; renderIntro(); }
     function introNext() {
-      if (introSlide >= introSlides().length - 1) { goToScreen('concept'); return; }
+      if (introSlide >= introSlides().length - 1) { goToScreen('setup'); return; }
       introSlide++; renderIntro();
     }
     function introPrev() { if (introSlide > 0) { introSlide--; renderIntro(); } }
-    function introSkip() { goToScreen('concept'); }
+    function introSkip() { goToScreen('setup'); }
 
     // --- The initial problem concept (start of the loop) ---
     function startConcept() { goToScreen('concept'); }
@@ -3698,32 +3935,60 @@ git push</pre>
       const concept = tutorialMode ? '' : (appState.settings.concept || '').trim();
       el.classList.toggle('hidden', !concept);
       if (concept) {
-        el.innerHTML = `<span class="bcb-edit">edit ✎</span><span class="bcb-key">Validating</span>${escapeHtml(concept)}`;
+        el.innerHTML = `<span class="bcb-edit">edit ✎</span><span class="bcb-key">Concept</span>${escapeHtml(concept)}`;
+      }
+      updateConceptInvite();
+    }
+
+    // Evidence-first flow: the problem concept is optional and only invited once
+    // a critical mass of source extracts has been kept from sorting. Never
+    // required; fully dismissible. (Threshold tunable.)
+    const CONCEPT_UNLOCK_SIGNALS = 10;
+    function keptSignalCount() {
+      const d = (appState.sorting && appState.sorting.decisions) || {};
+      let n = 0;
+      for (const k in d) { if (d[k] === 'signal' || d[k] === 'super') n++; }
+      return n;
+    }
+    function conceptUnlocked() { return keptSignalCount() >= CONCEPT_UNLOCK_SIGNALS; }
+    function tgxDismissConceptInvite() {
+      appState.settings.conceptInviteDismissed = true;
+      if (typeof scheduleSave === 'function') scheduleSave();
+      updateConceptInvite();
+    }
+    function updateConceptInvite() {
+      const el = document.getElementById('board-concept-invite');
+      if (!el) return;
+      const hasConcept = !!(appState.settings.concept || '').trim();
+      const show = !tutorialMode && !hasConcept && conceptUnlocked() && !appState.settings.conceptInviteDismissed;
+      el.classList.toggle('hidden', !show);
+      if (show) {
+        const txt = el.querySelector('.bci-text');
+        if (txt) txt.textContent = `You've kept ${keptSignalCount()} source extracts — is a problem starting to take shape? Naming it is optional.`;
       }
     }
 
     // --- Global step indicator: a loop the user re-runs, not a finish line ---
     // Every reached step is clickable to jump back to, non-destructively.
     const STEP_DEFS = [
-      { id: 'concept',  label: 'Concept',  screen: 'concept' },
       { id: 'sources',  label: 'Sources',  screen: 'setup' },
       { id: 'sort',     label: 'Sort',     screen: 'sorting' },
-      { id: 'validate', label: 'Validate (Steps 1–4)', screen: 'board' },
-      { id: 'map',      label: 'Map (Step 5)',      screen: 'board' },
+      { id: 'validate', label: 'Validate', screen: 'board' },
+      { id: 'map',      label: 'Map',      screen: 'board' },
       { id: 'classify', label: 'Classify', screen: 'board' },
       { id: 'deepen',   label: 'Deepen',   screen: 'workspace' }
     ];
     // The underlying "why" for each step, in a consistent 3-beat scaffold:
     // recall (what you just did) → why now → payoff (what it earns next).
     const STEP_WHY = {
-      concept: { label: 'Why start here',
-        body: "No evidence is loaded yet — on purpose. Naming your hunch first makes your bias **visible**, so the sources argue with a position instead of filling a blank. This is your first guard against **The Self-Made Box** — committing to a stale assumption before you've actually looked. Everything downstream measures itself against this sentence; revise it the moment the evidence earns it." },
+      concept: { label: 'Why now, not first',
+        body: "You've worked your source extracts and the shape of a problem is emerging. Naming it **now** — grounded in evidence you've actually sorted, not a blank-page hunch — is how you avoid **The Self-Made Box**, where a concept named too early quietly filters everything you let yourself see. It's optional and provisional: revise it, or skip it entirely, as the evidence keeps talking." },
       sources: { label: 'Why a pool, not a search',
-        body: "You've named what you expect. Now gather raw material **wide** — including what could contradict you — because a search only returns what you already believe. This widening is **Dorst's Field Mapping** in miniature, and it starves **The Self-Made Box** before it forms. The breadth here sets the ceiling on every signal you'll find." },
+        body: "Start wide. Gather raw material — field notes, sources, whatever you can pull in — **including what could contradict you**, because you're not searching for what you already believe. A wide pool is **Dorst's Field Mapping** in miniature, and it starves **The Self-Made Box** before it forms. Breadth here sets the ceiling on every signal you'll find. (You'll name the problem later, once the evidence has something to say.)" },
       sort: { label: 'Why force a binary',
         body: "These are the observations you just gathered. Signal-or-noise forces fast commitment, and commitment surfaces instinct — where you hesitate is data about a belief you haven't earned. Refusing to keep everything is how you avoid **Freeze the World**: drowning the map in undifferentiated noise. Only what survives becomes raw material." },
       validate: { label: 'Why connect, not collect',
-        body: "Your signals are still isolated facts. Connecting two into evidence is the first real test of your concept: a claim two independent signals support is **triangulated**; one anecdote is not. This is **Dorst Steps 1–4 (Archaeology → Paradox)**, and it's what keeps you off **The Rational High Ground** — defending a position you never grounded. This ladder is the spine of everything above it." },
+        body: "Your source extracts are still isolated facts. Connecting two into evidence is the first real test of a claim: two independent extracts pointing at the same condition are **triangulated**; one anecdote is not. This is **Dorst Steps 1–4 (Archaeology → Paradox)**, and it's what keeps you off **The Rational High Ground** — defending a position you never grounded. The problem concept, if you name one, earns itself here — from the evidence up." },
       map: { label: 'Why synthesize now',
         body: "You've climbed to a theme that bridges human experience and structure. Synthesizing the whole ladder into one Problem Situation is **Dorst Step 5 (Themes)** — it forces you to say what it all amounts to: an **open condition**, not a tidy problem. Skip it and you stay on **The Rational High Ground**, naming a theme you only felt. This is the groundwork a real frame later stands on." },
       classify: { label: 'Why type the evidence now',
@@ -3787,10 +4052,12 @@ git push</pre>
         return `${sep}<button type="button" class="step-chip" data-step="${s.id}" data-reached="${reached ? 1 : 0}" data-active="${isActive ? 1 : 0}"${reached ? '' : ' disabled'}${isActive ? ' aria-current="step"' : ''}><span class="step-dot" aria-hidden="true"></span>${escapeHtml(s.label)}</button>`;
       }).join('');
       const why = STEP_WHY[active];
-      const whyHtml = why
-        ? `<div class="step-why"><span class="step-why-label">${escapeHtml(why.label)}</span>${escapeHtml(why.body).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</div>`
+      const hideWhy = !!appState.hideStepWhy;
+      const whyHtml = (why && !hideWhy)
+        ? `<div class="step-why"><button type="button" class="step-why-x" onclick="tgxDismissWhy()" aria-label="Hide this explanation" title="Hide — you can bring it back">✕</button><span class="step-why-label">${escapeHtml(why.label)}</span>${escapeHtml(why.body).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</div>`
         : '';
-      const html = `<div class="step-indicator">${chips}<span class="step-loop-note"><span class="step-loop-icon" aria-hidden="true">↺</span> This is a loop — revisit any step as you learn more.</span>${whyHtml}</div>`;
+      const whyToggle = (why && hideWhy) ? ` · <button type="button" class="step-why-show" onclick="tgxShowWhy()">Why this step?</button>` : '';
+      const html = `<div class="step-indicator">${chips}<span class="step-loop-note"><span class="step-loop-icon" aria-hidden="true">↺</span> This is a loop — revisit any step as you learn more.${whyToggle}</span>${whyHtml}</div>`;
       mounts.forEach(m => {
         m.innerHTML = html;
         m.querySelectorAll('.step-chip').forEach(btn => {
@@ -3798,6 +4065,10 @@ git push</pre>
         });
       });
     }
+    // Dismissible "why this step" scaffold — one close hides it on every screen
+    // (additive appState.hideStepWhy); a "Why this step?" link brings it back.
+    function tgxDismissWhy() { appState.hideStepWhy = true; if (typeof scheduleSave === 'function') scheduleSave(); renderStepIndicator(); }
+    function tgxShowWhy() { appState.hideStepWhy = false; if (typeof scheduleSave === 'function') scheduleSave(); renderStepIndicator(); }
 
     function backToBoard() { goToScreen('board'); }
     function backToWorkspaceFromArtifact() { goToScreen('workspace'); }
@@ -3815,7 +4086,7 @@ git push</pre>
     function allObjects() { return appState.cards.slice(); }
     function nodeTier(id) { const c = findCard(id); return c ? c.tier : 0; }
 
-    const TIER_NAMES = { 0: 'Extracted Signal', 1: 'Evidence', 2: 'Pattern', 3: 'Theme', 4: 'Super-theme', 5: 'Mega-theme', 6: 'Meta-theme' };
+    const TIER_NAMES = { 0: 'Source Extract', 1: 'Evidence', 2: 'Pattern', 3: 'Theme', 4: 'Super-theme', 5: 'Mega-theme', 6: 'Meta-theme' };
     function tierName(t) { return TIER_NAMES[t] || ('Level-' + t + ' theme'); }
     const TIER_COLORS = { 1: cssToken('--tier-1'), 2: cssToken('--tier-2'), 3: cssToken('--tier-3'),
                           4: cssToken('--tier-4'), 5: cssToken('--tier-5'), 6: cssToken('--tier-6') };
@@ -3938,7 +4209,7 @@ git push</pre>
     }
     function invalidateSituationIndex() { _sitIndex = null; }
     function nodeLabel(id) {
-      if (isSignalId(id)) return 'Signal';
+      if (isSignalId(id)) return 'Source Extract';
       const c = findCard(id);
       if (!c) return 'Signal';
       if (c.tier === 1) return cardTypeInfo(c.cardType).label;
@@ -4242,7 +4513,7 @@ git push</pre>
       if (!tabs) return;
       const vs = normalizedView();
       let html = `<button class="view-tab${vs === 'all' ? ' is-active' : ''}" data-view="all" onclick="setCanvasView('all')">All</button>`;
-      html += `<button class="view-tab${vs === 'signals' ? ' is-active' : ''}" data-view="signals" onclick="setCanvasView('signals')">Signals</button>`;
+      html += `<button class="view-tab${vs === 'signals' ? ' is-active' : ''}" data-view="signals" onclick="setCanvasView('signals')">Source Extracts</button>`;
       existingTiers().forEach(t => {
         const key = 'tier-' + t;
         html += `<button class="view-tab${vs === key ? ' is-active' : ''}" data-view="${key}" onclick="setCanvasView('${key}')">${escapeHtml(tierName(t))}</button>`;
@@ -4284,7 +4555,7 @@ git push</pre>
     function signalTagLabel(item) {
       const isSuper = appState.sorting.decisions[item.id] === 'super';
       if (item.verified === false) return 'Source Extract';
-      return isSuper ? 'Strong Extracted Signal' : 'Extracted Signal';
+      return isSuper ? 'Strong Source Extract' : 'Source Extract';
     }
 
     // Clickable provenance: the source document an extract was parsed from.
@@ -5162,7 +5433,7 @@ git push</pre>
       const t = (titleEl.value || '').trim();
       const s = (summaryEl.value || '').trim();
       if (!t || !s) { toast('A signal needs both a title and a summary.'); return; }
-      const item = { id: uid('item'), tag: 'Friction Signal', title: t, summary: s };
+      const item = { id: uid('item'), tag: 'Source Extract', title: t, summary: s };
       appState.items.push(item);
       // Same sorting bookkeeping as board CSV import — never resume sorting.
       appState.sorting.decisions[item.id] = 'signal';
@@ -5969,19 +6240,19 @@ git push</pre>
     // --- Example dataset: "Neighborhood food access" ---
     // Deliberately a different domain from the built-in sample signals.
     const TUT_SORT_ITEMS = [
-      { id: 'tut-n1', tag: 'Friction Signal', title: 'Just build a market-finder app', summary: '"Honestly the fix is obvious — someone should make an app showing where the farmers markets are." — comment at a community meeting.' },
-      { id: 'tut-g1', tag: 'Friction Signal', title: 'Corner-store cooler economics', summary: 'Field notes: 6 of 8 corner stores stock fresh produce for only ~2 days after delivery, then pull wilted stock. Owners independently cite spoilage losses exceeding produce margins.' },
-      { id: 'tut-u1', tag: 'Friction Signal', title: 'The two-bus tomato', summary: 'Diary study: carless residents plan grocery trips like commutes — two buses each way — so they bulk-buy shelf-stable food and skip produce entirely.' }
+      { id: 'tut-n1', tag: 'Source Extract', title: 'Just build a market-finder app', summary: '"Honestly the fix is obvious — someone should make an app showing where the farmers markets are." — comment at a community meeting.' },
+      { id: 'tut-g1', tag: 'Source Extract', title: 'Corner-store cooler economics', summary: 'Field notes: 6 of 8 corner stores stock fresh produce for only ~2 days after delivery, then pull wilted stock. Owners independently cite spoilage losses exceeding produce margins.' },
+      { id: 'tut-u1', tag: 'Source Extract', title: 'The two-bus tomato', summary: 'Diary study: carless residents plan grocery trips like commutes — two buses each way — so they bulk-buy shelf-stable food and skip produce entirely.' }
     ];
     const TUT_CANVAS_ITEMS = [
-      { id: 'tut-s1', tag: 'Friction Signal', title: 'Supermarket pullout (2019)', summary: 'The chain closed both neighborhood branches, citing shrink and thin margins. Nothing has replaced them.' },
-      { id: 'tut-s2', tag: 'Friction Signal', title: 'Co-op that folded (2021)', summary: 'A community grocery co-op opened with grant funding and closed after 14 months, undercapitalized and under-stocked.' },
-      { id: 'tut-s3', tag: 'Friction Signal', title: 'Wholesale collective forming', summary: 'Five corner-store owners are pooling orders to hit the distributor\'s minimum and bring back produce coolers.' },
-      { id: 'tut-s4', tag: 'Friction Signal', title: 'SNAP-doubling pilot extended', summary: 'The city renewed its produce-match program after redemptions rose 40% in a year.' },
-      { id: 'tut-s5', tag: 'Friction Signal', title: 'Corner stores as de facto grocers', summary: 'Owners extend informal credit, take custom orders for regulars, and hold deliveries behind the counter.' },
-      { id: 'tut-s6', tag: 'Friction Signal', title: 'Church van shuttle', summary: 'Volunteer drivers run an unofficial weekly grocery run for thirty elders. There is a waitlist.' },
-      { id: 'tut-s7', tag: 'Friction Signal', title: 'Cooking as care', summary: 'Interviews tie feeding family fresh-cooked meals to dignity and identity — "boxed food means I failed."' },
-      { id: 'tut-s8', tag: 'Friction Signal', title: 'Pantry stigma', summary: 'Residents skip the free food pantry out of embarrassment; they want to buy food, not receive it.' }
+      { id: 'tut-s1', tag: 'Source Extract', title: 'Supermarket pullout (2019)', summary: 'The chain closed both neighborhood branches, citing shrink and thin margins. Nothing has replaced them.' },
+      { id: 'tut-s2', tag: 'Source Extract', title: 'Co-op that folded (2021)', summary: 'A community grocery co-op opened with grant funding and closed after 14 months, undercapitalized and under-stocked.' },
+      { id: 'tut-s3', tag: 'Source Extract', title: 'Wholesale collective forming', summary: 'Five corner-store owners are pooling orders to hit the distributor\'s minimum and bring back produce coolers.' },
+      { id: 'tut-s4', tag: 'Source Extract', title: 'SNAP-doubling pilot extended', summary: 'The city renewed its produce-match program after redemptions rose 40% in a year.' },
+      { id: 'tut-s5', tag: 'Source Extract', title: 'Corner stores as de facto grocers', summary: 'Owners extend informal credit, take custom orders for regulars, and hold deliveries behind the counter.' },
+      { id: 'tut-s6', tag: 'Source Extract', title: 'Church van shuttle', summary: 'Volunteer drivers run an unofficial weekly grocery run for thirty elders. There is a waitlist.' },
+      { id: 'tut-s7', tag: 'Source Extract', title: 'Cooking as care', summary: 'Interviews tie feeding family fresh-cooked meals to dignity and identity — "boxed food means I failed."' },
+      { id: 'tut-s8', tag: 'Source Extract', title: 'Pantry stigma', summary: 'Residents skip the free food pantry out of embarrassment; they want to buy food, not receive it.' }
     ];
     const TUT_CANVAS_POS = {
       'tut-s1': [250, 250],  'tut-s2': [620, 250],
@@ -7188,7 +7459,7 @@ ${AI_RULES}
         : (!v.total && framed)
           ? `${framed} situation${framed === 1 ? '' : 's'} mapped`
           : (!v.missing.length && v.total && !v.hasTheme)
-            ? 'Climb to a named & described theme to commit'
+            ? (isSeedMode() ? 'Seed Mode — connect source extracts into evidence, then ▲ graduate to build patterns & themes' : 'Climb to a named & described theme to commit')
             : `${v.named}/${v.total} cards named & described`;
       el.classList.toggle('meets-target', v.ready);
       el.classList.toggle('below-target', !v.ready);
@@ -7834,7 +8105,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     function onCommitRowChange() {}
     function getCheckedCommitIds() { return []; }
     function updateCommitContinueButton() {}
-    function confirmCommit() { closeModal('commit-modal'); }
+    // (removed) confirmCommit — belonged to the orphaned commit-modal
 
     // --- Classify phase: introduce the 7 evidence types in Dorst's order ---
     // A guided, one-type-at-a-time stepper that runs ON the board after the
@@ -8030,6 +8301,14 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <p class="field-hint">What are you assuming? What would break this framing if it turned out to be wrong? What have you chosen not to see?</p>
           <textarea id="sit-problem-${n}" placeholder="What's assumed, what would break this, what you've chosen not to see. Your words." oninput="updateSituationField('${s.id}', 'problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
         </section>
+
+        <section class="workspace-section">
+          <div class="ws-stage-label">Stage 5 — Field map &amp; candidate owners</div>
+          <label>Who could own this? Map the field, then mark candidate problem owners.</label>
+          <p class="field-hint">Ours is a modified Frame Innovation: you <em>discover</em> the problem owner through the field — you don't start with one. A candidate owner (1) holds the paradox in their world, (2) has the mandate or reach to act, and (3) gains from the value your frame creates.</p>
+          <div id="owner-rows-${s.id}" class="owner-rows">${tgxOwnerRowsHtml(s)}</div>
+          <button type="button" class="btn btn-outline" style="margin-top:10px;" onclick="tgxOwnerAdd('${s.id}')">+ Add a field actor</button>
+        </section>
       `;
 
       card.querySelector(`#sit-gap-prompt-${n}`).textContent = buildSituationPrompt('gap-analysis', s);
@@ -8056,6 +8335,57 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       scheduleSave();
     }
 
+    // ── A4: Field map & candidate problem owners ─────────────────────────
+    // Modified Frame Innovation: the pod DISCOVERS a problem owner via the
+    // field rather than starting with one. An additive, optional array on the
+    // situation (sit.fieldActors) — absent on old states, read-guarded
+    // everywhere, never touched by the SIT_FIELDS string-normalizer, so it
+    // needs zero migration.
+    const OWNER_ROLE_LABEL = { inner: 'Inner circle', wider: 'Wider field', owner: 'Owner / client' };
+    function tgxOwnerEnsure(s) { if (!Array.isArray(s.fieldActors)) s.fieldActors = []; return s.fieldActors; }
+    function tgxOwnerRowsHtml(s) {
+      const list = Array.isArray(s.fieldActors) ? s.fieldActors : [];
+      if (!list.length) return '<p class="owner-empty">No field actors yet. Add the players you\'ve mapped — then mark who could own this.</p>';
+      const roleOpts = (sel) => ['inner', 'wider', 'owner'].map(r => '<option value="' + r + '"' + ((sel || 'wider') === r ? ' selected' : '') + '>' + OWNER_ROLE_LABEL[r] + '</option>').join('');
+      return list.map((a, i) => '<div class="owner-row">'
+        + '<input class="owner-name" type="text" placeholder="Name / role" value="' + escapeHtml(a.name || '') + '" oninput="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'name\',this.value)">'
+        + '<select class="owner-role" onchange="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'role\',this.value)">' + roleOpts(a.role) + '</select>'
+        + '<input class="owner-note" type="text" placeholder="Practices &amp; the currency they trade in" value="' + escapeHtml(a.note || '') + '" oninput="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'note\',this.value)">'
+        + '<label class="owner-cand"><input type="checkbox"' + (a.candidateOwner ? ' checked' : '') + ' onchange="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'candidateOwner\',this.checked)"> candidate owner</label>'
+        + '<button type="button" class="owner-del" title="Remove" onclick="tgxOwnerRemove(\'' + s.id + '\',' + i + ')">✕</button>'
+        + '</div>').join('');
+    }
+    function tgxOwnerRerender(sitId) {
+      const el = document.getElementById('owner-rows-' + sitId);
+      const s = findSituation(sitId);
+      if (el && s) el.innerHTML = tgxOwnerRowsHtml(s);
+    }
+    function tgxOwnerAdd(sitId) {
+      const s = findSituation(sitId); if (!s) return;
+      tgxOwnerEnsure(s).push({ name: '', role: 'wider', note: '', candidateOwner: false });
+      scheduleSave(); tgxOwnerRerender(sitId);
+    }
+    function tgxOwnerRemove(sitId, i) {
+      const s = findSituation(sitId); if (!s || !Array.isArray(s.fieldActors)) return;
+      s.fieldActors.splice(i, 1); scheduleSave(); tgxOwnerRerender(sitId);
+    }
+    function tgxOwnerUpdate(sitId, i, key, val) {
+      const s = findSituation(sitId); if (!s) return;
+      const list = tgxOwnerEnsure(s); if (!list[i]) return;
+      list[i][key] = val; scheduleSave();
+    }
+    function tgxOwnerDocBlock(s) {
+      const list = Array.isArray(s.fieldActors) ? s.fieldActors.filter(a => (a.name || '').trim()) : [];
+      if (!list.length) return '(field not yet mapped — add the players and mark who could own this)';
+      let out = list.map(a => '- **' + a.name.trim() + '** _(' + (OWNER_ROLE_LABEL[a.role] || 'Wider field') + ')_'
+        + (a.candidateOwner ? ' — ★ candidate problem owner' : '')
+        + ((a.note || '').trim() ? ' — ' + a.note.trim() : '')).join('\n');
+      const cands = list.filter(a => a.candidateOwner);
+      if (cands.length) out += '\n\n**Candidate problem owners:** ' + cands.map(a => a.name.trim()).join(', ')
+        + '. A resolution needs at least one owner who holds the paradox, has the mandate to act, and gains from the value the frame creates.';
+      return out;
+    }
+
     // Complete = at least one situation with the required fields filled and a
     // named-and-described theme (tier >= 3) somewhere in its subtree. The
     // reflective fields (coverage, agenda, voices, access, beneficiaries) are
@@ -8067,9 +8397,11 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     }
 
     function recomputeSubmitButton() {
+      const ok = workspaceIsComplete();
+      const deckBtn = document.getElementById('produce-deck-btn');
+      if (deckBtn) deckBtn.disabled = !ok;
       const btn = document.getElementById('submit-for-voting-btn');
       if (!btn) return;
-      const ok = workspaceIsComplete();
       btn.disabled = !ok;
       btn.textContent = appState.submittedAt ? 'Re-submit' : 'Submit for Voting';
       const hint = document.getElementById('submit-status-hint');
@@ -8077,9 +8409,9 @@ Interrogate this map. Work through each point and answer concretely, naming spec
         if (ok) {
           hint.textContent = appState.submittedAt
             ? `Last submitted ${new Date(appState.submittedAt).toLocaleString()}. Re-submit to update.`
-            : 'Ready.';
+            : 'Ready — produce your Meet-the-Pods deck & site, or submit your cluster for voting.';
         } else {
-          hint.textContent = 'To submit: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.';
+          hint.textContent = 'To finish: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.';
         }
       }
     }
@@ -8381,7 +8713,12 @@ ${w(s.paradox, '(not yet written)')}
 ${w(s.statusQuoBeneficiaries, '(not yet written)')}
 
 ### Pressure-testing the framing
-${w(s.problematization, '(not yet written)')}`;
+${w(s.problematization, '(not yet written)')}
+
+---
+
+## The field — candidate problem owners
+${tgxOwnerDocBlock(s)}`;
       });
       if (!blocks.length) blocks.push('# Untitled Problem Situation\n\n(no problem situation mapped yet)');
       const next = `---
@@ -8611,7 +8948,7 @@ ${AI_RULES}
         const p = appState.nodes[it.id];
         const sz = nodeSize('signal', it.id);
         out.push({
-          id: it.id, type: 'Extracted Signal', tier: 0,
+          id: it.id, type: 'Source Extract', tier: 0,
           title: it.title || '', description: it.summary || '',
           x: p.x, y: p.y, w: sz.w, h: sz.h,
           verified: it.verified === true, strong: dec === 'super',
@@ -8636,6 +8973,8 @@ ${AI_RULES}
 
     function buildProjectJsonld() {
       const nodes = modularNodes();
+      const ids = new Set(nodes.map(n => n.id));
+      const typeToken = (t) => 'tg:' + String(t || '').replace(/[^A-Za-z]/g, ''); // "Source Extract" -> tg:SourceExtract
       const doc = {
         '@context': {
           '@vocab': 'https://schema.org/',
@@ -8647,22 +8986,36 @@ ${AI_RULES}
         title: appState.settings.title || 'Untitled',
         concept: appState.settings.concept || '',
         generatedAt: new Date().toISOString(),
-        '@graph': nodes.map(n => Object.assign({ '@id': n.id }, n))
+        // Proper RDF @type (a tg: term), drop the redundant plain `id` (keep `@id`),
+        // and close the graph — children only reference nodes present in @graph.
+        // `type` is kept for the bundled viewer.js, which reads it.
+        '@graph': nodes.map(n => {
+          const { id, children, ...rest } = n;
+          return Object.assign(
+            { '@id': id, '@type': typeToken(n.type) },
+            rest,
+            { children: (children || []).filter(k => ids.has(k)) }
+          );
+        })
       };
       return JSON.stringify(doc, null, 2);
     }
 
     function buildExtractsCsv() {
+      // Ships exactly the source-extract nodes that appear on the published map
+      // (non-noise, positioned) so the site's extract list and its web map can
+      // never disagree. `verified` reflects the QA-Intercept status truthfully.
       const rows = [['title', 'summary', 'source_url', 'verified']];
       appState.items.forEach(it => {
-        if (it.verified !== true) return; // only validated Extracted Signals
-        rows.push([it.title || '', it.summary || '', it.source_url || '', 'true']);
+        if (!appState.nodes[it.id]) return; // not on the map
+        if (appState.sorting.decisions[it.id] === 'noise') return; // discarded
+        rows.push([it.title || '', it.summary || '', it.source_url || '', it.verified === true ? 'true' : 'false']);
       });
       return rows.map(r => r.map(csvEscape).join(',')).join('\n') + '\n';
     }
 
     function buildThemesMd() {
-      const upper = appState.cards.filter(c => c.tier >= 2).sort((a, b) => b.tier - a.tier);
+      const upper = appState.cards.filter(c => c.tier >= 2 && (c.title || '').trim() && (c.description || '').trim()).sort((a, b) => b.tier - a.tier);
       let md = '# Themes & Patterns\n\n';
       if (!upper.length) { md += '_No patterns or themes have been built yet._\n'; return md; }
       upper.forEach(c => {
@@ -8770,7 +9123,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     html+='<section class="narrative"><h2>Themes</h2>'+mdToHtml(content.themes)+'</section>';
     html+='<section class="narrative"><h2>Problem situation</h2>'+mdToHtml(content.situation)+'</section>';
     var rows=parseCsvRows(data.extractsCsv||'');
-    if(rows.length>1){html+='<section class="extracts"><h2>Extracted signals</h2><ul>';
+    if(rows.length>1){html+='<section class="extracts"><h2>Source extracts</h2><ul>';
       for(var i=1;i<rows.length;i++){var r=rows[i],t=r[0]||'',s=r[1]||'',u=r[2]||'';
         html+='<li><strong>'+esc(t)+'</strong> — '+esc(s)+(/^https?:\\/\\//.test(u)?' <a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">source ↗</a>':'')+'</li>';}
       html+='</ul></section>';}
@@ -8807,14 +9160,82 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       return 'window.SITE_DATA = ' + JSON.stringify(data) + ';\n';
     }
 
+    // ── A3: "Meet the Pods" slide deck ───────────────────────────────────
+    // A self-contained, offline-safe slides.html generated from the mapped
+    // Problem Situation — one slide per section (paradox, frame, themes,
+    // field, join). Ships inside the export folder alongside index.html so a
+    // pod's seeded repo carries an initial deck to present at Meet the Pods.
+    function tgxBuildSlidesHtml(sit, cards) {
+      sit = sit || {};
+      const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const projectTitle = esc(appState.settings.title || sit.title || 'Our Pod');
+      const sitTitle = esc(sit.title || appState.settings.title || 'Problem Situation');
+      const themeCards = (cards || appState.cards || []).filter(c => c.tier >= 2 && (c.title || '').trim() && (c.description || '').trim()).sort((a, b) => b.tier - a.tier).slice(0, 4);
+      const has = (v) => (v || '').toString().trim();
+      const slides = [];
+      slides.push({ kind: 'cover', eyebrow: 'Meet the Pod', title: sitTitle, body: has(sit.description) ? '<p>' + esc(sit.description) + '</p>' : '' });
+      if (has(sit.paradox)) {
+        let b = '<p>' + esc(sit.paradox) + '</p>';
+        if (has(sit.statusQuoBeneficiaries)) b += '<p class="muted"><strong>Who benefits from the status quo:</strong> ' + esc(sit.statusQuoBeneficiaries) + '</p>';
+        slides.push({ kind: 'para', eyebrow: 'The Paradox', title: 'Why this stays stuck', body: b });
+      }
+      // No "Frame" slide: per the method, framing happens AFTER Meet the Pods
+      // (a pod forms around the paradox; the frame comes at project formation).
+      if (themeCards.length) {
+        let b = '<ul class="themes">';
+        themeCards.forEach(c => { b += '<li><span class="tier">' + esc(tierName(c.tier)) + '</span><span class="tt">' + esc(c.title || 'Untitled') + '</span>' + (has(c.description) ? '<span class="td">' + esc(c.description) + '</span>' : '') + '</li>'; });
+        b += '</ul>';
+        slides.push({ kind: 'themes', eyebrow: 'What we found', title: 'The themes beneath it', body: b });
+      }
+      const field = [];
+      const candOwners = (Array.isArray(sit.fieldActors) ? sit.fieldActors : []).filter(a => a.candidateOwner && (a.name || '').trim());
+      if (candOwners.length) field.push('<p class="muted"><strong>Candidate problem owners:</strong> ' + esc(candOwners.map(a => a.name.trim()).join(', ')) + '</p>');
+      if (has(sit.voicesNeeded)) field.push('<p class="muted"><strong>Voices we still need:</strong> ' + esc(sit.voicesNeeded) + '</p>');
+      if (field.length) slides.push({ kind: 'field', eyebrow: 'The Field', title: 'Who this touches', body: field.join('') });
+      slides.push({ kind: 'join', eyebrow: 'Join us', title: 'Build with the ' + projectTitle + ' pod', body: '<p>We\'re forming a pod around this paradox. If it pulls at you, come help us frame it — and find the problem owner who can move it.</p>' });
+
+      const slideHtml = slides.map((s, i) => '<section class="slide ' + s.kind + (i === 0 ? ' active' : '') + '" data-i="' + i + '"><div class="slide-inner"><div class="eyebrow">' + s.eyebrow + '</div><h1>' + s.title + '</h1><div class="body">' + s.body + '</div></div></section>').join('\n');
+      const dots = slides.map((s, i) => '<button class="dot' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" aria-label="Slide ' + (i + 1) + '"></button>').join('');
+
+      return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        + '<title>' + sitTitle + ' — Meet the Pod</title>\n<style>\n'
+        + ':root{--paper:#0d141b;--teal:#22c3cf;--fog:#aeb9bf;--line:rgba(255,255,255,.12);}\n'
+        + '*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}\n'
+        + 'body{background:var(--paper);color:#eef3f4;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden}\n'
+        + '.slide{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:8vh 9vw}\n'
+        + '.slide.active{display:flex}\n.slide-inner{max-width:62ch;width:100%}\n'
+        + '.eyebrow{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:18px}\n'
+        + 'h1{font-size:clamp(30px,6vw,58px);line-height:1.05;letter-spacing:-.02em;font-weight:800;margin-bottom:22px;text-wrap:balance}\n'
+        + '.body{font-size:clamp(17px,2.3vw,22px);line-height:1.55;color:#dbe4e6}.body p{margin-bottom:12px}.body .muted{color:var(--fog);font-size:.9em}\n'
+        + 'ul.themes{list-style:none;display:flex;flex-direction:column;gap:15px}ul.themes li{border-left:2px solid var(--teal);padding-left:16px}\n'
+        + 'ul.themes .tier{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:3px}\n'
+        + 'ul.themes .tt{display:block;font-weight:700;font-size:1.05em}ul.themes .td{display:block;color:var(--fog);font-size:.82em;margin-top:4px}\n'
+        + '.slide.cover h1{font-size:clamp(38px,8vw,78px)}.slide.join .slide-inner{text-align:center}\n'
+        + '.nav{position:fixed;bottom:22px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:20px;z-index:5}\n'
+        + '.dots{display:flex;gap:9px}.dot{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0}.dot.on{background:var(--teal)}\n'
+        + '.arrow{background:none;border:1px solid var(--line);color:#eef3f4;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1}.arrow:hover{border-color:var(--teal)}\n'
+        + '.brand{position:fixed;top:20px;left:26px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog)}.brand b{color:#eef3f4}\n'
+        + '</style></head>\n<body>\n<div class="brand">The <b>Upskilling Labs</b> · Meet the Pod</div>\n'
+        + slideHtml + '\n'
+        + '<div class="nav"><button class="arrow" id="prev" aria-label="Previous">‹</button><div class="dots" id="dots">' + dots + '</div><button class="arrow" id="next" aria-label="Next">›</button></div>\n'
+        + '<script>\n(function(){var slides=[].slice.call(document.querySelectorAll(".slide"));var dots=[].slice.call(document.querySelectorAll(".dot"));var i=0;'
+        + 'function go(n){i=Math.max(0,Math.min(slides.length-1,n));slides.forEach(function(s,k){s.classList.toggle("active",k===i);});dots.forEach(function(d,k){d.classList.toggle("on",k===i);});}'
+        + 'document.getElementById("next").onclick=function(){go(i+1);};document.getElementById("prev").onclick=function(){go(i-1);};'
+        + 'dots.forEach(function(d){d.onclick=function(){go(+d.getAttribute("data-i"));};});'
+        + 'document.addEventListener("keydown",function(e){if(e.key==="ArrowRight"||e.key===" ")go(i+1);else if(e.key==="ArrowLeft")go(i-1);});})();\n'
+        + '<\/script>\n</body></html>';
+    }
+
     function buildModularExportFiles() {
       const title = appState.settings.title || 'Untitled';
       const projectJson = buildProjectJsonld();
       const extractsCsv = buildExtractsCsv();
       const situationMd = exportSituationDoc();
       const themesMd = buildThemesMd();
+      const sitForSlides = appState.situations.find(s => (s.title || '').trim()) || appState.situations[0] || {};
       return [
         { path: 'index.html', content: buildSiteIndexHtml(title) },
+        { path: 'slides.html', content: tgxBuildSlidesHtml(sitForSlides, appState.cards) },
         { path: 'README.md', content: buildSiteReadme() },
         { path: 'assets/style.css', content: SITE_STYLE_CSS },
         { path: 'assets/viewer.js', content: SITE_VIEWER_JS },
@@ -8828,7 +9249,12 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
     function exportModular() {
       if (tutorialMode) { toast('Exporting is for your real board — finish the tutorial first.'); return; }
-      if (isSeedMode()) { toast('The site export is a Pod Mode feature — graduate first.'); return; }
+      if (isSeedMode()) { toast('The Meet-the-Pods site is a Pod Mode feature — graduate first.'); return; }
+      if (!workspaceIsComplete()) { toast('Map and complete your Problem Situation first — a title, the open condition, the paradox, a pressure-test, and at least one named & described theme. The deck and site are built from it.', { duration: 7000 }); return; }
+      const boardTitle = (appState.settings.title || '').trim();
+      if (!boardTitle || boardTitle === 'Signal Pool' || boardTitle === 'Untitled' || boardTitle === 'Upskilling Labs: Signal Pool') {
+        toast('Name your web map first (the title field at the top-left of the board) — it becomes your Pod\'s name on the site and deck.', { duration: 6000 }); return;
+      }
       appState.exportedAt = new Date().toISOString();
       const blob = buildZip(buildModularExportFiles());
       const url = URL.createObjectURL(blob);
@@ -9413,6 +9839,11 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       else {
         menu.classList.remove('hidden');
         btn.setAttribute('aria-expanded', 'true');
+        // Fix 3/4 — gate the Deepen + Name-the-problem entries on current state (mobile-reachable, and a desktop re-entry after dismissing the invite)
+        const dp = document.getElementById('menu-deepen');
+        if (dp) dp.classList.toggle('hidden', !hasSituations());
+        const cp = document.getElementById('menu-concept');
+        if (cp) cp.classList.toggle('hidden', !(conceptUnlocked() && !(appState.settings.concept || '').trim()));
         const search = document.getElementById('menu-search-input');
         const canonical = document.getElementById('search-input');
         if (search && canonical) search.value = canonical.value;
