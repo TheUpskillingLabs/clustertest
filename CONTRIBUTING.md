@@ -20,6 +20,8 @@ The issue templates (🐛 bug · 🧠 method friction · ✨ sprint idea) are th
 ## Branches & PRs
 
 - Branch from `main`. Pod Squad work: `podsquad/<short-slug>`. (You'll also see `claude/<slug>` branches — those are agent-built.)
+- **Diverge:** experiment branches (`podsquad/<yourname>-<experiment>`) and personal forks are the prototyping mechanism — a fork gets its own GitHub Pages URL, so your version can be live and clickable for the squad within minutes. Wild experiments belong on forks; no permission needed.
+- **Converge:** feature-harvest PRs bring the keepers from those experiments into `main`, argued from the method or the field. `main` is what the room runs.
 - Open a PR against `main`; describe what changed and *how you verified it*. PRs are merged with merge commits (not squash).
 - Docs-only changes (README, `docs/`) are the easiest first PR and are always welcome.
 

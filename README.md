@@ -85,7 +85,7 @@ The tool contains **no AI**. Every ✨ **AI prompts** button copies a carefully-
 
 | Doc | For |
 |---|---|
-| [docs/PODSQUAD-ONBOARDING.md](docs/PODSQUAD-ONBOARDING.md) | **Start here if you're a Poderator.** What this tool is for, how to run the loop, how to facilitate it, how to feed the build. |
+| [docs/PODSQUAD-ONBOARDING.md](docs/PODSQUAD-ONBOARDING.md) | **Start here if you're Pod Squad.** This tool is a starting place, and that doc is your invitation to rebuild it — fork it, prototype, feature-harvest, and ship the version the cycle deserves. |
 | [docs/SENSEMAKING-SPRINT.md](docs/SENSEMAKING-SPRINT.md) | The co-design brief for the first in-person sensemaking event — draft run-of-show + the open questions the Pod Squad owns. |
 | [docs/PRD-triangulator-finalization.md](docs/PRD-triangulator-finalization.md) | The product spec: cycle integration, seams to the OLOS platform, build order, design decisions. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Repo conventions, how to run the drivers, how to propose changes. |
