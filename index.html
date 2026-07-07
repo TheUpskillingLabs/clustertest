@@ -2550,7 +2550,7 @@
             <input type="text" id="search-input" class="search-input" placeholder="Search signals..." oninput="filterItems()">
             <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">✕</button>
           </div>
-          <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full collection of observations and insights with your AI thinking partner">✨ <span class="btn-label">LLM Field Analyis</span></button>
+          <button class="btn btn-outline btn-ai-prompt" onclick="openAIPromptModal()" aria-label="Explore the full collection of observations and insights with your AI thinking partner">✨ <span class="btn-label">LLM Field Analysis</span></button>
           <button class="btn btn-primary" onclick="openCommitModal()">Commit</button>
         </div>
         <span id="mobile-ready-dot" class="mobile-ready-dot" aria-hidden="true"></span>
@@ -2573,7 +2573,7 @@
             <button type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); openBlindSpotDrawer()">🔍 Blind-Spot Audit</button>
             <button id="menu-compile-concept" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); compileConcept()">Compile Concept ⤓</button>
             <button id="menu-graduate" type="button" class="menu-item hidden" role="menuitem" onclick="closeBoardMenu(); graduateToPod()">▲ Graduate to Pod Mode</button>
-            <button id="menu-export-canvas" type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); exportModular()">Export site (.zip) ⤓</button>
+            <button id="menu-export-canvas" type="button" class="menu-item" role="menuitem" onclick="closeBoardMenu(); exportModular()">Produce your “Meet the Pods” deck &amp; site (.zip) ⤓</button>
             <div class="divider"></div>
             <button type="button" class="menu-item menu-item-danger" role="menuitem" onclick="resetFromMenu()">💥 Self-destruct (reset workspace)</button>
           </div>
@@ -2901,7 +2901,7 @@
     <div class="modal-content" style="max-width: 580px;">
       <div class="modal-header"><h3 id="git-handoff-title">Your working folder is downloaded — here's the Git handoff</h3></div>
       <div class="modal-body">
-        <p class="intro-lede">This .zip is your complete evidence map — the semantic graph, the narrative Markdown, the AI-ready prompts, and a deployable static site. The tool has no server; your Pod syncs through one shared Git repo, and the manual loop is what keeps any one person from framing alone.</p>
+        <p class="intro-lede">This .zip is your complete Meet-the-Pods package — a deployable Pod website (<code>index.html</code>), a ready-to-present <strong>“Meet the Pods” slide deck</strong> (<code>slides.html</code>), the semantic graph, and the narrative Markdown. The tool has no server; your Pod syncs through one shared Git repo, and the manual loop is what keeps any one person from framing alone.</p>
         <ol class="intro-steps">
           <li><strong>Unzip</strong> the folder into your local clone of the Pod's shared repository (overwriting your previous version).</li>
           <li><strong>Commit &amp; push</strong> with three commands:
@@ -3857,7 +3857,7 @@ git push</pre>
     const TGX_COACH = {
       setup: { t: 'Step 1 · Gather source extracts', b: 'Load the sample, upload a CSV, or ✨ Extract from sources. Go wide — include what might contradict you. No concept yet; the problem comes into focus later.' },
       sorting: { t: 'Step 2 · Sort signal from noise', b: 'Right keeps a signal, left is noise, up is a super-signal. Commit fast — where you hesitate is data.' },
-      board: { t: 'Step 3 · Triangulate', b: 'Hover a card, drag from an edge dot to another to connect two source extracts into evidence. Two of anything makes the next tier.' }
+      board: { t: 'Step 3 · Triangulate', b: 'Hover a card, drag from an edge dot to another to connect two source extracts into evidence. Building patterns and themes on top unlocks when you graduate to Pod Mode.' }
     };
     function tgxCoachRender(screen) {
       const bar = document.getElementById('tgx-coach');
@@ -3980,11 +3980,11 @@ git push</pre>
       concept: { label: 'Why now, not first',
         body: "You've worked your source extracts and the shape of a problem is emerging. Naming it **now** — grounded in evidence you've actually sorted, not a blank-page hunch — is how you avoid **The Self-Made Box**, where a concept named too early quietly filters everything you let yourself see. It's optional and provisional: revise it, or skip it entirely, as the evidence keeps talking." },
       sources: { label: 'Why a pool, not a search',
-        body: "You've named what you expect. Now gather raw material **wide** — including what could contradict you — because a search only returns what you already believe. This widening is **Dorst's Field Mapping** in miniature, and it starves **The Self-Made Box** before it forms. The breadth here sets the ceiling on every signal you'll find." },
+        body: "Start wide. Gather raw material — field notes, sources, whatever you can pull in — **including what could contradict you**, because you're not searching for what you already believe. A wide pool is **Dorst's Field Mapping** in miniature, and it starves **The Self-Made Box** before it forms. Breadth here sets the ceiling on every signal you'll find. (You'll name the problem later, once the evidence has something to say.)" },
       sort: { label: 'Why force a binary',
         body: "These are the observations you just gathered. Signal-or-noise forces fast commitment, and commitment surfaces instinct — where you hesitate is data about a belief you haven't earned. Refusing to keep everything is how you avoid **Freeze the World**: drowning the map in undifferentiated noise. Only what survives becomes raw material." },
       validate: { label: 'Why connect, not collect',
-        body: "Your signals are still isolated facts. Connecting two into evidence is the first real test of your concept: a claim two independent signals support is **triangulated**; one anecdote is not. This is **Dorst Steps 1–4 (Archaeology → Paradox)**, and it's what keeps you off **The Rational High Ground** — defending a position you never grounded. This ladder is the spine of everything above it." },
+        body: "Your source extracts are still isolated facts. Connecting two into evidence is the first real test of a claim: two independent extracts pointing at the same condition are **triangulated**; one anecdote is not. This is **Dorst Steps 1–4 (Archaeology → Paradox)**, and it's what keeps you off **The Rational High Ground** — defending a position you never grounded. The problem concept, if you name one, earns itself here — from the evidence up." },
       map: { label: 'Why synthesize now',
         body: "You've climbed to a theme that bridges human experience and structure. Synthesizing the whole ladder into one Problem Situation is **Dorst Step 5 (Themes)** — it forces you to say what it all amounts to: an **open condition**, not a tidy problem. Skip it and you stay on **The Rational High Ground**, naming a theme you only felt. This is the groundwork a real frame later stands on." },
       classify: { label: 'Why type the evidence now',
@@ -8984,16 +8984,20 @@ ${AI_RULES}
     }
 
     function buildExtractsCsv() {
+      // Ships exactly the source-extract nodes that appear on the published map
+      // (non-noise, positioned) so the site's extract list and its web map can
+      // never disagree. `verified` reflects the QA-Intercept status truthfully.
       const rows = [['title', 'summary', 'source_url', 'verified']];
       appState.items.forEach(it => {
-        if (it.verified !== true) return; // only validated Extracted Signals
-        rows.push([it.title || '', it.summary || '', it.source_url || '', 'true']);
+        if (!appState.nodes[it.id]) return; // not on the map
+        if (appState.sorting.decisions[it.id] === 'noise') return; // discarded
+        rows.push([it.title || '', it.summary || '', it.source_url || '', it.verified === true ? 'true' : 'false']);
       });
       return rows.map(r => r.map(csvEscape).join(',')).join('\n') + '\n';
     }
 
     function buildThemesMd() {
-      const upper = appState.cards.filter(c => c.tier >= 2).sort((a, b) => b.tier - a.tier);
+      const upper = appState.cards.filter(c => c.tier >= 2 && (c.title || '').trim() && (c.description || '').trim()).sort((a, b) => b.tier - a.tier);
       let md = '# Themes & Patterns\n\n';
       if (!upper.length) { md += '_No patterns or themes have been built yet._\n'; return md; }
       upper.forEach(c => {
@@ -9148,7 +9152,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       const projectTitle = esc(appState.settings.title || sit.title || 'Our Pod');
       const sitTitle = esc(sit.title || appState.settings.title || 'Problem Situation');
-      const themeCards = (cards || appState.cards || []).filter(c => c.tier >= 2).sort((a, b) => b.tier - a.tier).slice(0, 4);
+      const themeCards = (cards || appState.cards || []).filter(c => c.tier >= 2 && (c.title || '').trim() && (c.description || '').trim()).sort((a, b) => b.tier - a.tier).slice(0, 4);
       const has = (v) => (v || '').toString().trim();
       const slides = [];
       slides.push({ kind: 'cover', eyebrow: 'Meet the Pod', title: sitTitle, body: has(sit.description) ? '<p>' + esc(sit.description) + '</p>' : '' });
@@ -9157,7 +9161,8 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         if (has(sit.statusQuoBeneficiaries)) b += '<p class="muted"><strong>Who benefits from the status quo:</strong> ' + esc(sit.statusQuoBeneficiaries) + '</p>';
         slides.push({ kind: 'para', eyebrow: 'The Paradox', title: 'Why this stays stuck', body: b });
       }
-      if (has(sit.frame)) slides.push({ kind: 'frame', eyebrow: 'The Frame', title: 'If we approach it as…', body: '<p>' + esc(sit.frame) + '</p>' });
+      // No "Frame" slide: per the method, framing happens AFTER Meet the Pods
+      // (a pod forms around the paradox; the frame comes at project formation).
       if (themeCards.length) {
         let b = '<ul class="themes">';
         themeCards.forEach(c => { b += '<li><span class="tier">' + esc(tierName(c.tier)) + '</span><span class="tt">' + esc(c.title || 'Untitled') + '</span>' + (has(c.description) ? '<span class="td">' + esc(c.description) + '</span>' : '') + '</li>'; });
@@ -9165,7 +9170,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         slides.push({ kind: 'themes', eyebrow: 'What we found', title: 'The themes beneath it', body: b });
       }
       const field = [];
-      if (has(sit.stakeholderMap)) field.push('<p>' + esc(sit.stakeholderMap) + '</p>');
       const candOwners = (Array.isArray(sit.fieldActors) ? sit.fieldActors : []).filter(a => a.candidateOwner && (a.name || '').trim());
       if (candOwners.length) field.push('<p class="muted"><strong>Candidate problem owners:</strong> ' + esc(candOwners.map(a => a.name.trim()).join(', ')) + '</p>');
       if (has(sit.voicesNeeded)) field.push('<p class="muted"><strong>Voices we still need:</strong> ' + esc(sit.voicesNeeded) + '</p>');
@@ -9227,7 +9231,8 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
     function exportModular() {
       if (tutorialMode) { toast('Exporting is for your real board — finish the tutorial first.'); return; }
-      if (isSeedMode()) { toast('The site export is a Pod Mode feature — graduate first.'); return; }
+      if (isSeedMode()) { toast('The Meet-the-Pods site is a Pod Mode feature — graduate first.'); return; }
+      if (!workspaceIsComplete()) { toast('Map and complete your Problem Situation first — a title, the open condition, the paradox, a pressure-test, and at least one named & described theme. The deck and site are built from it.', { duration: 7000 }); return; }
       appState.exportedAt = new Date().toISOString();
       const blob = buildZip(buildModularExportFiles());
       const url = URL.createObjectURL(blob);
