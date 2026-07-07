@@ -2441,6 +2441,9 @@
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
         <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()" style="margin-bottom: 12px;">Load 21 Civics &amp; Elections observations</button>
 
+        <button type="button" class="btn btn-primary" onclick="tgxExtractOpen()" style="margin-bottom: 6px;">✨ Extract from sources →</button>
+        <p style="font-size: var(--text-xs); color: var(--cloud); opacity: 0.75; margin: 0 0 14px;">Paste an article, notes, or a transcript and turn it into extract cards with your own AI — nothing leaves your browser.</p>
+
         <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: var(--radius-2); padding: 16px; margin-bottom: 16px;">
           <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px;">
             <strong style="color: var(--ghost-white); font-size: var(--text-sm);">Load your own observations</strong>
@@ -2786,6 +2789,57 @@
         <p class="intro-hint">The chip above the canvas shows how close you are.</p>
         <div class="modal-actions">
           <button class="btn btn-primary" onclick="closeModal('board-intro-modal')" data-autofocus>Start mapping</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* A2 — Extract from sources (namespaced xtr-*); light modal surface */
+    .xtr-body { display: flex; flex-direction: column; gap: 16px; }
+    .xtr-step { border: 1px solid var(--cloud); border-radius: var(--radius-2); padding: 14px 16px; background: rgba(0,0,0,0.02); }
+    .xtr-step-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+    .xtr-step-n { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-teal); color: var(--ghost-white); font-size: var(--text-xs); font-weight: 700; flex: none; }
+    .xtr-step-t { font-size: var(--text-sm); font-weight: 600; color: var(--midnight); }
+    .xtr-ta { width: 100%; box-sizing: border-box; font-family: 'Geologica', sans-serif; font-size: var(--text-sm); line-height: 1.5; padding: 10px 12px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: var(--ghost-white); color: var(--midnight); resize: vertical; }
+    .xtr-ta.mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: var(--text-xs); }
+    .xtr-ta:focus, .xtr-input:focus { outline: none; border-color: var(--primary-teal); }
+    .xtr-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+    .xtr-hint { font-size: var(--text-xs); color: var(--text-muted); margin: 0; }
+    .xtr-input { font-family: 'Geologica', sans-serif; font-size: var(--text-sm); padding: 8px 12px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: var(--ghost-white); color: var(--midnight); flex: 1; min-width: 220px; box-sizing: border-box; }
+    .xtr-err { font-size: var(--text-sm); color: #c0392b; margin-top: 8px; display: none; }
+    .xtr-err.show { display: block; }
+  </style>
+  <div id="xtr-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="xtr-title">
+    <div class="modal-content" style="max-width: 680px;">
+      <div class="modal-header"><h3 id="xtr-title">✨ Extract from sources</h3></div>
+      <div class="modal-body">
+        <p style="font-size: var(--text-sm); color: var(--text-muted); margin: 0 0 14px;">Turn raw source material — an article, interview notes, a transcript, a report — into atomic <strong>extract cards</strong> for your pool. You run the AI in your own tool; nothing leaves your browser.</p>
+        <div class="xtr-body">
+          <div class="xtr-step">
+            <div class="xtr-step-h"><span class="xtr-step-n">1</span><span class="xtr-step-t">Add your source material</span></div>
+            <textarea id="xtr-source" class="xtr-ta" rows="6" oninput="tgxExtractRefreshPrompt()" placeholder="Paste an article, notes, a transcript, or any raw field material here…"></textarea>
+            <div class="xtr-row">
+              <input type="file" id="xtr-file" accept=".txt,.md,.csv,text/plain,text/markdown" class="sr-only" onchange="tgxExtractOnFile(event)">
+              <button type="button" class="btn btn-outline" style="font-size: var(--text-sm); padding: 6px 14px;" onclick="document.getElementById('xtr-file').click()">Upload a file</button>
+              <input type="url" id="xtr-url" class="xtr-input" placeholder="Source URL (optional) — https://…">
+            </div>
+          </div>
+          <div class="xtr-step">
+            <div class="xtr-step-h"><span class="xtr-step-n">2</span><span class="xtr-step-t">Copy the prompt into your own AI</span></div>
+            <p class="xtr-hint" style="margin-bottom: 8px;">Copy this, paste it into Claude or ChatGPT, and run it. It returns a JSON list of extracts.</p>
+            <textarea id="xtr-prompt" class="xtr-ta mono" rows="6" readonly onclick="this.select()"></textarea>
+            <div class="xtr-row"><button type="button" class="btn btn-outline" style="font-size: var(--text-sm); padding: 6px 14px;" onclick="tgxExtractCopyPrompt(this)">Copy prompt</button></div>
+          </div>
+          <div class="xtr-step">
+            <div class="xtr-step-h"><span class="xtr-step-n">3</span><span class="xtr-step-t">Paste the result back</span></div>
+            <textarea id="xtr-result" class="xtr-ta mono" rows="5" placeholder='Paste your AI&apos;s JSON output here — e.g. [ { "title": "…", "summary": "…", "kind": "observation" } ]'></textarea>
+            <div class="xtr-err" id="xtr-error"></div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('xtr-modal')">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="tgxExtractParseAndAdd()">Add extracts to pool →</button>
         </div>
       </div>
     </div>
@@ -3534,6 +3588,100 @@ git push</pre>
     function qaCancelImport() {
       pendingCsvImport = null;
       closeModal('qa-verify-modal');
+    }
+
+    // ── A2: Extract from sources (BYO-LLM) ───────────────────────────────
+    // Paste/upload raw source material, copy a deterministic prompt to run
+    // in your OWN model, paste the JSON back. Produces pool items in the exact
+    // csvRowsToItems shape and hands off to the existing QA-verify +
+    // commitCsvImport path — no in-app model call, no new commit logic.
+    function tgxExtractOpen() {
+      const src = document.getElementById('xtr-source'); if (src) src.value = '';
+      const url = document.getElementById('xtr-url'); if (url) url.value = '';
+      const res = document.getElementById('xtr-result'); if (res) res.value = '';
+      tgxExtractHideError();
+      tgxExtractRefreshPrompt();
+      openModal('xtr-modal');
+    }
+    function tgxExtractOnFile(evt) {
+      const file = evt.target.files && evt.target.files[0];
+      evt.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onerror = () => toast('Could not read that file.');
+      reader.onload = () => {
+        const ta = document.getElementById('xtr-source');
+        const text = String(reader.result || '');
+        ta.value = ta.value.trim() ? (ta.value.trim() + '\n\n' + text) : text;
+        tgxExtractRefreshPrompt();
+        toast('Added "' + file.name + '" to the source box.');
+      };
+      reader.readAsText(file);
+    }
+    function tgxExtractBuildPrompt(source) {
+      return 'You are helping build a Frame Creation evidence pool. Read the SOURCE material below and pull out the discrete, atomic observations, facts, and insights it contains.\n\n'
+        + 'Rules:\n'
+        + '- One card per distinct idea. Split compound points apart.\n'
+        + '- Each card must describe something OBSERVED in the field — a pattern of behaviour, a dynamic, or a verifiable fact — not an opinion, a solution, or a value judgment.\n'
+        + '- "title": 8 words or fewer, specific.\n'
+        + '- "summary": 1–2 sentences, concrete, able to stand on its own.\n'
+        + '- "kind": exactly one of "observation" (a pattern of action/behaviour), "fact" (a verifiable datum), or "insight" (a non-obvious connection or implication).\n'
+        + '- Discard filler, rhetoric, and anything not grounded in the source.\n\n'
+        + 'Return ONLY a JSON array — no prose, no markdown fences — in exactly this shape:\n'
+        + '[ { "title": "…", "summary": "…", "kind": "observation" } ]\n\n'
+        + '<source>\n'
+        + (source || '(paste your source material above, then copy this prompt again)')
+        + '\n</source>';
+    }
+    function tgxExtractRefreshPrompt() {
+      const src = document.getElementById('xtr-source');
+      const out = document.getElementById('xtr-prompt');
+      if (out) out.value = tgxExtractBuildPrompt(src ? src.value.trim() : '');
+    }
+    function tgxExtractCopyPrompt(btn) {
+      tgxExtractRefreshPrompt();
+      const el = document.getElementById('xtr-prompt');
+      const done = () => { const o = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(() => { btn.textContent = o; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(el.value).then(done).catch(() => { el.select(); toast('Press Ctrl/Cmd+C to copy.'); });
+      } else { el.select(); toast('Press Ctrl/Cmd+C to copy.'); }
+    }
+    function tgxExtractHideError() { const e = document.getElementById('xtr-error'); if (e) { e.classList.remove('show'); e.textContent = ''; } }
+    function tgxExtractShowError(msg) { const e = document.getElementById('xtr-error'); if (e) { e.textContent = msg; e.classList.add('show'); } }
+    function tgxExtractParseExtracts(raw) {
+      let t = String(raw || '').trim();
+      if (!t) return { error: 'Paste your AI\'s JSON output first.' };
+      t = t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      const first = t.indexOf('['), last = t.lastIndexOf(']');
+      if (first > -1 && last > first) t = t.slice(first, last + 1);
+      let arr;
+      try { arr = JSON.parse(t); } catch (e) { return { error: 'That doesn\'t look like valid JSON. Re-run the copied prompt and paste the whole result.' }; }
+      if (!Array.isArray(arr)) return { error: 'Expected a JSON array of extracts.' };
+      const kindTag = { observation: 'Observation', fact: 'Fact', insight: 'Insight' };
+      const urlEl = document.getElementById('xtr-url');
+      let url = urlEl ? urlEl.value.trim() : '';
+      if (!/^https?:\/\//i.test(url)) url = '';
+      const items = [];
+      arr.forEach(e => {
+        if (!e || typeof e !== 'object') return;
+        const title = String(e.title || '').trim();
+        const summary = String(e.summary || '').trim();
+        if (!title || !summary) return;
+        const kind = String(e.kind || '').trim().toLowerCase();
+        items.push({ id: uid('item'), tag: kindTag[kind] || 'Extract', title: title, summary: summary, source_url: url, verified: false });
+      });
+      if (!items.length) return { error: 'No valid extracts found — each needs a "title" and a "summary".' };
+      return { items: items };
+    }
+    function tgxExtractParseAndAdd() {
+      tgxExtractHideError();
+      const result = tgxExtractParseExtracts(document.getElementById('xtr-result').value);
+      if (result.error) { tgxExtractShowError(result.error); return; }
+      const modeEl = document.querySelector('input[name="csv-mode"]:checked');
+      const mode = modeEl ? modeEl.value : 'append';
+      pendingCsvImport = { items: result.items, target: 'setup', mode: mode };
+      closeModal('xtr-modal');
+      openQaModal(result.items.length);
     }
 
     function csvEscape(s) {
