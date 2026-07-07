@@ -8955,14 +8955,80 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       return 'window.SITE_DATA = ' + JSON.stringify(data) + ';\n';
     }
 
+    // ── A3: "Meet the Pods" slide deck ───────────────────────────────────
+    // A self-contained, offline-safe slides.html generated from the mapped
+    // Problem Situation — one slide per section (paradox, frame, themes,
+    // field, join). Ships inside the export folder alongside index.html so a
+    // pod's seeded repo carries an initial deck to present at Meet the Pods.
+    function tgxBuildSlidesHtml(sit, cards) {
+      sit = sit || {};
+      const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const projectTitle = esc(appState.settings.title || sit.title || 'Our Pod');
+      const sitTitle = esc(sit.title || appState.settings.title || 'Problem Situation');
+      const themeCards = (cards || appState.cards || []).filter(c => c.tier >= 2).sort((a, b) => b.tier - a.tier).slice(0, 4);
+      const has = (v) => (v || '').toString().trim();
+      const slides = [];
+      slides.push({ kind: 'cover', eyebrow: 'Meet the Pod', title: sitTitle, body: has(sit.description) ? '<p>' + esc(sit.description) + '</p>' : '' });
+      if (has(sit.paradox)) {
+        let b = '<p>' + esc(sit.paradox) + '</p>';
+        if (has(sit.statusQuoBeneficiaries)) b += '<p class="muted"><strong>Who benefits from the status quo:</strong> ' + esc(sit.statusQuoBeneficiaries) + '</p>';
+        slides.push({ kind: 'para', eyebrow: 'The Paradox', title: 'Why this stays stuck', body: b });
+      }
+      if (has(sit.frame)) slides.push({ kind: 'frame', eyebrow: 'The Frame', title: 'If we approach it as…', body: '<p>' + esc(sit.frame) + '</p>' });
+      if (themeCards.length) {
+        let b = '<ul class="themes">';
+        themeCards.forEach(c => { b += '<li><span class="tier">' + esc(tierName(c.tier)) + '</span><span class="tt">' + esc(c.title || 'Untitled') + '</span>' + (has(c.description) ? '<span class="td">' + esc(c.description) + '</span>' : '') + '</li>'; });
+        b += '</ul>';
+        slides.push({ kind: 'themes', eyebrow: 'What we found', title: 'The themes beneath it', body: b });
+      }
+      const field = [];
+      if (has(sit.stakeholderMap)) field.push('<p>' + esc(sit.stakeholderMap) + '</p>');
+      if (has(sit.voicesNeeded)) field.push('<p class="muted"><strong>Voices we still need:</strong> ' + esc(sit.voicesNeeded) + '</p>');
+      if (field.length) slides.push({ kind: 'field', eyebrow: 'The Field', title: 'Who this touches', body: field.join('') });
+      slides.push({ kind: 'join', eyebrow: 'Join us', title: 'Build with the ' + projectTitle + ' pod', body: '<p>We\'re forming a pod around this paradox. If it pulls at you, come help us frame it — and find the problem owner who can move it.</p>' });
+
+      const slideHtml = slides.map((s, i) => '<section class="slide ' + s.kind + (i === 0 ? ' active' : '') + '" data-i="' + i + '"><div class="slide-inner"><div class="eyebrow">' + s.eyebrow + '</div><h1>' + s.title + '</h1><div class="body">' + s.body + '</div></div></section>').join('\n');
+      const dots = slides.map((s, i) => '<button class="dot' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" aria-label="Slide ' + (i + 1) + '"></button>').join('');
+
+      return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        + '<title>' + sitTitle + ' — Meet the Pod</title>\n<style>\n'
+        + ':root{--paper:#0d141b;--teal:#22c3cf;--fog:#aeb9bf;--line:rgba(255,255,255,.12);}\n'
+        + '*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}\n'
+        + 'body{background:var(--paper);color:#eef3f4;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden}\n'
+        + '.slide{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:8vh 9vw}\n'
+        + '.slide.active{display:flex}\n.slide-inner{max-width:62ch;width:100%}\n'
+        + '.eyebrow{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:18px}\n'
+        + 'h1{font-size:clamp(30px,6vw,58px);line-height:1.05;letter-spacing:-.02em;font-weight:800;margin-bottom:22px;text-wrap:balance}\n'
+        + '.body{font-size:clamp(17px,2.3vw,22px);line-height:1.55;color:#dbe4e6}.body p{margin-bottom:12px}.body .muted{color:var(--fog);font-size:.9em}\n'
+        + 'ul.themes{list-style:none;display:flex;flex-direction:column;gap:15px}ul.themes li{border-left:2px solid var(--teal);padding-left:16px}\n'
+        + 'ul.themes .tier{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:3px}\n'
+        + 'ul.themes .tt{display:block;font-weight:700;font-size:1.05em}ul.themes .td{display:block;color:var(--fog);font-size:.82em;margin-top:4px}\n'
+        + '.slide.cover h1{font-size:clamp(38px,8vw,78px)}.slide.join .slide-inner{text-align:center}\n'
+        + '.nav{position:fixed;bottom:22px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:20px;z-index:5}\n'
+        + '.dots{display:flex;gap:9px}.dot{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0}.dot.on{background:var(--teal)}\n'
+        + '.arrow{background:none;border:1px solid var(--line);color:#eef3f4;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1}.arrow:hover{border-color:var(--teal)}\n'
+        + '.brand{position:fixed;top:20px;left:26px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog)}.brand b{color:#eef3f4}\n'
+        + '</style></head>\n<body>\n<div class="brand">The <b>Upskilling Labs</b> · Meet the Pod</div>\n'
+        + slideHtml + '\n'
+        + '<div class="nav"><button class="arrow" id="prev" aria-label="Previous">‹</button><div class="dots" id="dots">' + dots + '</div><button class="arrow" id="next" aria-label="Next">›</button></div>\n'
+        + '<script>\n(function(){var slides=[].slice.call(document.querySelectorAll(".slide"));var dots=[].slice.call(document.querySelectorAll(".dot"));var i=0;'
+        + 'function go(n){i=Math.max(0,Math.min(slides.length-1,n));slides.forEach(function(s,k){s.classList.toggle("active",k===i);});dots.forEach(function(d,k){d.classList.toggle("on",k===i);});}'
+        + 'document.getElementById("next").onclick=function(){go(i+1);};document.getElementById("prev").onclick=function(){go(i-1);};'
+        + 'dots.forEach(function(d){d.onclick=function(){go(+d.getAttribute("data-i"));};});'
+        + 'document.addEventListener("keydown",function(e){if(e.key==="ArrowRight"||e.key===" ")go(i+1);else if(e.key==="ArrowLeft")go(i-1);});})();\n'
+        + '<\/script>\n</body></html>';
+    }
+
     function buildModularExportFiles() {
       const title = appState.settings.title || 'Untitled';
       const projectJson = buildProjectJsonld();
       const extractsCsv = buildExtractsCsv();
       const situationMd = exportSituationDoc();
       const themesMd = buildThemesMd();
+      const sitForSlides = appState.situations.find(s => (s.title || '').trim()) || appState.situations[0] || {};
       return [
         { path: 'index.html', content: buildSiteIndexHtml(title) },
+        { path: 'slides.html', content: tgxBuildSlidesHtml(sitForSlides, appState.cards) },
         { path: 'README.md', content: buildSiteReadme() },
         { path: 'assets/style.css', content: SITE_STYLE_CSS },
         { path: 'assets/viewer.js', content: SITE_VIEWER_JS },
