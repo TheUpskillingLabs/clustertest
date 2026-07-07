@@ -1,189 +1,99 @@
 # The Triangulator-inator
 
-A problem-framing instrument built on Kees Dorst's Frame Creation method. State your initial problem concept, load a pool of raw observations, sort them into signals and noise, triangulate the signals up a ladder of evidence to validate that concept, map the open condition underneath, and classify the evidence into Dorst's seven types. It maps the situation and surfaces its themes — the groundwork a frame stands on; framing itself comes later, in your own tools.
+An **evidence-first sensemaking canvas** built on a deliberate inversion of Kees Dorst's Frame Innovation method. Dorst starts with a client who hands you a problem. We start with **neither a client nor a problem** — only raw evidence from the field. You gather source extracts, sort signal from noise, triangulate the survivors up a ladder of evidence, and let the problem *emerge* — until you can name the **Problem Situation**, the **paradox** that keeps it stuck, and the **candidate problem owners** who could break it. Then you ship a ready-to-host site and slide deck to seed your Pod's repository for **Meet the Pods**.
 
-The whole sequence is a **loop, not a pipeline**: nothing is ever "done." As each step teaches you something, you circle back — revise the concept, add sources, re-sort, reconnect, re-map, re-classify.
+The whole sequence is a **loop, not a pipeline**: nothing is ever "done." As each step teaches you something, you circle back — add sources, re-sort, reconnect, re-map, re-deepen.
 
-Try it: **theupskillinglabs.github.io/triangles/**
+**Try it live: [theupskillinglabs.github.io/triangles](https://theupskillinglabs.github.io/triangles/)**
 
-An open-source project created for **The Upskilling Labs** by **Levy Strategic Design**.
-
----
-
-## What it does
-
-You start by naming your **initial problem concept** — the starting hunch you'll put to the test — then work an **observation pool** of raw material from the world (field notes, interview fragments, articles, statistics, policies, anecdotes), surface the real signals hiding inside, triangulate them into layered evidence that validates or challenges your concept, and climb until you can name the open condition underneath it all.
-
-The tool walks you through these stages (and you can revisit any of them at any time — it's a loop):
-
-1. **Name your initial concept** — before you load a single source, state the problem as you currently understand it. It's provisional: the evidence will push back on it, and you're expected to come back and revise it.
-
-2. **Sort the observations** — swipe through each observation card to classify it as **noise** (left), **signal** (right), or **★ super signal** (up). The binary forces intellectual commitment. Super signals mark what you consider most urgent or revelatory. Your sorting decisions become analytical data — the AI uses what you kept versus discarded to challenge your instincts.
-
-3. **Validate on the canvas** — drag surviving signals onto a web map and connect them up a ladder of cards. Connecting two of anything creates the next level: two **signals** → an **evidence card**; two evidence cards → a **pattern**; two patterns → a **theme**; two themes → a **super-theme**; and on up. Evidence cards stay **simple here — no type labels yet**: you're testing your concept, naming the claim each cluster makes. Nodes can have multiple parents: this is a **many-to-many lattice**, not a strict tree. A card at any level is locked for editing until every card it rests on is named and described — every claim must stand on examined ones.
-
-4. **Map the Problem Situation** — once every card is named and described and you've climbed to at least one theme, push forward and synthesize the whole ladder into a single **Problem Situation**: name it, describe it, map its stakeholders and themes, and pressure-test it. You're mapping and understanding the situation here — not yet framing it.
-
-5. **Classify the evidence** — only now do the seven evidence types appear, introduced **one at a time in Dorst's order** via a guided stepper. Tag each evidence card and see where your coverage is thin.
-
-6. **Artifact** — your mapped Problem Situation with its full evidence trail, ready to print or download as Markdown.
+Created for **The Upskilling Labs** by **Levy Strategic Design**. Open source under the [MIT License](LICENSE).
 
 ---
 
-## The ladder
+## Try it in 60 seconds
 
-| Level | What it is | Created by |
+There is no build step, no server, no install, and no account.
+
+1. Open **`index.html`** in any modern browser (double-click works — it runs from `file://`), or use the live URL above.
+2. On the Sources screen, click **Load 21 Civics & Elections source extracts** — real material from a field survey.
+3. Follow the bar at the bottom of the screen. It always shows your one next move.
+
+Everything auto-saves to your browser's `localStorage`. The app works fully offline after first load. **Nothing you enter ever leaves your browser.**
+
+## The journey
+
+A bottom **action bar** carries you through the whole arc — it always shows exactly one primary action for wherever you are, and if that action is locked, it tells you exactly what unblocks it. A dismissible corner **coach** explains *why* each step matters; the bar shows *what to click*.
+
+1. **Gather source extracts** (`Sources`) — load the sample, upload a CSV (`title,summary[,source_url]`), ✨ extract cards from an article or dataset with your own AI, or type one by hand. Go wide — include what might contradict you. **You do not name a problem first.** The problem comes into focus later, once the evidence has something to say.
+
+2. **Sort signal from noise** (`Sort`) — swipe each extract: **noise** (left / ←), **signal** (right / →), or **★ super signal** (up / ↑). Fast binary commitment is the point: where you hesitate is data about a belief you haven't earned.
+
+3. **Triangulate in Seed Mode** (`Validate`) — you start on a deliberately simple canvas: drag a glowing edge dot from one extract onto another (or use the **Link** tool in the dock) and two extracts pointing at the same condition become an **Evidence** card. Name the claim. Once you've kept a critical mass of extracts (~10), the tool *invites* you to name the problem concept taking shape — optional, dismissible, revisable.
+
+4. **Unlock Patterns & Themes** — Seed Mode holds hunches and evidence. One click (one-way) unlocks the full engine: Evidence climbs into **Patterns** (named mechanisms), Patterns into **Themes**, Themes toward the situation. Every card stays locked until the cards beneath it are named and described — each claim must stand on examined ones.
+
+5. **Map the Problem Situation** (`Map`) — with at least one named, described Theme, synthesize the ladder into a **Problem Situation**: an open, complex, networked condition — not yet a problem to solve.
+
+6. **Classify the evidence** (`Classify`) — Dorst's seven evidence types (history, counterfactual, problem, boundary, flux, player, value), introduced one at a time in Dorst's order. See where your coverage is thin.
+
+7. **Deepen** (`Deepen`) — a five-stage workbook that converges on the point of the whole exercise:
+   - **Stage 1** Solidify the situation · **Stage 2** Evidence landscape & research agenda · **Stage 3** Research access
+   - **Stage 4 — Context & field: map the players.** Inner circle first (the directly implicated — *candidate problem owners come from here*), then the wider field (where themes and status-quo beneficiaries live). Candidate owners are marked "(not yet approached)" until a real conversation has happened.
+   - **Stage 5 — Find the paradox(es).** The deadlock the field sustains: *"the situation demands X, but the same conditions that create the need prevent X from working."* Hold multiple candidate paradoxes, link each to who benefits from it persisting and to the evidence behind **both** legs of the contradiction, and pass the sharpness self-check — which is carried honestly into everything you export.
+
+8. **Produce the deck & site** — the terminal action. See "What comes out" below.
+
+## The method, in brief
+
+- **The ladder:** Source Extract (tier 0) → Evidence (1) → Pattern (2) → Theme (3) → Super-theme (4) and up. A many-to-many lattice, not a tree — nodes can have multiple parents.
+- **The inversion:** no client vouches for this problem, so the **evidence is the warrant**. Everywhere the paradox is asserted — deck, site, situation document — the tool attaches *how we know*: the extracts and themes it was read off.
+- **The five syndromes the locks head off** (Dorst): the Lone Warrior, Freeze the World, the Self-Made Box, the Rational High Ground, and Identification. Every gate you hit in the tool is one of these, prevented mechanically.
+- **The paradox is field-intrinsic** — a self-undoing structural contradiction verified by *who benefits from it persisting* (there's no stuck client to verify pain, so cui bono is the honesty gate).
+- **The problem owner is an output, not an input** — discovered in the Context ring of the field map, then approached. A candidate owner is a hypothesis until someone has actually talked to them.
+- **Honest deliverables:** the deck includes "What we're still testing" — open questions, ungrounded tensions, unclaimed sharpness. Meet the Pods presents a live inquiry, not performed completion.
+
+## What comes out
+
+Three exports, all reachable from the **Share / Export** sheet (and offered by the action bar when you're ready):
+
+| Export | When | Contents |
 |---|---|---|
-| **Observation** | Raw, unsorted material — the full pool you load at the start | Imported from CSV, sample data, or manual entry |
-| **Signal** | An observation that survived sorting — a pattern of action or behavior, not an opinion | Sorting right or up |
-| **Evidence** | An intermediate evidence card — created plain; you classify it into one of seven types *after* the situation is mapped | Connecting two signals |
-| **Pattern** | A specific, named mechanism that 2+ evidence cards triangulate toward | Connecting two evidence cards |
-| **Theme** | A deeper universal that 2+ patterns triangulate toward — bridging human experience and structural/systemic factors | Connecting two patterns |
-| **Super-theme / Mega-theme / …** | Higher convergences pointing toward a frame | Connecting two of the level below |
-| **Problem Situation** | The apex — an open, complex, dynamic condition synthesized on the next screen | Pushing once every card is named & described |
+| **Meet-the-Pods site & deck** (`.zip`) | Pod Mode, workspace complete, real title | 10 files: a GitHub-Pages-ready `index.html` (web map + themes + situation + extracts), `slides.html` (the Meet-the-Pods deck), `README.md`, `assets/` (viewer + styles), `data/project.jsonld` (semantic graph), `data/extracts.csv`, `data/site-data.js` (offline fallback), `content/situation.md`, `content/themes.md` |
+| **Working folder** (`.zip`) | Any mapped situation | `problem-situation.md`, `gap-analysis.md`, per-card folders (`card.json`, `notes.md`, `deepen.md`, `evidence.md`, attached sources), and **`state.json`** — a full re-importable board snapshot |
+| **Concept summary** (`.md`) | Seed Mode | Your provisional hunch + hunches with their supporting extracts |
 
-### The seven evidence types
+After any export, a **Git handoff** panel walks you through committing the folder into your Pod's shared repository. The **Open a shared folder** action (in the same sheet) imports a podmate's exported zip — merge or replace — which is how a whole Pod builds one map: export → commit → merge, and where Git finds a conflict, two people mapped the same thing differently and should talk. That conversation is the feature.
 
-The types are introduced only **after** you've mapped the situation, in a guided classify phase that walks them **one at a time in Kees Dorst's frame-creation order**: Archaeology first, then the paradox and its hard limits, then the wider field.
+## Your AI, not ours
 
-**Archaeology & Context** — excavating the problem's history, paradox, and hard limits:
+The tool contains **no AI**. Every ✨ **AI prompts** button copies a carefully-constructed prompt to your clipboard for you to run in *your own* model (Claude, ChatGPT, Gemini, NotebookLM, Perplexity…) and paste insights back. This is a governance decision, not a limitation: your data never leaves your browser, and the analytical judgment stays yours. The prompt library includes field analysis, sorting stress-tests, an adversarial **Blind-spot audit** (a hostile critic compiled from your entire canvas), situation lenses (paradoxes, frames, stakeholders, interviews, gap analysis), and per-card deepening prompts.
 
-| Type | Color | What it captures |
-|---|---|---|
-| **History** | Slate blue | What happened / what was done |
-| **Counterfactual** | Violet | The path not taken |
-| **Problem** | Orange | A bounded difficulty, solvable conventionally |
-| **Boundary** | Deep red | A "they will never…" nonnegotiable |
-| **Flux** | Amber | A point of movement or potential change |
+## Data & privacy
 
-**Field mapping** — mapping the wider field of players and values:
+- State lives in your browser's `localStorage` under the key `olos.sensemaking.v2` (older `v1` state auto-migrates; **saved boards are never broken by updates** — that's a hard invariant).
+- **Per-browser, per-device.** Your board does not sync anywhere by itself. Moving work between people or machines happens by export/import (see above).
+- Works offline. Makes no network requests with your data. "Self-destruct" on the Sources screen wipes local state.
 
-| Type | Color | What it captures |
-|---|---|---|
-| **Player** | Teal | A stakeholder, defined by practices & currency |
-| **Value** | Green | A deeper or universal value from the field |
+## For developers
 
-**Player** cards also have a **role**: Inner-circle (already involved), Wider-field (not yet involved but influential), or Owner/Client (could own this problem situation).
+- **One file.** The entire app — HTML, CSS, JS — is `index.html` (~10,300 lines, vanilla JS, no dependencies, no build). It must keep working when opened from `file://`.
+- **The additive invariant:** never break a saved board. New persisted fields must be optional and read with defaults; no migrations of existing state shapes beyond the established normalizer.
+- **Verification:** the project is tested by driving the real app headlessly with Playwright (state-machine walks, reachability sweeps, export round-trips, mobile viewport, old-state-blob loads — all against `file://` with a zero-JS-error gate). See [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Branches & PRs:** feature branches, PRs merged with merge commits. Pod Squad work uses `podsquad/<slug>` branches.
 
-The ✨ AI button on every evidence card generates a type-specific prompt grounded in Dorst's methodology — a thinking partner for classifying the evidence and naming the claim.
+## Documentation
 
----
-
-## Getting started
-
-Open `index.html` in any modern browser. No build step, no server, no dependencies — everything is in one file.
-
-1. Step through the short intro deck (or **Skip intro →**) and name your initial problem concept
-2. Load observations — use the 44 sample observations, upload a CSV, or add manually
-3. Click **Start Sorting** to enter the swipe-based sorting phase
-4. After sorting, the canvas opens with your surviving signals ready to triangulate and validate your concept
-
-Your session is saved automatically to `localStorage`, so you can close and reopen without losing work.
-
-### The guided tutorial
-
-First-time visitors are offered a **5-minute interactive tutorial** (also available any time via the **Tutorial** button). It runs on a self-contained worked example — *neighborhood food access* — completely sandboxed from your own data:
-
-1. **Sorting practice** — swipe three example observation cards (an opinion that's noise, an observed pattern that's a signal, and a reframing super signal), with an explanation after each swipe of *why* it sorts that way.
-2. **Canvas walkthrough** — eight pre-placed signals. You connect two into an evidence card, classify it using the two-phase type picker, and name the claim. (As a teaching simplification the tutorial classifies mid-canvas; in the real app the seven types are introduced only after you've mapped the situation.) The tutorial fast-forwards sibling cards, then you build a pattern, climb to a theme, and reach the Push gate.
-
-Along the way it teaches the Frame Creation reasoning behind each step: why binary sorting forces commitment, why two signals beat one anecdote, why patterns must name mechanisms, and why you map and understand before you solve. Exit at any step — nothing touches your workspace or saved state.
-
----
-
-## Sorting your observations
-
-The sorting screen is a pure gesture interface:
-
-| Action | How |
+| Doc | For |
 |---|---|
-| Keep as signal | Swipe right / press → |
-| Discard as noise | Swipe left / press ← |
-| Mark as super signal | Swipe up / press ↑ |
-| Undo last decision | Click "undo" or Ctrl+Z |
+| [docs/PODSQUAD-ONBOARDING.md](docs/PODSQUAD-ONBOARDING.md) | **Start here if you're a Poderator.** What this tool is for, how to run the loop, how to facilitate it, how to feed the build. |
+| [docs/SENSEMAKING-SPRINT.md](docs/SENSEMAKING-SPRINT.md) | The co-design brief for the first in-person sensemaking event — draft run-of-show + the open questions the Pod Squad owns. |
+| [docs/PRD-triangulator-finalization.md](docs/PRD-triangulator-finalization.md) | The product spec: cycle integration, seams to the OLOS platform, build order, design decisions. |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Repo conventions, how to run the drivers, how to propose changes. |
 
-- Cards show real-time feedback during drag — teal glow (right), desaturation (left), gold glow + lift (up)
-- Super signals get a gold starburst animation on release
-- Progress persists — you can close and resume mid-sort
-- A hint bar fades after your first swipe
+## Accessibility
 
----
-
-## Canvas interactions
-
-| Action | Desktop | Mobile / Touch |
-|---|---|---|
-| Move a node | Drag the card | Drag with one finger |
-| Pan the canvas | Drag background · Space + drag · Middle-mouse | Drag background with one finger |
-| Zoom | Scroll · Ctrl/Cmd + scroll · `+` / `−` keys | Pinch with two fingers |
-| Zoom out far | Scroll down (5%–250% range) | Pinch out |
-| Connect nodes | Hover card → drag from an edge dot to another card | Tap card → drag from an edge dot |
-| Fit all nodes | `0` key · click the `%` button | Tap `%` in zoom toolbar |
-| Delete a connection | Click the edge → press Delete | Tap the edge → Delete button |
-| Switch view state | Click tabs in the infobar | Same |
-| Hide header chrome | `↕` button in zoom toolbar | Same |
+WCAG-AA color contrast throughout; card types carry a shape channel in addition to color (colorblind-safe); keyboard paths for sorting (arrow keys) and canvas work; 44pt touch targets and bottom-sheet modals on mobile; `prefers-reduced-motion` respected.
 
 ---
 
-## Building the ladder
-
-1. Hover any signal card to reveal **dots** on its edges.
-2. Drag from a dot to another signal — a plain **evidence card** appears at the midpoint. The signals stay where you placed them; connecting never reshuffles your layout.
-3. Drag more signals onto the card to grow it. Evidence cards stay **simple while you validate** — name the claim the cluster makes against your concept. The seven evidence types are introduced later, in the classify phase that follows mapping the situation.
-4. **Name and describe the card** — higher-tier cards are locked until every card they rest on is named and described. Every claim must stand on examined ones.
-5. Connect two evidence cards to create a **Pattern**, two patterns to create a **Theme**, and so on. You always build one level at a time.
-6. **Theme** cards show quality-check prompts:
-   - *Bridge test:* Does this describe both a structural condition AND a human experience?
-   - *Depth test:* Is this hidden beneath the surface of everyday professional life?
-7. Nodes are color-coded by tier (and, once classified, evidence cards by type).
-
-### Levels view
-
-The tab bar at the top of the canvas lets you switch between **All**, **Signals**, and one tab per level that exists (Evidence, Pattern, Theme, …). **All** shows everything; each level view highlights its cards and fades the rest.
-
-### AI prompts
-
-The **✨ See the whole pool** button generates a prompt grounded in Dorst's methodology. If you've sorted, it partitions your observations by sorting decision and asks what your instincts reveal.
-
-Every card has a **✨ AI** button. Prompts are level- and type-aware — an unclassified evidence card gets a "which of the seven types is this?" prompt; a classified History card gets an excavation prompt; a theme gets a bridge-the-domains prompt.
-
----
-
-## Map the Problem Situation
-
-Once every card on the board is named and described — and the ladder has climbed to **at least one named and described theme** — the **Commit** button maps the ladder into a single **Problem Situation** box on the canvas, then drops you into the **classify phase**: the seven evidence types are introduced one at a time, in Dorst's order, and you tag each evidence card. Classification is encouraged but skippable, and you can re-enter it anytime. From there the synthesis screen lets you:
-
-- **Name & describe** the open condition and why it's open, not bounded
-- **Take stock of the evidence landscape** — which of the seven types you have, and the research gaps
-- **Map who you still need to reach** and the access barriers
-- **Find the paradox** — the structural deadlock, who benefits from the status quo, and a pressure-test of your own thinking
-
-You're mapping and understanding the situation here — not yet framing it. Each section has an AI prompt to take to your own AI tool — think with it, then come back and write in your own words. Once the core sections are complete, you can submit.
-
----
-
-## Exporting
-
-From the Artifact screen:
-
-- **Print / Save PDF** — browser print dialog
-- **Download Markdown** — `.md` file with your full submission
-
----
-
-## Technical notes
-
-- Single HTML file — all CSS and JavaScript are inline
-- No frameworks or build tools
-- State persists to `localStorage` (key: `olos.sensemaking.v2`)
-- Unified tiered data model: a single `cards[]` array where each card has a `tier` (1 = evidence … up) and a `childIds` array; the Problem Situation is one synthesized object
-- Older state shapes (clusters, and the cards/themes/situations lattice) are auto-migrated on load
-- Seven evidence types organized into two analytical phases (Archaeology & Context; Field mapping) with per-type SVG glyphs and Dorst-grounded AI prompts
-- Design tokens: all tier colors (`--tier-1`…`--tier-6`), evidence-type colors (`--type-history` … `--type-problem`), the type scale with paired baseline-grid leading (`--text-*`/`--lead-*`, 8px baseline), spacing (`--space-*`), radii, rules, and shadows live in the `:root` block of `index.html`; JavaScript resolves colors from CSS at startup (`cssToken()`), so the canvas, dock, and cards can never disagree
-- One tier-glyph language (dot → dashed circle → triangle → square → four-point star for Signal → Evidence → Pattern → Theme → Super-theme) shared by the bottom dock and card tags
-- Hub locking: a card is locked for editing until every card it rests on is named and described; unlocks live as you type
-- WCAG-AA contrast maintained across all evidence type color treatments; redundant shape channel (per-type glyph) for colorblind accessibility
-- Per-screen onboarding tours with spotlight engine
-- Sandboxed interactive tutorial: app state is swapped in-memory for example data, persistence is suspended, and steps advance on real user actions
-- Works offline after first load
-- Tested on Chrome, Safari, Firefox — desktop and mobile
+**The Upskilling Labs** · Washington, DC · built in the open.
