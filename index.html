@@ -2710,7 +2710,7 @@
         <button class="btn btn-outline" onclick="enterClassifyPhase()" title="Re-open the evidence type classification on the board">↩ Revisit classification</button>
         <h2 id="workspace-title">Build the case</h2>
       </div>
-      <p class="workspace-intro">Work through the four stages in order: solidify the situation, take honest stock of your evidence, name who you still need to reach, then find the paradox at the core.</p>
+      <p class="workspace-intro">Work through the five stages in order: solidify the situation, take honest stock of your evidence, name who you still need to reach, map the context and the field — then converge on the paradox(es). The paradox is what everything else was for: the self-undoing deadlock your pod forms around.</p>
     </div>
     <nav class="workspace-jump-bar" id="workspace-jump-bar" aria-label="Jump to a committed cluster"></nav>
     <div class="workspace-cards" id="workspace-cards-container"></div>
@@ -2811,7 +2811,7 @@
           <li><strong>Connect the dots.</strong> Drag two related source extracts together to link them — two pointing at the same condition make an <strong>Evidence</strong> card.</li>
           <li><strong>Graduate to Pod Mode.</strong> You start in <strong>Seed Mode</strong> (building hunches &amp; evidence). When you're ready to build <strong>Patterns &amp; Themes</strong>, hit <strong>▲ Graduate</strong> in the green bar above the canvas — it's one-way, and it unlocks the full ladder.</li>
           <li><strong>Climb &amp; name.</strong> Link Evidence into a <strong>Pattern</strong> (a named mechanism), Patterns into a <strong>Theme</strong>. Every card stays locked until the ones below it are named &amp; described.</li>
-          <li><strong>Commit &amp; map.</strong> Once you have a named, described Theme, hit <strong>Commit</strong> to synthesize the Problem Situation — then deepen it and produce your <strong>Meet-the-Pods</strong> deck &amp; site.</li>
+          <li><strong>Commit &amp; converge.</strong> Once you have a named, described Theme, hit <strong>Commit</strong> to synthesize the Problem Situation — map the players, find the <strong>paradox</strong> the pod forms around, then produce your <strong>Meet-the-Pods</strong> deck &amp; site.</li>
         </ol>
         <p class="intro-hint">The bar above the canvas shows which mode you're in and how close you are.</p>
         <div class="modal-actions">
@@ -2847,6 +2847,27 @@
     .owner-cand { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-muted); white-space: nowrap; cursor: pointer; }
     .owner-cand input { accent-color: var(--primary-teal); }
     .owner-del { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 15px; line-height: 1; padding: 4px 8px; border-radius: var(--radius-1); }
+    .owner-ring-label { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin: 8px 0 2px; }
+    .owner-ring-hint { flex-basis: 100%; margin: 2px 0 0; font-size: var(--text-xs); color: #b26a00; }
+    .owner-approached { color: var(--primary-teal); }
+    .sharpness-check { margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--cloud); border-radius: var(--radius-2); background: rgba(0,148,160,0.04); }
+    .sharpness-title { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--primary-teal); margin-bottom: 6px; }
+    .sharpness-item { display: flex; align-items: flex-start; gap: 7px; font-size: var(--text-sm); color: var(--midnight); margin: 4px 0; cursor: pointer; }
+    .sharpness-item input { accent-color: var(--primary-teal); margin-top: 3px; flex-shrink: 0; }
+    .paradox-row { flex-direction: column; align-items: stretch; }
+    .paradox-row-top { display: flex; gap: 8px; align-items: flex-start; }
+    .paradox-row .paradox-text { flex: 1; min-height: 44px; font-family: 'Geologica', sans-serif; font-size: var(--text-sm); padding: 8px 10px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: var(--ghost-white); color: var(--midnight); resize: vertical; }
+    .paradox-row .paradox-text:focus { outline: none; border-color: var(--primary-teal); }
+    .paradox-row-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+    .paradox-row .paradox-benef { flex: 2 1 220px; }
+    .paradox-row .paradox-actor { flex: 1 1 200px; }
+    .paradox-evi { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .paradox-grounding { font-size: var(--text-xs); font-weight: 700; }
+    .paradox-grounding.is-grounded { color: var(--primary-teal); }
+    .paradox-grounding.is-ungrounded { color: #b26a00; }
+    .evi-chip { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-xs); background: rgba(0,148,160,0.09); color: var(--midnight); border: 1px solid rgba(0,148,160,0.25); border-radius: 999px; padding: 2px 8px; }
+    .evi-chip button { background: none; border: none; cursor: pointer; color: #c0392b; font-size: 12px; padding: 0 2px; line-height: 1; }
+    .evi-add { font-size: var(--text-xs); padding: 4px 6px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: var(--ghost-white); color: var(--text-muted); max-width: 240px; }
     .owner-del:hover { background: rgba(192,57,43,0.08); }
     .owner-empty { font-size: var(--text-sm); color: var(--text-muted); font-style: italic; margin: 0; }
   </style>
@@ -7364,7 +7385,8 @@ ${AI_RULES}
       currentAIHubId = null;
       currentPoolMode = null;
       currentSituationId = sitId;
-      currentAIMode = SITUATION_PROMPT_KINDS[kind] ? kind : 'frame';
+      // Default lens is the paradox — the telos the whole ladder converges on.
+      currentAIMode = SITUATION_PROMPT_KINDS[kind] ? kind : 'paradox';
 
       const titleEl = document.getElementById('ai-modal-title');
       const blurb = document.getElementById('ai-modal-blurb');
@@ -7478,6 +7500,33 @@ ${AI_RULES}
     }
 
     const SITUATION_PROMPT_KINDS = {
+      paradox: {
+        label: 'Paradoxes',
+        blurb: 'Find the 2–3 deepest field-intrinsic structural contradictions — where the conditions creating a need are the same ones preventing it being met — with evidence for both legs, who benefits, and who could own breaking it.',
+        task: 'Help me find the PARADOX(ES) in this situation. We did not start with a client or a stated problem — only field evidence — so each paradox must be FIELD-INTRINSIC: a structural contradiction where the conditions that create a need are the same conditions that prevent it being met. A self-perpetuating deadlock the field sustains regardless of anyone\'s intent.',
+        thinking: [
+          'Read the full evidence trail. List every place where a demand and its own preconditions collide.',
+          'For each collision, test the shape: "the situation demands X, but the same conditions that create the need prevent X from working." If the fix does not undo itself, it is a tension, not a paradox — set it aside.',
+          'For each surviving paradox, follow the incentives: who benefits from it persisting? A paradox with no beneficiary is usually a misreading. Beneficiaries are often wider-field actors.',
+          'Cross-reference the field actors: which INNER-CIRCLE actor is trapped by the deadlock but positioned to act — the candidate owner of breaking it?',
+          'For each paradox, cite the specific cards/extracts that evidence EACH leg — the demand and the prevention. An unevidenced leg is a research task, not a finding.'
+        ],
+        output: `## Candidate paradoxes (2–3)
+For each:
+**The paradox:** "The situation demands [X], but the same conditions that create the need prevent [X] from working, because [mechanism]."
+**Evidence — the demand:** cards/extracts by name.
+**Evidence — the prevention:** cards/extracts by name.
+**Who benefits from it persisting:** actors and mechanisms (often wider-field).
+**Who could own breaking it:** the inner-circle actor trapped by the deadlock but positioned to act.
+**Sharpness verdict:** self-undoing paradox, or mere tension — say which and why.
+
+## The sharpest one
+Which single paradox should the pod form around, and what evidence would change your mind.
+
+## What's ungrounded
+Any leg you could NOT evidence from the trail — named as a research task.`,
+        modeRule: 'A paradox must be self-undoing (X requires not-X) and must name who benefits from its persistence. Do NOT accept "this is complicated" or a mere trade-off. Do NOT propose solutions or frames.'
+      },
       frame: {
         label: 'Frame',
         blurb: 'Articulate a frame: "if this situation is approached as if it is X, then Y follows." Frames are metaphors from other domains, not restatements.',
@@ -7642,6 +7691,8 @@ What the research demands that the user doesn't currently have access to: specif
         `Description: ${s.description || '(none yet)'}`,
         s.openness ? `Why it's open, not bounded: ${s.openness}` : null,
         s.problematization ? `Problematization so far: ${s.problematization}` : null,
+        s.paradox ? `Working paradox so far: ${s.paradox}` : null,
+        s.statusQuoBeneficiaries ? `Status-quo beneficiaries noted: ${s.statusQuoBeneficiaries}` : null,
         s.frame ? `Current frame: ${s.frame}` : null,
         s.stakeholderMap ? `Stakeholder notes: ${s.stakeholderMap}` : null
       ].filter(Boolean).join('\n');
@@ -7675,6 +7726,25 @@ ${inventory}
 ${epistemics}
 </epistemics>
 `;
+      }
+      // The paradox hunt reads the mapped players (Context ring first — that's
+      // where the owner of breaking a deadlock comes from) and any candidate
+      // paradoxes the pod is already holding.
+      if (kind === 'paradox') {
+        const actors = (Array.isArray(s.fieldActors) ? s.fieldActors : []).filter(a => (a.name || '').trim());
+        const actorLines = actors.map(a => `- ${a.name.trim()} (${OWNER_ROLE_LABEL[a.role] || 'Wider field'}${a.candidateOwner ? '; marked candidate owner' : ''})${(a.note || '').trim() ? ' — ' + a.note.trim() : ''}`).join('\n')
+          || '(no players mapped yet — suggest who the inner circle likely is, based on which actors the extracts keep naming)';
+        const held = (Array.isArray(s.paradoxes) ? s.paradoxes : []).filter(p => (p.text || '').trim())
+          .map(p => `- ${p.text.trim()}${(p.beneficiary || '').trim() ? ` (benefits: ${p.beneficiary.trim()})` : ''}`).join('\n');
+        extraBlocks = `
+<field_actors>
+${actorLines}
+</field_actors>
+${held ? `
+<candidate_paradoxes_already_held>
+${held}
+</candidate_paradoxes_already_held>
+` : ''}`;
       }
 
       return `<role>
@@ -8290,24 +8360,36 @@ Interrogate this map. Work through each point and answer concretely, naming spec
         </section>
 
         <section class="workspace-section">
-          <div class="ws-stage-label">Stage 4 — The paradox</div>
-          <label for="sit-paradox-${n}">What makes this situation hard to resolve?</label>
-          <p class="field-hint">In Dorst's terms, the paradox is the deadlock — the reason conventional approaches keep failing. It's not 'this is complicated.' It's the specific structural tension that traps everyone. Name it: 'The situation demands X, but the same conditions that create the need also prevent X from working.'</p>
-          <textarea id="sit-paradox-${n}" placeholder="The situation demands ___, but the same conditions that create the need also prevent ___ from working." oninput="updateSituationField('${s.id}', 'paradox', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.paradox || '')}</textarea>
-          <label for="sit-status-${n}" style="margin-top:12px;">Who benefits from the status quo?</label>
-          <p class="field-hint">If this situation persists indefinitely, who wins? Follow the incentives — name actors and mechanisms.</p>
-          <textarea id="sit-status-${n}" placeholder="Actor: ___. Mechanism: ___." oninput="updateSituationField('${s.id}', 'statusQuoBeneficiaries', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.statusQuoBeneficiaries || '')}</textarea>
-          <label for="sit-problem-${n}" style="margin-top:12px;">Pressure-test your framing</label>
-          <p class="field-hint">What are you assuming? What would break this framing if it turned out to be wrong? What have you chosen not to see?</p>
-          <textarea id="sit-problem-${n}" placeholder="What's assumed, what would break this, what you've chosen not to see. Your words." oninput="updateSituationField('${s.id}', 'problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
+          <div class="ws-stage-label">Stage 4 — Context &amp; field: map the players</div>
+          <label>Two moves: the inner circle first, then widen to the field.</label>
+          <p class="field-hint">Ours is a modified Frame Innovation: no client handed you a problem, so you <em>discover</em> the problem owner. Move one — the <strong>Context</strong>: who is directly implicated (deciding, blocking, gatekeeping, suffering alongside)? These are the actors your extracts keep naming. Move two — the <strong>wider field</strong>: the broader network of practices and values around them, where fresh frames and status-quo beneficiaries usually live. <strong>Candidate owners come from the inner circle</strong> — a candidate owner (1) holds the paradox in their world, (2) has the mandate or reach to act, and (3) gains from the value your frame creates.</p>
+          <div id="owner-rows-${s.id}" class="owner-rows">${tgxOwnerRowsHtml(s)}</div>
+          <button type="button" class="btn btn-outline" style="margin-top:10px;" onclick="tgxOwnerAdd('${s.id}')">+ Add a player</button>
         </section>
 
         <section class="workspace-section">
-          <div class="ws-stage-label">Stage 5 — Field map &amp; candidate owners</div>
-          <label>Who could own this? Map the field, then mark candidate problem owners.</label>
-          <p class="field-hint">Ours is a modified Frame Innovation: you <em>discover</em> the problem owner through the field — you don't start with one. A candidate owner (1) holds the paradox in their world, (2) has the mandate or reach to act, and (3) gains from the value your frame creates.</p>
-          <div id="owner-rows-${s.id}" class="owner-rows">${tgxOwnerRowsHtml(s)}</div>
-          <button type="button" class="btn btn-outline" style="margin-top:10px;" onclick="tgxOwnerAdd('${s.id}')">+ Add a field actor</button>
+          <div class="ws-stage-label">Stage 5 — Find the paradox(es)</div>
+          <label for="sit-paradox-${n}">Name the deadlock the field sustains</label>
+          <p class="field-hint">Everything you mapped — the themes, the context, the field — was in service of this. With no client to vouch for the pain, our paradox must live in the field itself: 'The situation demands X, but the same conditions that create the need also prevent X from working.' It's not 'this is complicated' — it's the self-undoing structural tension the pod forms around. Name it, and name who keeps it alive.</p>
+          <textarea id="sit-paradox-${n}" placeholder="The situation demands ___, but the same conditions that create the need also prevent ___ from working." oninput="updateSituationField('${s.id}', 'paradox', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.paradox || '')}</textarea>
+          ${tgxSharpnessHtml(s)}
+          <label for="sit-status-${n}" style="margin-top:12px;">Who benefits from the status quo?</label>
+          <p class="field-hint">If this situation persists indefinitely, who wins? Follow the incentives — name actors and mechanisms. A paradox nobody profits from is usually a misreading; the beneficiaries often sit in the wider field you just mapped.</p>
+          <textarea id="sit-status-${n}" placeholder="Actor: ___. Mechanism: ___." oninput="updateSituationField('${s.id}', 'statusQuoBeneficiaries', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.statusQuoBeneficiaries || '')}</textarea>
+          <label style="margin-top:16px;">Other candidate paradoxes the pod is holding</label>
+          <p class="field-hint">Sharp paradoxes are rare — hold several candidates and let the evidence decide which one the pod forms around. Link each to who benefits from it persisting and to the inner-circle player who could own breaking it.</p>
+          <div id="paradox-rows-${s.id}" class="owner-rows">${tgxParadoxRowsHtml(s)}</div>
+          <button type="button" class="btn btn-outline" style="margin-top:10px;" onclick="tgxParadoxAdd('${s.id}')">+ Add a candidate paradox</button>
+          <div class="prompt-cta" style="margin-top:16px;">
+            <div class="prompt-cta-header">
+              <div class="prompt-cta-label">✨ Find the tensions</div>
+              <button class="btn btn-primary" onclick="openSituationAIModal('${s.id}','paradox')">Open the prompt</button>
+            </div>
+            <p class="copy-hint" style="margin-top:6px;">A copy-paste prompt for your own AI: it reads your evidence trail and players, names the 2–3 deepest structural contradictions, cites the cards behind <em>both</em> legs of each, and says who benefits from each persisting.</p>
+          </div>
+          <label for="sit-problem-${n}" style="margin-top:12px;">Pressure-test your framing</label>
+          <p class="field-hint">What are you assuming? What would break this framing if it turned out to be wrong? What have you chosen not to see?</p>
+          <textarea id="sit-problem-${n}" placeholder="What's assumed, what would break this, what you've chosen not to see. Your words." oninput="updateSituationField('${s.id}', 'problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
         </section>
       `;
 
@@ -8335,25 +8417,47 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       scheduleSave();
     }
 
-    // ── A4: Field map & candidate problem owners ─────────────────────────
-    // Modified Frame Innovation: the pod DISCOVERS a problem owner via the
-    // field rather than starting with one. An additive, optional array on the
-    // situation (sit.fieldActors) — absent on old states, read-guarded
-    // everywhere, never touched by the SIT_FIELDS string-normalizer, so it
-    // needs zero migration.
+    // ── A4: Context & field map + candidate problem owners ──────────────
+    // Modified Frame Innovation: no client handed us a problem, so the pod
+    // DISCOVERS a problem owner. Dorst maps the Context (inner circle of
+    // directly-implicated players) FIRST, then widens to the Field — and the
+    // candidate owner comes from the inner circle, while the wider field is
+    // where themes and status-quo beneficiaries usually sit. An additive,
+    // optional array on the situation (sit.fieldActors) — absent on old
+    // states, read-guarded everywhere, never touched by the SIT_FIELDS
+    // string-normalizer, so it needs zero migration.
     const OWNER_ROLE_LABEL = { inner: 'Inner circle', wider: 'Wider field', owner: 'Owner / client' };
-    function tgxOwnerEnsure(s) { if (!Array.isArray(s.fieldActors)) s.fieldActors = []; return s.fieldActors; }
+    // Context ring sorts before the wider field (inner + confirmed owner = Context).
+    const OWNER_RING_ORDER = { inner: 0, owner: 0, wider: 1 };
+    function tgxOwnerEnsure(s) {
+      if (!Array.isArray(s.fieldActors)) s.fieldActors = [];
+      // Lazily assign stable ids (older states predate them): paradox rows
+      // reference actors by id, which must survive removes and Git merges.
+      s.fieldActors.forEach(a => { if (!a.id) a.id = uid('actor'); });
+      return s.fieldActors;
+    }
     function tgxOwnerRowsHtml(s) {
-      const list = Array.isArray(s.fieldActors) ? s.fieldActors : [];
-      if (!list.length) return '<p class="owner-empty">No field actors yet. Add the players you\'ve mapped — then mark who could own this.</p>';
-      const roleOpts = (sel) => ['inner', 'wider', 'owner'].map(r => '<option value="' + r + '"' + ((sel || 'wider') === r ? ' selected' : '') + '>' + OWNER_ROLE_LABEL[r] + '</option>').join('');
-      return list.map((a, i) => '<div class="owner-row">'
+      const list = tgxOwnerEnsure(s);
+      if (!list.length) return '<p class="owner-empty">No players yet. Start with the inner circle — who is directly implicated — then widen to the field.</p>';
+      const roleOpts = (sel) => ['inner', 'wider', 'owner'].map(r => '<option value="' + r + '"' + ((sel || 'inner') === r ? ' selected' : '') + '>' + OWNER_ROLE_LABEL[r] + '</option>').join('');
+      // Rows carry their TRUE array index (grouped display order ≠ array
+      // order) so updates and removes always hit the right actor.
+      const rowHtml = (a, i) => '<div class="owner-row">'
         + '<input class="owner-name" type="text" placeholder="Name / role" value="' + escapeHtml(a.name || '') + '" oninput="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'name\',this.value)">'
         + '<select class="owner-role" onchange="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'role\',this.value)">' + roleOpts(a.role) + '</select>'
         + '<input class="owner-note" type="text" placeholder="Practices &amp; the currency they trade in" value="' + escapeHtml(a.note || '') + '" oninput="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'note\',this.value)">'
         + '<label class="owner-cand"><input type="checkbox"' + (a.candidateOwner ? ' checked' : '') + ' onchange="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'candidateOwner\',this.checked)"> candidate owner</label>'
+        + (a.candidateOwner ? '<label class="owner-cand owner-approached"><input type="checkbox"' + (a.approached ? ' checked' : '') + ' onchange="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'approached\',this.checked)"> we\'ve talked to them</label>' : '')
         + '<button type="button" class="owner-del" title="Remove" onclick="tgxOwnerRemove(\'' + s.id + '\',' + i + ')">✕</button>'
-        + '</div>').join('');
+        + (a.candidateOwner && (a.role || 'inner') === 'wider' ? '<p class="owner-ring-hint">Owners usually come from the inner circle — is this player directly implicated, or informing from the field?</p>' : '')
+        + '</div>';
+      const idx = list.map((a, i) => i);
+      const ctx = idx.filter(i => (OWNER_RING_ORDER[list[i].role || 'inner'] || 0) === 0);
+      const wide = idx.filter(i => (OWNER_RING_ORDER[list[i].role || 'inner'] || 0) === 1);
+      let out = '';
+      if (ctx.length) out += '<div class="owner-ring-label">Context — the inner circle (owners come from here)</div>' + ctx.map(i => rowHtml(list[i], i)).join('');
+      if (wide.length) out += '<div class="owner-ring-label">The wider field (themes &amp; beneficiaries live here)</div>' + wide.map(i => rowHtml(list[i], i)).join('');
+      return out;
     }
     function tgxOwnerRerender(sitId) {
       const el = document.getElementById('owner-rows-' + sitId);
@@ -8362,28 +8466,196 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     }
     function tgxOwnerAdd(sitId) {
       const s = findSituation(sitId); if (!s) return;
-      tgxOwnerEnsure(s).push({ name: '', role: 'wider', note: '', candidateOwner: false });
+      // New actors start in the Context ring — map the inside players first.
+      tgxOwnerEnsure(s).push({ id: uid('actor'), name: '', role: 'inner', note: '', candidateOwner: false, approached: false });
       scheduleSave(); tgxOwnerRerender(sitId);
     }
     function tgxOwnerRemove(sitId, i) {
       const s = findSituation(sitId); if (!s || !Array.isArray(s.fieldActors)) return;
       s.fieldActors.splice(i, 1); scheduleSave(); tgxOwnerRerender(sitId);
+      tgxParadoxRerender(sitId); // actor pickers in paradox rows must refresh
     }
     function tgxOwnerUpdate(sitId, i, key, val) {
       const s = findSituation(sitId); if (!s) return;
       const list = tgxOwnerEnsure(s); if (!list[i]) return;
       list[i][key] = val; scheduleSave();
+      // Ring grouping / candidate-owner affordances change the row's chrome;
+      // text inputs must NOT rerender (typing would lose focus).
+      if (key === 'role' || key === 'candidateOwner') { tgxOwnerRerender(sitId); tgxParadoxRerender(sitId); }
     }
     function tgxOwnerDocBlock(s) {
       const list = Array.isArray(s.fieldActors) ? s.fieldActors.filter(a => (a.name || '').trim()) : [];
-      if (!list.length) return '(field not yet mapped — add the players and mark who could own this)';
+      if (!list.length) return '(field not yet mapped — start with the inner circle, then widen, and mark who could own this)';
       let out = list.map(a => '- **' + a.name.trim() + '** _(' + (OWNER_ROLE_LABEL[a.role] || 'Wider field') + ')_'
-        + (a.candidateOwner ? ' — ★ candidate problem owner' : '')
+        + (a.candidateOwner ? ' — ★ candidate problem owner' + (a.approached ? '' : ' (not yet approached)') : '')
         + ((a.note || '').trim() ? ' — ' + a.note.trim() : '')).join('\n');
       const cands = list.filter(a => a.candidateOwner);
-      if (cands.length) out += '\n\n**Candidate problem owners:** ' + cands.map(a => a.name.trim()).join(', ')
-        + '. A resolution needs at least one owner who holds the paradox, has the mandate to act, and gains from the value the frame creates.';
+      if (cands.length) out += '\n\n**Candidate problem owners:** ' + cands.map(a => a.name.trim() + (a.approached ? '' : ' (not yet approached)')).join(', ')
+        + '. A resolution needs at least one owner who holds the paradox, has the mandate to act, and gains from the value the frame creates. Until a real conversation has happened, a candidate owner is a hypothesis — not a commitment.';
       return out;
+    }
+
+    // ── Candidate paradoxes + sharpness self-check ───────────────────────
+    // The tool's telos: a FIELD-INTRINSIC paradox — no client vouches for the
+    // pain, so a paradox is only real if it is load-bearing (someone benefits
+    // from it persisting) and both of its legs are evidenced. sit.paradoxes[]
+    // holds additional candidates beyond the primary sit.paradox; each row
+    // { id, text, beneficiary, actorId, evidenceIds[] } links who benefits and
+    // which field actor could own breaking it. Additive + read-guarded like
+    // fieldActors; never in SIT_FIELDS; id-keyed so podmates' Git branches
+    // merge without collisions (the anti-Lone-Warrior shape).
+    function tgxParadoxEnsure(s) {
+      if (!Array.isArray(s.paradoxes)) s.paradoxes = [];
+      s.paradoxes.forEach(p => {
+        if (!p.id) p.id = uid('pdx');
+        if (!Array.isArray(p.evidenceIds)) p.evidenceIds = [];
+      });
+      return s.paradoxes;
+    }
+    function tgxParadoxFind(s, pid) { return tgxParadoxEnsure(s).find(p => p.id === pid) || null; }
+    // What a paradox may cite: named cards in this situation's subtree + kept
+    // (signal) source extracts. Verifying structure, not meaning — a paradox
+    // that can't cite both legs is visibly a hunch.
+    function tgxParadoxEvidencePool(s) {
+      const cards = situationCards(s).filter(c => (c.title || '').trim()).sort((a, b) => b.tier - a.tier)
+        .map(c => ({ id: c.id, label: tierName(c.tier) + ': ' + c.title.trim() }));
+      const kept = appState.items.filter(it => appState.sorting.decisions[it.id] === 'signal')
+        .map(it => ({ id: it.id, label: 'Extract: ' + (it.title || 'Untitled') }));
+      return cards.concat(kept);
+    }
+    function tgxParadoxEvidenceLabel(id) {
+      const c = findCard(id);
+      if (c) return tierName(c.tier) + ': ' + (c.title || 'Untitled');
+      const it = appState.items.find(x => x.id === id);
+      return it ? (it.title || 'Untitled') : id;
+    }
+    function tgxParadoxRowsHtml(s) {
+      const list = tgxParadoxEnsure(s);
+      if (!list.length) return '<p class="owner-empty">No candidate paradoxes yet. Sharp ones are rare — hold several and let the evidence decide which one the pod forms around.</p>';
+      // Inner-circle actors first: the owner of breaking a deadlock comes from
+      // the Context ring.
+      const actors = tgxOwnerEnsure(s).filter(a => (a.name || '').trim())
+        .slice().sort((a, b) => (OWNER_RING_ORDER[a.role || 'inner'] || 0) - (OWNER_RING_ORDER[b.role || 'inner'] || 0));
+      return list.map(p => {
+        const pool = tgxParadoxEvidencePool(s).filter(e => !p.evidenceIds.includes(e.id));
+        const chips = p.evidenceIds.map(id => '<span class="evi-chip">' + escapeHtml(tgxParadoxEvidenceLabel(id))
+          + '<button type="button" title="Unlink" onclick="tgxParadoxEvidenceRemove(\'' + s.id + '\',\'' + p.id + '\',\'' + id + '\')">✕</button></span>').join('');
+        const actorOpts = '<option value="">— who could own breaking it? —</option>' + actors.map(a =>
+          '<option value="' + a.id + '"' + (p.actorId === a.id ? ' selected' : '') + '>' + escapeHtml(a.name.trim()) + ' (' + (OWNER_ROLE_LABEL[a.role] || 'Wider field') + ')</option>').join('');
+        const grounded = p.evidenceIds.length > 0;
+        return '<div class="owner-row paradox-row">'
+          + '<div class="paradox-row-top">'
+          + '<textarea class="paradox-text" placeholder="The field demands ___, but the same conditions that create the need prevent ___ from working." oninput="tgxParadoxUpdate(\'' + s.id + '\',\'' + p.id + '\',\'text\',this.value)">' + escapeHtml(p.text || '') + '</textarea>'
+          + '<button type="button" class="owner-del" title="Remove" onclick="tgxParadoxRemove(\'' + s.id + '\',\'' + p.id + '\')">✕</button>'
+          + '</div>'
+          + '<div class="paradox-row-meta">'
+          + '<input class="owner-note paradox-benef" type="text" placeholder="Who benefits from this persisting? (actor + mechanism)" value="' + escapeHtml(p.beneficiary || '') + '" oninput="tgxParadoxUpdate(\'' + s.id + '\',\'' + p.id + '\',\'beneficiary\',this.value)">'
+          + '<select class="owner-role paradox-actor" onchange="tgxParadoxUpdate(\'' + s.id + '\',\'' + p.id + '\',\'actorId\',this.value)">' + actorOpts + '</select>'
+          + '</div>'
+          + '<div class="paradox-evi">'
+          + '<span class="paradox-grounding ' + (grounded ? 'is-grounded' : 'is-ungrounded') + '">' + (grounded ? 'Grounded in ' + p.evidenceIds.length + ' card' + (p.evidenceIds.length === 1 ? '' : 's') : 'Not yet evidenced') + '</span>'
+          + chips
+          + (pool.length ? '<select class="evi-add" onchange="if(this.value){tgxParadoxEvidenceAdd(\'' + s.id + '\',\'' + p.id + '\',this.value);}"><option value="">+ link evidence (both legs)…</option>' + pool.map(e => '<option value="' + e.id + '">' + escapeHtml(e.label) + '</option>').join('') + '</select>' : '')
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+    function tgxParadoxRerender(sitId) {
+      const el = document.getElementById('paradox-rows-' + sitId);
+      const s = findSituation(sitId);
+      if (el && s) el.innerHTML = tgxParadoxRowsHtml(s);
+    }
+    function tgxParadoxAdd(sitId) {
+      const s = findSituation(sitId); if (!s) return;
+      tgxParadoxEnsure(s).push({ id: uid('pdx'), text: '', beneficiary: '', actorId: '', evidenceIds: [] });
+      scheduleSave(); tgxParadoxRerender(sitId);
+    }
+    function tgxParadoxRemove(sitId, pid) {
+      const s = findSituation(sitId); if (!s || !Array.isArray(s.paradoxes)) return;
+      s.paradoxes = s.paradoxes.filter(p => p.id !== pid);
+      scheduleSave(); tgxParadoxRerender(sitId);
+    }
+    function tgxParadoxUpdate(sitId, pid, key, val) {
+      const s = findSituation(sitId); const p = s && tgxParadoxFind(s, pid); if (!p) return;
+      p[key] = val; scheduleSave();
+    }
+    function tgxParadoxEvidenceAdd(sitId, pid, evId) {
+      const s = findSituation(sitId); const p = s && tgxParadoxFind(s, pid); if (!p || !evId) return;
+      if (!p.evidenceIds.includes(evId)) p.evidenceIds.push(evId);
+      scheduleSave(); tgxParadoxRerender(sitId);
+    }
+    function tgxParadoxEvidenceRemove(sitId, pid, evId) {
+      const s = findSituation(sitId); const p = s && tgxParadoxFind(s, pid); if (!p) return;
+      p.evidenceIds = p.evidenceIds.filter(x => x !== evId);
+      scheduleSave(); tgxParadoxRerender(sitId);
+    }
+    function tgxParadoxDocBlock(s) {
+      const list = Array.isArray(s.paradoxes) ? s.paradoxes.filter(p => (p.text || '').trim()) : [];
+      if (!list.length) return '';
+      const actorName = (id) => { const a = (s.fieldActors || []).find(x => x.id === id); return a && (a.name || '').trim() ? a.name.trim() : ''; };
+      return '\n### Other candidate paradoxes / tensions\n' + list.map(p => {
+        let line = '- ' + p.text.trim();
+        if ((p.beneficiary || '').trim()) line += '\n  - Who benefits from it persisting: ' + p.beneficiary.trim();
+        const an = actorName(p.actorId);
+        if (an) line += '\n  - Could own breaking it: ' + an;
+        line += '\n  - ' + (p.evidenceIds && p.evidenceIds.length
+          ? 'Grounded in ' + p.evidenceIds.length + ' linked card' + (p.evidenceIds.length === 1 ? '' : 's') + ': ' + p.evidenceIds.map(id => tgxParadoxEvidenceLabel(id)).join('; ')
+          : 'Not yet evidenced — the cards behind both legs still need linking');
+        return line;
+      }).join('\n') + '\n';
+    }
+    // Sharpness self-check: declarative, non-blocking, and carried into the
+    // export — the deck audience sees what the pod claims (the only honesty
+    // gate available without a client or an in-app judge).
+    const SHARPNESS_ITEMS = [
+      ['selfUndoing', 'It names a contradiction where the fix undoes itself — X requires not-X'],
+      ['beneficiaryNamed', 'It names who is invested in it persisting'],
+      ['legsEvidenced', 'Both legs of the contradiction are evidenced (linked cards / extracts)']
+    ];
+    function tgxSharpnessEnsure(s) { if (!s.sharpness || typeof s.sharpness !== 'object') s.sharpness = {}; return s.sharpness; }
+    function tgxSharpnessUpdate(sitId, key, val) {
+      const s = findSituation(sitId); if (!s) return;
+      tgxSharpnessEnsure(s)[key] = !!val; scheduleSave();
+    }
+    function tgxSharpnessTally(s) { const sh = (s && s.sharpness) || {}; return SHARPNESS_ITEMS.filter(([k]) => sh[k] === true).length; }
+    function tgxSharpnessHtml(s) {
+      const sh = tgxSharpnessEnsure(s);
+      return '<div class="sharpness-check"><div class="sharpness-title">Sharpness check — a paradox, or still just a tension?</div>'
+        + SHARPNESS_ITEMS.map(([k, label]) => '<label class="sharpness-item"><input type="checkbox"' + (sh[k] ? ' checked' : '') + ' onchange="tgxSharpnessUpdate(\'' + s.id + '\',\'' + k + '\',this.checked)"> ' + label + '</label>').join('')
+        + '<p class="field-hint" style="margin:6px 0 0;">Self-assessed — and carried into your deck &amp; export, so the room sees what you claim.</p></div>';
+    }
+    // Evidence as warrant: no client vouches for this problem, so the trail
+    // has to. Everywhere the paradox is asserted, show what it was read off.
+    function tgxWarrantStats(s) {
+      const sigSet = new Set();
+      (Array.isArray(s.memberCardIds) ? s.memberCardIds : []).forEach(id => signalsUnder(id).forEach(x => sigSet.add(x)));
+      const themes = situationCards(s).filter(c => c.tier >= 3 && (c.title || '').trim());
+      const samples = [...sigSet].slice(0, 2)
+        .map(id => appState.items.find(x => x.id === id)).filter(Boolean)
+        .map(it => ({ title: it.title || 'Untitled', summary: it.summary || '' }));
+      return { extracts: sigSet.size, themes, samples };
+    }
+    function tgxWarrantDocBlock(s) {
+      const w = tgxWarrantStats(s);
+      if (!w.extracts) return '(the evidence trail is still thin — until extracts back it, this paradox is asserted, not derived)';
+      let out = 'No client handed us this problem — the evidence did. This paradox was read off **' + w.extracts + ' source extract' + (w.extracts === 1 ? '' : 's') + '**'
+        + (w.themes.length ? ' across **' + w.themes.length + ' named theme' + (w.themes.length === 1 ? '' : 's') + '** (' + w.themes.map(c => c.title.trim()).join(', ') + ')' : '')
+        + '. The full trail ships with this folder (`data/extracts.csv` + the themes narrative).';
+      if (w.samples.length) out += '\n\nRepresentative extracts:\n' + w.samples.map(x => '- "' + x.title + '"' + (x.summary ? ' — ' + x.summary : '')).join('\n');
+      return out;
+    }
+    // Open questions the pod carries into the room: the deliverable presents
+    // a live inquiry, not performed completion — the audience is the validator.
+    function tgxStillTestingItems(s) {
+      const bits = [];
+      if ((s.problematization || '').trim()) bits.push('What could break this framing: ' + s.problematization.trim());
+      (Array.isArray(s.paradoxes) ? s.paradoxes : [])
+        .filter(p => (p.text || '').trim() && !(Array.isArray(p.evidenceIds) && p.evidenceIds.length))
+        .forEach(p => bits.push('Not yet evidenced: ' + p.text.trim()));
+      SHARPNESS_ITEMS.forEach(([k, label]) => {
+        if (!(s.sharpness && s.sharpness[k] === true)) bits.push('Sharpness still unclaimed: ' + label.toLowerCase());
+      });
+      return bits;
     }
 
     // Complete = at least one situation with the required fields filled and a
@@ -8709,8 +8981,16 @@ ${w(s.accessNeeds, '(not yet identified)')}
 ## The paradox
 ${w(s.paradox, '(not yet written)')}
 
+_Sharpness self-check (pod-declared): ${tgxSharpnessTally(s)}/3._
+
 ### Who benefits from the status quo
 ${w(s.statusQuoBeneficiaries, '(not yet written)')}
+${tgxParadoxDocBlock(s)}
+### How we know (evidence as warrant)
+${tgxWarrantDocBlock(s)}
+
+### What we're still testing
+${(() => { const b = tgxStillTestingItems(s); return b.length ? b.map(x => '- ' + x).join('\n') : '(nothing open — fully grounded and self-assessed sharp)'; })()}
 
 ### Pressure-testing the framing
 ${w(s.problematization, '(not yet written)')}
@@ -9174,10 +9454,36 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       const has = (v) => (v || '').toString().trim();
       const slides = [];
       slides.push({ kind: 'cover', eyebrow: 'Meet the Pod', title: sitTitle, body: has(sit.description) ? '<p>' + esc(sit.description) + '</p>' : '' });
+      const otherParadoxes = (Array.isArray(sit.paradoxes) ? sit.paradoxes : []).filter(p => has(p.text));
       if (has(sit.paradox)) {
         let b = '<p>' + esc(sit.paradox) + '</p>';
         if (has(sit.statusQuoBeneficiaries)) b += '<p class="muted"><strong>Who benefits from the status quo:</strong> ' + esc(sit.statusQuoBeneficiaries) + '</p>';
+        if (otherParadoxes.length) {
+          b += '<p class="muted"><strong>Other tensions we\'re holding:</strong></p><ul class="tension-list">';
+          otherParadoxes.forEach(p => {
+            const a = (Array.isArray(sit.fieldActors) ? sit.fieldActors : []).find(x => x.id === p.actorId);
+            const n = (p.evidenceIds || []).length;
+            const meta = [
+              has(p.beneficiary) ? 'benefits: ' + esc(p.beneficiary) : '',
+              (a && has(a.name)) ? 'could own it: ' + esc(a.name) : '',
+              n ? 'grounded in ' + n + ' card' + (n === 1 ? '' : 's') : 'not yet evidenced'
+            ].filter(Boolean).join(' · ');
+            b += '<li>' + esc(p.text) + '<span class="tmeta">' + meta + '</span></li>';
+          });
+          b += '</ul>';
+        }
+        b += '<p class="muted tiny">Sharpness self-check (pod-declared): ' + tgxSharpnessTally(sit) + '/3</p>';
         slides.push({ kind: 'para', eyebrow: 'The Paradox', title: 'Why this stays stuck', body: b });
+      }
+      // Evidence as warrant: no client vouches for this problem — the trail
+      // does. Omitted when there are no extracts behind the situation yet.
+      const warr = tgxWarrantStats(sit);
+      if (warr.extracts) {
+        let wb = '<p>No client handed us this problem — the evidence did. This paradox was read off <strong>' + warr.extracts + ' source extract' + (warr.extracts === 1 ? '' : 's') + '</strong>'
+          + (warr.themes.length ? ' across <strong>' + warr.themes.length + ' named theme' + (warr.themes.length === 1 ? '' : 's') + '</strong>' : '') + '.</p>';
+        warr.samples.forEach(x => { wb += '<p class="muted">“' + esc(x.title) + '”' + (x.summary ? ' — ' + esc(x.summary) : '') + '</p>'; });
+        wb += '<p class="muted tiny">Full trail: data/extracts.csv in our pod repo.</p>';
+        slides.push({ kind: 'warrant', eyebrow: 'How we know', title: 'The evidence is the warrant', body: wb });
       }
       // No "Frame" slide: per the method, framing happens AFTER Meet the Pods
       // (a pod forms around the paradox; the frame comes at project formation).
@@ -9189,9 +9495,17 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       }
       const field = [];
       const candOwners = (Array.isArray(sit.fieldActors) ? sit.fieldActors : []).filter(a => a.candidateOwner && (a.name || '').trim());
-      if (candOwners.length) field.push('<p class="muted"><strong>Candidate problem owners:</strong> ' + esc(candOwners.map(a => a.name.trim()).join(', ')) + '</p>');
+      if (candOwners.length) field.push('<p class="muted"><strong>Candidate problem owners:</strong> ' + esc(candOwners.map(a => a.name.trim() + (a.approached ? '' : ' (not yet approached)')).join(', ')) + '</p>');
       if (has(sit.voicesNeeded)) field.push('<p class="muted"><strong>Voices we still need:</strong> ' + esc(sit.voicesNeeded) + '</p>');
       if (field.length) slides.push({ kind: 'field', eyebrow: 'The Field', title: 'Who this touches', body: field.join('') });
+      // Live inquiry, not performed completion: the open questions come to the
+      // room, because the audience is the validation this process lacks.
+      const openBits = tgxStillTestingItems(sit);
+      if (openBits.length) {
+        slides.push({ kind: 'testing', eyebrow: 'What we\'re still testing', title: 'This is a live inquiry', body:
+          '<p class="muted">We formed around evidence, not a brief — so we bring our open questions with us.</p><ul class="tension-list">'
+          + openBits.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' });
+      }
       slides.push({ kind: 'join', eyebrow: 'Join us', title: 'Build with the ' + projectTitle + ' pod', body: '<p>We\'re forming a pod around this paradox. If it pulls at you, come help us frame it — and find the problem owner who can move it.</p>' });
 
       const slideHtml = slides.map((s, i) => '<section class="slide ' + s.kind + (i === 0 ? ' active' : '') + '" data-i="' + i + '"><div class="slide-inner"><div class="eyebrow">' + s.eyebrow + '</div><h1>' + s.title + '</h1><div class="body">' + s.body + '</div></div></section>').join('\n');
@@ -9210,6 +9524,8 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         + 'ul.themes{list-style:none;display:flex;flex-direction:column;gap:15px}ul.themes li{border-left:2px solid var(--teal);padding-left:16px}\n'
         + 'ul.themes .tier{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:3px}\n'
         + 'ul.themes .tt{display:block;font-weight:700;font-size:1.05em}ul.themes .td{display:block;color:var(--fog);font-size:.82em;margin-top:4px}\n'
+        + 'ul.tension-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:6px}ul.tension-list li{border-left:2px solid var(--fog);padding-left:14px;font-size:.85em}\n'
+        + 'ul.tension-list .tmeta{display:block;color:var(--fog);font-size:.82em;margin-top:2px}.body .tiny{font-size:.72em;letter-spacing:.03em;margin-top:14px}\n'
         + '.slide.cover h1{font-size:clamp(38px,8vw,78px)}.slide.join .slide-inner{text-align:center}\n'
         + '.nav{position:fixed;bottom:22px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:20px;z-index:5}\n'
         + '.dots{display:flex;gap:9px}.dot{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0}.dot.on{background:var(--teal)}\n'
