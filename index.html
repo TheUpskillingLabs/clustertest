@@ -2809,6 +2809,19 @@
     .xtr-input { font-family: 'Geologica', sans-serif; font-size: var(--text-sm); padding: 8px 12px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: var(--ghost-white); color: var(--midnight); flex: 1; min-width: 220px; box-sizing: border-box; }
     .xtr-err { font-size: var(--text-sm); color: #c0392b; margin-top: 8px; display: none; }
     .xtr-err.show { display: block; }
+    /* A4 — Field map & candidate owners (namespaced owner-*) */
+    .owner-rows { display: flex; flex-direction: column; gap: 10px; }
+    .owner-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: rgba(0,0,0,0.02); }
+    .owner-row .owner-name, .owner-row .owner-note, .owner-row .owner-role { font-family: 'Geologica', sans-serif; font-size: var(--text-sm); padding: 7px 10px; border: 1px solid var(--cloud); border-radius: var(--radius-2); background: var(--ghost-white); color: var(--midnight); }
+    .owner-row .owner-name { flex: 2 1 150px; }
+    .owner-row .owner-note { flex: 3 1 190px; }
+    .owner-row .owner-role { flex: 1 1 130px; }
+    .owner-row .owner-name:focus, .owner-row .owner-note:focus, .owner-row .owner-role:focus { outline: none; border-color: var(--primary-teal); }
+    .owner-cand { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-muted); white-space: nowrap; cursor: pointer; }
+    .owner-cand input { accent-color: var(--primary-teal); }
+    .owner-del { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 15px; line-height: 1; padding: 4px 8px; border-radius: var(--radius-1); }
+    .owner-del:hover { background: rgba(192,57,43,0.08); }
+    .owner-empty { font-size: var(--text-sm); color: var(--text-muted); font-style: italic; margin: 0; }
   </style>
   <div id="xtr-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="xtr-title">
     <div class="modal-content" style="max-width: 680px;">
@@ -8178,6 +8191,14 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <p class="field-hint">What are you assuming? What would break this framing if it turned out to be wrong? What have you chosen not to see?</p>
           <textarea id="sit-problem-${n}" placeholder="What's assumed, what would break this, what you've chosen not to see. Your words." oninput="updateSituationField('${s.id}', 'problematization', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.problematization || '')}</textarea>
         </section>
+
+        <section class="workspace-section">
+          <div class="ws-stage-label">Stage 5 — Field map &amp; candidate owners</div>
+          <label>Who could own this? Map the field, then mark candidate problem owners.</label>
+          <p class="field-hint">Ours is a modified Frame Innovation: you <em>discover</em> the problem owner through the field — you don't start with one. A candidate owner (1) holds the paradox in their world, (2) has the mandate or reach to act, and (3) gains from the value your frame creates.</p>
+          <div id="owner-rows-${s.id}" class="owner-rows">${tgxOwnerRowsHtml(s)}</div>
+          <button type="button" class="btn btn-outline" style="margin-top:10px;" onclick="tgxOwnerAdd('${s.id}')">+ Add a field actor</button>
+        </section>
       `;
 
       card.querySelector(`#sit-gap-prompt-${n}`).textContent = buildSituationPrompt('gap-analysis', s);
@@ -8202,6 +8223,57 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       if (!s) return;
       s[key] = value;
       scheduleSave();
+    }
+
+    // ── A4: Field map & candidate problem owners ─────────────────────────
+    // Modified Frame Innovation: the pod DISCOVERS a problem owner via the
+    // field rather than starting with one. An additive, optional array on the
+    // situation (sit.fieldActors) — absent on old states, read-guarded
+    // everywhere, never touched by the SIT_FIELDS string-normalizer, so it
+    // needs zero migration.
+    const OWNER_ROLE_LABEL = { inner: 'Inner circle', wider: 'Wider field', owner: 'Owner / client' };
+    function tgxOwnerEnsure(s) { if (!Array.isArray(s.fieldActors)) s.fieldActors = []; return s.fieldActors; }
+    function tgxOwnerRowsHtml(s) {
+      const list = Array.isArray(s.fieldActors) ? s.fieldActors : [];
+      if (!list.length) return '<p class="owner-empty">No field actors yet. Add the players you\'ve mapped — then mark who could own this.</p>';
+      const roleOpts = (sel) => ['inner', 'wider', 'owner'].map(r => '<option value="' + r + '"' + ((sel || 'wider') === r ? ' selected' : '') + '>' + OWNER_ROLE_LABEL[r] + '</option>').join('');
+      return list.map((a, i) => '<div class="owner-row">'
+        + '<input class="owner-name" type="text" placeholder="Name / role" value="' + escapeHtml(a.name || '') + '" oninput="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'name\',this.value)">'
+        + '<select class="owner-role" onchange="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'role\',this.value)">' + roleOpts(a.role) + '</select>'
+        + '<input class="owner-note" type="text" placeholder="Practices &amp; the currency they trade in" value="' + escapeHtml(a.note || '') + '" oninput="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'note\',this.value)">'
+        + '<label class="owner-cand"><input type="checkbox"' + (a.candidateOwner ? ' checked' : '') + ' onchange="tgxOwnerUpdate(\'' + s.id + '\',' + i + ',\'candidateOwner\',this.checked)"> candidate owner</label>'
+        + '<button type="button" class="owner-del" title="Remove" onclick="tgxOwnerRemove(\'' + s.id + '\',' + i + ')">✕</button>'
+        + '</div>').join('');
+    }
+    function tgxOwnerRerender(sitId) {
+      const el = document.getElementById('owner-rows-' + sitId);
+      const s = findSituation(sitId);
+      if (el && s) el.innerHTML = tgxOwnerRowsHtml(s);
+    }
+    function tgxOwnerAdd(sitId) {
+      const s = findSituation(sitId); if (!s) return;
+      tgxOwnerEnsure(s).push({ name: '', role: 'wider', note: '', candidateOwner: false });
+      scheduleSave(); tgxOwnerRerender(sitId);
+    }
+    function tgxOwnerRemove(sitId, i) {
+      const s = findSituation(sitId); if (!s || !Array.isArray(s.fieldActors)) return;
+      s.fieldActors.splice(i, 1); scheduleSave(); tgxOwnerRerender(sitId);
+    }
+    function tgxOwnerUpdate(sitId, i, key, val) {
+      const s = findSituation(sitId); if (!s) return;
+      const list = tgxOwnerEnsure(s); if (!list[i]) return;
+      list[i][key] = val; scheduleSave();
+    }
+    function tgxOwnerDocBlock(s) {
+      const list = Array.isArray(s.fieldActors) ? s.fieldActors.filter(a => (a.name || '').trim()) : [];
+      if (!list.length) return '(field not yet mapped — add the players and mark who could own this)';
+      let out = list.map(a => '- **' + a.name.trim() + '** _(' + (OWNER_ROLE_LABEL[a.role] || 'Wider field') + ')_'
+        + (a.candidateOwner ? ' — ★ candidate problem owner' : '')
+        + ((a.note || '').trim() ? ' — ' + a.note.trim() : '')).join('\n');
+      const cands = list.filter(a => a.candidateOwner);
+      if (cands.length) out += '\n\n**Candidate problem owners:** ' + cands.map(a => a.name.trim()).join(', ')
+        + '. A resolution needs at least one owner who holds the paradox, has the mandate to act, and gains from the value the frame creates.';
+      return out;
     }
 
     // Complete = at least one situation with the required fields filled and a
@@ -8529,7 +8601,12 @@ ${w(s.paradox, '(not yet written)')}
 ${w(s.statusQuoBeneficiaries, '(not yet written)')}
 
 ### Pressure-testing the framing
-${w(s.problematization, '(not yet written)')}`;
+${w(s.problematization, '(not yet written)')}
+
+---
+
+## The field — candidate problem owners
+${tgxOwnerDocBlock(s)}`;
       });
       if (!blocks.length) blocks.push('# Untitled Problem Situation\n\n(no problem situation mapped yet)');
       const next = `---
@@ -8983,6 +9060,8 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       }
       const field = [];
       if (has(sit.stakeholderMap)) field.push('<p>' + esc(sit.stakeholderMap) + '</p>');
+      const candOwners = (Array.isArray(sit.fieldActors) ? sit.fieldActors : []).filter(a => a.candidateOwner && (a.name || '').trim());
+      if (candOwners.length) field.push('<p class="muted"><strong>Candidate problem owners:</strong> ' + esc(candOwners.map(a => a.name.trim()).join(', ')) + '</p>');
       if (has(sit.voicesNeeded)) field.push('<p class="muted"><strong>Voices we still need:</strong> ' + esc(sit.voicesNeeded) + '</p>');
       if (field.length) slides.push({ kind: 'field', eyebrow: 'The Field', title: 'Who this touches', body: field.join('') });
       slides.push({ kind: 'join', eyebrow: 'Join us', title: 'Build with the ' + projectTitle + ' pod', body: '<p>We\'re forming a pod around this paradox. If it pulls at you, come help us frame it — and find the problem owner who can move it.</p>' });
