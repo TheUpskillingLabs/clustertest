@@ -2408,6 +2408,7 @@
         <label for="concept-input" class="sr-only">Initial problem concept</label>
         <textarea id="concept-input" placeholder="Right now I think the problem is…" oninput="updateConcept(this.value)"></textarea>
         <p class="concept-loop">Provisional on purpose — as the evidence pushes back, you'll come back and revise it. That's the whole point.</p>
+        <button type="button" onclick="tgxGuidedStart()" style="margin-top:18px; background:none; border:1px solid rgba(255,255,255,0.22); color:var(--ghost-white); font-family:'Geologica',sans-serif; font-size:var(--text-sm); padding:8px 16px; border-radius:var(--radius-2); cursor:pointer;">✨ New here? Turn on step-by-step guidance</button>
       </div>
     </div>
     <nav class="deck-nav" aria-label="Concept navigation">
@@ -2856,6 +2857,22 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <style>
+    /* A1 — Guided-start coach (namespaced tgx-coach-*) */
+    .tgx-coach { position: fixed; left: 20px; bottom: 20px; z-index: 4000; max-width: 340px; display: flex; gap: 12px; align-items: flex-start; background: var(--midnight); color: var(--ghost-white); border: 1px solid rgba(255,255,255,0.14); border-left: 3px solid var(--primary-teal); border-radius: var(--radius-3); padding: 14px 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.28); }
+    .tgx-coach.hidden { display: none; }
+    .tgx-coach-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-teal); margin-top: 6px; flex: none; box-shadow: 0 0 0 4px rgba(0,148,160,0.2); }
+    .tgx-coach-text { font-size: var(--text-sm); line-height: 1.45; }
+    .tgx-coach-text strong { display: block; color: var(--primary-teal); font-size: var(--text-xs); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 3px; }
+    .tgx-coach-x { background: none; border: none; color: rgba(255,255,255,0.55); font-size: var(--text-xs); cursor: pointer; padding: 2px 4px; margin-left: 2px; white-space: nowrap; align-self: flex-start; }
+    .tgx-coach-x:hover { color: var(--ghost-white); }
+  </style>
+  <div id="tgx-coach" class="tgx-coach hidden" role="status" aria-live="polite">
+    <div class="tgx-coach-dot"></div>
+    <div class="tgx-coach-text"><strong id="tgx-coach-title"></strong><span id="tgx-coach-body"></span></div>
+    <button type="button" class="tgx-coach-x" onclick="tgxCoachDismiss()" aria-label="Turn off guidance">Skip guide ✕</button>
   </div>
 
   <div id="git-handoff-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="git-handoff-title">
@@ -3808,6 +3825,40 @@ git push</pre>
       scheduleSave();
       if (typeof maybeShowTour === 'function') maybeShowTour(name);
       tutorialNotify('screen', { name });
+      if (typeof tgxCoachRender === 'function') tgxCoachRender(name);
+    }
+
+    // ── A1: Guided start — opt-in per-screen coach (ceiling-not-floor) ────
+    // A dismissible corner coach that gives a first-timer the ONE next action
+    // per screen. Opt-in via appState.seedGuide (additive, optional boolean);
+    // Seed Mode is already the default first-run mode. Rewrites no screen.
+    const TGX_COACH = {
+      concept: { t: 'Step 1 · Name your hunch', b: "Write the problem as you see it right now — a sentence or two. It's provisional; the evidence will push back." },
+      setup: { t: 'Step 2 · Gather raw material', b: 'Load the sample, upload a CSV, or ✨ Extract from sources. Go wide — include what might contradict you.' },
+      sorting: { t: 'Step 3 · Sort signal from noise', b: 'Right keeps a signal, left is noise, up is a super-signal. Commit fast — where you hesitate is data.' },
+      board: { t: 'Step 4 · Triangulate', b: 'Hover a card, drag from an edge dot to another card. Two signals make an evidence card; two of anything makes the next tier.' }
+    };
+    function tgxCoachRender(screen) {
+      const bar = document.getElementById('tgx-coach');
+      if (!bar) return;
+      const on = !!(appState && appState.seedGuide) && TGX_COACH[screen];
+      if (!on) { bar.classList.add('hidden'); return; }
+      const t = document.getElementById('tgx-coach-title');
+      const b = document.getElementById('tgx-coach-body');
+      if (t) t.textContent = TGX_COACH[screen].t;
+      if (b) b.textContent = ' ' + TGX_COACH[screen].b;
+      bar.classList.remove('hidden');
+    }
+    function tgxCoachDismiss() {
+      if (appState) appState.seedGuide = false;
+      const bar = document.getElementById('tgx-coach'); if (bar) bar.classList.add('hidden');
+      if (typeof scheduleSave === 'function') scheduleSave();
+    }
+    function tgxGuidedStart() {
+      if (appState) appState.seedGuide = true;
+      if (typeof scheduleSave === 'function') scheduleSave();
+      tgxCoachRender((appState && appState.currentScreen) || 'concept');
+      if (typeof toast === 'function') toast('Step-by-step guidance on — follow the coach in the corner.');
     }
 
     // --- Intro slideshow (the onboarding deck) ---
