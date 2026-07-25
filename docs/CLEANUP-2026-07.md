@@ -11,7 +11,7 @@ arc still runs end to end, exports included. Every cut is either code that
 already couldn't run, a feature that did nothing, or one of several controls
 doing the same job.
 
-`index.html` went from **10,349 to ~9,370 lines** — 1,159 net lines out, with the BYO-LLM walkthrough added back in.
+`index.html` went from **10,349 to 9,940 lines** — 1,322 lines out, 913 back in. The removals are much bigger than the net figure suggests: the BYO-LLM walkthrough, the auto-layout pass and the workbook's stage nav are all new code added on top.
 
 ---
 
