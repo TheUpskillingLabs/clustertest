@@ -27,6 +27,9 @@ doing the same job.
 | `Stop the toast covering things…` | Two real bugs |
 | `Make the BYO-LLM prompts findable…` | A dead entry point, and a copy-paste flow that read like a dev tool |
 | `Add an auto-layout button` | Overlapping cards, and toasts landing under the dock |
+| `Make auto-layout hold up on a lattice…` | The first version only behaved on trees |
+| `Give the workbook its screen back…` | 45% of the viewport was chrome; no stage navigation |
+| `Unlock Patterns and Themes from the start` | Seed Mode removed — owner's call, and it contradicts a PRD MUST |
 
 ## Removed: code that already couldn't run
 
@@ -144,6 +147,15 @@ out differently on every press. On a 42-edge latticed fixture that took
 crossings from 46.5 average (42–51 spread) to a repeatable 32, and average edge
 length from 721px to 602px, with no regression on trees.
 
+**Pressing it twice used to rearrange the board.** Best-of-N restarts is a
+heuristic, not a function — started again from its own output it can find
+something better. It now runs to a fixed point, so a second press is a no-op.
+Note that the *first* press still varies run to run (9 to 23 crossings on the
+same fixture): the seed order is read from node positions laid down by a spiral
+that starts at `Math.random()`. Making the result independent of that would mean
+ignoring where the user had put things, which is a real trade-off, not an
+oversight.
+
 **Still open: width.** The drawing is as wide as its widest band, which is
 always the extracts — 16 of them in a row is ~4,400px, so a big board fits the
 screen at about 35% zoom. Stacking tier 0 into two sub-rows would roughly halve
@@ -167,6 +179,42 @@ occupied chrome went *down* (95px → 79px) while gaining the navigation.
 
   laptop  342px (45%) → 184px (24%),  first field y=494 → y=366
   phone   411px (49%) → 185px (22%),  first field y=594 → y=372
+
+## Removed: Seed Mode — the one cut that contradicts the spec
+
+**Owner's decision, and worth reading before anyone re-litigates it.**
+
+New boards used to start in Seed Mode: tier-1 was a "Hunch", the
+Pattern/Theme/Super-theme tools were hidden, the ladder refused to climb,
+classification and the site export were refused, and the way out was a one-way
+"Unlock Patterns & Themes" threshold sheet. Now every tier's tool is in the
+dock from the first card and two named Evidence cards climb to a Pattern with
+nothing in between.
+
+The argument for removing it: that design serves a first-timer meeting the tool
+**alone**. In a facilitated room the poderator introduces the ladder out loud,
+so a one-way gate sits in the middle of the thing being taught.
+
+**The argument against, which is on the record:** PRD §5 requirement **1.1 is a
+MUST** — *"Seed Mode is the front door"* — and the "ceiling, not floor"
+principle in §2 argues the same. Those are now marked reversed in the PRD
+rather than quietly deleted. **If this tool is ever shipped for unaccompanied
+first-timers again, the progressive on-ramp needs rebuilding.**
+`git show be5a1cc^:index.html` has the whole apparatus.
+
+Two things were kept rather than deleted with it:
+
+- The seed branch of `computeNextAction()` carried the only first-move hint on
+  an empty board. It became a `'connect'` state with the same hint.
+- **"Compile concept (.md)"** was offered *only* in Seed Mode, so removing Seed
+  would have silently dropped one of the three exports the README documents. It
+  now sits in the Share / Export sheet unconditionally.
+
+**The locks stay.** Seed Mode switched off `evidenceLabelLocked` and
+`hubLocked`; those are Dorst's syndromes made mechanical, so they now apply from
+the start. The one behaviour change for saved boards: a tier-1 card with fewer
+than two extracts becomes name-locked — exactly what already happened to any
+Seed board whose owner pressed Unlock.
 
 ## Fixed: four real bugs
 

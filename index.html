@@ -4180,9 +4180,24 @@ git push</pre>
         };
 
         const big = comp.length > 400;
-        const seeds = big ? [seedByX(1)] : [seedByX(1), seedStructural, seedByX(-1)];
         let best = null, bestCrossings = Infinity;
-        seeds.forEach(seed => {
+
+        // Run to a fixed point. Best-of-N restarts is a heuristic, not a
+        // function: started again from its own output it can find something
+        // better, which made pressing the button a second time quietly
+        // rearrange the board. Rounds after the first re-seed from the current
+        // winner — which is the whole point, and why the position-based seeds
+        // only make sense on the first round: they read node coordinates,
+        // which aren't written until this all finishes.
+        const keepCurrentOrder = () => {};
+        for (let round = 0; round < (big ? 1 : 6); round++) {
+          const roundStart = bestCrossings;
+          const seeds = round === 0
+            ? (big ? [seedByX(1)] : [seedByX(1), seedStructural, seedByX(-1)])
+            : [keepCurrentOrder, seedStructural];
+          seeds.forEach(seed => {
+          if (best) restore(best);
+          seed();
           seed();
           let localBest = snapshot(), localCrossings = totalCrossings();
           const MAX_PASSES = big ? 2 : 16;
@@ -4219,7 +4234,9 @@ git push</pre>
             if (c < localCrossings) { localBest = snapshot(); localCrossings = c; }
           }
           if (localCrossings < bestCrossings) { bestCrossings = localCrossings; best = localBest; }
-        });
+          });
+          if (bestCrossings >= roundStart) break;
+        }
         restore(best);
 
         // ---- Coordinates: relax toward the neighbours on both sides, packing

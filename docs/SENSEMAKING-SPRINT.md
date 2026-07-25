@@ -7,7 +7,7 @@
 
 ## What this event is
 
-The first in-person experience after the Kickoff Summit — the room where the cohort's field evidence becomes shared maps. Participants arrive having distributed the field survey and (ideally) extracted their harvest into source-extract cards; they leave having sorted their pools, built their first Evidence on the canvas, unlocked the full ladder together, and — for tables that move fast — mapped a first draft Problem Situation. It is the moment the cycle pivots from *collecting* to *making sense*.
+The first in-person experience after the Kickoff Summit — the room where the cohort's field evidence becomes shared maps. Participants arrive having distributed the field survey and (ideally) extracted their harvest into source-extract cards; they leave having sorted their pools, built their first Evidence on the canvas, climbed it into Patterns and Themes, and — for tables that move fast — mapped a first draft Problem Situation. It is the moment the cycle pivots from *collecting* to *making sense*.
 
 It is **not** the day pods form, paradoxes get finished, or anything gets decided. Forcing convergence on day one is precisely the failure mode the method exists to prevent.
 

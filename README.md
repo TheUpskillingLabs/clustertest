@@ -28,11 +28,11 @@ A bottom **action bar** carries you through the whole arc — it always shows ex
 
 2. **Sort signal from noise** (`Sort`) — swipe each extract: **noise** (left / ←), **signal** (right / →), or **★ super signal** (up / ↑). Fast binary commitment is the point: where you hesitate is data about a belief you haven't earned.
 
-3. **Triangulate in Seed Mode** (`Validate`) — you start on a deliberately simple canvas: drag a glowing edge dot from one extract onto another (or use the **Link** tool in the dock) and two extracts pointing at the same condition become an **Evidence** card. Name the claim. Once you've kept a critical mass of extracts (~10), the tool *invites* you to name the problem concept taking shape — optional, dismissible, revisable.
+3. **Triangulate** (`Validate`) — drag a glowing edge dot from one extract onto another (or use the **Link** tool in the dock) and two extracts pointing at the same condition become an **Evidence** card. Name the claim. Once you've kept a critical mass of extracts (~10), the tool *invites* you to name the problem concept taking shape — optional, dismissible, revisable.
 
    Cards land where you drop them, and a busy board gets tangled. **⊞ Auto-layout** in the canvas toolbar rebuilds it as tiers — extracts along the bottom, each claim centred over what it rests on, separate ladders side by side, and the extracts you haven't used yet pooled underneath. It's undoable from the toast if you'd hand-arranged things.
 
-4. **Unlock Patterns & Themes** — Seed Mode holds hunches and evidence. One click (one-way) unlocks the full engine: Evidence climbs into **Patterns** (named mechanisms), Patterns into **Themes**, Themes toward the situation. Every card stays locked until the cards beneath it are named and described — each claim must stand on examined ones.
+4. **Climb the ladder** — every tier's tool is in the dock from the first card. Evidence climbs into **Patterns** (named mechanisms), Patterns into **Themes**, Themes toward the situation. Every card stays locked until the cards beneath it are named and described — each claim must stand on examined ones. That lock is the method; there is no gate in front of it.
 
 5. **Map the Problem Situation** (`Map`) — with at least one named, described Theme, synthesize the ladder into a **Problem Situation**: an open, complex, networked condition — not yet a problem to solve.
 
@@ -62,7 +62,7 @@ Three exports, all reachable from the **Share / Export** sheet (and offered by t
 |---|---|---|
 | **Meet-the-Pods site & deck** (`.zip`) | Pod Mode, workspace complete, real title | 10 files: a GitHub-Pages-ready `index.html` (web map + themes + situation + extracts), `slides.html` (the Meet-the-Pods deck), `README.md`, `assets/` (viewer + styles), `data/project.jsonld` (semantic graph), `data/extracts.csv`, `data/site-data.js` (offline fallback), `content/situation.md`, `content/themes.md` |
 | **Working folder** (`.zip`) | Any mapped situation | `problem-situation.md`, `gap-analysis.md`, per-card folders (`card.json`, `notes.md`, `deepen.md`, `evidence.md`, attached sources), and **`state.json`** — a full re-importable board snapshot |
-| **Concept summary** (`.md`) | Seed Mode | Your provisional hunch + hunches with their supporting extracts |
+| **Concept summary** (`.md`) | Any time | Your provisional concept + your Evidence cards with their supporting extracts |
 
 After any export, a **Git handoff** panel walks you through committing the folder into your Pod's shared repository. The **Open a shared folder** action (in the same sheet) imports a podmate's exported zip — merge or replace — which is how a whole Pod builds one map: export → commit → merge, and where Git finds a conflict, two people mapped the same thing differently and should talk. That conversation is the feature.
 

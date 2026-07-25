@@ -6,7 +6,7 @@
 
 ## Three weeks from now
 
-Picture July 25. Dozens of your neighbors — organizers, poll workers, librarians, people who filled out a field survey because something in their civic life feels stuck — are about to spend a day turning a pile of raw evidence into shared maps. Their first Evidence card. The moment the whole room unlocks Patterns & Themes together. The first time someone looks at their own ladder and says *"oh — that's what's actually going on."*
+Picture July 25. Dozens of your neighbors — organizers, poll workers, librarians, people who filled out a field survey because something in their civic life feels stuck — are about to spend a day turning a pile of raw evidence into shared maps. Their first Evidence card. The first Pattern that two of those cards turn out to share. The first time someone looks at their own ladder and says *"oh — that's what's actually going on."*
 
 The tool they'll use for all of it is open in your browser right now.
 
@@ -20,7 +20,7 @@ Don't mistake "starting place" for "sketch." What's in this repo works (mostly),
 
 - The full arc runs: gather source extracts → sort signal from noise → triangulate up a ladder of Evidence, Patterns, Themes → map a Problem Situation → find the paradox that keeps it stuck → discover who could own breaking it → export a ready-to-host site and slide deck that seeds a pod's repository for Meet the Pods.
 - It's **one HTML file**. No build, no server, no dependencies. Open `index.html`, and you're holding the entire application — every word of copy, every gate, every screen. The file *is* the spec. That's not a limitation; it's the invitation. There is nothing in this tool you can't reach.
-- It's tested by `session-test.js`, a headless driver that walks the whole flow — sort, connect, unlock, climb, map, classify, the five Deepen stages, three exports — and fails on any JS error. Run it before you push and you'll know quickly whether you broke something else.
+- It's tested by `session-test.js`, a headless driver that walks the whole flow — sort, connect, climb, map, classify, the five Deepen stages, three exports — and fails on any JS error. Run it before you push and you'll know quickly whether you broke something else.
 - And you're not the first to mod it. Keep reading.
 
 ## The framework is already modded — so you have permission to test your own mods too
@@ -78,7 +78,7 @@ Everything else — copy, color, gates, stages, screens, the whole feel — is i
   1. Open [the live tool](https://theupskillinglabs.github.io/triangles/). It opens straight onto Sources.
   2. Sources → *Load 21 Civics & Elections source extracts* → **Start sorting →**. Sort all 21, fast — notice what hesitation feels like.
   3. On the canvas, drag a glowing edge dot onto another card → your first Evidence card. Name it. Do it twice more (or try the **Link** tool in the dock).
-  4. **Unlock Patterns & Themes** when the bar offers it. Read the sheet — note it's one-way.
+  4. Connect two named Evidence cards into a **Pattern** — the Pattern tool is in the dock from the start.
   5. Climb: Evidence → Pattern → Theme (name and describe as you go — feel the locks bite).
   6. **Map the Problem Situation** → take the classify beat → walk the five Deepen stages (linger on Stage 4's inner circle and Stage 5's paradox — that's the destination).
   7. **Produce the deck & site.** Unzip it. Open `slides.html`. That's what a pod carries into Meet the Pods.
@@ -127,7 +127,6 @@ You'll still be the one standing next to a stuck participant on July 25 — and 
 | Asking "what's the problem we're solving?" | Wants the concept first | The inversion, said plainly: "We don't know yet — that's the point. The evidence speaks before anyone names the problem. The tool will invite you to name it once you've kept enough." |
 | Can't find how to connect cards | Missed the affordance | Point at the glowing dots (visible for their first 3 connections), or the **Link** tool: click one card, then the other. |
 | Hit a locked card, annoyed | The gates working as designed | "Every lock is one of Dorst's five syndromes headed off. This one stops you claiming what you haven't examined. Name the cards under it first." |
-| Asking whether to Unlock | One-way anxiety | "Your hunches and evidence come with you unchanged. For the sprint, we do it together as a room." |
 | Wrote a "paradox" that's a complaint | Sharpness problem | Run the self-check with them: does the fix undo itself ("X requires not-X")? Who *benefits* from it persisting? A paradox nobody profits from is usually a misreading. |
 | Marked a candidate owner confidently | Overclaiming | "It says '(not yet approached)' until someone actually talks to them. An owner is a hypothesis until then — who's making the call?" |
 | Wants the AI to do the thinking | ✨ misunderstanding | "The tool has no AI. That button copies a prompt for *your* model — run it, argue with it, write your own words back. The Blind-spot audit is the tab for when everything feels too tidy." |
@@ -163,7 +162,6 @@ Three vocabularies touch this work. Same things, different words — here's the 
 |---|---|---|
 | Source Extract (tier 0) | extract / Extracted Signal | — (raw archaeology material) |
 | Evidence → Pattern → Theme | the same ladder, tiers 1–3 | Archaeology climbing toward Themes |
-| Seed Mode → Unlock (Pod Mode) | *(no equivalent — tool-only concept)* | scaffold-up-from-dead-simple |
 | Map the Problem Situation | `problem_situation` (the frame artifact) | the open, complex, networked condition |
 | The seven evidence types | same (history, counterfactual, problem, boundary, flux, player, value) | Dorst's evidence lenses |
 | The five syndromes (the locks) | *(not named in platform docs)* | Dorst: Lone Warrior, Freeze the World, Self-Made Box, Rational High Ground, Identification |
@@ -187,7 +185,7 @@ A good field report: *what they were trying to do → what actually happened →
 ## Gotchas (read twice — then teach them)
 
 1. **Boards live in the browser, per device.** Nothing syncs by itself. Library laptop ≠ home laptop. The bridge is always export → repo → import. Say it out loud at the start of every session.
-2. **Unlock is one-way.** Seed Mode can't be re-entered on that board (the work survives untouched; only the simpler view is gone).
+2. **The ladder is open from the start.** Patterns and Themes need no unlocking — but a card stays locked for naming until the cards beneath it are named and described.
 3. **Private/incognito windows** can wipe localStorage on close. Facilitate — and prototype — in normal windows.
 4. **The deck export has gates:** Pod Mode + a completed workbook + a real project title. The bar's hint names exactly what's missing — read it to them.
 5. **Offline is fine.** After first load, no network needed. Venue wifi is a non-event.

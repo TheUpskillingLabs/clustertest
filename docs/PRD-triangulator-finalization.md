@@ -74,11 +74,13 @@ Verified against code, not docs.
 
 ## 5. Area 1 — On-ramp & scaffolding
 
-**Problem.** The tool is deep. A first-timer today lands in the full seven-step machine. The method should be the ceiling, not the floor. The tool *already has the raw materials* — a `mode: 'seed'` and a one-way `graduateToPod()` — but they aren't composed into a single, obviously-simple front door. *(Updated July 2026: the sandboxed tutorial and the per-screen spotlight tours no longer exist — both were dormant and were deleted in the pre-sprint cleanup. The intro deck and corner coach went with them. The action bar is now the whole on-ramp.)*
+**Problem.** The tool is deep. A first-timer today lands in the full seven-step machine. The method should be the ceiling, not the floor. *(Updated July 2026: the sandboxed tutorial and the per-screen spotlight tours no longer exist — both were dormant and were deleted in the pre-sprint cleanup. The intro deck and corner coach went with them. The action bar is now the whole on-ramp.)*
 
 **Requirements.**
 
-- **1.1 (MUST) Seed Mode is the front door.** First run enters `mode: 'seed'` as a **linear, guided wizard**, not the free canvas. The spine: *name a hunch → pull in a few extracts → sort them → connect two into your first Evidence card → name the claim.* One decision per screen. The free-form canvas (`goToScreen('board')`) is reached only *after* the wizard, or via an explicit "go to full canvas" escape.
+- **1.1 (MUST) Seed Mode is the front door.** ~~First run enters `mode: 'seed'` as a **linear, guided wizard**, not the free canvas.~~ **Reversed, July 2026 — owner's call for the Sensemaking Sprint.** Seed Mode has been removed: Patterns and Themes are unlocked from the first card, and there is no graduation step. The reasoning is that this requirement was written for a first-timer meeting the tool *alone*; in a facilitated room the poderator introduces the ladder, and a one-way gate in the middle of the thing being taught is a wall rather than a scaffold.
+
+  **This is a live disagreement with the PRD, not an oversight.** If the tool is ever shipped for unaccompanied first-timers again, the progressive on-ramp this requirement asks for needs rebuilding — and the ceiling-not-floor principle in §2 still argues for it. The old implementation is at `git show be5a1cc^:index.html`.
 - **1.2 (MUST) A worked example precedes a blank canvas.** Before a member's first real board, offer the sandboxed worked example (the existing *neighborhood food access* tutorial). It is fully dismissible and never touches saved state. Returning members skip it by default (respect the expertise-reversal effect).
 - **1.3 (MUST) Progressive reveal of tiers and types.** Signals and one Evidence tier are visible from the start. Pattern/Theme/Super-theme tiers surface only as the member reaches them (connecting two of a tier reveals the next — already the mechanic; make the *unreached* tiers visually quiet, not absent-and-confusing). The **seven evidence types stay hidden until after the situation is mapped** (`enterClassifyPhase` / `classifyPhase`, already gated) — keep that.
 - **1.4 (SHOULD) Loop, not pipeline, is legible.** The step indicator (Concept → Sources → Sort → Validate → Map → Classify → Deepen) already says "this is a loop." Make "revisit any step" a first-class, obvious affordance, not fine print.
@@ -87,7 +89,7 @@ Verified against code, not docs.
 
 **Acceptance criteria.**
 - A first-time member can go from landing to a named first Evidence card **without ever seeing the seven evidence types or tiers above Evidence.**
-- Seed Mode is completable in < 5 minutes on the sample pool.
+- ~~Seed Mode is completable in < 5 minutes on the sample pool.~~ (Void — see 1.1.)
 - Exiting the worked example leaves saved state byte-identical.
 
 ---
@@ -223,7 +225,7 @@ Critical-path, gate-free first. **[T]** = standalone tool (`triangles`); **[O]**
 | 0 | Survey **share mechanics** + `/s/[slug]` | O | S | free |
 | 1 | `sources` + `extracts` tables + upload + **BYO-prompt** endpoints | O | M | free |
 | 2 | Extract-pool API as the tool's CSV contract (Seam 1) | O | S | free |
-| 3 | **On-ramp:** Seed Mode wizard + worked-example gating (Area 1) | T | M | free |
+| 3 | ~~**On-ramp:** Seed Mode wizard + worked-example gating (Area 1)~~ — see 1.1 | T | M | free |
 | 4 | **Extraction UX:** copy-prompt / paste-and-parse in the tool (Area 2) | T | M | free |
 | 5 | Reskin tool to OLOS light tokens + self-host type; iframe/host it | T | S–M | free |
 | 6 | Verbatim state storage `sensemaking_sessions` (Seam 2) | O | S | free |
@@ -250,7 +252,7 @@ Items 0–10 are gate-free (10 gates on publication consent). Only #11 is blocke
 ## 13. Success metrics
 
 - **Funnel:** survey responses (and share-driven reach), extracts produced/day, canvases reaching a named Theme, situations mapped, pods seeded from clusters, projects with a named owner.
-- **First-run:** % of first-timers who complete Seed Mode; time-to-first-Evidence-card.
+- **First-run:** time-to-first-Evidence-card. (The Seed Mode completion metric is void — see 1.1.)
 - **Integrity:** % of pods born from a triangulated cluster (target 100%); % of published repos with only consented evidence (must be 100%).
 
 ---
@@ -260,7 +262,7 @@ Items 0–10 are gate-free (10 gates on publication consent). Only #11 is blocke
 Key functions/state in `triangles/index.html`:
 
 - **Screens / navigation:** `goToScreen(name)` — `concept | setup | sorting | board | workspace`; step indicator via `renderStepIndicator`. (`intro` and `artifact` were removed July 2026; `normalizeState()` redirects boards saved on either.)
-- **Modes:** `appState.mode` incl. `'seed'` (3072); `graduateToPod()` (2567/3070/8250).
+- **Modes:** removed July 2026. `appState.mode` is still written as `'pod'` so older saved boards parse, but nothing reads it; `isSeedMode()` and `graduateToPod()` are gone.
 - **Data model:** `appState.cards[]` (unified tiered: `tier`, `childIds`), `appState.situations[]`, `appState.nodes`; persistence key `olos.sensemaking.v2`.
 - **Intake:** `parseCsv()` (3384); columns `title,summary,source_url`; sample loader `load-sample-btn`.
 - **Canvas:** `connectNodes(a,b)` (5197), `createCardBetween()` (4975).
