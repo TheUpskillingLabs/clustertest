@@ -15,7 +15,7 @@ Created for **The Upskilling Labs** by **Levy Strategic Design**. Open source un
 There is no build step, no server, no install, and no account.
 
 1. Open **`index.html`** in any modern browser (double-click works — it runs from `file://`), or use the live URL above.
-2. On the Sources screen, click **Load 21 Civics & Elections source extracts** — real material from a field survey.
+2. On the Sources screen, click **Load 48 Civics & Elections source extracts** — real material from a field survey; every card cites the survey response it came from.
 3. Follow the bar at the bottom of the screen. It always shows your one next move.
 
 Everything auto-saves to your browser's `localStorage`. The app works fully offline after first load. **Nothing you enter ever leaves your browser.**
