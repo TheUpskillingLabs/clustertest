@@ -774,7 +774,7 @@
 
     /* ── The one next action: OLOS actionbar grammar (sticky bottom bar, one
        full-width primary, hint above it, ghost secondaries beneath) ── */
-    .tgx-actionbar { width: 100%; box-sizing: border-box; flex-shrink: 0; background: var(--ghost-white); border-top: 1px solid var(--cloud); padding: 10px 24px calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 30; }
+    .tgx-actionbar { width: 100%; box-sizing: border-box; flex-shrink: 0; background: var(--ghost-white); border-top: 1px solid var(--cloud); padding: 8px 20px calc(9px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 30; }
     .tgx-actionbar.hidden { display: none; }
     .tgx-actionbar .ab-hint { font-size: var(--text-xs); line-height: var(--lead-sm); color: var(--midnight); opacity: 0.75; text-align: center; max-width: 680px; }
     .tgx-actionbar .ab-hint strong { color: var(--primary-teal); }
@@ -782,6 +782,55 @@
     .tgx-actionbar .ab-secondary-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
     .tgx-actionbar .ab-secondary { background: none; border: none; color: var(--primary-teal); font: inherit; font-size: var(--text-sm); cursor: pointer; padding: 4px 8px; border-radius: var(--radius-1); }
     .tgx-actionbar .ab-secondary:hover { background: rgba(0,148,160,0.08); }
+
+    /* The bar is permanent chrome over the canvas, so it stays as small as it
+       can while still holding one next action and the reason it's blocked —
+       and it minimises to just the action when the canvas matters more. */
+    .tgx-actionbar .ab-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; width: 100%; max-width: 1100px;
+    }
+    .tgx-actionbar .ab-row .ab-hint {
+      text-align: right; flex: 1; min-width: 0; margin: 0;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .tgx-actionbar .ab-row .ab-primary { flex: none; width: auto; max-width: none; padding: 9px 20px; }
+    .tgx-actionbar .ab-row .ab-secondary-row { flex: none; gap: 8px; }
+    .tgx-actionbar .ab-collapse {
+      flex: none; width: 28px; height: 28px; margin-left: 4px;
+      background: none; border: 1px solid var(--cloud); border-radius: var(--radius-1);
+      color: var(--midnight); opacity: 0.6; cursor: pointer; font-size: var(--text-sm);
+      line-height: 1; display: flex; align-items: center; justify-content: center;
+    }
+    .tgx-actionbar .ab-collapse:hover { opacity: 1; border-color: var(--primary-teal); color: var(--primary-teal); }
+    /* Balance the row: the collapse button on the right is matched by an equal
+       gap on the left, so the primary stays optically centred. */
+    .tgx-actionbar .ab-row::before { content: ''; flex: 1; min-width: 0; }
+    .tgx-actionbar.is-collapsed .ab-hint,
+    .tgx-actionbar.is-collapsed .ab-secondary-row { display: none; }
+    .tgx-actionbar.is-collapsed { padding: 3px 20px calc(3px + env(safe-area-inset-bottom, 0px)); gap: 0; }
+    .tgx-actionbar.is-collapsed .ab-primary {
+      padding: 2px 14px; font-size: var(--text-xs); min-height: 0; border-width: 1px;
+    }
+    .tgx-actionbar.is-collapsed .ab-collapse { width: 22px; height: 22px; }
+    @media (max-width: 720px) {
+      .tgx-actionbar .ab-row { flex-wrap: wrap; gap: 8px; }
+      .tgx-actionbar .ab-row::before { display: none; }
+      /* The hint is the reason, not the action — two lines of it is plenty
+         when the whole bar is competing with a phone-sized canvas. */
+      .tgx-actionbar .ab-row .ab-hint {
+        text-align: center; flex-basis: 100%; order: -1;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      }
+      .tgx-actionbar .ab-row .ab-primary { padding: 7px 16px; }
+      /* The minimise control tucks into the corner rather than taking a slot
+         in the row, so the secondaries can share a line with it. */
+      .tgx-actionbar { position: relative; }
+      .tgx-actionbar .ab-collapse { position: absolute; top: 6px; right: 8px; margin: 0; }
+      .tgx-actionbar .ab-row .ab-hint { padding: 0 34px; }
+      .tgx-actionbar .ab-row .ab-secondary-row { flex-wrap: wrap; justify-content: center; }
+      .tgx-actionbar.is-collapsed .ab-row { flex-wrap: nowrap; }
+    }
     #workspace-screen .tgx-actionbar { position: sticky; bottom: 0; margin-top: 24px; box-shadow: 0 -6px 20px rgba(0,20,27,0.06); border-radius: var(--radius-3) var(--radius-3) 0 0; }
 
 
@@ -833,13 +882,35 @@
 
     /* One row: what's missing on the left, the action on the right. */
     .ws-actionbar { flex-direction: row; justify-content: space-between; gap: 16px; padding-top: 8px; }
+    .ws-actionbar .ab-hint { margin: 0; }
     .ws-actionbar .ab-hint { text-align: left; flex: 1; min-width: 0; }
     .ws-actionbar .ab-primary { width: auto; max-width: none; flex: none; padding: 10px 20px; }
+    @media (max-width: 480px) {
+      /* One line of reason is enough when the canvas is this small. */
+      .tgx-actionbar .ab-row .ab-hint { -webkit-line-clamp: 1; }
+    }
     @media (max-width: 600px) {
       .ws-actionbar { flex-direction: column; gap: 6px; }
       .ws-actionbar .ab-hint { text-align: center; }
       .ws-actionbar .ab-primary { width: 100%; }
     }
+
+    /* An irreversible action asks in red, in the middle of the screen. */
+    .modal-content.danger-modal { border-top: 4px solid var(--action-red); }
+    .danger-modal .modal-header h3 { color: var(--action-red); display: flex; align-items: center; gap: 10px; }
+    .danger-glyph {
+      flex: none; width: 26px; height: 26px; border-radius: 50%;
+      background: var(--action-red); color: var(--ghost-white);
+      font-size: var(--text-base); font-weight: 700; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .danger-note {
+      background: color-mix(in srgb, var(--action-red) 8%, transparent);
+      border-left: 3px solid var(--action-red);
+      padding: 10px 14px; border-radius: 0 var(--radius-2) var(--radius-2) 0;
+      font-size: var(--text-sm); line-height: 1.5; margin-top: 12px;
+    }
+    .danger-note strong { color: var(--action-red); }
     /* ── Share sheet / chooser rows (big tappable choice rows, OLOS .choice grammar) ── */
     .share-sheet-list { display: flex; flex-direction: column; gap: 10px; }
     .share-row { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; text-align: left; background: var(--ghost-white); border: 1px solid var(--cloud); border-radius: var(--radius-2); padding: 14px 16px; cursor: pointer; font: inherit; color: var(--midnight); transition: border-color 0.15s, transform 0.15s; }
@@ -2674,6 +2745,22 @@ git push</pre>
 
   <!-- UNLOCK THRESHOLD — a visible seam (replaces window.confirm): one-way
        graduation from Seed to the full engine. -->
+
+  <div id="confirm-reset-modal" class="modal-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirm-reset-title" aria-describedby="confirm-reset-body">
+    <div class="modal-content danger-modal" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 id="confirm-reset-title"><span class="danger-glyph" aria-hidden="true">!</span> Clear this board?</h3>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-reset-body">Everything on the canvas goes — every extract, card, situation and note. The sample pool reloads and you start from nothing.</p>
+        <p class="danger-note"><strong>This cannot be undone.</strong> If you might want this work, close this and export it first.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeModal('confirm-reset-modal')" data-autofocus>Keep my board</button>
+          <button type="button" class="btn btn-danger" onclick="confirmStartOver()">Clear the board</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ADD EXTRACTS CHOOSER — one "add" entry, three methods. -->
   <div id="add-extracts-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="add-extracts-title">
@@ -6922,11 +7009,27 @@ ${AI_RULES}
     // bar. Not the bar's height: the workbook's action bar is sticky inside a
     // padded scroller, so it comes to rest above the window's bottom edge and
     // its height alone undercounts the gap by that padding.
-    function chromeClearance(el) {
+    function chromeClearance(el, clamp) {
       if (!el) return 0;
       const r = el.getBoundingClientRect();
       if (!r.height) return 0;
-      return Math.max(0, Math.min(window.innerHeight - r.top, r.height + 64));
+      const gap = Math.max(0, window.innerHeight - r.top);
+      // The clamp guards the case where an element isn't near the bottom at
+      // all (a sticky bar in a short, unscrolled page). The dock always is,
+      // and it rides on top of the action bar, so clamping it to its own
+      // height loses however tall that bar happens to be.
+      return clamp === false ? gap : Math.min(gap, r.height + 64);
+    }
+    // Minimising keeps the one next action — that is the bar's whole job — and
+    // drops the hint and the secondaries. Persisted next to the header's own
+    // collapse preference.
+    const AB_COLLAPSED_KEY = 'olos.actionbarCollapsed';
+    function abIsCollapsed() {
+      try { return localStorage.getItem(AB_COLLAPSED_KEY) === '1'; } catch (e) { return false; }
+    }
+    function toggleActionbar() {
+      try { localStorage.setItem(AB_COLLAPSED_KEY, abIsCollapsed() ? '0' : '1'); } catch (e) {}
+      renderTgxActionbar();
     }
     function tgxPublishAbHeight(bar, visible) {
       const h = visible ? chromeClearance(bar) : 0;
@@ -6935,7 +7038,7 @@ ${AI_RULES}
       // or an actionable one — Undo, Delete, Unframe — puts its button
       // underneath the dock, where it cannot be pressed.
       const dock = document.getElementById('canvas-dock');
-      const dockClear = (dock && !dock.classList.contains('hidden')) ? chromeClearance(dock) : 0;
+      const dockClear = (dock && !dock.classList.contains('hidden')) ? chromeClearance(dock, false) : 0;
       document.documentElement.style.setProperty('--dock-h', dockClear ? Math.max(0, dockClear - h) + 'px' : '0px');
     }
     function renderTgxActionbar() {
@@ -6947,10 +7050,20 @@ ${AI_RULES}
       if (a.hidden) { bar.classList.add('hidden'); tgxPublishAbHeight(bar, false); return; }
       const sec = (a.secondary || []).map(s =>
         `<button type="button" class="ab-secondary" onclick="${s.fn}">${s.label}</button>`).join('');
+      const collapsed = abIsCollapsed();
+      // Secondaries sit in the same row as the primary: a second row costs
+      // ~32px of canvas on every board state that has one.
       bar.innerHTML = `
-        <div class="ab-hint">${a.hint || ''}</div>
-        <button type="button" class="btn btn-primary ab-primary" onclick="${a.primary.fn}"${a.primary.enabled ? '' : ' disabled'}>${a.primary.label}</button>
-        ${sec ? `<div class="ab-secondary-row">${sec}</div>` : ''}`;
+        <div class="ab-row">
+          <div class="ab-hint">${a.hint || ''}</div>
+          <button type="button" class="btn btn-primary ab-primary" onclick="${a.primary.fn}"${a.primary.enabled ? '' : ' disabled'}>${a.primary.label}</button>
+          ${sec ? `<div class="ab-secondary-row">${sec}</div>` : ''}
+          <button type="button" class="ab-collapse" onclick="toggleActionbar()"
+            aria-expanded="${collapsed ? 'false' : 'true'}"
+            aria-label="${collapsed ? 'Expand the action bar' : 'Minimise the action bar'}"
+            title="${collapsed ? 'Expand' : 'Minimise'}">${collapsed ? '▴' : '▾'}</button>
+        </div>`;
+      bar.classList.toggle('is-collapsed', collapsed);
       bar.classList.remove('hidden');
       tgxPublishAbHeight(bar, true);
       // The coach narrates the same state the bar acts on.
@@ -9572,18 +9685,16 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     // asked "Reload site?" — and cancelling that (the natural answer, having
     // just confirmed) left the board on screen with its save already gone.
     let reloadIsIntentional = false;
-    function startOver() {
-      // Undoable-by-hesitation rather than a modal: the same toast-confirm
-      // pattern the unframe action uses, so a mis-tap costs nothing.
-      toast('Clear this board and start over? This cannot be undone.', {
-        actionLabel: 'Start over',
-        duration: 8000,
-        onAction: () => {
-          reloadIsIntentional = true;
-          clearSavedState();
-          location.reload();
-        }
-      });
+    // Clearing the board is the one irreversible thing in the tool, so it asks
+    // in the middle of the screen rather than in a toast at the bottom — which
+    // is where the action bar and the dock live, and which is where the toast
+    // version of this got lost.
+    function startOver() { openModal('confirm-reset-modal'); }
+    function confirmStartOver() {
+      closeModal('confirm-reset-modal');
+      reloadIsIntentional = true;
+      clearSavedState();
+      location.reload();
     }
 
     // --- Share / Export sheet ---
