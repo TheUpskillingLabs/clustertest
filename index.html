@@ -921,7 +921,7 @@
     .csv-status-ok { border-color: var(--primary-teal); background: rgba(0,148,160,0.10); }
     .csv-status-warn { border-color: #b8860b; background: rgba(184,134,11,0.12); }
     .csv-status-error { border-color: var(--action-red); background: color-mix(in srgb, var(--action-red) 10%, transparent); }
-    #board-csv-status { color: var(--midnight); }
+    #board-csv-status, #xtr-status { color: var(--midnight); }
     /* ── Share sheet / chooser rows (big tappable choice rows, OLOS .choice grammar) ── */
     .share-sheet-list { display: flex; flex-direction: column; gap: 10px; }
     .share-row { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; text-align: left; background: var(--ghost-white); border: 1px solid var(--cloud); border-radius: var(--radius-2); padding: 14px 16px; cursor: pointer; font: inherit; color: var(--midnight); transition: border-color 0.15s, transform 0.15s; }
@@ -2688,9 +2688,10 @@
             <div class="xtr-err" id="xtr-error"></div>
           </div>
         </div>
+        <p id="xtr-status" class="csv-status hidden" role="status" aria-live="polite"></p>
         <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
-          <button type="button" class="btn btn-outline" onclick="closeModal('xtr-modal')">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="tgxExtractParseAndAdd()">Add extracts to pool →</button>
+          <button type="button" class="btn btn-outline" onclick="closeModal('xtr-modal')">Close</button>
+          <button type="button" class="btn btn-primary" id="xtr-add-btn" onclick="tgxExtractParseAndAdd()">Add extracts to pool →</button>
         </div>
       </div>
     </div>
@@ -2833,7 +2834,7 @@ git push</pre>
         <input type="file" id="board-csv-input" accept=".csv,text/csv" class="sr-only" onchange="handleBoardCsvUpload(event)">
         <p id="board-csv-status" class="csv-status hidden" role="status" aria-live="polite"></p>
         <div class="modal-actions">
-          <button class="btn btn-outline" onclick="closeModal('board-csv-modal')">Cancel</button>
+          <button class="btn btn-outline" onclick="closeModal('board-csv-modal')">Close</button>
           <button class="btn btn-primary" onclick="document.getElementById('board-csv-input').click()" data-autofocus>Choose CSV</button>
         </div>
       </div>
@@ -3423,23 +3424,38 @@ git push</pre>
     // that a third of your rows were dropped. The outcome of an import is
     // written where the import happened and stays until the next one.
     // What the file actually produced, in one sentence.
-    function csvOutcomeText(loaded, skipped, mode) {
+    function csvOutcomeText(loaded, skipped, mode, opts) {
+      const o = opts || {};
+      const did = o.verb || 'loaded';
+      const noun = o.noun || 'row';
       const n = `${loaded} extract${loaded === 1 ? '' : 's'}`;
       const where = mode === 'replace' ? ' (replaced the pool)' : '';
-      if (!skipped) return `${n} loaded${where}.`;
-      return `${n} loaded${where} — ${skipped} row${skipped === 1 ? '' : 's'} skipped `
-        + `(a row needs both a title and a summary).`;
+      if (!skipped) return `${n} ${did}${where}.`;
+      return `${n} ${did}${where} — ${skipped} ${noun}${skipped === 1 ? '' : 's'} skipped `
+        + `(each needs both a title and a summary).`;
     }
-    function setCsvStatus(target, kind, message) {
-      const el = document.getElementById(target === 'board' ? 'board-csv-status' : 'csv-status');
-      if (!el) return;
+    // Where the receipt is written. Three surfaces, because an import can start
+    // from three places and the answer belongs where the question was asked.
+    const CSV_STATUS_EL = { setup: 'csv-status', board: 'board-csv-status', extract: 'xtr-status' };
+    // Returns whether the message actually reached the screen — a receipt
+    // inside a closed modal has not, and the caller should toast instead.
+    function setCsvStatus(surface, kind, message) {
+      const el = document.getElementById(CSV_STATUS_EL[surface] || CSV_STATUS_EL.setup);
+      if (!el) return false;
       el.className = 'csv-status csv-status-' + kind;
       el.textContent = message;
       if (kind === 'error' || kind === 'warn') el.setAttribute('role', 'alert');
       else el.setAttribute('role', 'status');
+      // The extractor is taller than the screen, so its receipt lands below the
+      // fold — and a receipt nobody scrolls to is no better than a toast. Bring
+      // what follows it along too, so the buttons come with the message.
+      if (el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+      const after = el.nextElementSibling;
+      if (after && after.scrollIntoView) after.scrollIntoView({ block: 'nearest' });
+      return el.offsetParent !== null;
     }
-    function clearCsvStatus(target) {
-      const el = document.getElementById(target === 'board' ? 'board-csv-status' : 'csv-status');
+    function clearCsvStatus(surface) {
+      const el = document.getElementById(CSV_STATUS_EL[surface] || CSV_STATUS_EL.setup);
       if (el) { el.className = 'csv-status hidden'; el.textContent = ''; }
     }
     function csvRowsToItems(text) {
@@ -3480,7 +3496,11 @@ git push</pre>
     // --- QA Intercept: every CSV import must pass a verification consent gate
     // before the extracts land in the workspace. Both upload paths stash the
     // parsed items here, then commitCsvImport() runs on the user's confirmation.
-    let pendingCsvImport = null; // { items, target: 'setup'|'board', mode }
+    // target = where the extracts land (the pool, or the live canvas).
+    // surface = where the receipt is written (see CSV_STATUS_EL). They differ:
+    // the extractor can drop cards straight onto the canvas while its own modal
+    // is the thing the participant is looking at.
+    let pendingCsvImport = null; // { items, target: 'setup'|'board', surface, mode, skipped }
 
     function handleCsvUpload(evt) {
       const file = evt.target.files && evt.target.files[0];
@@ -3489,19 +3509,18 @@ git push</pre>
       clearCsvStatus('setup');
       const reader = new FileReader();
       reader.onerror = () => {
-        setCsvStatus('setup', 'error', `Could not read ${file.name}.`);
-        toast('Could not read that file.');
+        if (!setCsvStatus('setup', 'error', `Could not read ${file.name}.`)) toast('Could not read that file.');
       };
       reader.onload = () => {
         const result = csvRowsToItems(String(reader.result || ''));
         if (result.error) {
-          setCsvStatus('setup', 'error', `${file.name}: ${result.error} Expected columns: title, summary, source_url (optional).`);
-          toast(result.error, { duration: 6000 });
+          const msg = `${file.name}: ${result.error} Expected columns: title, summary, source_url (optional).`;
+          if (!setCsvStatus('setup', 'error', msg)) toast(result.error, { duration: 6000 });
           return;
         }
         const modeEl = document.querySelector('input[name="csv-mode"]:checked');
         const mode = modeEl ? modeEl.value : 'append';
-        pendingCsvImport = { items: result.items, target: 'setup', mode, skipped: result.skipped, name: file.name };
+        pendingCsvImport = { items: result.items, target: 'setup', surface: 'setup', mode, skipped: result.skipped, name: file.name };
         openQaModal(result.items.length);
       };
       reader.readAsText(file);
@@ -3512,7 +3531,10 @@ git push</pre>
     function commitCsvImport() {
       if (!pendingCsvImport) return;
       const { items: newItems, target, mode, skipped } = pendingCsvImport;
+      const surface = pendingCsvImport.surface || target;
+      const noun = surface === 'extract' ? 'entry' : 'row';
       newItems.forEach(it => { it.verified = true; });
+      let text;
       if (target === 'setup') {
         if (mode === 'replace') {
           appState.items = newItems;
@@ -3521,23 +3543,29 @@ git push</pre>
           appState.items = appState.items.concat(newItems);
         }
         renderConfigItems();
-        scheduleSave();
-        const text = csvOutcomeText(newItems.length, skipped, mode);
-        setCsvStatus('setup', skipped ? 'warn' : 'ok', text);
-        toast(text, { duration: skipped ? 7000 : 3500 });
+        text = csvOutcomeText(newItems.length, skipped, mode, { noun });
       } else {
         appState.items = appState.items.concat(newItems);
         // Mark them sorted as signals and keep the sorting cursor at the end,
         // otherwise pickInitialScreen() bounces the next reload into sorting.
         newItems.forEach(it => { appState.sorting.decisions[it.id] = 'signal'; });
         appState.sorting.currentIndex = appState.items.length;
-        placeNodesInFreeSpace(newItems.map(it => it.id));
+        const newIds = newItems.map(it => it.id);
+        placeNodesInFreeSpace(newIds);
         renderAllNodes();
         renderAllEdges();
         updateClusterProgressChip();
-        closeModal('board-csv-modal');
-        scheduleSave();
-        toast(`${newItems.length} extract${newItems.length === 1 ? '' : 's'} added to the canvas.`);
+        // New cards land in open space to the right of everything else, which
+        // is usually off-screen. Pan to them: seeing the cards is the receipt.
+        focusNodes(newIds);
+        text = csvOutcomeText(newItems.length, skipped, 'append', { verb: 'added to the canvas', noun });
+      }
+      scheduleSave();
+      // One message, in one place. Toasting on top of a receipt the participant
+      // is already reading just covers the receipt — and on a phone, the button
+      // underneath it too.
+      if (!setCsvStatus(surface, skipped ? 'warn' : 'ok', text)) {
+        toast(text, { duration: skipped ? 7000 : 3500 });
       }
       pendingCsvImport = null;
     }
@@ -3565,17 +3593,16 @@ git push</pre>
       clearCsvStatus('board');
       const reader = new FileReader();
       reader.onerror = () => {
-        setCsvStatus('board', 'error', `Could not read ${file.name}.`);
-        toast('Could not read that file.');
+        if (!setCsvStatus('board', 'error', `Could not read ${file.name}.`)) toast('Could not read that file.');
       };
       reader.onload = () => {
         const result = csvRowsToItems(String(reader.result || ''));
         if (result.error) {
-          setCsvStatus('board', 'error', `${file.name}: ${result.error} Expected columns: title, summary, source_url (optional).`);
-          toast(result.error, { duration: 6000 });
+          const msg = `${file.name}: ${result.error} Expected columns: title, summary, source_url (optional).`;
+          if (!setCsvStatus('board', 'error', msg)) toast(result.error, { duration: 6000 });
           return;
         }
-        pendingCsvImport = { items: result.items, target: 'board', mode: 'append', skipped: result.skipped, name: file.name };
+        pendingCsvImport = { items: result.items, target: 'board', surface: 'board', mode: 'append', skipped: result.skipped, name: file.name };
         openQaModal(result.items.length);
       };
       reader.readAsText(file);
@@ -3592,13 +3619,13 @@ git push</pre>
       commitCsvImport();
     }
     function qaCancelImport() {
-      const target = pendingCsvImport ? pendingCsvImport.target : 'setup';
+      const surface = pendingCsvImport ? (pendingCsvImport.surface || pendingCsvImport.target) : 'setup';
       pendingCsvImport = null;
       closeModal('qa-verify-modal');
       // Cancelling used to leave no trace at all, which reads exactly like the
       // upload having silently failed.
-      setCsvStatus(target, 'warn', 'Import cancelled — nothing was added.');
-      toast('Import cancelled — nothing was added.');
+      const msg = 'Import cancelled — nothing was added.';
+      if (!setCsvStatus(surface, 'warn', msg)) toast(msg);
     }
 
     // ── A2: Extract from sources (BYO-LLM) ───────────────────────────────
@@ -3611,7 +3638,12 @@ git push</pre>
       const url = document.getElementById('xtr-url'); if (url) url.value = '';
       const res = document.getElementById('xtr-result'); if (res) res.value = '';
       tgxExtractHideError();
+      clearCsvStatus('extract');
       tgxExtractRefreshPrompt();
+      // Opened from the canvas, the cards go onto the canvas — say so.
+      const add = document.getElementById('xtr-add-btn');
+      if (add) add.textContent = appState.currentScreen === 'board'
+        ? 'Add extracts to the canvas →' : 'Add extracts to pool →';
       openModal('xtr-modal');
     }
     function tgxExtractOnFile(evt) {
@@ -3673,25 +3705,41 @@ git push</pre>
       let url = urlEl ? urlEl.value.trim() : '';
       if (!/^https?:\/\//i.test(url)) url = '';
       const items = [];
+      let skipped = 0;
       arr.forEach(e => {
-        if (!e || typeof e !== 'object') return;
+        if (!e || typeof e !== 'object') { skipped++; return; }
         const title = String(e.title || '').trim();
         const summary = String(e.summary || '').trim();
-        if (!title || !summary) return;
+        if (!title || !summary) { skipped++; return; }
         const kind = String(e.kind || '').trim().toLowerCase();
         items.push({ id: uid('item'), tag: kindTag[kind] || 'Extract', title: title, summary: summary, source_url: url, verified: false });
       });
       if (!items.length) return { error: 'No valid extracts found — each needs a "title" and a "summary".' };
-      return { items: items };
+      return { items: items, skipped: skipped };
     }
     function tgxExtractParseAndAdd() {
       tgxExtractHideError();
+      clearCsvStatus('extract');
       const result = tgxExtractParseExtracts(document.getElementById('xtr-result').value);
       if (result.error) { tgxExtractShowError(result.error); return; }
-      const modeEl = document.querySelector('input[name="csv-mode"]:checked');
+      // The extractor is reachable from the canvas as well as from Sources, and
+      // where you opened it decides where the cards go. Landing canvas-side
+      // extracts in the setup pool leaves them nowhere on screen and drops the
+      // next reload back into the sorting queue.
+      const onBoard = appState.currentScreen === 'board';
+      // Append/replace is a Sources-screen choice. On the canvas there is no
+      // such control, and "replace" would silently wipe the board.
+      const modeEl = onBoard ? null : document.querySelector('input[name="csv-mode"]:checked');
       const mode = modeEl ? modeEl.value : 'append';
-      pendingCsvImport = { items: result.items, target: 'setup', mode: mode };
-      closeModal('xtr-modal');
+      pendingCsvImport = {
+        items: result.items,
+        target: onBoard ? 'board' : 'setup',
+        surface: 'extract',
+        mode: mode,
+        skipped: result.skipped
+      };
+      // The extractor modal stays up behind the gate so the outcome can be
+      // reported where the work was done.
       openQaModal(result.items.length);
     }
 
@@ -3960,7 +4008,11 @@ git push</pre>
       document.querySelectorAll('#canvas-dock .dock-glyph').forEach(g => {
         const tool = g.closest('.dock-tool');
         if (!tool) return;
-        const t = tool.dataset.tool ? map[tool.dataset.tool] : 1; // no data-tool = Evidence
+        // Only the tier tools carry a tier glyph. "＋ Extracts" is not a tier —
+        // it used to fall through to Evidence's dashed circle, which on a phone
+        // (labels hidden) left the one way to add data looking like a duplicate.
+        const t = tool.dataset.tool ? map[tool.dataset.tool]
+          : (tool.id === 'dock-evidence-btn' ? 1 : undefined);
         if (t !== undefined) g.innerHTML = TIER_GLYPHS[t];
       });
     })();
@@ -4627,6 +4679,28 @@ git push</pre>
         const ang = baseAng + k * GOLDEN;
         setNodePos(id, cx + Math.cos(ang) * r - dims.w / 2, cy + Math.sin(ang) * r - dims.h / 2);
       });
+    }
+
+    // Pan (never zoom — the participant chose that) so the given nodes sit in
+    // the middle of the viewport.
+    function focusNodes(ids) {
+      const pts = (ids || []).map(id => appState.nodes[id]).filter(Boolean);
+      if (!pts.length) return;
+      const viewport = document.getElementById('canvas-viewport');
+      if (!viewport) return;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      ids.forEach(id => {
+        const p = appState.nodes[id];
+        if (!p) return;
+        const { w, h } = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
+        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x + w); maxY = Math.max(maxY, p.y + h);
+      });
+      const rect = viewport.getBoundingClientRect();
+      const z = appState.view.zoom;
+      appState.view.panX = rect.width / 2 - ((minX + maxX) / 2) * z;
+      appState.view.panY = rect.height / 2 - ((minY + maxY) / 2) * z;
+      applyViewTransform();
     }
 
     function applyViewTransform() {
@@ -6259,6 +6333,12 @@ git push</pre>
     function openModal(id) {
       lastFocusBeforeModal = document.activeElement;
       const modal = document.getElementById(id);
+      // Modals stack — the CSV picker stays up behind the verification gate.
+      // Every overlay carries the same z-index, so without this the winner is
+      // whichever happens to sit later in the document, and the gate's own
+      // buttons end up unclickable behind the modal that opened it.
+      const alreadyOpen = document.querySelectorAll('.modal-overlay:not(.hidden)').length;
+      modal.style.zIndex = String(1000 + alreadyOpen);
       modal.classList.remove('hidden');
       syncModalOpenClass();
       const autoCandidate = modal.querySelector('[data-autofocus]');
@@ -6271,7 +6351,9 @@ git push</pre>
       if (target) setTimeout(() => target.focus(), 0);
     }
     function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
+      const modal = document.getElementById(id);
+      modal.classList.add('hidden');
+      modal.style.zIndex = '';
       syncModalOpenClass();
       if (id === 'card-page-modal') currentCardPageId = null; // stop node→modal mirroring
       if (lastFocusBeforeModal && typeof lastFocusBeforeModal.focus === 'function') {
@@ -6288,10 +6370,19 @@ git push</pre>
     }
 
 
+    // The modal the keyboard belongs to is the one on top, which is not the
+    // first one in the document once modals stack.
+    function topmostOpenModal() {
+      const open = Array.from(document.querySelectorAll('.modal-overlay'))
+        .filter(m => !m.classList.contains('hidden'));
+      if (!open.length) return null;
+      return open.reduce((best, m) =>
+        (parseInt(m.style.zIndex, 10) || 1000) >= (parseInt(best.style.zIndex, 10) || 1000) ? m : best);
+    }
+
     // Trap Tab within an open modal, and close on Escape.
     document.addEventListener('keydown', (e) => {
-      const open = Array.from(document.querySelectorAll('.modal-overlay'))
-        .find(m => !m.classList.contains('hidden'));
+      const open = topmostOpenModal();
       if (!open) return;
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -10089,6 +10180,9 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       });
       appState.situations = appState.situations.filter(s => s.memberCardIds.length);
       if (appState.cards.length > 0) return 'board';
+      // Already working on the canvas with cards placed but no cluster yet —
+      // e.g. extracts imported on the board. Don't send them back to Sources.
+      if (appState.currentScreen === 'board' && Object.keys(appState.nodes).length > 0) return 'board';
       if (appState.currentScreen === 'sorting') return 'sorting';
       const totalItems = appState.items.length;
       const sortedCount = Object.keys(appState.sorting.decisions).length;
