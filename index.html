@@ -784,6 +784,62 @@
     .tgx-actionbar .ab-secondary:hover { background: rgba(0,148,160,0.08); }
     #workspace-screen .tgx-actionbar { position: sticky; bottom: 0; margin-top: 24px; box-shadow: 0 -6px 20px rgba(0,20,27,0.06); border-radius: var(--radius-3) var(--radius-3) 0 0; }
 
+
+    /* --- Workbook chrome: the five stages are a 4,000px scroll, so the screen
+       has to spend its height on the questions, not on framing them. The
+       header is one row; the stage nav is the only thing that stays. --- */
+    .workspace-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; margin-bottom: 10px;
+    }
+    .ws-head-titles { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .ws-head-eyebrow {
+      font-size: var(--text-xs); font-weight: 700; text-transform: uppercase;
+      letter-spacing: var(--track-label); color: var(--primary-teal); flex: none;
+    }
+    .workspace-header h2 { font-size: var(--text-base); font-weight: 600; margin: 0; min-width: 0; }
+    .workspace-header .ws-back, .workspace-header .ws-reclassify { flex: none; padding: 6px 12px; font-size: var(--text-sm); }
+
+    /* Where am I, and how do I get to the stage I want? */
+    .ws-stage-nav {
+      position: sticky; top: 0; z-index: 20;
+      width: 100%; max-width: 880px; box-sizing: border-box;
+      display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; overflow-x: auto;
+      background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: var(--radius-2);
+      padding: 5px; margin-bottom: 14px; scrollbar-width: none;
+    }
+    .ws-stage-nav::-webkit-scrollbar { display: none; }
+    .ws-stage-nav:empty { display: none; }
+    .ws-stage-chip {
+      flex: 1 1 auto; white-space: nowrap; background: none; border: none;
+      font: inherit; font-size: var(--text-xs); font-weight: 600; color: var(--midnight);
+      opacity: 0.6; cursor: pointer; padding: 7px 10px; border-radius: var(--radius-1);
+      display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px;
+    }
+    .ws-stage-chip:hover { opacity: 1; background: rgba(0,148,160,0.08); }
+    .ws-stage-chip[aria-current="true"] { opacity: 1; background: var(--primary-teal); color: var(--ghost-white); }
+    .ws-stage-chip .ws-chip-n { font-variant-numeric: tabular-nums; opacity: 0.75; }
+    .ws-stage-chip[aria-current="true"] .ws-chip-n { opacity: 1; }
+    .ws-stage-chip .ws-chip-done { color: var(--primary-teal); font-weight: 700; }
+    .ws-stage-chip[aria-current="true"] .ws-chip-done { color: var(--ghost-white); }
+    @media (max-width: 600px) {
+      .ws-stage-chip .ws-chip-label { display: none; }
+      .ws-stage-chip { flex: 0 0 auto; }
+      .workspace-header { padding: 8px 12px; gap: 8px; flex-wrap: nowrap; }
+      .workspace-header .ws-reclassify .btn-label { display: none; }
+      .ws-head-titles { flex-wrap: nowrap; gap: 8px; }
+      .workspace-header h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+
+    /* One row: what's missing on the left, the action on the right. */
+    .ws-actionbar { flex-direction: row; justify-content: space-between; gap: 16px; padding-top: 8px; }
+    .ws-actionbar .ab-hint { text-align: left; flex: 1; min-width: 0; }
+    .ws-actionbar .ab-primary { width: auto; max-width: none; flex: none; padding: 10px 20px; }
+    @media (max-width: 600px) {
+      .ws-actionbar { flex-direction: column; gap: 6px; }
+      .ws-actionbar .ab-hint { text-align: center; }
+      .ws-actionbar .ab-primary { width: 100%; }
+    }
     /* ── Share sheet / chooser rows (big tappable choice rows, OLOS .choice grammar) ── */
     .share-sheet-list { display: flex; flex-direction: column; gap: 10px; }
     .share-row { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; text-align: left; background: var(--ghost-white); border: 1px solid var(--cloud); border-radius: var(--radius-2); padding: 14px 16px; cursor: pointer; font: inherit; color: var(--midnight); transition: border-color 0.15s, transform 0.15s; }
@@ -2382,17 +2438,17 @@
   <div id="workspace-screen" class="hidden">
     <div class="step-indicator-mount"></div>
     <div class="workspace-header">
-      <div style="font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label); color: var(--primary-teal); margin-bottom: 8px;">Deepen</div>
-      <div class="workspace-title-row">
-        <button class="btn btn-outline" onclick="backToBoard()" aria-label="Back to the board" title="Back to the board">←</button>
-        <button class="btn btn-outline" onclick="enterClassifyPhase()" title="Re-open the evidence type classification on the board">↩ Revisit classification</button>
+      <button class="btn btn-outline ws-back" onclick="backToBoard()" aria-label="Back to the board" title="Back to the board">←</button>
+      <div class="ws-head-titles">
+        <span class="ws-head-eyebrow">Deepen</span>
         <h2 id="workspace-title">Build the case</h2>
       </div>
-      <p class="workspace-intro">Work through the five stages in order: solidify the situation, take honest stock of your evidence, name who you still need to reach, map the context and the field — then converge on the paradox(es). The paradox is what everything else was for: the self-undoing deadlock your pod forms around.</p>
+      <button class="btn btn-outline ws-reclassify" onclick="enterClassifyPhase()" title="Re-open the evidence type classification on the board">↩ <span class="btn-label">Revisit classification</span></button>
     </div>
+    <nav class="ws-stage-nav" id="ws-stage-nav" aria-label="Jump to a stage"></nav>
     <nav class="workspace-jump-bar" id="workspace-jump-bar" aria-label="Jump to a committed cluster"></nav>
     <div class="workspace-cards" id="workspace-cards-container"></div>
-    <div class="tgx-actionbar" id="workspace-actionbar">
+    <div class="tgx-actionbar ws-actionbar" id="workspace-actionbar">
       <div class="ab-hint" id="submit-status-hint">To finish: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.</div>
       <button class="btn btn-primary ab-primary" id="produce-deck-btn" onclick="exportModular()" disabled>Produce the deck &amp; site</button>
     </div>
@@ -3545,9 +3601,11 @@ git push</pre>
         renderWorkspace();
       }
       if (name !== 'board') {
-        // The action bar and dock only exist on the board; leaving their
-        // measured heights behind would push toasts up on every other screen.
-        document.documentElement.style.setProperty('--ab-h', '0px');
+        // The dock is the board's alone, but the workbook has its own sticky
+        // action bar — toasts have to clear whichever one is on screen, or
+        // they slide underneath it.
+        const wsBar = name === 'workspace' ? document.getElementById('workspace-actionbar') : null;
+        document.documentElement.style.setProperty('--ab-h', chromeClearance(wsBar) + 'px');
         document.documentElement.style.setProperty('--dock-h', '0px');
       }
       renderStepIndicator();
@@ -6834,15 +6892,25 @@ ${AI_RULES}
     function tgxDismissMappedThreshold() { tgxJustMapped = false; renderTgxActionbar(); }
     // Publish the action bar's live height as --ab-h on :root so fixed
     // overlays (the coach) can stay clear of it. 0 when hidden/off-board.
+    // How far up from the bottom of the window a toast has to start to clear a
+    // bar. Not the bar's height: the workbook's action bar is sticky inside a
+    // padded scroller, so it comes to rest above the window's bottom edge and
+    // its height alone undercounts the gap by that padding.
+    function chromeClearance(el) {
+      if (!el) return 0;
+      const r = el.getBoundingClientRect();
+      if (!r.height) return 0;
+      return Math.max(0, Math.min(window.innerHeight - r.top, r.height + 64));
+    }
     function tgxPublishAbHeight(bar, visible) {
-      const h = visible && bar ? bar.offsetHeight : 0;
+      const h = visible ? chromeClearance(bar) : 0;
       document.documentElement.style.setProperty('--ab-h', h + 'px');
       // The canvas dock floats above the action bar. Toasts have to clear both
       // or an actionable one — Undo, Delete, Unframe — puts its button
       // underneath the dock, where it cannot be pressed.
       const dock = document.getElementById('canvas-dock');
-      const dockH = (dock && !dock.classList.contains('hidden')) ? dock.offsetHeight : 0;
-      document.documentElement.style.setProperty('--dock-h', dockH ? (dockH + 20) + 'px' : '0px');
+      const dockClear = (dock && !dock.classList.contains('hidden')) ? chromeClearance(dock) : 0;
+      document.documentElement.style.setProperty('--dock-h', dockClear ? Math.max(0, dockClear - h) + 'px' : '0px');
     }
     function renderTgxActionbar() {
       const bar = document.getElementById('tgx-actionbar');
@@ -7625,6 +7693,8 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       const container = document.getElementById('workspace-cards-container');
       const jumpBar = document.getElementById('workspace-jump-bar');
       if (jumpBar) jumpBar.innerHTML = '';
+      const stageNav = document.getElementById('ws-stage-nav');
+      if (stageNav) stageNav.innerHTML = '';
       container.innerHTML = '';
 
       if (!hasSituations()) {
@@ -7637,7 +7707,110 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       }
       appState.situations.forEach((sit, i) => container.appendChild(renderSituationEditor(sit, i)));
       recomputeSubmitButton();
+      renderStageNav();
     }
+
+
+    // ---- Workbook stage nav -------------------------------------------------
+    // Five stages down a 4,000px scroll with nothing to say where you are. This
+    // nav is the one piece of chrome that stays: which stage you're in, which
+    // ones you've answered, and one click to any of them.
+    //
+    // Stage 4 is the players list; the rest are gated on their fields. Only
+    // stages 1 and 5 are required to export — the ticks are orientation, not
+    // a gate, and the action bar remains the thing that says what's blocking.
+    const WS_STAGE_FIELDS = {
+      1: ['title', 'description', 'openness'],
+      2: ['evidenceCoverage', 'researchAgenda'],
+      3: ['voicesNeeded', 'accessNeeds'],
+      5: ['paradox', 'problematization']
+    };
+    function wsStageDone(stage, sit) {
+      if (!sit) return false;
+      if (stage === 4) return (sit.players || []).length > 0;
+      const fields = WS_STAGE_FIELDS[stage] || [];
+      return fields.length > 0 && fields.every(f => (sit[f] || '').trim());
+    }
+    function renderStageNav() {
+      const nav = document.getElementById('ws-stage-nav');
+      if (!nav) return;
+      const sections = [...document.querySelectorAll('#workspace-cards-container .workspace-section[data-stage]')];
+      // With more than one situation the stage numbers repeat, so a single
+      // stage nav would be ambiguous — the situation jump bar covers that.
+      if (!sections.length || appState.situations.length !== 1) { nav.innerHTML = ''; return; }
+      const sit = appState.situations[0];
+      nav.innerHTML = sections.map(sec => {
+        const n = sec.getAttribute('data-stage');
+        const short = sec.getAttribute('data-stage-short') || ('Stage ' + n);
+        const done = wsStageDone(Number(n), sit);
+        return `<button type="button" class="ws-stage-chip" data-goto-stage="${n}" aria-current="false">`
+          + `<span class="ws-chip-n" aria-hidden="true">${done ? '<span class="ws-chip-done">✓</span>' : n}</span>`
+          + `<span class="ws-chip-label">${escapeHtml(short)}</span>`
+          + `<span class="sr-only">Stage ${n}${done ? ' — answered' : ''}</span></button>`;
+      }).join('');
+      nav.querySelectorAll('[data-goto-stage]').forEach(btn => {
+        btn.addEventListener('click', () => wsGoToStage(btn.getAttribute('data-goto-stage')));
+      });
+      wsSyncStageNav();
+    }
+    // Just the ticks — rebuilding the whole nav on every keystroke would drop
+    // focus out of the field being typed into.
+    function renderStageNavTicks() {
+      const nav = document.getElementById('ws-stage-nav');
+      if (!nav || !nav.children.length || appState.situations.length !== 1) return;
+      const sit = appState.situations[0];
+      nav.querySelectorAll('[data-goto-stage]').forEach(btn => {
+        const n = Number(btn.getAttribute('data-goto-stage'));
+        const slot = btn.querySelector('.ws-chip-n');
+        if (slot) slot.innerHTML = wsStageDone(n, sit) ? '<span class="ws-chip-done">✓</span>' : String(n);
+      });
+    }
+    // Where a jumped-to stage comes to rest below the nav, and how far past
+    // the nav a stage counts as "the one you're in". The second must be the
+    // looser of the two or a stage you just jumped to reads as the one above.
+    const WS_STAGE_LAND = 12;
+    const WS_STAGE_LINE = 24;
+    function wsGoToStage(n) {
+      const sec = document.querySelector(`#workspace-cards-container .workspace-section[data-stage="${n}"]`);
+      const screen = document.getElementById('workspace-screen');
+      const nav = document.getElementById('ws-stage-nav');
+      if (!sec || !screen || !nav) return;
+      // Aim at where the nav will be once it sticks, not where it is now — at
+      // the top of the scroll it is still sitting below the header, and using
+      // that position under-scrolls by exactly the header's height.
+      const restingTop = screen.getBoundingClientRect().top + nav.offsetHeight + WS_STAGE_LAND;
+      const delta = sec.getBoundingClientRect().top - restingTop;
+      screen.scrollTo({ top: screen.scrollTop + delta, behavior: 'smooth' });
+    }
+    // Which stage is the reader actually in? The last one whose top has passed
+    // under the nav.
+    function wsSyncStageNav() {
+      const nav = document.getElementById('ws-stage-nav');
+      if (!nav || !nav.children.length) return;
+      const screenTop = document.getElementById('workspace-screen').getBoundingClientRect().top;
+      const line = screenTop + nav.offsetHeight + WS_STAGE_LINE;
+      const sections = [...document.querySelectorAll('#workspace-cards-container .workspace-section[data-stage]')];
+      let active = sections[0];
+      sections.forEach(sec => { if (sec.getBoundingClientRect().top <= line) active = sec; });
+      const screen = document.getElementById('workspace-screen');
+      if (screen && screen.scrollTop + screen.clientHeight >= screen.scrollHeight - 24) {
+        active = sections[sections.length - 1];
+      }
+      const activeN = active ? active.getAttribute('data-stage') : null;
+      nav.querySelectorAll('[data-goto-stage]').forEach(btn => {
+        btn.setAttribute('aria-current', btn.getAttribute('data-goto-stage') === activeN ? 'true' : 'false');
+      });
+    }
+    (function bindStageNavScroll() {
+      const screen = document.getElementById('workspace-screen');
+      if (!screen) return;
+      let queued = false;
+      screen.addEventListener('scroll', () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => { queued = false; wsSyncStageNav(); });
+      }, { passive: true });
+    })();
 
     function renderSituationEditor(s, idx) {
       const tops = s.memberCardIds.map(findCard).filter(Boolean)
@@ -7659,7 +7832,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <p class="field-hint">An open, complex, networked condition synthesized from what you mapped. This is not a problem to solve yet — it's a situation to map and understand.</p>
         </header>
 
-        <section class="workspace-section">
+        <section class="workspace-section" data-stage="1" data-stage-short="Solidify">
           <div class="ws-stage-label">Stage 1 — Solidify the situation</div>
           <label for="sit-title-${n}">Name the situation</label>
           <input type="text" id="sit-title-${n}" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('${s.id}', 'title', this.value); recomputeSubmitButton();">
@@ -7673,7 +7846,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <ul class="signal-chips">${trail}</ul>
         </section>
 
-        <section class="workspace-section">
+        <section class="workspace-section" data-stage="2" data-stage-short="Evidence">
           <div class="ws-stage-label">Stage 2 — Evidence landscape &amp; research agenda</div>
           <label for="sit-coverage-${n}">What the evidence covers</label>
           <p class="field-hint">Look at your evidence trail. Which of Dorst's seven types do you have? (History, counterfactual, problem, boundary, flux, player, value.) Which are thin or missing entirely?</p>
@@ -7691,7 +7864,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           </div>
         </section>
 
-        <section class="workspace-section">
+        <section class="workspace-section" data-stage="3" data-stage-short="Access">
           <div class="ws-stage-label">Stage 3 — Research access</div>
           <label for="sit-voices-${n}">Who do you need to hear from?</label>
           <p class="field-hint">Who lives inside this problem and could ground-truth your framing? Name specific roles, communities, or institutions — not abstractly ('patients') but concretely enough to act on ('someone who navigated the Medicaid recertification process in the last 6 months').</p>
@@ -7701,7 +7874,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <textarea id="sit-access-${n}" placeholder="Need: ___. Possible path: ___." oninput="updateSituationField('${s.id}', 'accessNeeds', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.accessNeeds || '')}</textarea>
         </section>
 
-        <section class="workspace-section">
+        <section class="workspace-section" data-stage="4" data-stage-short="Players">
           <div class="ws-stage-label">Stage 4 — Context &amp; field: map the players</div>
           <label>Two moves: the inner circle first, then widen to the field.</label>
           <p class="field-hint">Ours is a modified Frame Innovation: no client handed you a problem, so you <em>discover</em> the problem owner. Move one — the <strong>Context</strong>: who is directly implicated (deciding, blocking, gatekeeping, suffering alongside)? These are the actors your extracts keep naming. Move two — the <strong>wider field</strong>: the broader network of practices and values around them, where fresh frames and status-quo beneficiaries usually live. <strong>Candidate owners come from the inner circle</strong> — a candidate owner (1) holds the paradox in their world, (2) has the mandate or reach to act, and (3) gains from the value your frame creates.</p>
@@ -7709,7 +7882,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <button type="button" class="btn btn-outline" style="margin-top:10px;" onclick="tgxOwnerAdd('${s.id}')">+ Add a player</button>
         </section>
 
-        <section class="workspace-section">
+        <section class="workspace-section" data-stage="5" data-stage-short="Paradox">
           <div class="ws-stage-label">Stage 5 — Find the paradox(es)</div>
           <label for="sit-paradox-${n}">Name the deadlock the field sustains</label>
           <p class="field-hint">Everything you mapped — the themes, the context, the field — was in service of this. With no client to vouch for the pain, our paradox must live in the field itself: 'The situation demands X, but the same conditions that create the need also prevent X from working.' It's not 'this is complicated' — it's the self-undoing structural tension the pod forms around. Name it, and name who keeps it alive.</p>
@@ -8033,6 +8206,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     }
     function recomputeSubmitButton() {
       const ok = workspaceIsComplete();
+      if (appState.currentScreen === 'workspace') renderStageNavTicks();
       const deckBtn = document.getElementById('produce-deck-btn');
       if (deckBtn) deckBtn.disabled = !ok;
       const hint = document.getElementById('submit-status-hint');

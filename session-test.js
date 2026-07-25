@@ -246,12 +246,72 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('Stage 5 — the pressure-test', await typeInto('sit-problem-1', 'Assumes volunteering is the unit of capacity; paid civic staffing would break the frame.'));
   await sleep(400);
 
+  // The workbook is a ~4,000px scroll across five stages. It has to spend its
+  // height on the questions, and it has to say where you are in them.
+  const wsChrome = await page.evaluate(() => {
+    const h = s => { const e = document.querySelector(s); return e ? Math.round(e.getBoundingClientRect().height) : 0; };
+    const sticky = h('.ws-stage-nav') + h('#workspace-actionbar');
+    const top = h('#workspace-screen .step-indicator') + h('.workspace-header') + h('.ws-stage-nav') + h('#workspace-actionbar');
+    const field = document.querySelector('#sit-title-1');
+    return { vh: window.innerHeight, sticky, top, firstField: field ? Math.round(field.getBoundingClientRect().top) : null };
+  });
+  check('the workbook does not spend a third of the screen on chrome',
+    wsChrome.top / wsChrome.vh < 0.30,
+    `${wsChrome.top}px of ${wsChrome.vh} (${Math.round(wsChrome.top / wsChrome.vh * 100)}%) — was 45% before the rework`);
+  check('the first question is in the top half of the screen',
+    wsChrome.firstField !== null && wsChrome.firstField < wsChrome.vh / 2,
+    `first field at y=${wsChrome.firstField} of ${wsChrome.vh}`);
+
+  check('the stage nav lists all five stages',
+    await page.evaluate(() => document.querySelectorAll('.ws-stage-chip').length) === 5);
+
+  // Jumping must land the stage under the nav *and* light the right chip. The
+  // nav is sticky, so at scroll-top it is still below the header — targeting
+  // where it is rather than where it comes to rest under-scrolls every jump.
+  const jumps = [];
+  for (const n of ['2', '3', '4', '5']) {
+    await page.click(`.ws-stage-chip[data-goto-stage="${n}"]`);
+    await sleep(1100);
+    jumps.push(await page.evaluate(() => {
+      const active = document.querySelector('.ws-stage-chip[aria-current="true"]');
+      return active ? active.getAttribute('data-goto-stage') : null;
+    }));
+  }
+  check('jumping to a stage highlights that stage', jumps.join(',') === '2,3,4,5', jumps.join(','));
+
+  await page.evaluate(() => wsGoToStage('1'));
+  await sleep(900);
+
   check('the deck button unlocks once the five stages are answered',
     await page.evaluate(() => {
       const b = document.getElementById('produce-deck-btn');
       return !!b && !b.disabled;
     }),
     await page.evaluate(() => document.getElementById('submit-status-hint') && document.getElementById('submit-status-hint').textContent));
+
+  // Answering a stage should tick it in the nav — without stealing focus out
+  // of the field being typed into.
+  check('answering Stage 1 ticks it in the nav',
+    await page.evaluate(() => {
+      const chip = document.querySelector('.ws-stage-chip[data-goto-stage="1"]');
+      return !!chip && !!chip.querySelector('.ws-chip-done');
+    }));
+
+  // The workbook has its own sticky action bar; a toast has to clear it the
+  // same way it clears the board's.
+  const wsToastClear = await page.evaluate(() => {
+    document.querySelectorAll('#toast-region .toast').forEach(t => t.remove());
+    toast('probe');
+    const t = document.querySelector('#toast-region .toast');
+    const bar = document.getElementById('workspace-actionbar');
+    if (!t || !bar) return 'missing element';
+    const a = t.getBoundingClientRect(), b = bar.getBoundingClientRect();
+    return (a.bottom <= b.top || a.top >= b.bottom) ? true
+      : `toast ${Math.round(a.top)}..${Math.round(a.bottom)} vs footer ${Math.round(b.top)}..${Math.round(b.bottom)}, --ab-h=${getComputedStyle(document.documentElement).getPropertyValue('--ab-h').trim()}, toasts=${document.querySelectorAll('#toast-region .toast').length}`;
+  });
+  check('a toast on the workbook clears its footer', wsToastClear === true, String(wsToastClear));
+  await sleep(300);
+  await page.evaluate(() => document.querySelectorAll('#toast-region .toast').forEach(t => t.remove()));
 
   // ------------------------------------------------- The export gate speaks
   // A blocked export must name the stage that unblocks it from every entry
