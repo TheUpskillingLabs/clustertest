@@ -131,6 +131,7 @@ You'll still be the one standing next to a stuck participant on July 25 — and 
 | Wrote a "paradox" that's a complaint | Sharpness problem | Run the self-check with them: does the fix undo itself ("X requires not-X")? Who *benefits* from it persisting? A paradox nobody profits from is usually a misreading. |
 | Marked a candidate owner confidently | Overclaiming | "It says '(not yet approached)' until someone actually talks to them. An owner is a hypothesis until then — who's making the call?" |
 | Wants the AI to do the thinking | ✨ misunderstanding | "The tool has no AI. That button copies a prompt for *your* model — run it, argue with it, write your own words back. The Blind-spot audit is the tab for when everything feels too tidy." |
+| Stuck on one card, staring at it | Doesn't know the help is there | Point at the ✨ **AI** button on the card itself. Three prompts for that card, built from what's underneath it. It walks them through copy → paste → bring it back. |
 | "I lost my work??" | localStorage panic | Per-browser, per-device — see Gotchas. Same browser + device = it's there. Different device = it never was; export/import moves work. |
 
 And now the builder's corollary: every row you add to this table from the field is either a facilitation note *or a bug in the design*. When it's the design — change the design.

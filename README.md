@@ -66,7 +66,20 @@ After any export, a **Git handoff** panel walks you through committing the folde
 
 ## Your AI, not ours
 
-The tool contains **no AI**. Every ✨ **AI prompts** button copies a carefully-constructed prompt to your clipboard for you to run in *your own* model (Claude, ChatGPT, Gemini, NotebookLM, Perplexity…) and paste insights back. This is a governance decision, not a limitation: your data never leaves your browser, and the analytical judgment stays yours. The prompt library includes field analysis, sorting stress-tests, an adversarial **Blind-spot audit** (a hostile critic compiled from your entire canvas), situation lenses (paradoxes, frames, stakeholders, interviews, gap analysis), and per-card deepening prompts.
+The tool contains **no AI**. Every ✨ **AI prompts** button builds a prompt out of what's on your board, copies it to your clipboard, and leaves the thinking to you and *your own* model. This is a governance decision, not a limitation: your data never leaves your browser, and the analytical judgment stays yours.
+
+Wherever you are, the prompt for that thing is one click away:
+
+| Where | Button | Prompts |
+|---|---|---|
+| Sources | ✨ **Extract from sources** | Turn an article, transcript, or dataset into extract cards |
+| Board (header) | ✨ **AI prompts** | Landscape · Stress-test sorting · Find bridges · 🔍 Blind-spot audit |
+| Any card | ✨ **AI** | Through-line · Name & describe · Stress-test |
+| A problem situation | ✨ **AI prompts** · 🔍 **Audit** | Paradoxes · Frame · Stakeholders · Problematize · Interviews |
+
+Every one of them opens the same three steps — **copy the prompt**, **open your AI and paste it in** (Claude, ChatGPT, Gemini, NotebookLM, Perplexity), **bring it back and argue with it**. The prompt text itself is folded away behind "See the prompt text"; you never have to read the XML unless you want to. Prompts are rebuilt from the live board every time you open them, so re-running one after the card changes gives you a different answer.
+
+The **Blind-spot audit** deserves its own mention: it compiles your entire canvas into a hostile critic. It's the one to reach for when everything feels too tidy.
 
 ## Data & privacy
 

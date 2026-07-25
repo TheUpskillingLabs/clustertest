@@ -11,7 +11,7 @@ arc still runs end to end, exports included. Every cut is either code that
 already couldn't run, a feature that did nothing, or one of several controls
 doing the same job.
 
-`index.html` went from **10,349 to ~9,190 lines**.
+`index.html` went from **10,349 to ~9,370 lines** — 1,159 net lines out, with the BYO-LLM walkthrough added back in.
 
 ---
 
@@ -25,6 +25,7 @@ doing the same job.
 | `Retire three of the four systems…` | Intro deck, corner coach, "Why this step?" |
 | `Consolidate the controls on each screen` | Fewer, clearer controls; same capability |
 | `Stop the toast covering things…` | Two real bugs |
+| `Make the BYO-LLM prompts findable…` | A dead entry point, and a copy-paste flow that read like a dev tool |
 
 ## Removed: code that already couldn't run
 
@@ -108,7 +109,20 @@ The intro deck's copy is real writing and is not reproduced anywhere else:
   situation. It's `exportWorkingFolder` without the named-situation gate, and
   the working-folder zip already carries the whole board.
 
-## Fixed: two real bugs
+## Added: the BYO-LLM prompts got an entry point and a walkthrough
+
+Not a removal, but it belongs in the same record. `openHubAIModal()` and
+`openHubNamePromptModal()` were **dead functions** — the per-card prompts had no
+caller anywhere in the UI, despite being the richest part of the library. Every
+card now carries a ✨ **AI** button (using `.hub-ai-btn`, which was already in
+the stylesheet with nothing rendering it).
+
+Both prompt surfaces also stopped leading with the raw prompt — a wall of
+`<role>` XML — and now lead with a numbered **copy → paste → argue with it**
+walkthrough, with the prompt text folded behind a labelled disclosure and the
+five paste destinations as buttons.
+
+## Fixed: three real bugs
 
 1. **The toast covered what it interrupted.** `#toast-region` was pinned to the
    bottom at `z-index: 2000` with nothing keeping it clear. On the sort screen
@@ -116,7 +130,11 @@ The intro deck's copy is real writing and is not reproduced anywhere else:
    at the moment a first-time sorter needs it, and it covered the workspace
    action bar too. Toasts now respect `--ab-h`; the legend is lifted clear.
    `session-test.js` asserts the two boxes don't intersect.
-2. **The export gate wouldn't say what was wrong.** Producing the deck is gated
+2. **Toasts also drew on top of open modals** (`z-index` 2000 against 1000),
+   and once they cleared the action bar they landed on the modals' own buttons.
+   A `modal-open` class on `body` drops them back to the floor while a modal is
+   up.
+3. **The export gate wouldn't say what was wrong.** Producing the deck is gated
    on the five Deepen stages. From `#produce-deck-btn` the block is explained
    ("Missing: the paradox — Stage 5"), but `exportModular()` is reachable from
    three other places, and all three gave the same generic paragraph listing
