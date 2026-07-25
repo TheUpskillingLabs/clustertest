@@ -51,7 +51,7 @@ Verified against code, not docs.
 | Triangulator canvas | **Built (standalone)** | `triangles/index.html`. `localStorage`, own tier vocabulary, single-user. **This PRD, Areas 1 & 4.** |
 | Export → GitHub-Pages site | **Built (emitter)** | `buildModularExportFiles()` / `exportModular()` emit `index.html` + `assets/` + `data/project.jsonld` + `content/*.md`. README: "ready to host on GitHub Pages." |
 | Repo provisioning (OLOS side) | **Not built** | `lib/integrations/` is **only** `luma.ts`. `pods.github_repo_url` is a hand-typed string. **This PRD, Area 3.** |
-| "Meet the Pods" slides | **Concept only** | The phrase and workflow are baked into the tool's intro deck; **no slide artifact is generated.** **This PRD, Area 3.** |
+| "Meet the Pods" slides | **Built** | `slides.html` ships in the deck & site zip. (The intro deck that used to teach the workflow has been removed.) |
 | Pod formation | **Built (mis-seeded)** | `voting/finalize`, `pods` — but seeded by free-text `problem_statement_id`, not a paradox/cluster. No `clusters` table. **This PRD, Area 4.** |
 | Project / problem-owner layer | **Partial** | Project schema nests; `actants`/`problem_owner` and the proposal gate are doc-only. **This PRD, Area 4.** |
 | Ortelius graph / AI reads | **Gated** | Signed edges, actants, OPP, semantic search — blocked by governance #11. Out of scope. |
@@ -74,7 +74,7 @@ Verified against code, not docs.
 
 ## 5. Area 1 — On-ramp & scaffolding
 
-**Problem.** The tool is deep. A first-timer today lands in the full seven-step machine. The method should be the ceiling, not the floor. The tool *already has the raw materials* — a `mode: 'seed'` (index.html:3072), a one-way `graduateToPod()` (2567/3070/8250), a sandboxed tutorial, per-screen tours — but they aren't composed into a single, obviously-simple front door.
+**Problem.** The tool is deep. A first-timer today lands in the full seven-step machine. The method should be the ceiling, not the floor. The tool *already has the raw materials* — a `mode: 'seed'` and a one-way `graduateToPod()` — but they aren't composed into a single, obviously-simple front door. *(Updated July 2026: the sandboxed tutorial and the per-screen spotlight tours no longer exist — both were dormant and were deleted in the pre-sprint cleanup. The intro deck and corner coach went with them. The action bar is now the whole on-ramp.)*
 
 **Requirements.**
 
@@ -176,7 +176,7 @@ pod_seed (extends the existing schema.org JSON-LD, additively)
 - **4.2 (MUST) Field-actor ledger for owner discovery.** Add `actants (id, cycle_id, kind, role, name, stake, value)` and a `solution_proposal_actants` join. `role ∈ {inner_circle, wider_field, problem_owner}` (matches the tool's Player roles). This is the structured home for `is_candidate_owner` that §7 references.
 - **4.3 (MUST) The proposal gate.** A `solution_proposal` requires **≥ 1 actant of role `problem_owner`** — one `count(*) ≥ 1` guard before the UPSERT. "You can't propose an intervention until you can say who it's for."
 - **4.4 (MUST) Resolve the 12-vs-3–5 config.** It's config, not contradiction. Set `pod_min` deliberately per cycle (today's seeded default is 5, unenforced); set `project_max` to **5** (today 7) to honor "no more than five." One Pod (~12) incubates 2–3 Projects (3–5 each).
-- **4.5 (SHOULD) The tool's "submit for voting" becomes real.** Today `confirmSubmit` (index.html:2726) / the `submit-for-voting` control just stamps a timestamp and navigates (`graduateToPod`). In the integrated path it hands the situation/cluster to the OLOS ballot. Standalone, keep the current behavior (the Git-merge workflow) as the offline mode.
+- **4.5 (SHOULD) Submitting a situation to the ballot.** The tool used to carry a `submit-for-voting` control that only stamped a timestamp and navigated to a read-only artifact screen; it was removed in the July 2026 cleanup because it did nothing and competed with the real terminal action. If the integrated path needs to hand a situation/cluster to the OLOS ballot, it should be built against the ballot, not restored as a stub. Standalone, the Git-merge workflow is the offline mode.
 
 **Acceptance criteria.**
 - A cluster that clears the vote threshold + pod floor becomes a pod carrying its evidence.
@@ -259,7 +259,7 @@ Items 0–10 are gate-free (10 gates on publication consent). Only #11 is blocke
 
 Key functions/state in `triangles/index.html`:
 
-- **Screens / navigation:** `goToScreen(name)` — `intro | concept | setup | sorting | board | workspace | artifact`; step indicator via `renderStepIndicator`.
+- **Screens / navigation:** `goToScreen(name)` — `concept | setup | sorting | board | workspace`; step indicator via `renderStepIndicator`. (`intro` and `artifact` were removed July 2026; `normalizeState()` redirects boards saved on either.)
 - **Modes:** `appState.mode` incl. `'seed'` (3072); `graduateToPod()` (2567/3070/8250).
 - **Data model:** `appState.cards[]` (unified tiered: `tier`, `childIds`), `appState.situations[]`, `appState.nodes`; persistence key `olos.sensemaking.v2`.
 - **Intake:** `parseCsv()` (3384); columns `title,summary,source_url`; sample loader `load-sample-btn`.
@@ -267,7 +267,6 @@ Key functions/state in `triangles/index.html`:
 - **Classify:** `enterClassifyPhase()` / `appState.classifyPhase` — the seven evidence types, staged.
 - **Situation:** `frame`, `paradox`, stakeholder map, voices-needed, status-quo-beneficiaries.
 - **Export:** `buildModularExportFiles()` / `exportModular()` (8829) → `index.html`, `assets/style.css`, `assets/viewer.js`, `data/project.jsonld`, `data/extracts.csv`, `data/site-data.js`, `content/situation.md`, `content/themes.md`. Plus the Git-handoff modal.
-- **Submit:** `confirmSubmit()` (2726), `submit-for-voting` control.
 - **AI assist:** every ✨ button builds an XML-tagged prompt → clipboard (BYO-LLM). No in-app model.
 
 **Glossary (Dorst, as used here):** *Problem Situation* — the open, dynamic condition mapped from the evidence. *Paradox* — the structural deadlock at its core (an obligatory passage point sustaining a regime). *Theme* — a deeper universal bridging human experience and structural condition. *Frame* — "if the situation is approached *as if* X, then Y." *Field vs. Context* — the wider network of actors/values vs. the immediate players. *Problem owner* — the actor who could own the situation or adopt a resolution (here: **discovered**, not assumed).

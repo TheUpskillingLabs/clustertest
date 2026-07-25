@@ -27,11 +27,18 @@ The issue templates (🐛 bug · 🧠 method friction · ✨ sprint idea) are th
 
 ## Verifying changes
 
-The project is tested by driving the real app headlessly with Playwright against `file://`, with a zero-JS-error gate. If you change app behavior:
+The project is tested by driving the real app headlessly with Playwright against `file://`, with a zero-JS-error gate. Two drivers are committed:
 
-1. Install the driver deps locally (they're git-ignored): `npm init -y && npm i playwright` and point `PLAYWRIGHT_BROWSERS_PATH` at a Chromium, or just use your installed Chrome via `channel: 'chrome'`.
-2. Minimum bar: load the app fresh (cleared localStorage), click through Sources → Sort → connect → Unlock → Map → Deepen → export, and confirm the console shows **zero errors**.
-3. State-compatibility bar: load a board saved *before* your change and confirm it renders and the action bar shows a sane state.
+| Driver | What it covers |
+|---|---|
+| `session-test.js` | The full arc — Sources → sort all 21 → connect into Evidence → the Seed-Mode ceiling → Unlock → climb to a Theme → Map → Classify → the five Deepen stages → **three exports** — plus loads of boards saved by older builds. Fails on any uncaught exception or console error. |
+| `cursor-test.js` | Canvas cursor states (idle, node, connect handle, space-to-pan). |
+
+If you change app behavior:
+
+1. Install the driver deps locally (they're git-ignored): `npm init -y && npm i playwright`. If you already have a Playwright elsewhere, point at it instead: `PW=/path/to/playwright node session-test.js`.
+2. Run both: `node session-test.js && node cursor-test.js`. Both exit non-zero on failure. **`session-test.js` must report zero JS errors** — that check is the gate, because the action bar builds its handlers as inline `onclick` strings at runtime, so a deleted function is a click-time `ReferenceError` that nothing else catches.
+3. If you add a screen, a gate, or a persisted field, add a check for it. If you remove UI that wrote a persisted field, add a case to the additive-invariant section proving an old board still loads.
 4. Say in the PR what you drove and what you saw.
 
 ## Docs map
@@ -42,5 +49,6 @@ The project is tested by driving the real app headlessly with Playwright against
 | `docs/PODSQUAD-ONBOARDING.md` | Poderator onboarding + facilitation guide |
 | `docs/SENSEMAKING-SPRINT.md` | The co-design brief for the first in-person event (living doc) |
 | `docs/PRD-triangulator-finalization.md` | Product spec: cycle integration, seams, build order |
+| `docs/CLEANUP-2026-07.md` | What was removed before the Sensemaking Sprint, and how to restore any of it |
 
 House style for all docs: the brand is **The Upskilling Labs** ("The Labs" — never an acronym); the role is **Poderator** in anything reader-facing.

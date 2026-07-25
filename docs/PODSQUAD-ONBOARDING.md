@@ -20,7 +20,7 @@ Don't mistake "starting place" for "sketch." What's in this repo works (mostly),
 
 - The full arc runs: gather source extracts → sort signal from noise → triangulate up a ladder of Evidence, Patterns, Themes → map a Problem Situation → find the paradox that keeps it stuck → discover who could own breaking it → export a ready-to-host site and slide deck that seeds a pod's repository for Meet the Pods.
 - It's **one HTML file**. No build, no server, no dependencies. Open `index.html`, and you're holding the entire application — every word of copy, every gate, every screen. The file *is* the spec. That's not a limitation; it's the invitation. There is nothing in this tool you can't reach.
-- It's tested by a battery of headless-browser drivers that walk the whole flow and demand zero errors — so when you change something, you can know quickly whether you broke something else.
+- It's tested by `session-test.js`, a headless driver that walks the whole flow — sort, connect, unlock, climb, map, classify, the five Deepen stages, three exports — and fails on any JS error. Run it before you push and you'll know quickly whether you broke something else.
 - And you're not the first to mod it. Keep reading.
 
 ## The framework is already modded — so you have permission to test your own mods too
@@ -37,13 +37,14 @@ Now here's the thing that makes this repo different from a book club: **this app
 | The paradox is diagnosed from the client's stuckness | The paradox is **discovered in the evidence** and verified by *cui bono* — who benefits from it persisting | Is the sharpness self-check honest enough? Too preachy? Does it need teeth or a lighter touch? |
 | The problem owner is the client — given, day one | The owner is an **output**: discovered in the Context ring, marked "(not yet approached)" until someone's actually talked to them | How should a pod track approach attempts? Is "not yet approached" the right social pressure? |
 | Framing is the point | Framing is **deliberately deferred** — pods form around a paradox; frames come at the Frame Sprint | Is the boundary drawn in the right place? What framing "leakage" should the tool allow? |
-| The expert designer drives | A bottom action bar + a corner coach drive, so a first-timer needs no expert | Every word of that coach is yours to rewrite. You know how DC actually talks. |
+| The expert designer drives | A bottom action bar drives: one next action, and when it's locked, the reason | Every word of that bar is yours to rewrite. You know how DC actually talks. |
 
 The rule of the game — the only rule of taste we ask you to honor: **mods are argued from the method or from the field, never from preference alone.** "I'd prefer blue" is a preference. "Three people at kickoff couldn't find the connect dots, here's what they said" is the field. "Dorst defers framing because premature frames blind you, and this button invites framing too early" is the method. Both of those win arguments. Preference just starts them.
 
 **Your reading path** (a week of commutes, not a semester):
 1. The [README's method section](../README.md#the-method-in-brief) — ten minutes, the whole shape.
 2. [The PRD](PRD-triangulator-finalization.md) — where the tool is headed and why; skim §2 Principles and §10 Design decisions.
+2b. [The cleanup record](CLEANUP-2026-07.md) — what was cut before the sprint and how to get it back. Two of those cuts (a worked example, discoverable keyboard shortcuts) are open build agendas with the old code still in `git`.
 3. Kees Dorst, *Frame Innovation: Create New Thinking by Design* (MIT Press, 2015) — chapters 1–5 are the engine. Read it like a co-author, pencil out.
 
 > **🤖 Ask your AI:** *"Give me a working crash course on Kees Dorst's Frame Innovation method — the nine steps, the role of the paradox, and the difference between a theme and a frame. Then explain what would have to change if there were no client and no agreed problem at the start — just a pile of field evidence. Quiz me until I can explain it to a friend."*
@@ -54,7 +55,7 @@ The rule of the game — the only rule of taste we ask you to honor: **mods are 
 
 Here's the vision, concretely. Not "feedback welcome." Not "we'll take it under advisement." This:
 
-**By this Friday, there's a version of this tool with your name on it, live on the internet, doing something main doesn't do.** Your fork, your experiment, your hunch about what the room needs — clickable by anyone you send the link to. Next to it, four or five siblings: your squadmates' versions, each betting on something different. One of you rewrote the coach in plain DC. One of you made sorting feel like a game. One of you tore a gate out entirely to see what happens without it. One of you added a stage we never thought of.
+**By this Friday, there's a version of this tool with your name on it, live on the internet, doing something main doesn't do.** Your fork, your experiment, your hunch about what the room needs — clickable by anyone you send the link to. Next to it, four or five siblings: your squadmates' versions, each betting on something different. One of you rewrote the action bar in plain DC. One of you made sorting feel like a game. One of you tore a gate out entirely to see what happens without it. One of you added a stage we never thought of.
 
 Then — week two — you play each other's builds. The way pods will play the tool. And the best ideas stop being opinions, because you've *used* them: "yours made me want to keep sorting; mine made me stop." That's **feature harvest**: the keepers get PR'd into main, one by one, argued from the method or the field. The best idea in the room wins on contact with reality — not in a meeting, not by seniority, not by whoever talks longest.
 
@@ -74,20 +75,20 @@ Everything else — copy, color, gates, stages, screens, the whole feel — is i
 ## Your first week
 
 - [ ] **Today: feel the clay.** Run the loop once, end to end (15 minutes, sample data, disposable):
-  1. Open [the live tool](https://theupskillinglabs.github.io/triangles/). Skim the intro deck.
+  1. Open [the live tool](https://theupskillinglabs.github.io/triangles/). It opens straight onto Sources.
   2. Sources → *Load 21 Civics & Elections source extracts* → **Start sorting →**. Sort all 21, fast — notice what hesitation feels like.
   3. On the canvas, drag a glowing edge dot onto another card → your first Evidence card. Name it. Do it twice more (or try the **Link** tool in the dock).
   4. **Unlock Patterns & Themes** when the bar offers it. Read the sheet — note it's one-way.
   5. Climb: Evidence → Pattern → Theme (name and describe as you go — feel the locks bite).
   6. **Map the Problem Situation** → take the classify beat → walk the five Deepen stages (linger on Stage 4's inner circle and Stage 5's paradox — that's the destination).
   7. **Produce the deck & site.** Unzip it. Open `slides.html`. That's what a pod carries into Meet the Pods.
-  8. Sources → *Start over (reset)* — clean slate.
+  8. **Share / Export → Start over** — clean slate.
   Keep a note of every moment that made you squint. That list is your first build agenda.
 - [ ] **This week: read enough to argue.** The reading path above. You don't need mastery — you need enough to say "Dorst would push back here, and here's why I'd push back on Dorst."
 - [ ] **Then: make one mod.** Branch (`podsquad/<yourname>-<experiment>`) or fork — your call:
   - **Fork** (recommended for wild experiments): your fork gets its **own live GitHub Pages URL**. On your fork: Settings → Pages → "Deploy from a branch" → `main` / root → Save. Minutes later your version is live at `<you>.github.io/triangles/`.
   - **Branch** (fine for shared work): push `podsquad/<yourname>-<experiment>` to this repo.
-  - Then open `index.html` — the whole app is in there — and change *one thing* from your squint list. A word of coach copy counts. A hint counts. A gate's threshold counts. A whole new workbook stage counts. Small is a superpower here: small ships Friday.
+  - Then open `index.html` — the whole app is in there — and change *one thing* from your squint list. A word of action-bar copy counts. A hint counts. A gate's threshold counts. A whole new workbook stage counts. Small is a superpower here: small ships Friday.
 - [ ] **Share your URL** in the squad channel. Say what you were betting on. Try whatever anyone else posts.
 
 > **🤖 Ask your AI (building edition):**
@@ -117,7 +118,7 @@ Hold onto the one method idea under all of it: **we start with no client and no 
 
 ## Facilitation moves, by stage
 
-You'll still be the one standing next to a stuck participant on July 25 — and by then, you'll be facilitating a tool you helped build. The bar at the bottom of their screen always shows the next move; the corner coach explains why. When someone stalls, look at their bar *with* them. You carry the why behind the why.
+You'll still be the one standing next to a stuck participant on July 25 — and by then, you'll be facilitating a tool you helped build. The bar at the bottom of their screen always shows the next move. It no longer explains *why* — that part is yours now, said out loud. When someone stalls, look at their bar *with* them. You carry the why behind the why.
 
 | They're… | What's happening | Your move |
 |---|---|---|

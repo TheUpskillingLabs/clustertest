@@ -22,7 +22,7 @@ Everything auto-saves to your browser's `localStorage`. The app works fully offl
 
 ## The journey
 
-A bottom **action bar** carries you through the whole arc — it always shows exactly one primary action for wherever you are, and if that action is locked, it tells you exactly what unblocks it. A dismissible corner **coach** explains *why* each step matters; the bar shows *what to click*.
+A bottom **action bar** carries you through the whole arc — it always shows exactly one primary action for wherever you are, and if that action is locked, it names the one thing that unblocks it. That bar is the whole guidance system: the tool used to also carry an intro deck, a corner coach and a "Why this step?" panel, all explaining the same thing in parallel. They were removed for the facilitated sessions, where a poderator carries the why out loud.
 
 1. **Gather source extracts** (`Sources`) — load the sample, upload a CSV (`title,summary[,source_url]`), ✨ extract cards from an article or dataset with your own AI, or type one by hand. Go wide — include what might contradict you. **You do not name a problem first.** The problem comes into focus later, once the evidence has something to say.
 
@@ -54,7 +54,7 @@ A bottom **action bar** carries you through the whole arc — it always shows ex
 
 ## What comes out
 
-Three exports, all reachable from the **Share / Export** sheet (and offered by the action bar when you're ready):
+Three exports, all reachable from the **Share / Export** sheet (and offered by the action bar when you're ready). The sheet is also where **Start over** lives — clearing the board is a deliberate trip, not a button beside the forward action:
 
 | Export | When | Contents |
 |---|---|---|
@@ -76,9 +76,9 @@ The tool contains **no AI**. Every ✨ **AI prompts** button copies a carefully-
 
 ## For developers
 
-- **One file.** The entire app — HTML, CSS, JS — is `index.html` (~10,300 lines, vanilla JS, no dependencies, no build). It must keep working when opened from `file://`.
+- **One file.** The entire app — HTML, CSS, JS — is `index.html` (~9,200 lines, vanilla JS, no dependencies, no build). It must keep working when opened from `file://`.
 - **The additive invariant:** never break a saved board. New persisted fields must be optional and read with defaults; no migrations of existing state shapes beyond the established normalizer.
-- **Verification:** the project is tested by driving the real app headlessly with Playwright (state-machine walks, reachability sweeps, export round-trips, mobile viewport, old-state-blob loads — all against `file://` with a zero-JS-error gate). See [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Verification:** `node session-test.js` drives the real app headlessly with Playwright — the full arc from Sources to three exports, plus old-saved-board loads — and fails on any uncaught exception or console error. `node cursor-test.js` covers canvas cursor states. Both run against `file://`. See [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Branches & PRs:** feature branches, PRs merged with merge commits. Pod Squad work uses `podsquad/<slug>` branches.
 
 ## Documentation
@@ -89,6 +89,7 @@ The tool contains **no AI**. Every ✨ **AI prompts** button copies a carefully-
 | [docs/SENSEMAKING-SPRINT.md](docs/SENSEMAKING-SPRINT.md) | The co-design brief for the first in-person sensemaking event — draft run-of-show + the open questions the Pod Squad owns. |
 | [docs/PRD-triangulator-finalization.md](docs/PRD-triangulator-finalization.md) | The product spec: cycle integration, seams to the OLOS platform, build order, design decisions. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Repo conventions, how to run the drivers, how to propose changes. |
+| [docs/CLEANUP-2026-07.md](docs/CLEANUP-2026-07.md) | What was removed before the Sensemaking Sprint, why, and how to restore any of it. Read before rebuilding something that looks missing. |
 
 ## Accessibility
 
