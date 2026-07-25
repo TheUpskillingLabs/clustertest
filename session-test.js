@@ -458,6 +458,69 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const names = await page.evaluate(() => window.__downloads);
   console.log('  downloads: ' + JSON.stringify(names));
 
+  // ------------------------------------------- What is actually in the export
+  // "A file was produced" is not the deliverable. The deliverable is a landing
+  // page and a presentation that open by double-click — no server, no network —
+  // because that is how they get looked at: from a USB stick, in a library.
+  {
+    const fs = require('fs');
+    const os = require('os');
+    const files = await page.evaluate(() => buildModularExportFiles());
+    const byPath = Object.fromEntries(files.map(f => [f.path, f.content]));
+    const want = ['index.html', 'slides.html', 'README.md', 'assets/style.css', 'assets/viewer.js',
+      'data/project.jsonld', 'data/extracts.csv', 'data/site-data.js',
+      'content/situation.md', 'content/themes.md'];
+    check('the export carries the whole site folder',
+      want.every(f => byPath[f] && byPath[f].length),
+      JSON.stringify(want.filter(f => !byPath[f])));
+
+    check('index.html is the landing page, titled with the board',
+      /<!doctype html>/i.test(byPath['index.html'])
+      && /id="report"/.test(byPath['index.html'])
+      && /Civics &amp; Elections/.test(byPath['index.html']));
+    check('slides.html is a self-contained presentation of the situation',
+      /class="slide/.test(byPath['slides.html'])
+      && /<style>/.test(byPath['slides.html']) && /<script>/.test(byPath['slides.html'])
+      && /Ballot access erodes/.test(byPath['slides.html']),
+      (byPath['slides.html'].match(/class="slide[ "]/g) || []).length + ' slides');
+    check('nothing in the export reaches for the network',
+      !want.some(f => /https?:\/\/(cdn|unpkg|jsdelivr|fonts\.googleapis|ajax\.google)/i.test(byPath[f])));
+
+    // Write the folder out and open it the way a participant will: by
+    // double-clicking index.html off a stick, with no server anywhere.
+    const site = fs.mkdtempSync(path.join(os.tmpdir(), 'tgx-site-'));
+    files.forEach(f => {
+      const dest = path.join(site, f.path);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, f.content);
+    });
+    for (const [name, min] of [['index.html', 'text'], ['slides.html', 'slides']]) {
+      const p = await browser.newPage();
+      const pageErrs = [];
+      p.on('pageerror', e => pageErrs.push(String(e.message)));
+      p.on('console', m => { if (m.type() === 'error') pageErrs.push(m.text()); });
+      await p.goto('file://' + path.join(site, name));
+      await sleep(1200);
+      const seen = await p.evaluate(() => ({
+        len: (document.body.innerText || '').trim().length,
+        loading: !!document.querySelector('.loading'),
+        mapNodes: document.querySelectorAll('svg.map rect').length,
+        headings: document.querySelectorAll('h1, h2, .slide h1, .slide h2').length,
+      }));
+      // The site hydrates a whole report; the deck shows one slide at a time,
+      // so its visible text is short by design — count its slides instead.
+      const rendered = min === 'text'
+        ? (!seen.loading && seen.len > 500 && seen.mapNodes > 0)
+        : seen.headings >= 4;
+      check(`${name} opens from file:// and renders`, rendered, JSON.stringify(seen));
+      // Falling back after four failed fetches works, but it fills the console
+      // with red for anyone who looks — on file:// there is nothing to fetch.
+      check(`${name} opens without console errors`, pageErrs.length === 0, JSON.stringify(pageErrs));
+      await p.close();
+    }
+    fs.rmSync(site, { recursive: true, force: true });
+  }
+
   // ------------------------------------------------------- The action bar
   // It is permanent chrome over the canvas, so it stays small — and minimises
   // to just the one next action when the canvas matters more.

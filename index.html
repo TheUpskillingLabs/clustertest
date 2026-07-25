@@ -9081,6 +9081,11 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       fetchText('./content/situation.md'),fetchText('./content/themes.md')]).then(function(res){
       return {project:JSON.parse(res[0]),extractsCsv:res[1],content:{situation:res[2],themes:res[3]}};});
   }
+  // Served, the fetch path wins: a pod that edits content/*.md in its repo sees
+  // the edit without regenerating the shim. Opened by double-click, fetch on
+  // file:// is blocked by the browser — so don't try, and don't spend four red
+  // console errors proving it. The shim is always shipped.
+  if(location.protocol==='file:'&&window.SITE_DATA){render(window.SITE_DATA);return;}
   hydrate().then(render).catch(function(){
     if(window.SITE_DATA){render(window.SITE_DATA);}
     else{byId('report').innerHTML='<p>Could not load site data. Serve this folder over HTTP (e.g. python3 -m http.server).</p>';}
