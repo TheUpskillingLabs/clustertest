@@ -4035,11 +4035,27 @@ git push</pre>
         rowTop.set(t, rowTop.get(prev) - LAYOUT_V_GAP - rowHeight.get(t));
       });
 
-      // Stable sort by a numeric key; ties and unkeyed nodes keep their order.
-      const orderBy = (arr, key) => {
-        const decorated = arr.map((id, i) => ({ id, i, k: key(id) }));
-        decorated.sort((a, b) => (a.k - b.k) || (a.i - b.i));
-        return decorated.map(d => d.id);
+      // ---- Crossing count between two adjacent bands, by inversions.
+      // Every edge spans exactly one tier (connectNodes only joins same-tier
+      // nodes into one above; addUnderExistingParent is gated to one tier
+      // below), so there are no long edges to route around and no dummy
+      // nodes are needed.
+      const crossingsBetween = (upper, lower) => {
+        const lowerPos = new Map(lower.map((id, i) => [id, i]));
+        const edges = [];
+        upper.forEach((u, ui) => {
+          (kids.get(u) || []).forEach(k => {
+            if (lowerPos.has(k)) edges.push([ui, lowerPos.get(k)]);
+          });
+        });
+        let n = 0;
+        for (let i = 0; i < edges.length; i++) {
+          for (let j = i + 1; j < edges.length; j++) {
+            const a = edges[i], b = edges[j];
+            if ((a[0] - b[0]) * (a[1] - b[1]) < 0) n++;
+          }
+        }
+        return n;
       };
 
       const x = {};
@@ -4054,51 +4070,206 @@ git push</pre>
         });
         const tiers = [...rows.keys()].sort((a, b) => a - b);
 
-        // Seed the order from where things already are, so the result still
-        // resembles the board they were looking at.
-        tiers.forEach(t => rows.set(t, orderBy(rows.get(t), id => getNodePos(id).x)));
+        const rowSets = new Map(tiers.map(t => [t, new Set(rows.get(t))]));
+        const totalCrossings = () => {
+          let n = 0;
+          for (let ti = 1; ti < tiers.length; ti++) n += crossingsBetween(rows.get(tiers[ti]), rows.get(tiers[ti - 1]));
+          return n;
+        };
+        const snapshot = () => tiers.map(t => rows.get(t).slice());
+        const restore = snap => tiers.forEach((t, i) => rows.set(t, snap[i].slice()));
 
-        // Barycentre sweeps: pull each node toward the average position of
-        // what it connects to, alternating up and down until it settles.
-        for (let pass = 0; pass < 4; pass++) {
-          for (let ti = 1; ti < tiers.length; ti++) {
-            const below = new Map((rows.get(tiers[ti - 1]) || []).map((id, i) => [id, i]));
-            rows.set(tiers[ti], orderBy(rows.get(tiers[ti]), id => {
-              const ks = (kids.get(id) || []).filter(k => below.has(k));
-              return ks.length ? ks.reduce((sum, k) => sum + below.get(k), 0) / ks.length : Infinity;
-            }));
-          }
+        // ---- Ordering: median heuristic, then transpose, keeping the best
+        // arrangement any pass produced. Barycentre/median oscillates rather
+        // than converging, so keeping the best is what makes it reliable on a
+        // real lattice; transpose is what clears the last few crossings.
+        //
+        // A node with no neighbours in the rank being read from keeps its
+        // current slot — the earlier version sorted those to the far right,
+        // which churned the order every pass and was the main reason a
+        // latticed board came out tangled.
+        const median = (id, adjacent, useKids) => {
+          const posOf = new Map(adjacent.map((n, i) => [n, i]));
+          const ns = ((useKids ? kids.get(id) : parentsMap.get(id)) || []).filter(n => posOf.has(n));
+          if (!ns.length) return -1;
+          const ps = ns.map(n => posOf.get(n)).sort((a, b) => a - b);
+          const m = ps.length >> 1;
+          if (ps.length % 2) return ps[m];
+          if (ps.length === 2) return (ps[0] + ps[1]) / 2;
+          // Weighted median: bias toward the denser side (Gansner et al.).
+          const left = ps[m - 1] - ps[0], right = ps[ps.length - 1] - ps[m];
+          return (left + right) ? (ps[m - 1] * right + ps[m] * left) / (left + right) : (ps[m - 1] + ps[m]) / 2;
+        };
+        const reorderByMedian = (t, adjacentT, useKids) => {
+          const adjacent = rows.get(adjacentT) || [];
+          const cur = rows.get(t);
+          const keyed = cur.map((id, i) => ({ id, i, m: median(id, adjacent, useKids) }));
+          // Nodes without a median stay put: only the ones that have one get
+          // sorted, into the slots those nodes already occupy.
+          const movable = keyed.filter(k => k.m >= 0).sort((a, b) => (a.m - b.m) || (a.i - b.i));
+          const slots = keyed.filter(k => k.m >= 0).map(k => k.i);
+          const out = cur.slice();
+          slots.forEach((slot, n) => { out[slot] = movable[n].id; });
+          rows.set(t, out);
+        };
+
+        // Seeds. The board's own left-to-right order is the one that keeps the
+        // result recognisable, but it comes from a spiral seeded with
+        // Math.random(), so on its own the quality of the answer is luck.
+        // Trying a couple of structural seeds too and keeping the best makes
+        // this both better and repeatable.
+        const seedByX = dir => () => tiers.forEach(t =>
+          rows.set(t, rows.get(t).slice().sort((a, b) => dir * (getNodePos(a).x - getNodePos(b).x))));
+        const seedStructural = () => {
+          const top = tiers[tiers.length - 1];
+          rows.set(top, rows.get(top).slice().sort((a, b) => getNodePos(a).x - getNodePos(b).x));
           for (let ti = tiers.length - 2; ti >= 0; ti--) {
-            const above = new Map((rows.get(tiers[ti + 1]) || []).map((id, i) => [id, i]));
-            rows.set(tiers[ti], orderBy(rows.get(tiers[ti]), id => {
-              const ps = (parentsMap.get(id) || []).filter(pp => above.has(pp));
-              return ps.length ? ps.reduce((sum, pp) => sum + above.get(pp), 0) / ps.length : Infinity;
+            const t = tiers[ti];
+            const mine = rowSets.get(t);
+            const seen = new Set(), out = [];
+            (rows.get(tiers[ti + 1]) || []).forEach(pid => (kids.get(pid) || []).forEach(k => {
+              if (mine.has(k) && !seen.has(k)) { seen.add(k); out.push(k); }
             }));
+            rows.get(t).forEach(id => { if (!seen.has(id)) { seen.add(id); out.push(id); } });
+            rows.set(t, out);
           }
-        }
+        };
 
-        // Place: pack the bottom band, then centre each card over its children
-        // and slide right only as far as it takes to stop an overlap.
-        let localMin = Infinity, localMax = -Infinity;
-        tiers.forEach((t, ti) => {
-          let cur = -Infinity;
-          rows.get(t).forEach(id => {
-            const w = widthOf(id);
-            let want;
-            if (ti === 0) {
-              want = (cur === -Infinity) ? 0 : cur;
+        const big = comp.length > 400;
+        const seeds = big ? [seedByX(1)] : [seedByX(1), seedStructural, seedByX(-1)];
+        let best = null, bestCrossings = Infinity;
+        seeds.forEach(seed => {
+          seed();
+          let localBest = snapshot(), localCrossings = totalCrossings();
+          const MAX_PASSES = big ? 2 : 16;
+          for (let pass = 0; pass < MAX_PASSES && localCrossings > 0; pass++) {
+            if (pass % 2 === 0) {
+              for (let ti = 1; ti < tiers.length; ti++) reorderByMedian(tiers[ti], tiers[ti - 1], true);
             } else {
-              const ks = (kids.get(id) || []).filter(k => x[k] !== undefined);
-              want = ks.length
-                ? ks.reduce((sum, k) => sum + x[k] + widthOf(k) / 2, 0) / ks.length - w / 2
-                : (cur === -Infinity ? 0 : cur);
-              if (cur !== -Infinity && want < cur) want = cur;
+              for (let ti = tiers.length - 2; ti >= 0; ti--) reorderByMedian(tiers[ti], tiers[ti + 1], false);
             }
-            x[id] = want;
-            cur = want + w + LAYOUT_H_GAP;
-            localMin = Math.min(localMin, want);
-            localMax = Math.max(localMax, want + w);
+            // Transpose: swap adjacent pairs while it reduces crossings. This
+            // is what clears the crossings median alone plateaus on.
+            if (!big) {
+              let improved = true, guard = 0;
+              while (improved && guard++ < 8) {
+                improved = false;
+                for (let ti = 0; ti < tiers.length; ti++) {
+                  const row = rows.get(tiers[ti]);
+                  for (let i = 0; i + 1 < row.length; i++) {
+                    const localCross = () => {
+                      let n = 0;
+                      if (ti > 0) n += crossingsBetween(row, rows.get(tiers[ti - 1]));
+                      if (ti + 1 < tiers.length) n += crossingsBetween(rows.get(tiers[ti + 1]), row);
+                      return n;
+                    };
+                    const was = localCross();
+                    [row[i], row[i + 1]] = [row[i + 1], row[i]];
+                    if (localCross() >= was) [row[i], row[i + 1]] = [row[i + 1], row[i]];
+                    else improved = true;
+                  }
+                }
+              }
+            }
+            const c = totalCrossings();
+            if (c < localCrossings) { localBest = snapshot(); localCrossings = c; }
+          }
+          if (localCrossings < bestCrossings) { bestCrossings = localCrossings; best = localBest; }
+        });
+        restore(best);
+
+        // ---- Coordinates: relax toward the neighbours on both sides, packing
+        // each band from the left and then pulling back from the right so the
+        // slack lands between groups instead of all at one end. A single
+        // bottom-up pass (what this used to do) cascades every clamp rightward
+        // and stretches a latticed board across the canvas.
+        // Given where each card in a band *wants* to be, find the closest
+        // arrangement that still respects the minimum separation. Packing
+        // left-to-right and clamping (what this did before) shoves the whole
+        // rest of the band rightward every time two cards want the same spot,
+        // which is what stretched a latticed board across the canvas.
+        //
+        // Subtracting the cumulative separation turns "keep them apart" into
+        // "keep them in order", and pool-adjacent-violators then gives the
+        // arrangement with the least total movement — corrections get shared
+        // between the cards involved instead of cascading one way.
+        const packRank = (ids, desired) => {
+          const n = ids.length;
+          if (!n) return [];
+          const offsets = [];
+          let off = 0;
+          for (let i = 0; i < n; i++) { offsets.push(off); off += widthOf(ids[i]) + LAYOUT_H_GAP; }
+          const blocks = [];
+          for (let i = 0; i < n; i++) {
+            const block = { sum: desired[i] - offsets[i], count: 1 };
+            block.val = block.sum;
+            while (blocks.length && blocks[blocks.length - 1].val > block.val) {
+              const prev = blocks.pop();
+              block.sum += prev.sum;
+              block.count += prev.count;
+              block.val = block.sum / block.count;
+            }
+            blocks.push(block);
+          }
+          const out = [];
+          blocks.forEach(b => { for (let i = 0; i < b.count; i++) out.push(b.val); });
+          return out.map((v, i) => v + offsets[i]);
+        };
+        const centreOf = id => x[id] + widthOf(id) / 2;
+        const desiredFrom = (id, neighbours) => {
+          const ns = (neighbours || []).filter(n => x[n] !== undefined);
+          if (!ns.length) return null;
+          return ns.reduce((sum, n) => sum + centreOf(n), 0) / ns.length - widthOf(id) / 2;
+        };
+
+        // Seed: pack every band left-to-right.
+        tiers.forEach(t => {
+          let cur = 0;
+          rows.get(t).forEach(id => { x[id] = cur; cur += widthOf(id) + LAYOUT_H_GAP; });
+        });
+
+        // Relax toward neighbours, alternating which side is doing the pulling
+        // and settling on both. Like the ordering pass this oscillates rather
+        // than converging, so keep whichever iteration drew the shortest edges
+        // — otherwise the answer is just whatever the last pass happened to do,
+        // which on a simple tree is worse than not relaxing at all.
+        const edgeLength = () => {
+          let total = 0;
+          comp.forEach(id => (kids.get(id) || []).forEach(k => {
+            if (x[k] === undefined) return;
+            total += Math.abs(centreOf(id) - centreOf(k));
+          }));
+          return total;
+        };
+        let bestX = {}, bestLen = Infinity;
+        const keepIfBetter = () => {
+          const len = edgeLength();
+          if (len < bestLen) { bestLen = len; comp.forEach(id => { bestX[id] = x[id]; }); }
+        };
+        keepIfBetter();
+        for (let iter = 0; iter < 12; iter++) {
+          const mode = iter % 3;                       // 0 = from children, 1 = from parents, 2 = both
+          const sweep = mode === 1 ? tiers.slice(0, -1).reverse() : tiers.slice(1);
+          const bands = mode === 2 ? tiers.slice() : sweep;
+          bands.forEach(t => {
+            const ids = rows.get(t);
+            const desired = ids.map(id => {
+              const from = mode === 0 ? (kids.get(id) || [])
+                : mode === 1 ? (parentsMap.get(id) || [])
+                  : (kids.get(id) || []).concat(parentsMap.get(id) || []);
+              const d = desiredFrom(id, from);
+              return d === null ? x[id] : d;
+            });
+            packRank(ids, desired).forEach((v, i) => { x[ids[i]] = v; });
           });
+          keepIfBetter();
+        }
+        comp.forEach(id => { x[id] = bestX[id]; });
+
+        let localMin = Infinity, localMax = -Infinity;
+        comp.forEach(id => {
+          localMin = Math.min(localMin, x[id]);
+          localMax = Math.max(localMax, x[id] + widthOf(id));
         });
 
         // Butt this ladder up against the previous one.

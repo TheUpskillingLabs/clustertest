@@ -484,6 +484,103 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await page.evaluate(() => closeAIPromptModal());
   await sleep(300);
 
+  // ------------------------------------------------- Auto-layout on a lattice
+  section('Auto-layout — latticed board');
+  // --- The case that actually matters: a lattice, not a tree.
+  // The method's whole point is that a node can rest on several claims and be
+  // read by several above it — "a many-to-many lattice, not a tree". A layout
+  // that only behaves on trees is a layout that degrades exactly as the
+  // exercise succeeds.
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await sleep(1200);
+  await page.evaluate(() => {
+    loadSampleSignals();
+    appState.items.forEach(i => { appState.sorting.decisions[i.id] = 'signal'; });
+    appState.mode = 'pod';
+    goToScreen('board');
+    const k = appState.items.map(i => i.id);
+    const mk = (a, b, t) => {
+      connectNodes(a, b);
+      const c = appState.cards[appState.cards.length - 1];
+      c.title = t; c.description = 'described';
+      return c.id;
+    };
+    const e = [];
+    for (let i = 0; i < 8; i++) e.push(mk(k[i * 2], k[i * 2 + 1], 'E' + (i + 1)));
+    // Extracts read by more than one Evidence card.
+    addChildToParent(e[0], k[6]); addChildToParent(e[1], k[0]);
+    addChildToParent(e[5], k[2]); addChildToParent(e[7], k[4]);
+    const P = [mk(e[0], e[1], 'P1'), mk(e[2], e[3], 'P2'), mk(e[4], e[5], 'P3'), mk(e[6], e[7], 'P4')];
+    // Evidence read by more than one Pattern.
+    addChildToParent(P[0], e[4]); addChildToParent(P[1], e[6]);
+    addChildToParent(P[2], e[1]); addChildToParent(P[3], e[2]);
+    const T = [mk(P[0], P[1], 'T1'), mk(P[2], P[3], 'T2')];
+    addChildToParent(T[0], P[2]); addChildToParent(T[1], P[0]);
+    mk(T[0], T[1], 'S1');
+    save(); renderBoard(); autoLayout();
+  });
+  await sleep(1400);
+
+  // Crossings, counted the way the layout counts them: inversions between
+  // adjacent bands. Geometry is the wrong measure here — collinear endpoints
+  // make naive segment intersection over-report.
+  const latticeMetrics = () => page.evaluate(() => {
+    const tierOf = id => { const c = findCard(id); return c ? c.tier : 0; };
+    const inLattice = new Set();
+    appState.cards.forEach(c => { inLattice.add(c.id); (c.childIds || []).forEach(k => inLattice.add(k)); });
+    const ranks = {};
+    [...inLattice].forEach(id => { const t = tierOf(id); (ranks[t] = ranks[t] || []).push(id); });
+    const tiers = Object.keys(ranks).map(Number).sort((a, b) => a - b);
+    tiers.forEach(t => ranks[t].sort((a, b) => appState.nodes[a].x - appState.nodes[b].x));
+    let crossings = 0;
+    for (let i = 1; i < tiers.length; i++) {
+      const pos = new Map(ranks[tiers[i - 1]].map((id, j) => [id, j]));
+      const edges = [];
+      ranks[tiers[i]].forEach((u, ui) => (findCard(u).childIds || []).forEach(kk => {
+        if (pos.has(kk)) edges.push([ui, pos.get(kk)]);
+      }));
+      for (let a = 0; a < edges.length; a++) {
+        for (let b = a + 1; b < edges.length; b++) {
+          if ((edges[a][0] - edges[b][0]) * (edges[a][1] - edges[b][1]) < 0) crossings++;
+        }
+      }
+    }
+    const rects = [...document.querySelectorAll('.canvas-node')]
+      .filter(n => n.getBoundingClientRect().width > 0)
+      .map(n => n.getBoundingClientRect());
+    let overlaps = 0;
+    for (let i = 0; i < rects.length; i++) {
+      for (let j = i + 1; j < rects.length; j++) {
+        const a = rects[i], b = rects[j];
+        if (!(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom)) overlaps++;
+      }
+    }
+    const edgeCount = appState.cards.reduce((n, c) => n + (c.childIds || []).length, 0);
+    return { crossings, overlaps, edgeCount, positions: JSON.stringify(appState.nodes) };
+  });
+
+  const lat = await latticeMetrics();
+  check('a latticed board still lays out without overlaps', lat.overlaps === 0, JSON.stringify({ overlaps: lat.overlaps }));
+  check('multi-parent nodes do not tangle the layout',
+    lat.crossings <= 40,
+    `${lat.crossings} crossings over ${lat.edgeCount} edges (pre-rewrite this fixture ran 42-51)`);
+  check('every card still sits above its children on a lattice', await page.evaluate(() => {
+    return appState.cards.every(c => {
+      const p = appState.nodes[c.id];
+      return !p || (c.childIds || []).every(k => !appState.nodes[k] || appState.nodes[k].y > p.y);
+    });
+  }));
+
+  // Running it twice must not shuffle the board. The seed order comes from the
+  // spiral, which uses Math.random(), so without the multi-seed restarts the
+  // same board laid out differently every press.
+  await page.click('.zoom-layout');
+  await sleep(1400);
+  const lat2 = await latticeMetrics();
+  check('laying out twice is stable', lat2.positions === lat.positions,
+    `${lat.crossings} then ${lat2.crossings} crossings`);
+
   // -------------------------------------------- The additive invariant
   // A board saved by an OLDER build must still open. This is the project's
   // hardest rule and the one with the least margin for error.
