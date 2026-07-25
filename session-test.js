@@ -308,9 +308,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await page.evaluate(() => wsGoToStage('1'));
   await sleep(900);
 
-  check('the deck button unlocks once the five stages are answered',
+  check('the export button unlocks once the five stages are answered',
     await page.evaluate(() => {
-      const b = document.getElementById('produce-deck-btn');
+      const b = document.getElementById('export-folder-btn');
       return !!b && !b.disabled;
     }),
     await page.evaluate(() => document.getElementById('submit-status-hint') && document.getElementById('submit-status-hint').textContent));
