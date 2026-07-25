@@ -32,6 +32,7 @@ doing the same job.
 | `Unlock Patterns and Themes from the start` | Seed Mode removed — owner's call, and it contradicts a PRD MUST |
 | `Make CSV import say what it actually did` | Silently dropped rows; a cancelled import left no trace |
 | `Make both ways of adding extracts work from the canvas` | Five bugs between the dock and the board |
+| `Check what the export actually contains` | The driver only counted files; now it opens the site and the deck |
 
 ## Removed: code that already couldn't run
 
@@ -281,6 +282,32 @@ behind it offered all three ways in. None of it survived contact.
    button without a `data-tool` as Evidence, so the ＋ was overwritten with the
    dashed circle. On a phone, where the dock hides its labels, the one way to
    add data looked like a duplicate of the tool beside it.
+
+## Checked: the export still builds the site and the deck
+
+**Produce the deck & site** was only ever asserted as far as "a file was
+downloaded" — the driver never opened the zip. Driven end to end now, three
+times, on a complete board:
+
+`index.html` · `slides.html` · `README.md` · `assets/style.css` ·
+`assets/viewer.js` · `data/project.jsonld` · `data/extracts.csv` ·
+`data/site-data.js` · `content/situation.md` · `content/themes.md`
+
+`index.html` is a 413-byte shell by design — it hydrates from
+`data/site-data.js` and renders the board title, the web map as SVG, the themes,
+the problem situation and every source extract (23k of text, 55 map nodes on the
+sample board). `slides.html` is a six-slide, self-contained deck built from the
+mapped situation: cover, paradox, evidence, themes, live-inquiry, join. Neither
+reaches for a CDN, a font service or a network of any kind.
+
+One fix: the viewer tried `fetch()` first and fell back to the embedded shim
+when it failed. That works, but on `file://` — how these get looked at — the
+fallback cost four red console errors before it fired. It now skips straight to
+the shim when the protocol is `file:`, and keeps fetching when served, so a pod
+that edits `content/*.md` in its repo still sees the edit without regenerating.
+
+`session-test.js` now writes the export folder to disk and opens both pages from
+`file://`, asserting they render and that the console is clean.
 
 ## How to get any of it back
 
