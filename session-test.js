@@ -299,6 +299,96 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const names = await page.evaluate(() => window.__downloads);
   console.log('  downloads: ' + JSON.stringify(names));
 
+  // --------------------------------------------------------- Auto-layout
+  // Nodes are seeded on a spiral whose spacing is under half a card's width,
+  // so a board of any size starts out overlapping. Auto-layout is the way out.
+  section('Auto-layout');
+
+  await page.evaluate(() => goToScreen('board'));
+  await sleep(800);
+  const overlaps = () => page.evaluate(() => {
+    const r = [...document.querySelectorAll('.canvas-node')]
+      .filter(n => n.getBoundingClientRect().width > 0)
+      .map(n => n.getBoundingClientRect());
+    let pairs = 0;
+    for (let i = 0; i < r.length; i++) {
+      for (let j = i + 1; j < r.length; j++) {
+        const a = r[i], b = r[j];
+        if (!(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom)) pairs++;
+      }
+    }
+    return { pairs, nodes: r.length };
+  });
+
+  const posBefore = await page.evaluate(() => JSON.stringify(appState.nodes));
+  const boxBefore = await page.evaluate(() => JSON.stringify(appState.situations.map(s => s.box)));
+  const before2 = await overlaps();
+
+  check('the auto-layout button is on the canvas toolbar',
+    await page.evaluate(() => {
+      const b = document.querySelector('.zoom-layout');
+      return !!b && b.getBoundingClientRect().width > 0;
+    }));
+
+  await page.click('.zoom-layout');
+  await sleep(1200);
+  const after2 = await overlaps();
+  check('auto-layout removes every card overlap',
+    after2.pairs === 0 && after2.nodes === before2.nodes,
+    `before ${before2.pairs} pairs / after ${after2.pairs} pairs over ${after2.nodes} nodes`);
+
+  // Tiers must actually stack: every card sits above the ones it rests on.
+  check('every card sits above its own children', await page.evaluate(() => {
+    const bad = [];
+    appState.cards.forEach(c => {
+      const p = appState.nodes[c.id];
+      if (!p) return;
+      (c.childIds || []).forEach(k => {
+        const q = appState.nodes[k];
+        if (q && q.y <= p.y) bad.push(`${c.title || c.id} not above ${k}`);
+      });
+    });
+    return bad.length === 0;
+  }));
+
+  // Section boxes are derived from member positions, so a layout that doesn't
+  // recompute them leaves a frame around empty canvas.
+  check('situation boxes still wrap their members', await page.evaluate(() => {
+    return appState.situations.every(s => {
+      if (!s.box) return false;
+      return situationNodeIds(s).every(id => {
+        const n = appState.nodes[id];
+        const d = nodeSize(isHubId(id) ? 'hub' : 'signal', id);
+        return n && n.x >= s.box.x && n.y >= s.box.y
+          && n.x + d.w <= s.box.x + s.box.w && n.y + d.h <= s.box.y + s.box.h;
+      });
+    });
+  }));
+
+  // Someone who hand-arranged their board and hit this by accident must be
+  // able to get it back — and the Undo button must be clickable, which means
+  // clear of the dock and the action bar.
+  const undoBtn = page.locator('#toast-region .toast button', { hasText: 'Undo' });
+  check('the Undo action on the toast is not buried under the canvas chrome',
+    await page.evaluate(() => {
+      const btn = [...document.querySelectorAll('#toast-region .toast button')]
+        .find(b => /undo/i.test(b.textContent));
+      if (!btn) return 'no Undo button';
+      const r = btn.getBoundingClientRect();
+      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return (top === btn || btn.contains(top)) ? true : 'covered by .' + (top && top.className);
+    }) === true);
+  await undoBtn.click();
+  await sleep(900);
+  check('Undo puts every node back exactly where it was',
+    await page.evaluate(() => JSON.stringify(appState.nodes)) === posBefore);
+  check('Undo restores the situation boxes too',
+    await page.evaluate(() => JSON.stringify(appState.situations.map(s => s.box))) === boxBefore);
+
+  // And it has to survive being run on an empty-ish board without throwing.
+  await page.click('.zoom-layout');
+  await sleep(1000);
+
   // ------------------------------------------------------------- BYO-LLM
   // The prompts are the only analytical help the tool offers — it has no AI of
   // its own — so an entry point that can't be found is the feature not existing.

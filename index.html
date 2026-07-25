@@ -537,7 +537,7 @@
     /* --- TOAST --- */
     #toast-region {
       position: fixed; left: 50%; transform: translateX(-50%);
-      bottom: calc(var(--ab-h, 0px) + 24px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(var(--ab-h, 0px) + var(--dock-h, 0px) + 24px + env(safe-area-inset-bottom, 0px));
     }
     body.modal-open #toast-region {
       bottom: calc(16px + env(safe-area-inset-bottom, 0px));
@@ -1886,7 +1886,7 @@
       .cardpage-label.mt { margin-top: 12px; }
       /* Board chrome */
       .toast { padding: 12px 16px; }
-      #toast-region { bottom: calc(var(--ab-h, 0px) + 16px + env(safe-area-inset-bottom, 0px)); }
+      #toast-region { bottom: calc(var(--ab-h, 0px) + var(--dock-h, 0px) + 16px + env(safe-area-inset-bottom, 0px)); }
       .zoom-toolbar { right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 3px; }
       .canvas-infobar { padding: 8px 12px; }
     }
@@ -2353,7 +2353,8 @@
           <button type="button" class="zoom-btn" onclick="zoomBy(-1)" aria-label="Zoom out">−</button>
           <button type="button" class="zoom-btn zoom-level" id="zoom-level" onclick="resetView()" aria-label="Reset zoom and fit">100%</button>
           <button type="button" class="zoom-btn" onclick="zoomBy(1)" aria-label="Zoom in">+</button>
-          <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes">⤢</button>
+          <button type="button" class="zoom-btn zoom-fit" onclick="resetView()" aria-label="Fit all nodes" title="Fit everything on screen">⤢</button>
+          <button type="button" class="zoom-btn zoom-layout" onclick="autoLayout()" aria-label="Auto-layout — arrange cards into tiers" title="Auto-layout — arrange the ladder into tiers, extracts at the bottom">⊞</button>
           <button type="button" class="zoom-btn" id="panel-toggle-btn" onclick="toggleHeaderCollapse()" aria-label="Hide / show header" title="Hide / show header">↕</button>
         </div>
         <div id="canvas-dock" class="canvas-dock hidden" role="toolbar" aria-label="Add to canvas">
@@ -3543,6 +3544,12 @@ git push</pre>
       } else if (name === 'workspace') {
         renderWorkspace();
       }
+      if (name !== 'board') {
+        // The action bar and dock only exist on the board; leaving their
+        // measured heights behind would push toasts up on every other screen.
+        document.documentElement.style.setProperty('--ab-h', '0px');
+        document.documentElement.style.setProperty('--dock-h', '0px');
+      }
       renderStepIndicator();
       scheduleSave();
     }
@@ -3933,6 +3940,217 @@ git push</pre>
       // Persist any first-time placements immediately, so a node never gets
       // re-scattered to a new random position on a later render or reload.
       if (placed.size > before) scheduleSave();
+    }
+
+
+    // ======================== AUTO-LAYOUT ========================
+    // New nodes are seeded on a phyllotaxis spiral — compact, but its radial
+    // spacing (110px) is less than half a card's width, so past a handful of
+    // cards they sit on top of each other and the ladder reads as a cloud.
+    // autoLayout() rebuilds the arrangement as what the method actually is:
+    // one band per tier, extracts along the bottom, every claim centred over
+    // the ones it rests on, and the extracts you haven't used yet in a pool
+    // underneath.
+    //
+    // The graph is properly layered — connectNodes only ever joins two nodes
+    // of the same tier into one a tier above, and addUnderExistingParent only
+    // adds a node exactly one tier below its parent — so a Sugiyama-style
+    // pass (order by barycentre, then place) fits it exactly.
+
+    const LAYOUT_H_GAP = 56;    // between cards in a band
+    const LAYOUT_V_GAP = 130;   // between tier bands — room for the edges
+    const LAYOUT_POOL_GAP = 190; // between the lattice and the unused pool
+
+    function autoLayout() {
+      const visibleItems = appState.items.filter(item => {
+        const status = appState.sorting.decisions[item.id];
+        return !status || status === 'signal' || status === 'super';
+      });
+      const cards = appState.cards.slice();
+      if (!visibleItems.length && !cards.length) { toast('Nothing to arrange yet.'); return; }
+
+      // Snapshot first: this moves everything, and someone who hand-arranged
+      // their board should get it back with one click.
+      const prevNodes = {};
+      Object.keys(appState.nodes).forEach(id => { prevNodes[id] = { ...appState.nodes[id] }; });
+      const prevBoxes = appState.situations.map(sit => (sit.box ? { ...sit.box } : null));
+
+      const itemIds = new Set(visibleItems.map(i => i.id));
+      const onCanvas = id => itemIds.has(id) || !!findCard(id);
+      const widthOf = id => nodeSize(isHubId(id) ? 'hub' : 'signal', id).w;
+      const heightOf = id => nodeSize(isHubId(id) ? 'hub' : 'signal', id).h;
+      const tierOf = id => { const c = findCard(id); return c ? c.tier : 0; };
+
+      const kids = new Map();
+      const parentsMap = new Map();
+      cards.forEach(c => {
+        const ks = (c.childIds || []).filter(onCanvas);
+        kids.set(c.id, ks);
+        ks.forEach(k => {
+          if (!parentsMap.has(k)) parentsMap.set(k, []);
+          parentsMap.get(k).push(c.id);
+        });
+      });
+
+      // Everything with an edge belongs to the lattice; a kept extract nobody
+      // has used yet belongs to the pool.
+      const lattice = new Set(cards.map(c => c.id));
+      visibleItems.forEach(i => { if (parentsMap.has(i.id)) lattice.add(i.id); });
+      const pool = visibleItems.filter(i => !parentsMap.has(i.id)).map(i => i.id);
+
+      // Separate ladders shouldn't be interleaved, so lay each connected
+      // component out on its own and stand them side by side.
+      const adj = new Map();
+      lattice.forEach(id => adj.set(id, []));
+      cards.forEach(c => (kids.get(c.id) || []).forEach(k => {
+        if (!adj.has(c.id)) adj.set(c.id, []);
+        if (!adj.has(k)) adj.set(k, []);
+        adj.get(c.id).push(k); adj.get(k).push(c.id);
+      }));
+      const seen = new Set();
+      const components = [];
+      lattice.forEach(id => {
+        if (seen.has(id)) return;
+        const stack = [id], comp = [];
+        seen.add(id);
+        while (stack.length) {
+          const n = stack.pop();
+          comp.push(n);
+          (adj.get(n) || []).forEach(m => { if (!seen.has(m)) { seen.add(m); stack.push(m); } });
+        }
+        components.push(comp);
+      });
+
+      // Tier bands are global so the tiers line up across every ladder.
+      const rowHeight = new Map();
+      lattice.forEach(id => {
+        const t = tierOf(id);
+        rowHeight.set(t, Math.max(rowHeight.get(t) || 0, heightOf(id)));
+      });
+      const allTiers = [...rowHeight.keys()].sort((a, b) => a - b);
+      const rowTop = new Map();
+      allTiers.forEach((t, i) => {
+        if (i === 0) { rowTop.set(t, 0); return; }
+        const prev = allTiers[i - 1];
+        rowTop.set(t, rowTop.get(prev) - LAYOUT_V_GAP - rowHeight.get(t));
+      });
+
+      // Stable sort by a numeric key; ties and unkeyed nodes keep their order.
+      const orderBy = (arr, key) => {
+        const decorated = arr.map((id, i) => ({ id, i, k: key(id) }));
+        decorated.sort((a, b) => (a.k - b.k) || (a.i - b.i));
+        return decorated.map(d => d.id);
+      };
+
+      const x = {};
+      let cursorX = 0;
+
+      components.forEach(comp => {
+        const rows = new Map();
+        comp.forEach(id => {
+          const t = tierOf(id);
+          if (!rows.has(t)) rows.set(t, []);
+          rows.get(t).push(id);
+        });
+        const tiers = [...rows.keys()].sort((a, b) => a - b);
+
+        // Seed the order from where things already are, so the result still
+        // resembles the board they were looking at.
+        tiers.forEach(t => rows.set(t, orderBy(rows.get(t), id => getNodePos(id).x)));
+
+        // Barycentre sweeps: pull each node toward the average position of
+        // what it connects to, alternating up and down until it settles.
+        for (let pass = 0; pass < 4; pass++) {
+          for (let ti = 1; ti < tiers.length; ti++) {
+            const below = new Map((rows.get(tiers[ti - 1]) || []).map((id, i) => [id, i]));
+            rows.set(tiers[ti], orderBy(rows.get(tiers[ti]), id => {
+              const ks = (kids.get(id) || []).filter(k => below.has(k));
+              return ks.length ? ks.reduce((sum, k) => sum + below.get(k), 0) / ks.length : Infinity;
+            }));
+          }
+          for (let ti = tiers.length - 2; ti >= 0; ti--) {
+            const above = new Map((rows.get(tiers[ti + 1]) || []).map((id, i) => [id, i]));
+            rows.set(tiers[ti], orderBy(rows.get(tiers[ti]), id => {
+              const ps = (parentsMap.get(id) || []).filter(pp => above.has(pp));
+              return ps.length ? ps.reduce((sum, pp) => sum + above.get(pp), 0) / ps.length : Infinity;
+            }));
+          }
+        }
+
+        // Place: pack the bottom band, then centre each card over its children
+        // and slide right only as far as it takes to stop an overlap.
+        let localMin = Infinity, localMax = -Infinity;
+        tiers.forEach((t, ti) => {
+          let cur = -Infinity;
+          rows.get(t).forEach(id => {
+            const w = widthOf(id);
+            let want;
+            if (ti === 0) {
+              want = (cur === -Infinity) ? 0 : cur;
+            } else {
+              const ks = (kids.get(id) || []).filter(k => x[k] !== undefined);
+              want = ks.length
+                ? ks.reduce((sum, k) => sum + x[k] + widthOf(k) / 2, 0) / ks.length - w / 2
+                : (cur === -Infinity ? 0 : cur);
+              if (cur !== -Infinity && want < cur) want = cur;
+            }
+            x[id] = want;
+            cur = want + w + LAYOUT_H_GAP;
+            localMin = Math.min(localMin, want);
+            localMax = Math.max(localMax, want + w);
+          });
+        });
+
+        // Butt this ladder up against the previous one.
+        const shift = cursorX - (localMin === Infinity ? 0 : localMin);
+        comp.forEach(id => { x[id] += shift; });
+        if (localMax > -Infinity) cursorX += (localMax - localMin) + LAYOUT_H_GAP * 3;
+      });
+
+      // Commit the lattice.
+      lattice.forEach(id => {
+        const t = tierOf(id);
+        const band = rowHeight.get(t) || heightOf(id);
+        setNodePos(id, Math.round(x[id]), Math.round(rowTop.get(t) + (band - heightOf(id)) / 2));
+      });
+
+      // The pool you haven't drawn from yet, in a grid under the lattice.
+      if (pool.length) {
+        const bottomTier = allTiers.length ? allTiers[0] : 0;
+        const latticeBottom = allTiers.length ? rowTop.get(bottomTier) + rowHeight.get(bottomTier) : 0;
+        const poolTop = allTiers.length ? latticeBottom + LAYOUT_POOL_GAP : 0;
+        const cols = Math.max(4, Math.ceil(Math.sqrt(pool.length * 1.6)));
+        const cw = NODE_SIGNAL_W + LAYOUT_H_GAP;
+        const ch = NODE_SIGNAL_H + Math.round(LAYOUT_V_GAP / 2);
+        pool.forEach((id, i) => {
+          setNodePos(id, Math.round((i % cols) * cw), Math.round(poolTop + Math.floor(i / cols) * ch));
+        });
+      }
+
+      // Section boxes are derived from member positions, so they have to be
+      // recomputed or they'll be left framing empty canvas.
+      invalidateSituationIndex();
+      appState.situations.forEach(sit => { sit.box = computeSectionBoxFor(sit); });
+
+      renderBoard();
+      resetView();
+      scheduleSave();
+
+      toast(pool.length
+        ? `Arranged into tiers — ${pool.length} extract${pool.length === 1 ? '' : 's'} not used yet are pooled below.`
+        : 'Arranged into tiers.', {
+        actionLabel: 'Undo',
+        duration: 8000,
+        onAction: () => {
+          appState.nodes = prevNodes;
+          appState.situations.forEach((sit, i) => { sit.box = prevBoxes[i]; });
+          invalidateSituationIndex();
+          renderBoard();
+          resetView();
+          scheduleSave();
+          toast('Layout restored.');
+        }
+      });
     }
 
     // All active section-box rects on the canvas.
@@ -6448,6 +6666,12 @@ ${AI_RULES}
     function tgxPublishAbHeight(bar, visible) {
       const h = visible && bar ? bar.offsetHeight : 0;
       document.documentElement.style.setProperty('--ab-h', h + 'px');
+      // The canvas dock floats above the action bar. Toasts have to clear both
+      // or an actionable one — Undo, Delete, Unframe — puts its button
+      // underneath the dock, where it cannot be pressed.
+      const dock = document.getElementById('canvas-dock');
+      const dockH = (dock && !dock.classList.contains('hidden')) ? dock.offsetHeight : 0;
+      document.documentElement.style.setProperty('--dock-h', dockH ? (dockH + 20) + 'px' : '0px');
     }
     function renderTgxActionbar() {
       const bar = document.getElementById('tgx-actionbar');
