@@ -15,8 +15,8 @@ The day's arc:
    but everyone keeps working their own map and problem situation.
 4. **Publish** — each triad makes one GitHub repo; each member commits
    their exported working folder to it.
-5. **Submit** — each person submits their own problem statement in OLOS,
-   linking the repo ("Link to your map", step 3 of the propose wizard).
+5. **Submit** — each person submits their own problem situation in OLOS,
+   linking the repo ("Link to your map", step 1 of the propose wizard).
 6. **Review + vote** — everyone browses the OLOS gallery
    (`/cycles/{id}/proposals`), then stack-votes on the ballot; finalize
    publishes the pod shortlist.
@@ -57,9 +57,9 @@ The day's arc:
 
 ### C. Submitting in OLOS
 
-9. `/cycles/{id}/propose` → the 6-step wizard. Step 3 has **"Link to your
+9. `/cycles/{id}/propose` → one short form. It opens with **"Link to your
    map"** — paste the triad repo URL (or a link straight to your folder in
-   it). Everyone submits their own statement; the triad is a consultation
+   it). Everyone submits their own situation (a name + one distilled sentence — the map holds the depth); the triad is a consultation
    structure, not a submission unit.
 10. Your submission (with its map link) appears on the cycle page and in
     the gallery immediately; voting opens when the facilitator says so.
