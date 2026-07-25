@@ -2079,6 +2079,32 @@
       #setup-screen .config-container { padding: 16px 22px; }
       #setup-screen .sources-head { margin-bottom: 12px; }
     }
+
+    /* Sources: three ways in, everything else behind one disclosure. */
+    .sources-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+    .sources-help { font-size: var(--text-xs); color: var(--cloud); opacity: 0.75; margin: 0 0 16px; line-height: 1.5; }
+    .sources-more, .sources-ai-convert { border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius-2); overflow: hidden; margin-bottom: 16px; }
+    .sources-more > summary, .sources-ai-convert > summary {
+      padding: 10px 14px; font-size: var(--text-sm); font-weight: 600; cursor: pointer;
+      list-style: none; display: flex; align-items: center; gap: 8px;
+      color: var(--ghost-white); background: rgba(255,255,255,0.05); user-select: none;
+    }
+    .sources-more > summary::-webkit-details-marker, .sources-ai-convert > summary::-webkit-details-marker { display: none; }
+    .sources-more > summary::before { content: '+'; color: var(--primary-teal); font-weight: 700; }
+    .sources-more[open] > summary::before { content: '−'; }
+    .sources-more-body { padding: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .sources-more-row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin-bottom: 14px; }
+    .csv-mode-fieldset { border: none; padding: 0; margin: 0; display: flex; gap: 16px; color: var(--cloud); font-size: var(--text-sm); }
+    .csv-mode-fieldset label { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+    .sources-ai-convert { margin-bottom: 14px; }
+    .sources-ai-body { padding: 12px 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .sources-ai-body p { font-size: var(--text-sm); color: var(--cloud); margin-bottom: 10px; }
+    .sources-ai-body textarea {
+      width: 100%; box-sizing: border-box; font-family: 'Courier New', monospace;
+      font-size: var(--text-sm); line-height: 1.5; padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-2);
+      background: rgba(0,0,0,0.3); color: var(--ghost-white); resize: none; margin-bottom: 8px;
+    }
   </style>
 
   <div id="concept-screen" class="hidden">
@@ -2115,7 +2141,7 @@
       <header class="sources-head">
         <p class="deck-eyebrow">Start here <span class="deck-kicker">· your source extracts</span></p>
         <h1 class="deck-title sources-title">Load the raw material.</h1>
-        <p class="deck-lede sources-lede">Field notes, interview fragments, articles, statistics, policies, anecdotes — the raw material you'll sift for signal. Start with the sample survey or bring your own. A problem concept comes later, once the evidence has something to say.</p>
+        <p class="deck-lede sources-lede">Field notes, interviews, articles, statistics, anecdotes — the raw material you'll sift for signal. Go wide; include what might contradict you. The problem comes into focus later.</p>
       </header>
 
       <div class="config-field">
@@ -2124,62 +2150,55 @@
       </div>
 
       <div class="config-field">
-        <label id="pool-label">Source-extract pool — <span id="config-pool-count">0</span> source extracts <span style="opacity: 0.7; font-weight: 400;">(Civics & Elections cycle survey — replace with your own via CSV or ✨ Extract from sources)</span></label>
+        <label id="pool-label">Source-extract pool — <span id="config-pool-count">0</span> source extracts</label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
-        <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()" style="margin-bottom: 12px;">Load 21 Civics &amp; Elections source extracts</button>
+        <div class="sources-actions">
+          <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()">Load 21 Civics &amp; Elections source extracts</button>
+          <button type="button" class="btn btn-primary" onclick="tgxExtractOpen()">✨ Extract from sources →</button>
+          <input type="file" id="csv-file-input" accept=".csv,text/csv" class="sr-only" onchange="handleCsvUpload(event)">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">Upload CSV</button>
+        </div>
+        <p class="sources-help">✨ Extract turns an article, notes or a transcript into cards using your own AI — nothing leaves your browser. CSV columns: <code>title,summary,source_url</code>.</p>
 
-        <button type="button" class="btn btn-primary" onclick="tgxExtractOpen()" style="margin-bottom: 6px;">✨ Extract from sources →</button>
-        <p style="font-size: var(--text-xs); color: var(--cloud); opacity: 0.75; margin: 0 0 14px;">Paste an article, notes, or a transcript and turn it into extract cards with your own AI — nothing leaves your browser.</p>
-
-        <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15); border-radius: var(--radius-2); padding: 16px; margin-bottom: 16px;">
-          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px;">
-            <strong style="color: var(--ghost-white); font-size: var(--text-sm);">Load your own source extracts</strong>
-            <span style="font-size: var(--text-xs); color: var(--cloud); opacity: 0.7;">Columns: <code>title,summary,source_url</code> (header row required; <code>source_url</code> optional)</span>
-          </div>
-          <details style="margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-2); overflow: hidden;">
-            <summary style="padding: 9px 13px; font-size: var(--text-sm); font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; color: var(--ghost-white); background: rgba(255,255,255,0.05); user-select: none;">
-              <span>✨</span><span>Convert any dataset with AI</span>
-            </summary>
-            <div style="padding: 12px 13px; border-top: 1px solid rgba(255,255,255,0.08);">
-              <p style="font-size: var(--text-sm); color: var(--cloud); margin-bottom: 10px;">Copy this prompt, open Claude or ChatGPT, paste it in, then add your raw data at the bottom. Upload the CSV it returns here.</p>
-              <textarea readonly rows="9" onclick="this.select()" style="width: 100%; box-sizing: border-box; font-family: 'Courier New', monospace; font-size: var(--text-sm); line-height: 1.5; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-2); background: rgba(0,0,0,0.3); color: var(--ghost-white); resize: none; margin-bottom: 8px;" id="csv-prompt-text-setup"></textarea>
-              <button type="button" class="btn btn-outline" style="font-size: var(--text-sm); padding: 6px 14px;" onclick="copyCsvPrompt(this)">Copy prompt</button>
+        <details class="sources-more">
+          <summary>Other ways to add extracts</summary>
+          <div class="sources-more-body">
+            <div class="sources-more-row">
+              <button type="button" class="btn btn-outline" onclick="downloadCsvTemplate()">Download CSV template</button>
+              <fieldset class="csv-mode-fieldset">
+                <legend class="sr-only">CSV merge mode</legend>
+                <label><input type="radio" name="csv-mode" value="append" checked> Append to pool</label>
+                <label><input type="radio" name="csv-mode" value="replace"> Replace existing pool</label>
+              </fieldset>
             </div>
-          </details>
-          <div style="display: flex; flex-wrap: wrap; gap: 16px 20px; align-items: center;">
-            <input type="file" id="csv-file-input" accept=".csv,text/csv" class="sr-only" onchange="handleCsvUpload(event)">
-            <button type="button" class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">Upload CSV</button>
-            <button type="button" class="btn btn-outline" onclick="downloadCsvTemplate()">Download template</button>
-            <fieldset style="border: none; padding: 0; margin: 0; display: flex; gap: 16px; color: var(--cloud); font-size: var(--text-sm);">
-              <legend class="sr-only">CSV merge mode</legend>
-              <label style="display: inline-flex; gap: 8px; align-items: center; cursor: pointer;">
-                <input type="radio" name="csv-mode" value="append" checked> Append to pool
-              </label>
-              <label style="display: inline-flex; gap: 8px; align-items: center; cursor: pointer;">
-                <input type="radio" name="csv-mode" value="replace"> Replace existing pool
-              </label>
-            </fieldset>
-          </div>
-        </div>
 
-        <div class="add-item-bar">
-          <label class="sr-only" for="new-item-title">New observation short label</label>
-          <input type="text" id="new-item-title" class="config-input" placeholder="Observation title..." style="flex:1;">
-          <label class="sr-only" for="new-item-summary">New observation description</label>
-          <input type="text" id="new-item-summary" class="config-input" placeholder="What's the friction? Who feels it?..." style="flex:2;">
-          <button class="btn btn-primary" onclick="addConfigItem()">Add source extract</button>
-        </div>
+            <details class="sources-ai-convert">
+              <summary><span>✨</span><span>Convert any dataset with AI</span></summary>
+              <div class="sources-ai-body">
+                <p>Copy this prompt, open your own model, paste it in, then add your raw data at the bottom. Upload the CSV it returns here.</p>
+                <textarea readonly rows="9" onclick="this.select()" id="csv-prompt-text-setup"></textarea>
+                <button type="button" class="btn btn-outline" onclick="copyCsvPrompt(this)">Copy prompt</button>
+              </div>
+            </details>
+
+            <div class="add-item-bar">
+              <label class="sr-only" for="new-item-title">New observation short label</label>
+              <input type="text" id="new-item-title" class="config-input" placeholder="Observation title..." style="flex:1;">
+              <label class="sr-only" for="new-item-summary">New observation description</label>
+              <input type="text" id="new-item-summary" class="config-input" placeholder="What's the friction? Who feels it?..." style="flex:2;">
+              <button class="btn btn-primary" onclick="addConfigItem()">Add one by hand</button>
+            </div>
+          </div>
+        </details>
       </div>
 
       </div>
     </div>
     <nav class="deck-nav" aria-label="Sources navigation">
       <div class="nav-left">
-        <button type="button" class="deck-ghost-btn" style="opacity:0.6;" onclick="startOver()" title="Clear the saved board and start fresh">Start over (reset)</button>
       </div>
       <div class="deck-dots"></div>
       <div class="nav-right">
-        <button type="button" class="btn btn-outline" onclick="skipSortingToBoard()">Skip to Canvas</button>
         <button type="button" class="btn btn-primary" onclick="startSorting()">Start sorting →</button>
       </div>
     </nav>
@@ -6209,7 +6228,6 @@ ${AI_RULES}
     let tgxJustMapped = false; // session-scoped seam flag set by openCommitModal
     function computeNextAction() {
       const unsorted = appState.items.filter(it => !(appState.sorting.decisions || {})[it.id]).length;
-      const share = { label: 'Share / Export…', fn: 'openShareSheet()' };
       // Classify guide owns the bottom surface while it runs — never stack two.
       if (appState.classifyPhase) return { state: 'classify', hidden: true };
       if (!appState.items.length) return {
@@ -6222,7 +6240,7 @@ ${AI_RULES}
         state: 'sort',
         hint: 'Sort fast — signal or noise. Where you hesitate is data.',
         primary: { label: `Sort your extracts (${unsorted} left) →`, fn: "goToScreen('sorting')", enabled: true },
-        secondary: [share]
+        secondary: []
       };
       const sortRemaining = unsorted > 0 ? [{ label: `Sort remaining (${unsorted})`, fn: "goToScreen('sorting')" }] : [];
       if (isSeedMode()) {
@@ -6233,7 +6251,7 @@ ${AI_RULES}
             ? '<strong>Seed Mode</strong> holds hunches & evidence. Unlock to build Patterns & Themes on top.'
             : 'First: connect two source extracts into <strong>Evidence</strong> — drag a glowing dot onto another card.',
           primary: { label: 'Unlock Patterns & Themes', fn: 'graduateToPod()', enabled: true },
-          secondary: [...sortRemaining, { label: 'Compile concept (.md)', fn: 'compileConcept()' }, share]
+          secondary: [...sortRemaining, { label: 'Compile concept (.md)', fn: 'compileConcept()' }]
         };
       }
       if (tgxJustMapped && hasSituations()) return {
@@ -6247,25 +6265,25 @@ ${AI_RULES}
         state: 'produce',
         hint: 'Your Problem Situation is complete — produce the Meet-the-Pods deliverable.',
         primary: { label: 'Produce the deck & site', fn: 'exportModular()', enabled: true },
-        secondary: [{ label: 'Deepen this Situation →', fn: "goToScreen('workspace')" }, share]
+        secondary: [{ label: 'Deepen this Situation →', fn: "goToScreen('workspace')" }]
       };
       if (v.ready) return {
         state: 'map-ready',
         hint: `Ready — ${v.total} card${v.total === 1 ? '' : 's'} named & described. Synthesize the ladder into a Problem Situation.`,
         primary: { label: 'Map the Problem Situation', fn: 'openCommitModal()', enabled: true },
-        secondary: [...(hasSituations() ? [{ label: 'Deepen this Situation →', fn: "goToScreen('workspace')" }] : []), share]
+        secondary: [...(hasSituations() ? [{ label: 'Deepen this Situation →', fn: "goToScreen('workspace')" }] : [])]
       };
       if (hasSituations()) return {
         state: 'deepen',
         hint: 'Work the situation: evidence landscape, the field, and the paradox at the core.',
         primary: { label: 'Deepen this Situation →', fn: "goToScreen('workspace')", enabled: true },
-        secondary: [{ label: 'Classify evidence types', fn: 'enterClassifyPhase()' }, ...sortRemaining, share]
+        secondary: [{ label: 'Classify evidence types', fn: 'enterClassifyPhase()' }, ...sortRemaining]
       };
       return {
         state: 'map-notready',
         hint: v.warnings[0] || 'Name and describe every card, and climb to a named theme.',
         primary: { label: 'Map the Problem Situation', fn: 'openCommitModal()', enabled: false },
-        secondary: [...sortRemaining, share]
+        secondary: [...sortRemaining]
       };
     }
     function tgxClassifyFromBar() { tgxJustMapped = false; enterClassifyPhase(); }
@@ -8789,9 +8807,13 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     }
 
     function startOver() {
-      if (!window.confirm('Activate the self-destruct button? This will clear your saved board and reload all the default signals. (Of course it has one. What kind of -inator doesn\'t?)')) return;
-      clearSavedState();
-      location.reload();
+      // Undoable-by-hesitation rather than a modal: the same toast-confirm
+      // pattern the unframe action uses, so a mis-tap costs nothing.
+      toast('Clear this board and start over? This cannot be undone.', {
+        actionLabel: 'Start over',
+        duration: 8000,
+        onAction: () => { clearSavedState(); location.reload(); }
+      });
     }
 
     // --- Share / Export sheet ---
@@ -8810,9 +8832,10 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         const name = (s.title || '').trim() || `Situation ${i + 1}`;
         rows.push(row(`Export working folder — ${escapeHtml(name)} (.zip)`, 'The situation’s cards, notes, and prompts, ready for an AI or a podmate.', `exportWorkingFolder('${s.id}')`));
       });
-      rows.push(row('Export the whole canvas (.zip)', 'Everything on the board — the folder podmates merge via Git.', 'exportCanvasZip()'));
+      if (!appState.situations.length) rows.push(row('Export the whole canvas (.zip)', 'Everything on the board — the folder podmates merge via Git.', 'exportCanvasZip()'));
       if (seed) rows.push(row('Compile concept (.md)', 'A lightweight Markdown summary of your hunches and evidence.', 'compileConcept()'));
       rows.push(row('Open a shared folder', 'Bring in a podmate’s exported folder — merge or replace.', 'openImportModal()'));
+      rows.push(row('Start over', 'Clear this board and reload the sample pool. Export first if you want to keep it.', 'startOver()', true));
       list.innerHTML = rows.join('');
       openModal('share-sheet-modal');
     }
