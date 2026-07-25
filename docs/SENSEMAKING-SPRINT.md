@@ -57,6 +57,11 @@ Full list of what changed and how to reverse any of it:
 
 **This brief is a stub.** Q1 and "Fixed" are written; **Q2–Q7 are referenced
 above but were never drafted** — including Q2 (the format of the slot) and Q7
-(devices). The run-of-show is not written down anywhere in this repo. Before
-the next sprint, either draft them or delete the forward references, so nobody
-goes looking for a section that doesn't exist.
+(devices). Before the next sprint, either draft them or delete the forward
+references, so nobody goes looking for a section that doesn't exist.
+
+The operational run-of-show for the July 25 sprint now lives in
+[SESSION-RUNBOOK-2026-07-25.md](SESSION-RUNBOOK-2026-07-25.md) (with the
+grouping prompt in
+[ANTI-MATCHMAKING-PROMPT.md](ANTI-MATCHMAKING-PROMPT.md) and the digest
+tool in `scripts/digest-boards.mjs`).
