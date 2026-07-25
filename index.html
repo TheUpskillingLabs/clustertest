@@ -1826,7 +1826,8 @@
       /* Sorting */
       .sorting-top { padding: 8px 12px 0; }
       .sort-card { padding: 20px 20px 28px; }
-      .sorting-hint { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+      /* Narrow enough that the toast wraps to two lines — clear it. */
+      .sorting-hint { bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }
       .sorting-complete { padding: 16px; }
       /* Modals */
       .modal-overlay { padding: 12px; padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)); }

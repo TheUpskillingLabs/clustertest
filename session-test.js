@@ -355,6 +355,42 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('a legacy v1 board migrates and the old key is cleaned up',
     migrated.items === 1 && migrated.v1gone && migrated.v2written, JSON.stringify(migrated));
 
+  // ------------------------------------------------------- Narrow viewports
+  // Forty-odd people on whatever devices they brought. Two things must hold on
+  // a phone: nothing scrolls sideways, and the toast still doesn't sit on the
+  // sort legend — it wraps to two lines down there, which is what made the
+  // desktop fix insufficient.
+  section('Phone viewport');
+  const phone = await context.newPage({ viewport: { width: 390, height: 844 } });
+  watchForErrors(phone);
+  await phone.goto(URL);
+  await phone.evaluate(() => localStorage.clear());
+  await phone.reload();
+  await sleep(800);
+  check('Sources does not scroll sideways on a phone',
+    await phone.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
+  await phone.evaluate(() => {
+    loadSampleSignals();
+    appState.items.forEach(i => { appState.sorting.decisions[i.id] = 'signal'; });
+    goToScreen('sorting');
+  });
+  await sleep(600);
+  const phoneLegend = await phone.evaluate(() => {
+    const hint = document.getElementById('sorting-hint');
+    const toast = document.querySelector('#toast-region .toast');
+    if (!hint) return 'no hint element';
+    if (!toast) return true;
+    const a = hint.getBoundingClientRect(), b = toast.getBoundingClientRect();
+    return (a.bottom < b.top || a.top > b.bottom) ? true
+      : `toast ${Math.round(b.height)}px tall covers the legend`;
+  });
+  check('the sort legend survives a two-line toast on a phone', phoneLegend === true, String(phoneLegend));
+  await phone.evaluate(() => goToScreen('board'));
+  await sleep(800);
+  check('the board does not scroll sideways on a phone',
+    await phone.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
+  await phone.close();
+
   // ------------------------------------------------------------- The gate
   section('Zero-JS-error gate');
   check('no uncaught errors or console errors during the whole run',
