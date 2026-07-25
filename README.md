@@ -30,6 +30,8 @@ A bottom **action bar** carries you through the whole arc — it always shows ex
 
 3. **Triangulate in Seed Mode** (`Validate`) — you start on a deliberately simple canvas: drag a glowing edge dot from one extract onto another (or use the **Link** tool in the dock) and two extracts pointing at the same condition become an **Evidence** card. Name the claim. Once you've kept a critical mass of extracts (~10), the tool *invites* you to name the problem concept taking shape — optional, dismissible, revisable.
 
+   Cards land where you drop them, and a busy board gets tangled. **⊞ Auto-layout** in the canvas toolbar rebuilds it as tiers — extracts along the bottom, each claim centred over what it rests on, separate ladders side by side, and the extracts you haven't used yet pooled underneath. It's undoable from the toast if you'd hand-arranged things.
+
 4. **Unlock Patterns & Themes** — Seed Mode holds hunches and evidence. One click (one-way) unlocks the full engine: Evidence climbs into **Patterns** (named mechanisms), Patterns into **Themes**, Themes toward the situation. Every card stays locked until the cards beneath it are named and described — each claim must stand on examined ones.
 
 5. **Map the Problem Situation** (`Map`) — with at least one named, described Theme, synthesize the ladder into a **Problem Situation**: an open, complex, networked condition — not yet a problem to solve.

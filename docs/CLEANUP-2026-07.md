@@ -26,6 +26,7 @@ doing the same job.
 | `Consolidate the controls on each screen` | Fewer, clearer controls; same capability |
 | `Stop the toast covering things…` | Two real bugs |
 | `Make the BYO-LLM prompts findable…` | A dead entry point, and a copy-paste flow that read like a dev tool |
+| `Add an auto-layout button` | Overlapping cards, and toasts landing under the dock |
 
 ## Removed: code that already couldn't run
 
@@ -122,7 +123,21 @@ Both prompt surfaces also stopped leading with the raw prompt — a wall of
 walkthrough, with the prompt text folded behind a labelled disclosure and the
 five paste destinations as buttons.
 
-## Fixed: three real bugs
+## Added: an auto-layout button
+
+New nodes are seeded on a phyllotaxis spiral with 110px of radial spacing
+against cards 240–400px wide, so any real board starts out overlapping — 104
+overlapping pairs on a 21-extract sample with two ladders. **⊞** in the canvas
+toolbar lays the graph out as tiers (barycentre ordering, parents centred over
+children, ladders side by side, unused extracts pooled below), recomputes the
+situation boxes, and is undoable from the toast.
+
+The spiral seeding is untouched — it is fine for the first few cards and
+auto-layout is the way out once it isn't. If someone wants to go further, the
+obvious next step is running it automatically the first time a board crosses
+some node count.
+
+## Fixed: four real bugs
 
 1. **The toast covered what it interrupted.** `#toast-region` was pinned to the
    bottom at `z-index: 2000` with nothing keeping it clear. On the sort screen
@@ -134,7 +149,12 @@ five paste destinations as buttons.
    and once they cleared the action bar they landed on the modals' own buttons.
    A `modal-open` class on `body` drops them back to the floor while a modal is
    up.
-3. **The export gate wouldn't say what was wrong.** Producing the deck is gated
+3. **Actionable toasts were unreachable on the board.** The canvas dock floats
+   above the action bar, so once toasts cleared the action bar they landed on
+   the dock — Undo, Delete-underpopulated and the Unframe confirm all had
+   buttons that could not be pressed. `tgxPublishAbHeight()` now publishes
+   `--dock-h` alongside `--ab-h`, and toasts clear both.
+4. **The export gate wouldn't say what was wrong.** Producing the deck is gated
    on the five Deepen stages. From `#produce-deck-btn` the block is explained
    ("Missing: the paradox — Stage 5"), but `exportModular()` is reachable from
    three other places, and all three gave the same generic paragraph listing
