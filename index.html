@@ -518,17 +518,11 @@
     .add-cluster-btn:hover { background: var(--ghost-white); border-color: var(--primary-teal); color: var(--primary-teal); }
 
     /* --- VIEW 3: ARTIFACT LAYOUT --- */
-    #artifact-screen { height: 100vh; height: 100dvh; width: 100vw; overflow-y: auto; background: var(--paper); padding: 40px 24px; display: flex; flex-direction: column; align-items: center; }
-    .artifact-actions { width: 100%; max-width: 840px; display: flex; justify-content: space-between; margin-bottom: 24px; background: var(--ghost-white); padding: 20px 32px; border-radius: var(--radius-3); border: 2px solid var(--cloud); align-items: center; flex-shrink: 0; }
     .action-group { display: flex; gap: 12px; }
 
     .document-paper { background: var(--ghost-white); max-width: 840px; width: 100%; padding: 60px 80px; border-radius: var(--radius-3); border: 2px solid var(--cloud); box-shadow: 0 10px 30px rgba(16,24,32,0.03); }
     .doc-header { border-bottom: 3px solid var(--midnight); padding-bottom: 20px; margin-bottom: 36px; }
-    .doc-cluster { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 2px solid var(--cloud); }
-    .doc-cluster h2 { color: var(--primary-teal); margin-bottom: 12px; font-size: var(--text-2xl); font-weight: 500; }
-    .doc-item-box { background: var(--cloud); border-left: 4px solid var(--primary-teal); padding: 16px; margin-bottom: 12px; font-size: var(--text-sm); border-radius: 0 var(--radius-2) var(--radius-2) 0; }
     
-    .next-steps-section { margin-top: 60px; background: var(--cloud); padding: 32px; border-radius: var(--radius-3); border: 2px solid var(--cloud); }
     .prompt-card { background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: var(--radius-2); padding: 24px; margin-bottom: 20px; }
     .prompt-card h4 { font-size: var(--text-lg); margin-bottom: 8px; color: var(--midnight); font-weight: 500; }
     .prompt-card p.context { font-size: var(--text-sm); color: var(--text-muted); margin-bottom: 16px; }
@@ -806,19 +800,6 @@
     .commit-cluster-row .cluster-meta p { font-size: var(--text-xs); color: var(--midnight); opacity: 0.7; }
     .commit-warning { background: rgba(238,28,37,0.08); color: var(--action-red); padding: 12px 16px; border-radius: var(--radius-2); font-size: var(--text-sm); line-height: var(--lead-sm); margin-bottom: 12px; border-left: 4px solid var(--action-red); }
 
-    /* --- Re-purposed artifact (submission) view --- */
-    .submission-header { width: 100%; max-width: 840px; background: var(--ghost-white); padding: 24px 32px; border-radius: var(--radius-3); border: 2px solid var(--cloud); margin-bottom: 24px; }
-    .submission-header h2 { font-size: var(--text-xl); font-weight: 500; color: var(--midnight); margin-bottom: 4px; }
-    .submission-header .submission-timestamp { font-size: var(--text-sm); color: var(--midnight); opacity: 0.7; margin-bottom: 16px; }
-    .submission-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-    .submission-cluster { background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: var(--radius-3); padding: 28px 32px; margin-bottom: 24px; }
-    .submission-cluster h3 { color: var(--primary-teal); font-size: var(--text-xl); font-weight: 500; margin-bottom: 8px; }
-    .submission-cluster .cluster-desc { font-size: var(--text-base); color: var(--midnight); opacity: 0.85; font-style: italic; margin-bottom: 16px; line-height: var(--lead-base); }
-    .submission-cluster .signal-chips { margin-bottom: 20px; }
-    .submission-answer { margin-bottom: 16px; }
-    .submission-answer:last-child { margin-bottom: 0; }
-    .submission-answer h4 { font-size: var(--text-base); font-weight: 500; color: var(--midnight); margin-bottom: 8px; }
-    .submission-answer .answer-body { background: var(--cloud); border-left: 4px solid var(--primary-teal); padding: 16px; border-radius: 0 var(--radius-2) var(--radius-2) 0; font-size: var(--text-base); line-height: var(--lead-base); white-space: pre-wrap; color: var(--midnight); }
 
     /* ============ WEB-MAP CANVAS ============ */
     .webmap-panel { display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; background: var(--cloud); padding-top: env(safe-area-inset-top, 0px); }
@@ -899,9 +880,7 @@
       .workspace-header        { padding: 16px; }
       .workspace-cluster-card  { padding: 0 16px 20px; }
       /* Artifact screen */
-      #artifact-screen   { padding: 12px; }
       .document-paper    { padding: 24px 20px; }
-      .artifact-actions  { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
     }
 
     /* Canvas hint: show touch-specific text on mobile */
@@ -1769,20 +1748,15 @@
 
     @media print {
       body { background: var(--ghost-white); overflow: visible; height: auto; }
-      .artifact-actions, .next-steps-section, .upskill-banner, .submission-actions, .peer-review-section { display: none !important; }
-      #artifact-screen { padding: 0; height: auto; overflow: visible; display: block; }
+      .upskill-banner { display: none !important; }
       .document-paper { box-shadow: none; border: none; padding: 0; max-width: 100%; }
-      .doc-cluster, .submission-cluster { page-break-inside: avoid; }
-      .submission-header { border: none; padding: 0 0 16px 0; }
-      .submission-cluster { border: none; padding: 0; margin-bottom: 32px; }
     }
 
     /* --- TYPOGRAPHY & SPACING POLISH --- */
     /* Headings: tracking + balance */
     .config-header h1 { letter-spacing: var(--track-tight); text-wrap: balance; line-height: var(--lh-tight); }
     .panel-header h2, .webmap-header h2,
-    .workspace-title-row h2, .submission-header h2,
-    .submission-cluster h3, .doc-cluster h2 { letter-spacing: var(--track-snug); text-wrap: balance; }
+    .workspace-title-row h2 { letter-spacing: var(--track-snug); text-wrap: balance; }
     .modal-header h3 { letter-spacing: var(--track-snug); text-wrap: balance; line-height: var(--lead-xl); }
     .workspace-cluster-card h3 { letter-spacing: var(--track-tight); text-wrap: balance; line-height: var(--lead-2xl); }
 
@@ -1796,7 +1770,6 @@
     .upskill-banner p, .modal-body p, .workspace-intro, .interview-helper .helper-desc,
     .field-hint, .workspace-section .field-hint,
     .card-type-hint { line-height: var(--lh-body); text-wrap: pretty; }
-    .submission-answer .answer-body, .doc-item-box { line-height: var(--lh-body); text-wrap: pretty; max-width: var(--measure); }
     .config-header p { line-height: var(--lh-body); max-width: 52ch; text-wrap: pretty; }
 
     /* Tabular numbers: no width jitter as digits change */
@@ -1807,7 +1780,7 @@
 
     .btn { letter-spacing: 0.005em; }
 
-    /* Spacing rhythm: setup / modal / workspace / artifact */
+    /* Spacing rhythm: setup / modal / workspace */
     @media (max-width: 600px) { .modal-content { padding: var(--space-6); } }
     .config-field { margin-bottom: var(--space-6); }
     .config-field label, .workspace-section > label { letter-spacing: var(--track-snug); }
@@ -1818,8 +1791,6 @@
     .modal-body p { margin-bottom: var(--space-5); }
     .workspace-section { margin-bottom: var(--space-7); }
     .workspace-section .field-hint { margin-bottom: var(--space-4); }
-    .submission-answer { margin-bottom: var(--space-5); }
-    .submission-answer h4 { margin-bottom: var(--space-2); letter-spacing: var(--track-snug); }
     .prompt-text, .prompt-cta .prompt-text { line-height: var(--lh-body); }
 
     /* Sort card + node-internal type (type only — never node geometry) */
@@ -2452,47 +2423,9 @@
     <div class="tgx-actionbar" id="workspace-actionbar">
       <div class="ab-hint" id="submit-status-hint">To finish: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.</div>
       <button class="btn btn-primary ab-primary" id="produce-deck-btn" onclick="exportModular()" disabled>Produce the deck &amp; site</button>
-      <div class="ab-secondary-row">
-        <button class="ab-secondary" id="submit-for-voting-btn" onclick="submitForVoting()" disabled>Submit for voting</button>
-      </div>
     </div>
   </div>
 
-  <div id="artifact-screen" class="hidden">
-    <div class="submission-header">
-      <div style="font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label); color: var(--primary-teal); margin-bottom: 8px;">Your artifact</div>
-      <h2 id="submission-heading">Your Artifact</h2>
-      <p class="submission-timestamp" id="submission-timestamp"></p>
-      <div class="submission-actions">
-        <button class="btn btn-outline" onclick="backToWorkspaceFromArtifact()">← Back to Workspace</button>
-        <button class="btn btn-outline" onclick="window.print()">Print / Save PDF</button>
-        <button class="btn btn-outline" onclick="downloadMarkdown()">Download Markdown (.md)</button>
-        <button class="btn btn-primary" onclick="exportModular()">Produce your “Meet the Pods” deck &amp; site →</button>
-        <button class="btn btn-outline" onclick="openSubmitModal()">Re-submit</button>
-        <button class="btn btn-danger" onclick="startOver()" style="margin-left:auto;" aria-label="Start over — permanently clears your saved board">Start Over</button>
-      </div>
-    </div>
-    <div id="submission-body"></div>
-  </div>
-
-  <!-- (removed) orphaned commit-modal — it was never opened; the live flow uses openCommitModal()/validateBoard() -->
-
-  <div id="submit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="submit-modal-title">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="submit-modal-title">Submit your map for voting?</h3>
-      </div>
-      <div class="modal-body">
-        <p id="submit-modal-summary"></p>
-        <p id="submit-modal-prior" class="hidden" style="font-size: var(--text-sm); color: var(--midnight); opacity: 0.7;"></p>
-        <p style="font-size: var(--text-sm); color: var(--midnight); opacity: 0.7;">In a live deployment, this queues your work for community review. In this prototype, it timestamps your submission and produces a read-only artifact.</p>
-        <div class="modal-actions">
-          <button class="btn btn-outline" onclick="closeModal('submit-modal')">Cancel</button>
-          <button class="btn btn-primary" id="submit-modal-confirm-btn" onclick="confirmSubmit()" data-autofocus>Submit</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <div id="card-page-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="card-page-title">
     <div class="modal-content" style="max-width: 760px;">
@@ -2948,7 +2881,6 @@ git push</pre>
         view: { zoom: 1, panX: 0, panY: 0 },
         viewInitialized: false,
         canvasViewState: 'all',
-        submittedAt: null,
         exportedAt: null,
         currentScreen: 'intro',
         // Classify phase: the 7 evidence types are introduced only AFTER the
@@ -3172,9 +3104,11 @@ git push</pre>
       });
       parsed.items.forEach(it => { if (typeof it.source !== 'string' || !it.source) delete it.source; });
       parsed.cards.forEach(c => { if (typeof c.source !== 'string' || !c.source) delete c.source; });
-      if (typeof parsed.submittedAt === 'undefined') parsed.submittedAt = null;
       if (typeof parsed.exportedAt === 'undefined') parsed.exportedAt = null;
-      const VALID_SCREENS = ['intro', 'concept', 'setup', 'sorting', 'board', 'workspace', 'artifact'];
+      // 'artifact' was a screen until the submit-for-voting stub came out;
+      // a board saved on it resumes at the workbook it came from.
+      if (parsed.currentScreen === 'artifact') parsed.currentScreen = 'workspace';
+      const VALID_SCREENS = ['intro', 'concept', 'setup', 'sorting', 'board', 'workspace'];
       if (!parsed.currentScreen || !VALID_SCREENS.includes(parsed.currentScreen)) parsed.currentScreen = 'intro';
       if (!parsed.nodes || typeof parsed.nodes !== 'object') parsed.nodes = {};
       if (!parsed.view || typeof parsed.view !== 'object') parsed.view = { zoom: 1, panX: 0, panY: 0 };
@@ -3595,7 +3529,6 @@ git push</pre>
       document.getElementById('sorting-screen').classList.toggle('hidden', name !== 'sorting');
       document.getElementById('board-workspace').classList.toggle('hidden', name !== 'board');
       document.getElementById('workspace-screen').classList.toggle('hidden', name !== 'workspace');
-      document.getElementById('artifact-screen').classList.toggle('hidden', name !== 'artifact');
       if (name === 'intro') {
         renderIntro();
       } else if (name === 'concept') {
@@ -3610,8 +3543,6 @@ git push</pre>
         if (appState.classifyPhase) renderClassifyGuide(); else removeClassifyGuide();
       } else if (name === 'workspace') {
         renderWorkspace();
-      } else if (name === 'artifact') {
-        renderSubmittedArtifact();
       }
       renderStepIndicator();
       scheduleSave();
@@ -3789,7 +3720,6 @@ git push</pre>
         case 'setup':   return 'sources';
         case 'sorting': return 'sort';
         case 'workspace':
-        case 'artifact': return 'deepen';
         case 'board':
           if (appState.classifyPhase) return 'classify';
           if (hasSituations()) return 'map';
@@ -3861,7 +3791,6 @@ git push</pre>
     function tgxShowWhy() { appState.hideStepWhy = false; if (typeof scheduleSave === 'function') scheduleSave(); renderStepIndicator(); }
 
     function backToBoard() { goToScreen('board'); }
-    function backToWorkspaceFromArtifact() { goToScreen('workspace'); }
 
     // ======================== WEB-MAP CANVAS ========================
 
@@ -7777,169 +7706,15 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       const ok = workspaceIsComplete();
       const deckBtn = document.getElementById('produce-deck-btn');
       if (deckBtn) deckBtn.disabled = !ok;
-      const btn = document.getElementById('submit-for-voting-btn');
-      if (!btn) return;
-      btn.disabled = !ok;
-      btn.textContent = appState.submittedAt ? 'Re-submit for voting' : 'Submit for voting';
       const hint = document.getElementById('submit-status-hint');
       if (hint) {
         if (ok) {
-          hint.textContent = appState.submittedAt
-            ? `Last submitted ${new Date(appState.submittedAt).toLocaleString()}. Re-submit to update.`
-            : 'Ready — produce your Meet-the-Pods deck & site, or submit for voting.';
+          hint.textContent = 'Ready — produce your Meet-the-Pods deck & site.';
         } else {
           const missing = tgxFirstMissingField();
           hint.textContent = missing ? `Missing: ${missing}.` : 'Complete the five stages to finish.';
         }
       }
-    }
-
-    // --- Submit for Voting ---
-    function submitForVoting() {
-      if (!workspaceIsComplete()) return;
-      openSubmitModal();
-    }
-
-    function openSubmitModal() {
-      if (!workspaceIsComplete()) {
-        toast('Fill the required fields (name, description, openness, paradox, pressure-test) and back the situation with at least one named theme.');
-        return;
-      }
-      const sits = appState.situations;
-      const tops = sits.flatMap(s => s.memberCardIds.map(findCard).filter(Boolean));
-      const signalSet = new Set();
-      tops.forEach(c => signalsUnder(c.id).forEach(id => signalSet.add(id)));
-      const charCount = sits.reduce((sum, s) =>
-        sum + ['description', 'openness', 'evidenceCoverage', 'researchAgenda', 'voicesNeeded', 'accessNeeds', 'paradox', 'statusQuoBeneficiaries', 'problematization'].reduce((a, k) => a + (s[k] || '').trim().length, 0), 0);
-      const titles = sits.map(s => `"${s.title || 'Untitled'}"`).join(', ');
-      const summary = document.getElementById('submit-modal-summary');
-      summary.textContent = `You're submitting ${sits.length} Problem Situation${sits.length === 1 ? '' : 's'} — ${titles} — built from ${tops.length} top-level card${tops.length === 1 ? '' : 's'} covering ${signalSet.size} signal${signalSet.size === 1 ? '' : 's'}, with ${charCount} characters of situation, evidence-landscape, research-access, and paradox analysis.`;
-      const prior = document.getElementById('submit-modal-prior');
-      if (appState.submittedAt) {
-        prior.textContent = `Previously submitted on ${new Date(appState.submittedAt).toLocaleString()}. Re-submitting will replace that timestamp.`;
-        prior.classList.remove('hidden');
-        document.getElementById('submit-modal-title').textContent = 'Re-submit this map?';
-        document.getElementById('submit-modal-confirm-btn').textContent = 'Re-submit';
-      } else {
-        prior.classList.add('hidden');
-        document.getElementById('submit-modal-title').textContent = 'Submit your map for voting?';
-        document.getElementById('submit-modal-confirm-btn').textContent = 'Submit';
-      }
-      openModal('submit-modal');
-    }
-
-    function confirmSubmit() {
-      if (!workspaceIsComplete()) return;
-      appState.submittedAt = new Date().toISOString();
-      closeModal('submit-modal');
-      scheduleSave();
-      goToScreen('artifact');
-      toast('Submitted.');
-    }
-
-    // --- Submitted artifact (read-only) ---
-    function renderSubmittedArtifact() {
-      const tsEl = document.getElementById('submission-timestamp');
-      if (tsEl) {
-        tsEl.textContent = appState.submittedAt
-          ? `Submitted on ${new Date(appState.submittedAt).toLocaleString()}`
-          : 'Draft — not yet submitted';
-      }
-      const heading = document.getElementById('submission-heading');
-      if (heading) heading.textContent = appState.settings.title
-        ? `${appState.settings.title} — Artifact`
-        : 'Your Artifact';
-
-      const body = document.getElementById('submission-body');
-      body.innerHTML = '';
-      const wrap = document.createElement('div');
-      wrap.style.width = '100%';
-      wrap.style.maxWidth = '840px';
-
-      appState.situations.forEach(s => {
-        const tops = s.memberCardIds.map(findCard).filter(Boolean)
-          .sort((a, b) => (b.tier - a.tier) || (a.title || '').localeCompare(b.title || ''));
-        // Required fields always render (with "(empty)"); reflective fields only when written.
-        const answer = (h, v, required) => (v || '').trim() || required
-          ? `<div class="submission-answer"><h4>${escapeHtml(h)}</h4><div class="answer-body">${escapeHtml((v || '').trim() || '(empty)')}</div></div>`
-          : '';
-        const article = document.createElement('article');
-        article.className = 'submission-cluster';
-        article.innerHTML = `
-          <h3>${escapeHtml(s.title || 'Untitled Problem Situation')} <span style="font-size:var(--text-2xs); color:var(--tier-4-plus-ink-light); font-weight:700; text-transform:uppercase; letter-spacing:var(--track-label); margin-left:var(--space-2);">Problem Situation</span></h3>
-          ${s.description ? `<p class="cluster-desc">${escapeHtml(s.description)}</p>` : ''}
-          ${answer('Why this is open, not bounded', s.openness, true)}
-          <ul class="signal-chips">
-            ${tops.map(c => `<li>${escapeHtml(c.title || 'Untitled')} (${escapeHtml(nodeLabel(c.id))})</li>`).join('')}
-          </ul>
-          ${answer('What the evidence covers', s.evidenceCoverage, false)}
-          ${answer('Research agenda — what’s still missing', s.researchAgenda, false)}
-          ${answer('Who I need to hear from', s.voicesNeeded, false)}
-          ${answer('What I can’t reach alone — and how I might', s.accessNeeds, false)}
-          ${answer('The paradox', s.paradox, true)}
-          ${answer('Who benefits from the status quo', s.statusQuoBeneficiaries, false)}
-          ${answer('Pressure-testing the framing', s.problematization, true)}
-          ${answer('Legacy — Frame', s.frame, false)}
-          ${answer('Legacy — Stakeholder Map', s.stakeholderMap, false)}
-        `;
-        wrap.appendChild(article);
-      });
-      body.appendChild(wrap);
-
-      const peerReview = document.createElement('div');
-      peerReview.className = 'peer-review-section';
-      peerReview.style.cssText = 'width: 100%; max-width: 840px; margin-top: 40px;';
-      peerReview.innerHTML = `
-        <div style="background: var(--ghost-white); border: 2px solid var(--cloud); border-radius: var(--radius-3); padding: 28px 32px;">
-          <div style="font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label); color: var(--primary-teal); margin-bottom: 8px;">Before Peer Review</div>
-          <h3 style="font-size: var(--text-lg); font-weight: 700; color: var(--midnight); margin-bottom: 12px;">Can you defend this?</h3>
-          <p style="font-size: var(--text-base); color: var(--midnight); opacity: 0.85; line-height: 1.6; margin-bottom: 20px;">Your peers are going to challenge your framing. Before you walk in, make sure you have an answer to each of these.</p>
-          <ol style="font-size: var(--text-base); color: var(--midnight); line-height: 1.8; padding-left: 20px;">
-            <li style="margin-bottom: 8px;">Which signal doesn't quite fit — and why did you keep it anyway?</li>
-            <li style="margin-bottom: 8px;">Whose voice is still missing — and what's your path to reaching them?</li>
-            <li style="margin-bottom: 8px;">What assumption would break your framing if it turned out to be wrong?</li>
-            <li style="margin-bottom: 8px;">Why is this an open situation and not a bounded problem?</li>
-            <li style="margin-bottom: 8px;">What's the strongest argument that the evidence should have been organized differently?</li>
-          </ol>
-        </div>
-      `;
-      body.appendChild(peerReview);
-    }
-
-    function downloadMarkdown() {
-      let md = `# ${appState.settings.title || 'Problem Situation'}\n`;
-      md += appState.submittedAt
-        ? `*Submitted on ${new Date(appState.submittedAt).toLocaleString()}*\n\n`
-        : `*Draft — not yet submitted*\n\n`;
-      appState.situations.forEach(s => {
-        const section = (h, v, required) => {
-          if (!(v || '').trim() && !required) return;
-          md += `### ${h}\n${(v || '').trim() || '(empty)'}\n\n`;
-        };
-        md += `---\n\n## Problem Situation: ${s.title || 'Untitled'}\n\n`;
-        if (s.description) md += `${s.description}\n\n`;
-        section('Why this is open, not bounded', s.openness, true);
-        section('What the evidence covers', s.evidenceCoverage, false);
-        section('Research agenda — what’s still missing', s.researchAgenda, false);
-        section('Who I need to hear from', s.voicesNeeded, false);
-        section('What I can’t reach alone — and how I might', s.accessNeeds, false);
-        section('The paradox', s.paradox, true);
-        section('Who benefits from the status quo', s.statusQuoBeneficiaries, false);
-        section('Pressure-testing the framing', s.problematization, true);
-        section('Legacy — Frame', s.frame, false);
-        section('Legacy — Stakeholder Map', s.stakeholderMap, false);
-        md += `### Evidence trail\n\n`;
-        s.memberCardIds.map(findCard).filter(Boolean).forEach(c => { md += formatCardOutline(c.id, 0) + '\n\n'; });
-      });
-      md += `---\n\n`;
-
-      const blob = new Blob([md], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Triangulator_Submission.md';
-      a.click();
-      URL.revokeObjectURL(url);
     }
 
     // ======================== TWO-PHASE MODE (Seed ↔ Pod) ========================
