@@ -132,10 +132,28 @@ toolbar lays the graph out as tiers (barycentre ordering, parents centred over
 children, ladders side by side, unused extracts pooled below), recomputes the
 situation boxes, and is undoable from the toast.
 
+The first version only behaved on **trees**. The method is a many-to-many
+lattice, and a latticed board came out tangled — the ordering pass sorted
+unconnected nodes to the far right of their band and never settled, it kept
+whatever its last pass produced rather than the best, and the coordinate pass
+cascaded every collision rightward across the canvas. Rewritten as a proper
+layered pass: median ordering with transpose, isotonic (pool-adjacent-violators)
+placement, best-kept across iterations, and three seeds tried because the spiral
+that seeds the order starts at `Math.random()` — so the same board used to lay
+out differently on every press. On a 42-edge latticed fixture that took
+crossings from 46.5 average (42–51 spread) to a repeatable 32, and average edge
+length from 721px to 602px, with no regression on trees.
+
+**Still open: width.** The drawing is as wide as its widest band, which is
+always the extracts — 16 of them in a row is ~4,400px, so a big board fits the
+screen at about 35% zoom. Stacking tier 0 into two sub-rows would roughly halve
+that and double the readable zoom. It's the obvious next move, and it wasn't
+worth making the night before a session because it changes the one-band-per-tier
+model the crossing counter assumes.
+
 The spiral seeding is untouched — it is fine for the first few cards and
-auto-layout is the way out once it isn't. If someone wants to go further, the
-obvious next step is running it automatically the first time a board crosses
-some node count.
+auto-layout is the way out once it isn't. Running it automatically the first
+time a board crosses some node count is the other obvious follow-up.
 
 ## Fixed: four real bugs
 
