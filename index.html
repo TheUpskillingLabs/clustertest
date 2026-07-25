@@ -905,10 +905,7 @@
     }
 
     /* Canvas hint: show touch-specific text on mobile */
-    .hint-mobile { display: none; }
     @media (max-width: 1024px) {
-      .hint-desktop { display: none; }
-      .hint-mobile  { display: inline; }
     }
 
     .canvas-viewport {
@@ -1621,122 +1618,12 @@
     #board-workspace.header-collapsed .step-indicator-mount { display: none; }
     #board-workspace.header-collapsed .board-concept-strip { display: none; }
 
-    .canvas-hint {
-      position: absolute;
-      right: calc(16px + env(safe-area-inset-right, 0px));
-      bottom: calc(72px + env(safe-area-inset-bottom, 0px)); /* above the zoom toolbar */
-      background: rgba(16,24,32,0.88);
-      color: var(--ghost-white);
-      padding: 8px 16px;
-      border-radius: var(--radius-2);
-      font-size: var(--text-xs);
-      font-weight: 500;
-      pointer-events: none;
-      z-index: 13;
-      max-width: 260px;
-      text-align: right;
-      line-height: 1.55;
-      opacity: 0;
-      transition: opacity 0.18s ease;
-    }
-    /* Touch devices have no hover — tapping the help button (which focuses it)
-       is the way in, so broaden the trigger to :focus above. */
 
     @media (prefers-reduced-motion: reduce) {
       .canvas-node, .edge-layer .edge, .hub-node { transition-duration: 60ms !important; animation-duration: 60ms !important; }
       .canvas-node.spawn, .edge-layer .edge.spawning, .canvas-node.match-ring::before, .hub-node.tier-up { animation: none !important; }
     }
 
-    /* ===================== ONBOARDING: INTERACTIVE GUIDED TUTORIAL ===================== */
-    /* Highlight ring: dims everything else but lets ALL pointer events pass
-       through, so swipes, connect-handle drags, chip clicks, and typing keep
-       working while a target is spotlighted. */
-    #tutorial-highlight {
-      position: fixed;
-      z-index: 2095;
-      pointer-events: none;
-      border: 3px solid var(--primary-teal);
-      border-radius: var(--radius-3);
-      box-shadow: 0 0 0 9999px rgba(16,24,32,0.45), 0 0 24px rgba(0,148,160,0.5);
-      transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
-    }
-    #tutorial-highlight.hidden { display: none; }
-
-    /* Coach panel: docked, scrollable, rich educational copy. */
-    #tutorial-coach {
-      position: fixed;
-      left: calc(16px + env(safe-area-inset-left, 0px));
-      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-      z-index: 2098;
-      width: min(440px, calc(100vw - 24px));
-      background: var(--ghost-white);
-      border-radius: var(--radius-3);
-      box-shadow: 0 18px 50px rgba(16,24,32,0.32), 0 0 0 2px var(--primary-teal);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    #tutorial-coach.coach-right { left: auto; right: 16px; }
-    #tutorial-coach.hidden { display: none; }
-    .tut-coach-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px 8px; }
-    .tut-coach-title { font-size: var(--text-2xs); font-weight: 800; text-transform: uppercase; letter-spacing: var(--track-label); color: var(--primary-teal); flex-shrink: 0; }
-    .tut-coach-progress-track { flex: 1; height: 4px; background: var(--cloud); border-radius: 2px; overflow: hidden; }
-    #tutorial-coach-progress { height: 100%; background: var(--primary-teal); width: 0; transition: width 0.3s ease; }
-    #tutorial-coach-step { font-size: var(--text-2xs); font-weight: 700; color: var(--midnight); opacity: 0.45; flex-shrink: 0; }
-    #tutorial-coach-body { padding: 4px 16px 8px; overflow-y: auto; max-height: 46vh; font-size: var(--text-sm); line-height: var(--lead-sm); color: var(--midnight); }
-    #tutorial-coach-body h4 { font-size: var(--text-base); font-weight: 700; margin-bottom: 8px; color: var(--midnight); }
-    #tutorial-coach-body p { margin-bottom: 12px; opacity: 0.85; }
-    #tutorial-coach-body ul { margin: 0 0 12px 16px; opacity: 0.85; }
-    #tutorial-coach-body li { margin-bottom: 4px; }
-    .tut-why {
-      background: rgba(0,148,160,0.08);
-      border-left: 3px solid var(--primary-teal);
-      border-radius: 0 var(--radius-2) var(--radius-2) 0;
-      padding: 8px 12px;
-      margin-bottom: 12px;
-      font-size: var(--text-sm);
-      line-height: 1.55;
-    }
-    .tut-why .tut-why-label { color: var(--primary-teal); text-transform: uppercase; font-size: var(--text-2xs); font-weight: 800; letter-spacing: var(--track-label); display: block; margin-bottom: 3px; }
-    .tut-do {
-      background: var(--midnight);
-      color: var(--ghost-white);
-      border-radius: var(--radius-2);
-      padding: 12px;
-      margin-bottom: 12px;
-      font-size: var(--text-sm);
-      font-weight: 600;
-      line-height: 1.5;
-    }
-    .tut-do::before { content: "👉 "; }
-    .tut-example { font-style: italic; opacity: 0.92; }
-    .tut-good { color: #1e8e3e; font-weight: 700; }
-    .tut-coach-footer { display: flex; align-items: center; gap: 8px; padding: 8px 16px 16px; border-top: 1px solid var(--cloud); }
-    .tut-exit-btn { background: transparent; border: none; color: var(--midnight); opacity: 0.45; font-size: var(--text-sm); font-weight: 600; cursor: pointer; margin-right: auto; padding: 8px 0; transition: opacity 0.15s ease; }
-    .tut-exit-btn:hover { opacity: 0.7; }
-    #tutorial-coach-next {
-      background: var(--primary-teal);
-      color: var(--ghost-white);
-      border: none;
-      padding: 8px 16px;
-      border-radius: var(--radius-2);
-      font-weight: 700;
-      font-size: var(--text-sm);
-      cursor: pointer;
-      transition: background 0.15s ease, opacity 0.15s ease;
-    }
-    #tutorial-coach-next:hover:not(:disabled) { background: var(--teal-deep); }
-    #tutorial-coach-next:disabled { opacity: 0.35; cursor: default; }
-
-
-    @media (max-width: 600px) {
-      #tutorial-coach { left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: max(8px, env(safe-area-inset-bottom, 0px)); width: auto; }
-      #tutorial-coach.coach-right { left: 8px; right: 8px; }
-      #tutorial-coach-body { max-height: 38vh; }
-    }
-
-
-    /* ======================== SORTING SCREEN ======================== */
     #sorting-screen { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--midnight); overflow: hidden; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
     /* One row: back · progress · counter · undo (was two stacked rows). */
     .sorting-top { display: flex; align-items: center; gap: 14px; padding: 12px 24px 8px; flex-shrink: 0; }
@@ -1901,20 +1788,20 @@
 
     /* Microlabels: one consistent uppercase tracking */
     .upskill-banner h3, .card-tag, .cluster-actions button, .ws-card-tier, .ws-jump-label,
-    .tour-tooltip-step, .tut-coach-title, .sort-card-tag, .sort-zone-label, .view-tab,
+    .sort-card-tag, .sort-zone-label, .view-tab,
     .prompt-cta-label, .interview-helper .step-label, .profile-popover .profile-id .label,
     .card-type-group-label { letter-spacing: var(--track-label); }
 
     /* Reading blocks: leading, pretty wrapping, measure */
     .upskill-banner p, .modal-body p, .workspace-intro, .interview-helper .helper-desc,
-    .field-hint, .workspace-section .field-hint, .tour-tooltip p,
+    .field-hint, .workspace-section .field-hint,
     .card-type-hint { line-height: var(--lh-body); text-wrap: pretty; }
     .submission-answer .answer-body, .doc-item-box { line-height: var(--lh-body); text-wrap: pretty; max-width: var(--measure); }
     .config-header p { line-height: var(--lh-body); max-width: 52ch; text-wrap: pretty; }
 
     /* Tabular numbers: no width jitter as digits change */
-    .sorting-counter, #sort-card-number, .zoom-btn.zoom-level, #tutorial-coach-step,
-    .tour-step-count, .hub-count, #cluster-progress {
+    .sorting-counter, #sort-card-number, .zoom-btn.zoom-level,
+    .hub-count, #cluster-progress {
       font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
     }
 
@@ -2014,7 +1901,6 @@
       }
       .view-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
       .view-tabs::-webkit-scrollbar { display: none; }
-      .canvas-hint { display: none; }
     }
     @media (prefers-reduced-motion: reduce) { .modal-overlay .modal-content { animation: none; } }
   </style>
@@ -2541,7 +2427,6 @@
           <button type="button" class="dock-tool" data-tool="tier-4" aria-pressed="false" title="Add a super-theme" onclick="dockToolClick(this)"><span class="dock-glyph" aria-hidden="true">✦</span><span class="dock-label">Super-theme</span></button>
         </div>
         <div id="marquee-rect" class="marquee-rect"></div>
-        <div class="canvas-hint" id="canvas-hint"><span class="hint-desktop">Drag to select · Edge dots to connect · Scroll to pan · Cmd-scroll to zoom · Space-drag to pan</span><span class="hint-mobile">Drag to move · Tap to connect · Pinch to zoom · Two fingers to pan</span></div>
       </div>
       <!-- The one state-driven next action (OLOS actionbar grammar): exactly one
            primary CTA per board state, disabled-until-valid with a hint; secondary
@@ -2550,20 +2435,6 @@
     </main>
   </div>
 
-  <!-- INTERACTIVE TUTORIAL: highlight ring + coach panel -->
-  <div id="tutorial-highlight" class="hidden" aria-hidden="true"></div>
-  <aside id="tutorial-coach" class="hidden" role="complementary" aria-label="Tutorial coach">
-    <div class="tut-coach-header">
-      <span class="tut-coach-title">Tutorial</span>
-      <div class="tut-coach-progress-track" aria-hidden="true"><div id="tutorial-coach-progress"></div></div>
-      <span id="tutorial-coach-step" aria-live="polite"></span>
-    </div>
-    <div id="tutorial-coach-body"></div>
-    <div class="tut-coach-footer">
-      <button type="button" class="tut-exit-btn" onclick="tutorialExit(false)">Exit tutorial</button>
-      <button type="button" id="tutorial-coach-next" onclick="tutorialAdvance()">Next →</button>
-    </div>
-  </aside>
 
   <div id="workspace-screen" class="hidden">
     <div class="step-indicator-mount"></div>
@@ -3080,7 +2951,6 @@ git push</pre>
         submittedAt: null,
         exportedAt: null,
         currentScreen: 'intro',
-        boardIntroSeen: false, // first-canvas assignment popup shown once
         // Classify phase: the 7 evidence types are introduced only AFTER the
         // problem situation is mapped. False during the validate phase so the
         // type picker stays hidden; flipped true by enterClassifyPhase().
@@ -3098,17 +2968,14 @@ git push</pre>
       };
     }
 
-    // NOTE: appState is swapped wholesale while the guided tutorial runs
     // (see the INTERACTIVE GUIDED TUTORIAL module). Never cache appState in a
     // long-lived closure — always read the binding at call time.
-    let tutorialMode = false; // declared early: save() and other guards read it
     let selectedNodeIds = new Set(); // Figma-style multi-selection
     let appState = loadState() || defaultState();
 
     // --- Persistence ---
     let saveTimer = null;
     function save() {
-      if (tutorialMode) return; // tutorial state is sandboxed — never persist it
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
         showSaveStatus('Saved');
@@ -3252,7 +3119,6 @@ git push</pre>
       });
       if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
       if (typeof parsed.settings.concept !== 'string') parsed.settings.concept = '';
-      parsed.boardIntroSeen = parsed.boardIntroSeen === true;
       parsed.classifyPhase = parsed.classifyPhase === true;
       // --- Migrate singular situation + committedCardIds → situations[] ---
       const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization',
@@ -3749,7 +3615,6 @@ git push</pre>
       }
       renderStepIndicator();
       scheduleSave();
-      tutorialNotify('screen', { name });
       if (typeof tgxCoachRender === 'function') tgxCoachRender(name);
     }
 
@@ -3765,7 +3630,6 @@ git push</pre>
     };
     // Board messages keyed by the action-bar state: the coach explains the
     // GESTURE, the action bar holds the CLICK. (One coach — the intro modal,
-    // spotlight tours, and tutorial offer are gone.)
     const TGX_COACH_BOARD = {
       sources: { t: 'Step 1 · Gather source extracts', b: 'The canvas is empty because there is nothing to triangulate yet — load your sources first.' },
       sort: { t: 'Step 2 · Sort signal from noise', b: 'Sort before you map: only what survives the cut becomes raw material for evidence.' },
@@ -3856,8 +3720,8 @@ git push</pre>
       const text = el.querySelector('.bcs-text');
       const nameBtn = el.querySelector('.bcs-name');
       const dismissBtn = el.querySelector('.bcs-x');
-      const concept = tutorialMode ? '' : (appState.settings.concept || '').trim();
-      const invite = !tutorialMode && !concept && conceptUnlocked() && !appState.settings.conceptInviteDismissed;
+      const concept = (appState.settings.concept || '').trim();
+      const invite = !concept && conceptUnlocked() && !appState.settings.conceptInviteDismissed;
       el.classList.toggle('hidden', !concept && !invite);
       if (concept) {
         text.innerHTML = `<span class="bcb-key">Concept</span><span class="bcb-edit">edit ✎</span>${escapeHtml(concept)}`;
@@ -3964,8 +3828,6 @@ git push</pre>
     function renderStepIndicator() {
       const mounts = document.querySelectorAll('.step-indicator-mount');
       if (!mounts.length) return;
-      // Hidden during the sandboxed tutorial — it runs its own scripted flow.
-      if (tutorialMode) { mounts.forEach(m => { m.innerHTML = ''; }); return; }
       const active = currentStepId();
       const chips = STEP_DEFS.map((s, i) => {
         const reached = stepReached(s.id);
@@ -4326,11 +4188,6 @@ git push</pre>
       localStorage.setItem('olos.headerCollapsed', collapsed ? '1' : '');
     }
 
-    // The phone slim-bar's expandable panel is gone (the hamburger board menu
-    // replaced it); these stay as no-ops for dormant tutorial callers.
-    function toggleMobileHeader() {}
-    function ensureMobileHeaderFor() {}
-
     function zoomBy(direction, anchorClientX, anchorClientY) {
       const viewport = document.getElementById('canvas-viewport');
       const rect = viewport.getBoundingClientRect();
@@ -4553,7 +4410,6 @@ git push</pre>
         titleInput.addEventListener('input', () => {
           obj.title = titleInput.value; scheduleSave(); updateClusterProgressChip(); refreshParentLocks(obj.id);
           mirrorToCardPage();
-          tutorialNotify('card-edited', { id: obj.id, title: obj.title || '', description: obj.description || '' });
         });
         titleInput.addEventListener('pointerdown', (e) => e.stopPropagation());
       }
@@ -4562,7 +4418,6 @@ git push</pre>
         desc.addEventListener('input', () => {
           obj.description = desc.value; autoResize(desc); scheduleSave(); refreshParentLocks(obj.id);
           mirrorToCardPage();
-          tutorialNotify('card-edited', { id: obj.id, title: obj.title || '', description: obj.description || '' });
         });
         desc.addEventListener('pointerdown', (e) => e.stopPropagation());
         requestAnimationFrame(() => autoResize(desc));
@@ -4585,11 +4440,10 @@ git push</pre>
     // Two-phase routing. Seed Mode (Phase 1) is a simplified canvas: advanced
     // classification and the deep hierarchy locks are hidden, and the single
     // tier-1 card is a provisional "Hunch". Pod Mode (Phase 2/3) is the full
-    // engine. Read live — appState is swapped wholesale during the tutorial.
     function isSeedMode() { return appState.mode === 'seed'; }
 
     // The evidence type picker is live only in the classify phase, and never in
-    // Seed Mode (provisional work isn't classified). The tutorial sets
+    // Seed Mode (provisional work isn't classified).
     // classifyPhase=true for its canvas beat so its "classify it" step works.
     function typePickerEnabled() { return appState.classifyPhase === true && !isSeedMode(); }
 
@@ -4708,7 +4562,6 @@ git push</pre>
           const newType = chip.getAttribute('data-type');
           card.cardType = newType;
           if (newType !== 'player') delete card.playerRole;
-          tutorialNotify('card-typed', { cardId: card.id, type: newType });
           scheduleSave();
           renderAllNodes();
           renderAllEdges();
@@ -5459,7 +5312,6 @@ git push</pre>
         }
         const card = createCardBetween(sourceId, targetId, null);
         spawnHubUI(card, card.id);
-        tutorialNotify('card-created', { cardId: card.id, tier: card.tier });
         return;
       }
 
@@ -5633,7 +5485,7 @@ git push</pre>
       viewport.addEventListener('pointerdown', (e) => {
         if (!armedTool) return;
         if (e.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) return; // pinch wins
-        if (e.target.closest('.canvas-node, .section-header, .zoom-toolbar, .canvas-dock, .canvas-hint, #tgx-actionbar, #edge-delete-btn')) return;
+        if (e.target.closest('.canvas-node, .section-header, .zoom-toolbar, .canvas-dock, #tgx-actionbar, #edge-delete-btn')) return;
         if (e.target.classList && e.target.classList.contains('edge-hit')) return;
         e.preventDefault();
         e.stopPropagation();
@@ -5646,9 +5498,9 @@ git push</pre>
       }, true);
 
       viewport.addEventListener('pointerdown', (e) => {
-        // Ignore canvas chrome (zoom toolbar, dock, tutorial button) so their
+        // Ignore canvas chrome (zoom toolbar, dock) so their
         // clicks aren't swallowed by marquee/pan start + preventDefault.
-        if (e.target.closest('.zoom-toolbar, .canvas-dock, #tgx-actionbar, .canvas-hint')) return;
+        if (e.target.closest('.zoom-toolbar, .canvas-dock, #tgx-actionbar')) return;
         if (e.pointerType !== 'mouse' && activeCanvasTouches.size >= 2) return;
         const onNode = !!e.target.closest('.canvas-node');
         const onEdge = !!(e.target.classList && e.target.classList.contains('edge-hit'));
@@ -5973,560 +5825,6 @@ git push</pre>
     }
     function closeAIPromptModal() { closeModal('ai-modal'); }
 
-    // ===================== ONBOARDING MODULE =====================
-    // Spotlight tours + the tutorial-offer modal are deleted (guidance is now
-    // the step rail + the corner coach + the action bar). The sandboxed
-    // interactive tutorial machinery below stays dormant.
-
-    // ===================== INTERACTIVE GUIDED TUTORIAL =====================
-    // A sandboxed, hands-on walkthrough. The real appState is swapped out for
-    // an in-memory tutorial state (save() is guarded, so nothing persists),
-    // and steps advance when the user performs the real action — swiping,
-    // connecting, classifying, naming — not just by clicking Next.
-
-    let _tutActive = false;
-    let _tutIndex = 0;
-    let _tutSatisfied = false;
-    let _tutSavedState = null;
-    let _tutSavedScreen = null;
-    let _tutTimer = null;
-    let _tutCreated = {}; // tier → id of the card the user created at that tier
-
-    // --- Example dataset: "Neighborhood food access" ---
-    // Deliberately a different domain from the built-in sample signals.
-    const TUT_SORT_ITEMS = [
-      { id: 'tut-n1', tag: 'Source Extract', title: 'Just build a market-finder app', summary: '"Honestly the fix is obvious — someone should make an app showing where the farmers markets are." — comment at a community meeting.' },
-      { id: 'tut-g1', tag: 'Source Extract', title: 'Corner-store cooler economics', summary: 'Field notes: 6 of 8 corner stores stock fresh produce for only ~2 days after delivery, then pull wilted stock. Owners independently cite spoilage losses exceeding produce margins.' },
-      { id: 'tut-u1', tag: 'Source Extract', title: 'The two-bus tomato', summary: 'Diary study: carless residents plan grocery trips like commutes — two buses each way — so they bulk-buy shelf-stable food and skip produce entirely.' }
-    ];
-    const TUT_CANVAS_ITEMS = [
-      { id: 'tut-s1', tag: 'Source Extract', title: 'Supermarket pullout (2019)', summary: 'The chain closed both neighborhood branches, citing shrink and thin margins. Nothing has replaced them.' },
-      { id: 'tut-s2', tag: 'Source Extract', title: 'Co-op that folded (2021)', summary: 'A community grocery co-op opened with grant funding and closed after 14 months, undercapitalized and under-stocked.' },
-      { id: 'tut-s3', tag: 'Source Extract', title: 'Wholesale collective forming', summary: 'Five corner-store owners are pooling orders to hit the distributor\'s minimum and bring back produce coolers.' },
-      { id: 'tut-s4', tag: 'Source Extract', title: 'SNAP-doubling pilot extended', summary: 'The city renewed its produce-match program after redemptions rose 40% in a year.' },
-      { id: 'tut-s5', tag: 'Source Extract', title: 'Corner stores as de facto grocers', summary: 'Owners extend informal credit, take custom orders for regulars, and hold deliveries behind the counter.' },
-      { id: 'tut-s6', tag: 'Source Extract', title: 'Church van shuttle', summary: 'Volunteer drivers run an unofficial weekly grocery run for thirty elders. There is a waitlist.' },
-      { id: 'tut-s7', tag: 'Source Extract', title: 'Cooking as care', summary: 'Interviews tie feeding family fresh-cooked meals to dignity and identity — "boxed food means I failed."' },
-      { id: 'tut-s8', tag: 'Source Extract', title: 'Pantry stigma', summary: 'Residents skip the free food pantry out of embarrassment; they want to buy food, not receive it.' }
-    ];
-    const TUT_CANVAS_POS = {
-      'tut-s1': [250, 250],  'tut-s2': [620, 250],
-      'tut-s3': [1280, 250], 'tut-s4': [1650, 250],
-      'tut-s5': [250, 840],  'tut-s6': [620, 840],
-      'tut-s7': [1280, 840], 'tut-s8': [1650, 840]
-    };
-
-    function buildTutorialState() {
-      const s = defaultState();
-      s.mode = 'pod'; // the tutorial teaches the full engine, incl. classification
-      s.settings.title = 'Tutorial: Neighborhood Food Access';
-      s.items = TUT_SORT_ITEMS.map(i => ({ ...i }));
-      s.currentScreen = 'sorting';
-      return s;
-    }
-
-    // Swap the tutorial state's sorting data for the canvas phase and enter the board.
-    function tutEnterCanvasPhase() {
-      appState.items = TUT_CANVAS_ITEMS.map(i => ({ ...i }));
-      appState.sorting = { currentIndex: TUT_CANVAS_ITEMS.length, decisions: {} };
-      TUT_CANVAS_ITEMS.forEach(i => { appState.sorting.decisions[i.id] = (i.id === 'tut-s8') ? 'super' : 'signal'; });
-      Object.entries(TUT_CANVAS_POS).forEach(([id, [x, y]]) => setNodePos(id, x, y));
-      appState.viewInitialized = false; // renderBoard will fit-all on entry
-      // The tutorial teaches classification mid-canvas as a simplification; in
-      // the real app the 7 types are introduced after the situation is mapped.
-      appState.classifyPhase = true;
-      setBoardTitleDisplay();
-      ensureCanvasInitialized();
-      goToScreen('board');
-    }
-
-    // Inject a fully-formed card between two existing nodes (the "fast-forward" beats).
-    function tutInjectCardBetween(idA, idB, opts) {
-      const a = nodeCenter(idA), b = nodeCenter(idB);
-      const card = { id: opts.id, title: opts.title, description: opts.description, tier: nodeTier(idA) + 1, childIds: [idA, idB] };
-      if (card.tier === 1) { card.cardType = opts.cardType || null; card.playerRole = null; }
-      appState.cards.push(card);
-      setNodePos(card.id, (a.x + b.x) / 2 - NODE_HUB_W / 2, (a.y + b.y) / 2 - NODE_HUB_H / 2);
-      renderAllNodes();
-      renderAllEdges();
-      animateNodeSpawn(card.id);
-      return card;
-    }
-
-    // Adaptive post-swipe explanations for the three practice cards.
-    function tutSortExplanation(kind, decision) {
-      const opener = {
-        noise:  decision === 'noise'
-          ? '<p><span class="tut-good">Exactly right — that\'s noise.</span> Here\'s why:</p>'
-          : '<p>You kept it — most people do at first. It <em>sounds</em> useful. But this one is <strong>noise</strong>, and the reason matters:</p>',
-        signal: decision === 'signal'
-          ? '<p><span class="tut-good">Right — that\'s a signal.</span> Look at what makes it one:</p>'
-          : (decision === 'super'
-            ? '<p>You marked it super — it\'s certainly a keeper. We\'d call it a regular <strong>signal</strong>, and the distinction is worth examining:</p>'
-            : '<p>You discarded it — but this one is a <strong>signal</strong>, and it\'s worth seeing why:</p>'),
-        super:  decision === 'super'
-          ? '<p><span class="tut-good">Yes — that\'s a super signal.</span> Here\'s what earns the star:</p>'
-          : '<p>You sorted it — but this one deserves the <strong>★ super</strong> mark, and the reason teaches the most important lesson in sorting:</p>'
-      }[kind];
-      const body = {
-        noise: `
-          <ul>
-            <li><strong>No observed behavior.</strong> Nobody did anything in this card — someone <em>opined</em>. You can't interview an opinion or count it.</li>
-            <li><strong>It's a solution wearing a problem costume.</strong> "Someone should build an app" pre-decides what the problem is (information) before any evidence says so.</li>
-            <li>Noise also includes vague complaints ("food here is terrible") and second-hand hearsay.</li>
-          </ul>
-          <div class="tut-why"><span class="tut-why-label">Why this matters</span>Dorst calls the first move of framing <strong>archaeology</strong> — establishing what is actually known. Letting opinions in as "evidence" means you end up framing what people <em>think</em>, not what <em>happens</em>.</div>`,
-        signal: `
-          <ul>
-            <li><strong>Someone watched the world</strong> and recorded behavior: stocking, wilting, pulling stock.</li>
-            <li><strong>Specific actors and a mechanism</strong>: store owners, spoilage economics, a margin calculation.</li>
-            <li><strong>Verifiable</strong>: you could visit those 8 stores tomorrow and check.</li>
-          </ul>
-          <div class="tut-why"><span class="tut-why-label">Why this matters</span>A signal is a <em>pattern of action or behavior</em>. Patterns can be triangulated; opinions can only be argued with. Everything you build on the canvas later rests on cards like this one.</div>`,
-        super: `
-          <ul>
-            <li>It <strong>crosses categories</strong>: transport, time budgets, and diet all collide in one observation.</li>
-            <li>It <strong>reframes</strong> the situation: "food desert" suggests <em>distance</em> is the problem — this card says it's <em>logistics and time</em>. That's a different problem with different owners.</li>
-          </ul>
-          <div class="tut-why"><span class="tut-why-label">Why this matters</span>Mark super when evidence makes you say "wait — the problem isn't what I thought." Confirming evidence is useful; <em>reframing</em> evidence is precious. Supers are where new frames come from.</div>`
-      }[kind];
-      return opener + body + '<p>Click <strong>Continue</strong> for the next card.</p>';
-    }
-
-    // --- The step sequence ---
-    const TUTORIAL_STEPS = [
-      // ---- Phase 1: Sorting ----
-      {
-        screen: 'sorting', highlight: null, mode: 'next',
-        html: `
-          <h4>Why framing comes before solving</h4>
-          <p>Most problem-solving fails at the first step: accepting the problem as given. Kees Dorst's <strong>Frame Creation</strong> method does the opposite — it treats the problem itself as the thing to investigate.</p>
-          <p>This tool walks his ladder:</p>
-          <ul>
-            <li><strong>Signals</strong> — raw observed friction in the world</li>
-            <li><strong>Evidence</strong> — what two or more signals jointly establish</li>
-            <li><strong>Patterns</strong> — the mechanisms behind the evidence</li>
-            <li><strong>Themes</strong> — the deeper condition underneath it all</li>
-          </ul>
-          <div class="tut-why"><span class="tut-why-label">Why this matters</span>A team that jumps straight to solutions anchors on its first framing — usually someone else's framing. The ladder forces you to <em>earn</em> your definition of the problem.</div>
-          <p>We'll practice on a worked example: <strong>food access in one neighborhood</strong>. Nothing here touches your own data.</p>`
-      },
-      {
-        screen: 'sorting', highlight: '#sort-card', pad: 14, mode: 'next',
-        html: `
-          <h4>The sort: noise / signal / ★ super</h4>
-          <p>You're about to sort three cards. The choices are binary on purpose:</p>
-          <ul>
-            <li><strong>← Noise</strong>: opinions, solutions-in-disguise, vague complaints, hearsay.</li>
-            <li><strong>→ Signal</strong>: an observed pattern of action or behavior — something that <em>happened</em>, with actors and context.</li>
-            <li><strong>↑ ★ Super signal</strong>: a signal that doesn't just confirm what you suspected — it <em>reframes</em> the situation.</li>
-          </ul>
-          <div class="tut-why"><span class="tut-why-label">Why binary?</span>Forced, fast commitment surfaces your instincts. If you hesitate on a card, that hesitation is data — it means your framing is doing work it hasn't earned yet.</div>`
-      },
-      {
-        screen: 'sorting', highlight: '#sort-card', pad: 14, mode: 'action-continue',
-        waitFor: {
-          event: 'sort',
-          match: d => d.itemId === 'tut-n1',
-          check: () => appState.sorting && appState.sorting.decisions['tut-n1'] ? { decision: appState.sorting.decisions['tut-n1'], itemId: 'tut-n1' } : null
-        },
-        html: `
-          <h4>Card 1 — read it, then decide</h4>
-          <p class="tut-example">"Just build a market-finder app" — a comment from a community meeting.</p>
-          <p>Ask yourself: <em>did anyone observe behavior here, or is this someone's take?</em></p>
-          <div class="tut-do">Swipe the card left (or press ←) if you think it's noise — right (→) for signal, up (↑) for super. Commit!</div>`,
-        explainHtml: d => tutSortExplanation('noise', d.decision)
-      },
-      {
-        screen: 'sorting', highlight: '#sort-card', pad: 14, mode: 'action-continue',
-        waitFor: {
-          event: 'sort',
-          match: d => d.itemId === 'tut-g1',
-          check: () => appState.sorting && appState.sorting.decisions['tut-g1'] ? { decision: appState.sorting.decisions['tut-g1'], itemId: 'tut-g1' } : null
-        },
-        html: `
-          <h4>Card 2 — what kind of knowing is this?</h4>
-          <p class="tut-example">"Corner-store cooler economics" — field notes from 8 stores, with owners' own numbers.</p>
-          <p>Check it against the test: actors? observed behavior? a mechanism you could verify?</p>
-          <div class="tut-do">Sort it: ← noise, → signal, ↑ super.</div>`,
-        explainHtml: d => tutSortExplanation('signal', d.decision)
-      },
-      {
-        screen: 'sorting', highlight: '#sort-card', pad: 14, mode: 'action-continue',
-        waitFor: {
-          event: 'sort',
-          match: d => d.itemId === 'tut-u1',
-          check: () => appState.sorting && appState.sorting.decisions['tut-u1'] ? { decision: appState.sorting.decisions['tut-u1'], itemId: 'tut-u1' } : null
-        },
-        html: `
-          <h4>Card 3 — does it confirm, or reframe?</h4>
-          <p class="tut-example">"The two-bus tomato" — a diary study of how carless residents actually plan grocery trips.</p>
-          <p>This one is clearly a keeper. The real question: is it merely <em>true</em>, or does it change what you think the problem <em>is</em>?</p>
-          <div class="tut-do">Sort it: ← noise, → signal, ↑ super.</div>`,
-        explainHtml: d => tutSortExplanation('super', d.decision)
-      },
-      {
-        screen: 'sorting', highlight: '#sorting-complete', pad: 14, mode: 'next', nextLabel: 'To the canvas →',
-        html: `
-          <h4>Sorting: what you just learned</h4>
-          <ul>
-            <li><strong>Noise</strong> opines; <strong>signals</strong> observe; <strong>supers</strong> reframe.</li>
-            <li>Your discards matter too — what you throw away reveals your assumptions, and the AI prompts later will challenge you with them.</li>
-          </ul>
-          <p>In real use you'll sort dozens of signals in a few minutes. Now for the heart of the method: the <strong>canvas</strong>, where surviving signals get triangulated into something defensible.</p>`,
-        onAdvance: tutEnterCanvasPhase
-      },
-      // ---- Phase 2: Canvas ----
-      {
-        screen: 'board', highlight: '#canvas-viewport', pad: 0, mode: 'next',
-        html: `
-          <h4>The canvas: your evidence, spatially</h4>
-          <p>Eight signals about neighborhood food access, already sorted and placed. Drag the background to pan, scroll to zoom, drag cards to arrange them. <strong>Nothing ever moves unless you move it.</strong></p>
-          <p>The one rule of the ladder: <strong>connect two cards of the same level to create the next level up.</strong></p>
-          <ul>
-            <li>signal + signal → <strong>evidence card</strong></li>
-            <li>evidence + evidence → <strong>pattern</strong></li>
-            <li>pattern + pattern → <strong>theme</strong></li>
-          </ul>
-          <div class="tut-why"><span class="tut-why-label">Why a ladder?</span>Each level must be <em>earned</em> from the level below. A theme you can trace down to raw signals is defensible in front of any audience. A theme you "just felt" is not.</div>`
-      },
-      {
-        screen: 'board', highlight: '#node-tut-s1', pad: 10, mode: 'action-auto', advanceDelay: 700,
-        waitFor: {
-          event: 'card-created',
-          match: d => d.tier === 1,
-          check: () => { const c = appState.cards.find(c => c.tier === 1); return c ? { cardId: c.id, tier: 1 } : null; }
-        },
-        onSatisfied: d => { _tutCreated[1] = d.cardId; },
-        html: `
-          <h4>Triangulate: make your first evidence card</h4>
-          <p>One signal is an anecdote. Two independent signals pointing at the same condition is <strong>evidence of a mechanism</strong> — that's triangulation.</p>
-          <p>Look at the two highlighted-area signals: <em>"Supermarket pullout (2019)"</em> and <em>"Co-op that folded (2021)"</em>. Different actors, different years — same story.</p>
-          <div class="tut-do">Hover "Supermarket pullout (2019)", then drag from one of its edge dots onto "Co-op that folded (2021)".</div>
-          <p>(Any two signals will work — these two just triangulate especially cleanly.)</p>`
-      },
-      {
-        screen: 'board',
-        highlight: () => _tutCreated[1] ? '#node-' + _tutCreated[1] : null, pad: 10,
-        mode: 'action-continue', coachRight: true, // phase-grouped picker is tall; keep the coach off the card
-        waitFor: {
-          event: 'card-typed',
-          match: d => !!d.type,
-          check: () => { const c = findCard(_tutCreated[1]); return (c && c.cardType) ? { cardId: c.id, type: c.cardType } : null; }
-        },
-        html: `
-          <h4>Classify it: what kind of evidence is this?</h4>
-          <p>A new <strong>evidence card</strong> appeared. Dorst names seven kinds of knowing, because <em>what kind</em> of evidence you hold changes what you can do with it:</p>
-          <ul>
-            <li><strong>History</strong> — what happened / was already tried</li>
-            <li><strong>Counterfactual</strong> — the path not taken</li>
-            <li><strong>Problem</strong> — a bounded, conventionally solvable difficulty</li>
-            <li><strong>Boundary</strong> — a "they will never…" nonnegotiable</li>
-            <li><strong>Flux</strong> — a point of movement or change</li>
-            <li><strong>Player</strong> — a stakeholder, by practices &amp; currency</li>
-            <li><strong>Value</strong> — a deeper value at work in the field</li>
-          </ul>
-          <p>Two failed grocery attempts are about <em>what already happened</em>.</p>
-          <div class="tut-do">Click the <strong>History</strong> chip on the new card.</div>`,
-        explainHtml: d => {
-          const picked = (CARD_TYPE_MAP[d.type] || {}).label || d.type;
-          const lead = d.type === 'history'
-            ? '<p><span class="tut-good">History it is.</span></p>'
-            : `<p>You chose <strong>${escapeHtml(picked)}</strong> — defensible! Classification is a judgment call, and arguing about it is productive. The strongest case here is <strong>History</strong>:</p>`;
-          return lead + `
-            <p>These two signals record <em>completed attempts with known outcomes</em>. History evidence tells you what the field has already rejected — it stops you from proposing the co-op that already failed.</p>
-            <div class="tut-why"><span class="tut-why-label">Why classify at all?</span>An unclassified pile of facts all looks equally important. Once typed, gaps leap out: "we have lots of History but no Flux — do we actually know what's <em>changing</em>?" You can re-classify any time via "Change type".</div>
-            <p>Click <strong>Continue</strong>.</p>`;
-        }
-      },
-      {
-        screen: 'board',
-        highlight: () => _tutCreated[1] ? '#node-' + _tutCreated[1] : null, pad: 10,
-        mode: 'action-continue',
-        waitFor: {
-          event: 'card-edited',
-          match: d => d.id === _tutCreated[1] && d.title.trim().length >= 3 && d.description.trim().length >= 10,
-          check: () => { const c = findCard(_tutCreated[1]); return (c && (c.title || '').trim().length >= 3 && (c.description || '').trim().length >= 10) ? { id: c.id } : null; }
-        },
-        html: `
-          <h4>Name the claim, not the topic</h4>
-          <p>A name like "grocery stores" is a <em>topic</em> — it claims nothing and can't be wrong. Good evidence names are <strong>claims</strong>: statements the signals jointly establish, that someone could push back on.</p>
-          <p class="tut-example">Weak: "Grocery history" · Strong: "Retail grocery has repeatedly failed here"</p>
-          <div class="tut-do">Type a title for your card (feel free to use the strong example), and a one-sentence description of what the two signals jointly establish.</div>
-          <div class="tut-why"><span class="tut-why-label">Why this matters</span>An unnamed card is an unexamined claim. The act of writing the sentence is where the thinking happens — that's why the app won't let you commit a situation until every card is named and described.</div>`,
-        explainHtml: () => `
-          <p><span class="tut-good">Named and described.</span> Notice what just happened: you turned two loose observations into one citable claim with an evidence trail behind it.</p>
-          <p>Anyone who challenges your card, you can answer: <em>"two independent retail failures, 2019 and 2021 — here are the signals."</em></p>
-          <p>Click <strong>Continue</strong>.</p>`
-      },
-      {
-        screen: 'board', highlight: null, mode: 'next', coachRight: true,
-        onEnter: () => {
-          tutInjectCardBetween('tut-s3', 'tut-s4', { id: 'tut-eB', cardType: 'flux',   title: 'Money and supply chains are starting to move', description: 'Distributor minimums are being worked around and produce subsidies are growing — the constraints are loosening at both the supply and demand ends.' });
-          tutInjectCardBetween('tut-s5', 'tut-s6', { id: 'tut-eC', cardType: 'player', title: 'Informal operators already run the access system', description: 'Corner-store owners and church volunteers are the de facto grocers and logistics network — unpaid, unrecognized, and at capacity.' });
-          tutInjectCardBetween('tut-s7', 'tut-s8', { id: 'tut-eD', cardType: 'value',  title: 'Dignity governs how people will and won\'t get food', description: 'People will pay, improvise, and travel to buy food with dignity — and will go without rather than accept charity that costs them their self-image.' });
-        },
-        html: `
-          <h4>Fast-forward: three more evidence cards</h4>
-          <p>Building each one works exactly like the one you just made, so we filled in the rest of the pool for you. Look at what each <em>type</em> contributes:</p>
-          <ul>
-            <li><strong>Flux</strong> (top right): <em>"Money and supply chains are starting to move."</em> Flux tells you where the situation is already in motion — where effort gets leverage.</li>
-            <li><strong>Player</strong> (bottom left): <em>"Informal operators already run the access system."</em> Players are stakeholders defined by what they <em>do</em> and what currency they trade in — here, trust.</li>
-            <li><strong>Value</strong> (bottom right): <em>"Dignity governs how people will and won't get food."</em> Values explain behavior that looks irrational from outside — like skipping a free pantry.</li>
-          </ul>
-          <p>Four typed, named, described evidence cards. Now we climb.</p>`
-      },
-      {
-        screen: 'board', highlight: '#node-tut-eB', pad: 10, mode: 'action-auto', advanceDelay: 700,
-        waitFor: {
-          event: 'card-created',
-          match: d => d.tier === 2,
-          check: () => { const c = appState.cards.find(c => c.tier === 2); return c ? { cardId: c.id, tier: 2 } : null; }
-        },
-        onSatisfied: d => { _tutCreated[2] = d.cardId; },
-        html: `
-          <h4>Patterns: mechanisms, not topics</h4>
-          <p>Connect two evidence cards and you get a <strong>pattern</strong>. A pattern is not a category — it's a <strong>mechanism</strong>: something with moving parts and a <em>because</em>.</p>
-          <p class="tut-example">Topic: "food access" (could caption a pie chart) · Mechanism: "when formal retail exits, informal actors silently absorb the load" (has cause, effect, and a place to intervene)</p>
-          <p>Your <strong>History</strong> card (retail keeps failing) and the <strong>Flux</strong> card (yet money is moving) point at one mechanism together.</p>
-          <div class="tut-do">Drag from a dot on your History card onto the highlighted Flux card.</div>`
-      },
-      {
-        screen: 'board',
-        highlight: () => _tutCreated[2] ? '#node-' + _tutCreated[2] : null, pad: 10,
-        mode: 'action-continue',
-        waitFor: {
-          event: 'card-edited',
-          match: d => d.id === _tutCreated[2] && d.title.trim().length >= 3 && d.description.trim().length >= 10,
-          check: () => { const c = findCard(_tutCreated[2]); return (c && (c.title || '').trim().length >= 3 && (c.description || '').trim().length >= 10) ? { id: c.id } : null; }
-        },
-        html: `
-          <h4>Name the mechanism</h4>
-          <p>Test for a pattern name: <em>does it contain an implied verb or causation?</em> If it reads like a label, it's a topic. If it reads like a claim about how the world works, it's a pattern.</p>
-          <p class="tut-example">Suggestion: "Formal retail exits, informal infrastructure absorbs the load"</p>
-          <div class="tut-do">Name and describe your new pattern card. Say what the mechanism is and what it would take to break it.</div>`,
-        explainHtml: () => `
-          <p><span class="tut-good">That's a pattern.</span> You now hold a mechanism-level claim with a two-branch evidence trail: signals → typed evidence → pattern.</p>
-          <p>A skeptic can follow your reasoning down to field notes. That's what "defensible" means in this method.</p>
-          <p>Click <strong>Continue</strong>.</p>`
-      },
-      {
-        screen: 'board', highlight: '#node-tut-p2', pad: 10, mode: 'next',
-        onEnter: () => {
-          tutInjectCardBetween('tut-eC', 'tut-eD', { id: 'tut-p2', title: 'Access runs on relationships, not proximity', description: 'Food moves through trust — credit at the corner store, a van from church, buying rather than receiving. Distance-based "food desert" maps cannot see the real network.' });
-        },
-        html: `
-          <h4>The second pattern (fast-forwarded)</h4>
-          <p>We built the sibling pattern from the <strong>Player</strong> + <strong>Value</strong> evidence: <em>"Access runs on relationships, not proximity."</em></p>
-          <p>Read its mechanism: trust preserves dignity, so food flows through relationships — informal credit, church vans, buying clubs. A map of store locations literally cannot see this system, which is why "open a store" solutions keep missing.</p>
-          <div class="tut-why"><span class="tut-why-label">Notice</span>Two patterns from the same eight signals, and they're <em>different mechanisms</em>. That tension is healthy — themes live exactly where independent mechanisms intersect.</div>`
-      },
-      {
-        screen: 'board',
-        highlight: () => _tutCreated[2] ? '#node-' + _tutCreated[2] : '#node-tut-p2', pad: 10,
-        mode: 'action-auto', advanceDelay: 700,
-        waitFor: {
-          event: 'card-created',
-          match: d => d.tier === 3,
-          check: () => { const c = appState.cards.find(c => c.tier === 3); return c ? { cardId: c.id, tier: 3 } : null; }
-        },
-        onSatisfied: d => { _tutCreated[3] = d.cardId; },
-        html: `
-          <h4>Climb to a theme</h4>
-          <p>Connect the two patterns. What appears is a <strong>theme</strong> — the deepest object on this canvas: the condition underneath both mechanisms.</p>
-          <div class="tut-do">Drag from a dot on your pattern onto "Access runs on relationships, not proximity".</div>`
-      },
-      {
-        screen: 'board',
-        highlight: () => _tutCreated[3] ? '#node-' + _tutCreated[3] : null, pad: 10,
-        mode: 'action-continue',
-        waitFor: {
-          event: 'card-edited',
-          match: d => d.id === _tutCreated[3] && d.title.trim().length >= 3 && d.description.trim().length >= 10,
-          check: () => { const c = findCard(_tutCreated[3]); return (c && (c.title || '').trim().length >= 3 && (c.description || '').trim().length >= 10) ? { id: c.id } : null; }
-        },
-        html: `
-          <h4>The two tests every theme must pass</h4>
-          <p>A theme is a <strong>deeper universal</strong>, and there are two tests on the card itself:</p>
-          <ul>
-            <li><strong>Bridge test</strong>: does it name BOTH a structural condition (retail economics, distribution, transit) AND a human experience (dignity, trust, time poverty)? A theme that lives on only one side is just a restated pattern.</li>
-            <li><strong>Depth test</strong>: is it hidden beneath the everyday surface framing? It should explain things you didn't build it from — like why supermarkets fail here <em>and</em> why the free pantry sits unused.</li>
-          </ul>
-          <p class="tut-example">Suggestion: "Food access here is a trust-and-logistics network mistaken for a retail problem"</p>
-          <div class="tut-do">Name and describe your theme. Run both tests on whatever you write.</div>`,
-        explainHtml: () => `
-          <p><span class="tut-good">You just framed a problem.</span> Feel the difference: "this neighborhood is a food desert" treats the situation as a <em>shortage of stores</em>. Your theme treats it as a <em>misread network</em>. Those lead to completely different futures — one builds supermarkets that fail (you have the History card proving it), the other strengthens the system that already works.</p>
-          <p>That shift — same evidence, new problem — is what Dorst means by <strong>reframing</strong>.</p>
-          <p>Click <strong>Continue</strong>.</p>`
-      },
-      {
-        screen: 'board', highlight: 'button[onclick="openCommitModal()"]', pad: 8, mode: 'next',
-        html: `
-          <h4>The gate: Commit to a Problem Situation</h4>
-          <p>On your real board, this button carries everything forward to the <strong>Problem Situation</strong> screen — where you synthesize the whole ladder into one open, complex condition, frame it ("if this situation is approached as if it is ___, then ___"), map stakeholders, and pressure-test yourself.</p>
-          <p>It only unlocks when <strong>every card is named and described</strong>. That's not bureaucracy — an unnamed card is an unexamined claim, and the gate is the method enforcing its own discipline.</p>
-          <div class="tut-why"><span class="tut-why-label">Why frame before solving?</span>Solutions inherit their quality from the frame they were conceived in. Your theme suggests interventions (back the wholesale collective, fund the church van, formalize store credit) that "open a supermarket" thinking would never produce — and your History card shows what that thinking already cost.</div>
-          <p>We won't commit in the tutorial — that moment belongs to your real work.</p>`
-      },
-      {
-        screen: 'board', highlight: null, mode: 'next', nextLabel: 'Finish ✓',
-        html: `
-          <h4>You know the whole method now</h4>
-          <ul>
-            <li><strong>Sort</strong>: noise opines, signals observe, supers reframe.</li>
-            <li><strong>Triangulate</strong>: two signals → an evidence card; classify it (the seven types), then name the <em>claim</em>.</li>
-            <li><strong>Patterns</strong> name mechanisms; <strong>themes</strong> bridge the structural and the human.</li>
-            <li><strong>Commit</strong> only when every card can defend itself.</li>
-          </ul>
-          <p>None of this was saved — your own workspace is exactly as you left it. Replay any time with the <strong>🎓</strong> button in the canvas corner.</p>`
-      }
-    ];
-
-    // --- Controller ---
-    function tutorialStart() {
-      if (tutorialMode) return;
-      localStorage.setItem('olos.tutorial.offered', '1');
-      // Flush any pending REAL save before swapping state — but don't create
-      // a storage entry for a brand-new visitor with nothing to save.
-      clearTimeout(saveTimer);
-      if (localStorage.getItem(STORAGE_KEY) || appState.items.length || appState.cards.length) save();
-      _tutSavedState = appState;
-      _tutSavedScreen = appState.currentScreen || 'setup';
-      tutorialMode = true;
-      _tutActive = true;
-      _tutIndex = 0;
-      _tutSatisfied = false;
-      _tutCreated = {};
-      appState = buildTutorialState();
-      const launchBtn = document.getElementById('tour-help-btn');
-      if (launchBtn) launchBtn.classList.add('hidden');
-      goToScreen('sorting');
-      document.getElementById('tutorial-coach').classList.remove('hidden');
-      tutRenderStep();
-      _tutTimer = setInterval(tutPoll, 250);
-    }
-
-    function tutorialExit(completed) {
-      if (!tutorialMode) return;
-      tutorialMode = false;
-      _tutActive = false;
-      clearInterval(_tutTimer); _tutTimer = null;
-      clearTimeout(saveTimer); // discard any save queued against tutorial state
-      document.getElementById('tutorial-coach').classList.add('hidden');
-      document.getElementById('tutorial-highlight').classList.add('hidden');
-      if (completed) localStorage.setItem('olos.tutorial.done', '1');
-      appState = _tutSavedState || defaultState();
-      _tutSavedState = null;
-      // Re-render the real state on the screen the user came from.
-      renderConfigItems();
-      setBoardTitleDisplay();
-      const target = _tutSavedScreen || 'setup';
-      if (target === 'board' || target === 'workspace' || target === 'artifact') ensureCanvasInitialized();
-      goToScreen(target);
-      updateTutorialLaunchBtn();
-      toast(completed
-        ? 'Tutorial complete — your workspace is exactly as you left it.'
-        : 'Tutorial closed — nothing was changed in your workspace.');
-    }
-
-    function tutorialAdvance() {
-      if (!_tutActive) return;
-      const step = TUTORIAL_STEPS[_tutIndex];
-      if (step.mode !== 'next' && !_tutSatisfied) return;
-      if (step.onAdvance) step.onAdvance();
-      if (_tutIndex >= TUTORIAL_STEPS.length - 1) { tutorialExit(true); return; }
-      _tutIndex++;
-      tutRenderStep();
-    }
-
-    function tutorialNotify(event, detail) {
-      if (!tutorialMode || !_tutActive || _tutSatisfied) return;
-      const step = TUTORIAL_STEPS[_tutIndex];
-      const w = step.waitFor;
-      if (!w || w.event !== event) return;
-      if (w.match && !w.match(detail || {})) return;
-      tutSatisfy(step, detail || {});
-    }
-
-    function tutSatisfy(step, detail) {
-      _tutSatisfied = true;
-      if (step.onSatisfied) step.onSatisfied(detail);
-      if (step.mode === 'action-auto') {
-        setTimeout(() => { if (_tutActive) tutorialAdvance(); }, step.advanceDelay || 600);
-        return;
-      }
-      // action-continue: swap in the explanation and unlock Continue.
-      const body = document.getElementById('tutorial-coach-body');
-      if (step.explainHtml) {
-        body.innerHTML = typeof step.explainHtml === 'function' ? step.explainHtml(detail) : step.explainHtml;
-        body.scrollTop = 0;
-      }
-      const nextBtn = document.getElementById('tutorial-coach-next');
-      nextBtn.disabled = false;
-      nextBtn.textContent = 'Continue →';
-      setTimeout(() => nextBtn.focus(), 60);
-    }
-
-    function tutRenderStep() {
-      const step = TUTORIAL_STEPS[_tutIndex];
-      _tutSatisfied = false;
-      if (step.onEnter) step.onEnter();
-      const body = document.getElementById('tutorial-coach-body');
-      body.innerHTML = step.html;
-      body.scrollTop = 0;
-      document.getElementById('tutorial-coach-step').textContent = (_tutIndex + 1) + ' / ' + TUTORIAL_STEPS.length;
-      document.getElementById('tutorial-coach-progress').style.width = (((_tutIndex + 1) / TUTORIAL_STEPS.length) * 100) + '%';
-      const nextBtn = document.getElementById('tutorial-coach-next');
-      if (step.mode === 'next') {
-        nextBtn.disabled = false;
-        nextBtn.textContent = step.nextLabel || 'Next →';
-        setTimeout(() => nextBtn.focus(), 60);
-      } else {
-        nextBtn.disabled = true;
-        nextBtn.textContent = 'Continue →';
-      }
-      document.getElementById('tutorial-coach').classList.toggle('coach-right', !!step.coachRight);
-      tutPoll();
-    }
-
-    // Interval tick: keep the highlight glued to its (re-rendered) target and
-    // self-heal if the awaited action already happened (e.g. the user worked ahead).
-    function tutPoll() {
-      if (!_tutActive) return;
-      const step = TUTORIAL_STEPS[_tutIndex];
-      // Highlight
-      const hl = document.getElementById('tutorial-highlight');
-      const sel = typeof step.highlight === 'function' ? step.highlight() : step.highlight;
-      const el = sel ? document.querySelector(sel) : null;
-      ensureMobileHeaderFor(el);
-      if (!el) {
-        hl.classList.add('hidden');
-      } else {
-        const rect = el.getBoundingClientRect();
-        if (!rect.width && !rect.height) {
-          hl.classList.add('hidden');
-        } else {
-          const pad = step.pad || 8;
-          hl.style.top = (rect.top - pad) + 'px';
-          hl.style.left = (rect.left - pad) + 'px';
-          hl.style.width = (rect.width + pad * 2) + 'px';
-          hl.style.height = (rect.height + pad * 2) + 'px';
-          hl.classList.remove('hidden');
-        }
-      }
-      // Self-healing satisfaction check
-      if (!_tutSatisfied && step.waitFor && step.waitFor.check) {
-        const d = step.waitFor.check();
-        if (d) tutSatisfy(step, d);
-      }
-    }
-
-    function updateTutorialLaunchBtn() {
-      const btn = document.getElementById('tour-help-btn');
-      if (btn) btn.classList.toggle('hidden', tutorialMode);
-    }
-
-    // ===================== END ONBOARDING MODULE =====================
 
     // Trap Tab within an open modal, and close on Escape.
     document.addEventListener('keydown', (e) => {
@@ -6553,8 +5851,7 @@ git push</pre>
     // Click outside modal-content closes (overlay click).
     document.addEventListener('click', (e) => {
       if (e.target.classList && e.target.classList.contains('modal-overlay') && !e.target.classList.contains('hidden')) {
-        if (e.target.id === 'tutorial-offer-modal') declineTutorialOffer();
-        else closeModal(e.target.id);
+        closeModal(e.target.id);
       }
     });
     // Give every modal a visible ✕ close — Escape/backdrop alone aren't
@@ -6569,8 +5866,7 @@ git push</pre>
         btn.setAttribute('aria-label', 'Close');
         btn.innerHTML = '&times;';
         btn.addEventListener('click', () => {
-          if (modal.id === 'tutorial-offer-modal') declineTutorialOffer();
-          else closeModal(modal.id);
+          closeModal(modal.id);
         });
         content.insertBefore(btn, content.firstChild);
       });
@@ -7292,7 +6588,7 @@ ${AI_RULES}
     function renderTgxActionbar() {
       const bar = document.getElementById('tgx-actionbar');
       if (!bar) return;
-      if (tutorialMode || appState.currentScreen !== 'board') { bar.classList.add('hidden'); tgxPublishAbHeight(bar, false); return; }
+      if (appState.currentScreen !== 'board') { bar.classList.add('hidden'); tgxPublishAbHeight(bar, false); return; }
       const a = computeNextAction();
       bar.setAttribute('data-state', a.state);
       if (a.hidden) { bar.classList.add('hidden'); tgxPublishAbHeight(bar, false); return; }
@@ -7869,7 +7165,6 @@ Interrogate this map. Work through each point and answer concretely, naming spec
         { actionLabel: 'Unframe', duration: 7000, onAction: () => unframeSituation(sitId) });
     }
     function unframeSituation(sitId) {
-      if (tutorialMode) return;
       const i = appState.situations.findIndex(s => s.id === sitId);
       if (i === -1) return;
       appState.situations.splice(i, 1);
@@ -7916,10 +7211,6 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     }
 
     function openCommitModal() {
-      if (tutorialMode) {
-        toast('In the tutorial we stop before pushing — that step is for your real board.');
-        return;
-      }
       const group = pushableGroup();
       const warningEl = document.getElementById('validation-warning');
       if (!group.roots.length) {
@@ -7969,10 +7260,6 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       renderTgxActionbar();
       toast('Situation mapped ✓');
     }
-    // Kept as no-ops for any lingering references in the (now-unused) modal.
-    function onCommitRowChange() {}
-    function getCheckedCommitIds() { return []; }
-    function updateCommitContinueButton() {}
     // (removed) confirmCommit — belonged to the orphaned commit-modal
 
     // --- Classify phase: introduce the 7 evidence types in Dorst's order ---
@@ -7982,7 +7269,6 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     // terminal — it feeds back into the loop.
     let classifyStepIndex = 0;
     function enterClassifyPhase() {
-      if (tutorialMode) return;
       if (isSeedMode()) {
         toast('Classification is a Pod Mode step — graduate first to type your evidence.');
         return;
@@ -8029,9 +7315,8 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       if (board) board.removeAttribute('data-classify-type');
     }
     function renderClassifyGuide() {
-      // The tutorial sets classifyPhase to expose the picker, but it runs its
       // own scripted coaching — never overlay the product guide on top of it.
-      if (tutorialMode || !appState.classifyPhase) { removeClassifyGuide(); return; }
+      if (!appState.classifyPhase) { removeClassifyGuide(); return; }
       let g = document.getElementById('classify-guide');
       if (!g) {
         g = document.createElement('div');
@@ -8675,13 +7960,12 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       const btn = document.getElementById('concept-reentry');
       if (!btn) return;
       const hasConcept = !!(appState.settings.concept || '').trim();
-      btn.classList.toggle('hidden', tutorialMode || hasConcept || !conceptUnlocked());
+      btn.classList.toggle('hidden', hasConcept || !conceptUnlocked());
     }
 
     // One-way graduation from Seed Mode (Phase 1) to Pod Mode (Phase 2/3).
     // The seam is a visible threshold sheet, not a window.confirm.
     function graduateToPod() {
-      if (tutorialMode) { toast('Graduation is for your real board — finish the tutorial first.'); return; }
       if (!isSeedMode()) { toast('Patterns & Themes are already unlocked.'); return; }
       openModal('graduate-modal');
     }
@@ -8699,7 +7983,6 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     // Seed-mode export: a lightweight Markdown summary of the provisional concept
     // and the Hunches mapped beneath it.
     function compileConcept() {
-      if (tutorialMode) { toast('Compiling is for your real board — finish the tutorial first.'); return; }
       const title = appState.settings.title || 'Untitled concept';
       let md = `# ${title}\n\n`;
       md += `*Seed Mode concept — compiled ${new Date().toLocaleString()}*\n\n`;
@@ -9397,7 +8680,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     }
 
     function exportModular() {
-      if (tutorialMode) { toast('Exporting is for your real board — finish the tutorial first.'); return; }
       if (isSeedMode()) { toast('The Meet-the-Pods site is a Pod Mode feature — graduate first.'); return; }
       if (!workspaceIsComplete()) { toast('Map and complete your Problem Situation first — a title, the open condition, the paradox, a pressure-test, and at least one named & described theme. The deck and site are built from it.', { duration: 7000 }); return; }
       const boardTitle = (appState.settings.title || '').trim();
@@ -9417,7 +8699,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     }
 
     function exportWorkingFolder(sitId) {
-      if (tutorialMode) { toast('Exporting is for your real board — finish the tutorial first.'); return; }
       // The export always carries the whole board; the gate is that the
       // situation you're exporting from (or at least one) is named & described.
       const named = (s) => s && (s.title || '').trim() && (s.description || '').trim();
@@ -9441,7 +8722,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     // Whole-canvas export from the board menu: same folder, but no
     // named-situation gate — the zip carries everything as-is.
     function exportCanvasZip() {
-      if (tutorialMode) { toast('Exporting is for your real board — finish the tutorial first.'); return; }
       appState.exportedAt = new Date().toISOString();
       const blob = buildZip(buildExportFiles());
       const url = URL.createObjectURL(blob);
@@ -9461,7 +8741,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     let stagedImportState = null;
 
     function openImportModal() {
-      if (tutorialMode) { toast('Opening shared work is for your real board — finish the tutorial first.'); return; }
       stagedImportState = null;
       document.getElementById('import-pick').classList.remove('hidden');
       document.getElementById('import-confirm').classList.add('hidden');
@@ -10006,8 +9285,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     // ======================== SORTING SCREEN ========================
 
     function sortingBackToSetup() {
-      // During the tutorial, "back" means leaving the sandbox entirely.
-      if (tutorialMode) { tutorialExit(false); return; }
       goToScreen('setup');
     }
 
@@ -10140,7 +9417,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       const item = items[idx];
       appState.sorting.decisions[item.id] = decision;
       appState.sorting.currentIndex = idx + 1;
-      tutorialNotify('sort', { decision, itemId: item.id });
 
       const card = document.getElementById('sort-card');
       const exitClass = decision === 'noise' ? 'exit-left' : decision === 'super' ? 'exit-up' : 'exit-right';
@@ -10166,7 +9442,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     }
 
     function sortUndo() {
-      if (tutorialMode) return; // undo would desync the per-swipe explanations
       if (appState.sorting.currentIndex <= 0) return;
       appState.sorting.currentIndex--;
       const item = appState.items[appState.sorting.currentIndex];
@@ -10176,7 +9451,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     }
 
     function finishSorting() {
-      if (tutorialMode) { tutorialAdvance(); return; } // tutorial drives the transition itself
       if (!appState.settings.title) {
         const titleEl = document.getElementById('config-title');
         appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
@@ -10304,7 +9578,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       const target = pickInitialScreen();
       const titleEl = document.getElementById('config-title');
       if (titleEl && appState.settings.title) titleEl.value = appState.settings.title;
-      updateTutorialLaunchBtn();
       const raw = localStorage.getItem(STORAGE_KEY);
       const onboarding = (target === 'intro' || target === 'concept' || target === 'setup');
 
@@ -10337,7 +9610,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
     // Warn before unload if there's in-progress, unsubmitted work.
     window.addEventListener('beforeunload', (e) => {
-      if (tutorialMode) return; // tutorial state is throwaway — never warn
       const onActiveScreen = appState.currentScreen === 'board' || appState.currentScreen === 'workspace' || appState.currentScreen === 'sorting';
       if (onActiveScreen && (appState.cards.length > 0 || Object.keys(appState.sorting.decisions).length > 0)) {
         e.preventDefault();

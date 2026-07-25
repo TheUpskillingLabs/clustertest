@@ -1,5 +1,6 @@
-const { chromium } = require('playwright');
-const URL = 'file:///home/user/triangles/index.html';
+const path = require('path');
+const { chromium } = require(process.env.PW || 'playwright');
+const URL = 'file://' + path.join(__dirname, 'index.html');
 let failures = 0;
 function check(name, cond) {
   console.log((cond ? 'PASS' : 'FAIL') + '  ' + name);
@@ -14,12 +15,7 @@ const cssCursor = (page, sel) => page.evaluate(s => {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await page.goto(URL);
-  await page.evaluate(() => {
-    localStorage.clear();
-    // Suppress all spotlight feature tours so they don't intercept events
-    ['board','sorting','setup','workspace','artifact'].forEach(s =>
-      localStorage.setItem('olos.tour.done.' + s, '1'));
-  });
+  await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForTimeout(700);
   // Build a small real board
@@ -32,16 +28,8 @@ const cssCursor = (page, sel) => page.evaluate(s => {
     ensureCanvasInitialized();
     goToScreen('board');
     renderAllNodes(); renderAllEdges();
-    updateTutorialLaunchBtn();
   });
   await page.waitForTimeout(300);
-  // Dismiss any spotlight feature-tour overlay so it doesn't intercept events
-  await page.evaluate(() => {
-    if (typeof tourDismiss === 'function') tourDismiss();
-    const o = document.getElementById('tour-overlay');
-    if (o) o.classList.add('hidden');
-  });
-  await page.waitForTimeout(150);
 
   // --- Cursor states ---
   check('viewport idle cursor = default (arrow)',
