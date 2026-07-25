@@ -1,6 +1,6 @@
 # The Triangulator-inator
 
-An **evidence-first sensemaking canvas** built on a deliberate inversion of Kees Dorst's Frame Innovation method. Dorst starts with a client who hands you a problem. We start with **neither a client nor a problem** — only raw evidence from the field. You gather source extracts, sort signal from noise, triangulate the survivors up a ladder of evidence, and let the problem *emerge* — until you can name the **Problem Situation**, the **paradox** that keeps it stuck, and the **candidate problem owners** who could break it. Then you ship a ready-to-host site and slide deck to seed your Pod's repository for **Meet the Pods**.
+An **evidence-first sensemaking canvas** built on a deliberate inversion of Kees Dorst's Frame Innovation method. Dorst starts with a client who hands you a problem. We start with **neither a client nor a problem** — only raw evidence from the field. You gather source extracts, sort signal from noise, triangulate the survivors up a ladder of evidence, and let the problem *emerge* — until you can name the **Problem Situation**, the **paradox** that keeps it stuck, and the **candidate problem owners** who could break it. Then you export your **working folder** into your pod's shared repository and submit your problem statement in **OLOS**, where the cohort reviews the gallery, votes, and pods form. (A ready-to-host site + slide deck export remains available as an optional showcase.)
 
 The whole sequence is a **loop, not a pipeline**: nothing is ever "done." As each step teaches you something, you circle back — add sources, re-sort, reconnect, re-map, re-deepen.
 
@@ -43,7 +43,7 @@ A bottom **action bar** carries you through the whole arc — it always shows ex
    - **Stage 4 — Context & field: map the players.** Inner circle first (the directly implicated — *candidate problem owners come from here*), then the wider field (where themes and status-quo beneficiaries live). Candidate owners are marked "(not yet approached)" until a real conversation has happened.
    - **Stage 5 — Find the paradox(es).** The deadlock the field sustains: *"the situation demands X, but the same conditions that create the need prevent X from working."* Hold multiple candidate paradoxes, link each to who benefits from it persisting and to the evidence behind **both** legs of the contradiction, and pass the sharpness self-check — which is carried honestly into everything you export.
 
-8. **Produce the deck & site** — the terminal action. See "What comes out" below.
+8. **Export your working folder** — the terminal action: commit it to your pod's shared repo, then submit your problem statement in OLOS with the repo link. (The deck & site export remains as an optional showcase — see "What comes out" below.)
 
 ## The method, in brief
 
@@ -60,7 +60,7 @@ Three exports, all reachable from the **Share / Export** sheet (and offered by t
 
 | Export | When | Contents |
 |---|---|---|
-| **Meet-the-Pods site & deck** (`.zip`) | Pod Mode, workspace complete, real title | 10 files: a GitHub-Pages-ready `index.html` (web map + themes + situation + extracts), `slides.html` (the Meet-the-Pods deck), `README.md`, `assets/` (viewer + styles), `data/project.jsonld` (semantic graph), `data/extracts.csv`, `data/site-data.js` (offline fallback), `content/situation.md`, `content/themes.md` |
+| **Meet-the-Pods site & deck** (`.zip`, optional showcase) | Workspace complete, real title | 10 files: a GitHub-Pages-ready `index.html` (web map + themes + situation + extracts), `slides.html` (the Meet-the-Pods deck), `README.md`, `assets/` (viewer + styles), `data/project.jsonld` (semantic graph), `data/extracts.csv`, `data/site-data.js` (offline fallback), `content/situation.md`, `content/themes.md` |
 | **Working folder** (`.zip`) | Any mapped situation | `problem-situation.md`, `gap-analysis.md`, per-card folders (`card.json`, `notes.md`, `deepen.md`, `evidence.md`, attached sources), and **`state.json`** — a full re-importable board snapshot |
 | **Concept summary** (`.md`) | Any time | Your provisional concept + your Evidence cards with their supporting extracts |
 

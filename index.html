@@ -2522,7 +2522,7 @@
     <div class="workspace-cards" id="workspace-cards-container"></div>
     <div class="tgx-actionbar ws-actionbar" id="workspace-actionbar">
       <div class="ab-hint" id="submit-status-hint">To finish: name, description, openness, paradox, and pressure-test — plus at least one named theme behind the situation.</div>
-      <button class="btn btn-primary ab-primary" id="produce-deck-btn" onclick="exportModular()" disabled>Produce the deck &amp; site</button>
+      <button class="btn btn-primary ab-primary" id="export-folder-btn" onclick="exportWorkingFolder()" disabled>Export your working folder (.zip)</button>
     </div>
   </div>
 
@@ -2686,22 +2686,23 @@
 
   <div id="git-handoff-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="git-handoff-title">
     <div class="modal-content" style="max-width: 580px;">
-      <div class="modal-header"><h3 id="git-handoff-title">Your working folder is downloaded — here's the Git handoff</h3></div>
+      <div class="modal-header"><h3 id="git-handoff-title">Working folder downloaded — commit it, then submit in OLOS</h3></div>
       <div class="modal-body">
-        <p class="intro-lede">This .zip is your complete Meet-the-Pods package — a deployable Pod website (<code>index.html</code>), a ready-to-present <strong>“Meet the Pods” slide deck</strong> (<code>slides.html</code>), the semantic graph, and the narrative Markdown. The tool has no server; your Pod syncs through one shared Git repo, and the manual loop is what keeps any one person from framing alone.</p>
+        <p class="intro-lede">This .zip is your <strong>working folder</strong> — your whole board as data (<code>state.json</code>) plus the situation and themes as Markdown. The tool has no server; your triad syncs through one shared Git repo, and the manual loop is what keeps any one person from framing alone.</p>
         <ol class="intro-steps">
-          <li><strong>Unzip</strong> the folder into your local clone of the Pod's shared repository (overwriting your previous version).</li>
+          <li><strong>Unzip</strong> the folder into your local clone of the triad's shared repository, as your own top-level folder (overwriting your previous version).</li>
           <li><strong>Commit &amp; push</strong> with three commands:
             <pre class="prompt-text" id="git-handoff-cmds">git add .
 git commit -m "Update situation map — [your name]"
 git push</pre>
           </li>
           <li><strong>Git merges</strong> your map with your podmates'. A merge conflict isn't an error — it's a <em>conversation</em>: two of you saw the same thing differently, so talk it out, then commit the resolution.</li>
-          <li><strong>Publish</strong> when ready: push to a GitHub repository, then open <strong>Settings → Pages</strong> and pick the branch. Your mapped Problem Situation becomes a public knowledge graph at <code>https://&lt;user&gt;.github.io/&lt;repo&gt;/</code>.</li>
+          <li><strong>Submit in OLOS</strong>: open your cycle → <strong>Propose</strong>. The wizard asks for your distilled problem statement and a <strong>“Link to your map”</strong> — paste the triad repo's URL. Voting happens on the OLOS ballot; the repo is what voters open.</li>
         </ol>
-        <p class="intro-hint">This manual loop is intentional. It teaches enterprise version control and prevents the <strong>Lone Warrior</strong> syndrome — no single person's export overwrites everyone else's work without Git making you negotiate.</p>
+        <p class="intro-hint">This manual loop is intentional. It prevents the <strong>Lone Warrior</strong> syndrome — no single person's export overwrites everyone else's work without Git making you negotiate.</p>
         <div class="modal-actions">
           <button class="btn btn-outline" onclick="copyGitCommands()">Copy git commands</button>
+          <a class="btn btn-outline" href="https://theupskillinglabs.org/dashboard" target="_blank" rel="noopener noreferrer">Open OLOS</a>
           <button class="btn btn-primary" onclick="closeModal('git-handoff-modal')" data-autofocus>Got it</button>
         </div>
       </div>
@@ -6973,10 +6974,10 @@ ${AI_RULES}
       };
       const v = validateBoard();
       if (typeof workspaceIsComplete === 'function' && workspaceIsComplete()) return {
-        state: 'produce',
-        hint: 'Your Problem Situation is complete — produce the Meet-the-Pods deliverable.',
-        primary: { label: 'Produce the deck & site', fn: 'exportModular()', enabled: true },
-        secondary: [{ label: 'Deepen this Situation →', fn: "goToScreen('workspace')" }]
+        state: 'submit',
+        hint: 'Situation complete ✓ — export your working folder, commit it to your triad\'s shared repo, then submit your problem statement in OLOS (it asks for the repo link).',
+        primary: { label: 'Export your working folder (.zip)', fn: 'exportWorkingFolder()', enabled: true },
+        secondary: [{ label: 'Deepen this Situation →', fn: "goToScreen('workspace')" }, { label: 'Produce the deck & site', fn: 'exportModular()' }]
       };
       if (v.ready) return {
         state: 'map-ready',
@@ -8333,12 +8334,12 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     function recomputeSubmitButton() {
       const ok = workspaceIsComplete();
       if (appState.currentScreen === 'workspace') renderStageNavTicks();
-      const deckBtn = document.getElementById('produce-deck-btn');
-      if (deckBtn) deckBtn.disabled = !ok;
+      const exportBtn = document.getElementById('export-folder-btn');
+      if (exportBtn) exportBtn.disabled = !ok;
       const hint = document.getElementById('submit-status-hint');
       if (hint) {
         if (ok) {
-          hint.textContent = 'Ready — produce your Meet-the-Pods deck & site.';
+          hint.textContent = 'Ready — export your working folder, commit it to your triad repo, then submit your statement in OLOS.';
         } else {
           const missing = tgxFirstMissingField();
           hint.textContent = missing ? `Missing: ${missing}.` : 'Complete the five stages to finish.';
@@ -9698,12 +9699,14 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       const row = (title, sub, fn, danger) =>
         `<button type="button" class="share-row${danger ? ' share-row-danger' : ''}" onclick="closeModal('share-sheet-modal'); ${fn}">
            <span class="share-row-title">${title}</span><span class="share-row-sub">${sub}</span></button>`;
-      rows.push(row('Produce the deck &amp; site (.zip)', 'The Meet-the-Pods deliverable — a GitHub-Pages-ready site + slide deck.', 'exportModular()'));
       appState.situations.forEach((s, i) => {
         const name = (s.title || '').trim() || `Situation ${i + 1}`;
-        rows.push(row(`Export working folder — ${escapeHtml(name)} (.zip)`, 'The situation’s cards, notes, and prompts, ready for an AI or a podmate.', `exportWorkingFolder('${s.id}')`));
+        rows.push(row(`Export working folder — ${escapeHtml(name)} (.zip)`, 'The sprint deliverable — commit it to your triad repo, then submit your statement in OLOS.', `exportWorkingFolder('${s.id}')`));
       });
-      if (!appState.situations.length) rows.push(row('Export the whole canvas (.zip)', 'Everything on the board — the folder podmates merge via Git.', 'exportCanvasZip()'));
+      // The no-gate fallback: offered until at least one situation is exportable.
+      const exportable = appState.situations.some(s => (s.title || '').trim() && (s.description || '').trim());
+      if (!exportable) rows.push(row('Export the whole canvas (.zip)', 'Everything on the board, no gate — the folder podmates merge via Git.', 'exportCanvasZip()'));
+      rows.push(row('Produce the deck &amp; site (.zip)', 'Optional showcase — a GitHub-Pages-ready site + slide deck. Not needed for the OLOS submission.', 'exportModular()'));
       rows.push(row('Compile concept (.md)', 'A lightweight Markdown summary of your concept and the cards under it.', 'compileConcept()'));
       rows.push(row('Open a shared folder', 'Bring in a podmate’s exported folder — merge or replace.', 'openImportModal()'));
       rows.push(row('Start over', 'Clear this board and begin again from Sources. Export first if you want to keep it.', 'startOver()', true));

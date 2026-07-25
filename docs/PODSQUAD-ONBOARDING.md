@@ -18,7 +18,7 @@ The tool they'll use for all of it is open in your browser right now.
 
 Don't mistake "starting place" for "sketch." What's in this repo works (mostly), end to end, today:
 
-- The full arc runs: gather source extracts → sort signal from noise → triangulate up a ladder of Evidence, Patterns, Themes → map a Problem Situation → find the paradox that keeps it stuck → discover who could own breaking it → export a ready-to-host site and slide deck that seeds a pod's repository for Meet the Pods.
+- The full arc runs: gather source extracts → sort signal from noise → triangulate up a ladder of Evidence, Patterns, Themes → map a Problem Situation → find the paradox that keeps it stuck → discover who could own breaking it → export your working folder into the triad's shared repo and submit your problem statement in OLOS. (The site + slide deck export remains as an optional showcase.)
 - It's **one HTML file**. No build, no server, no dependencies. Open `index.html`, and you're holding the entire application — every word of copy, every gate, every screen. The file *is* the spec. That's not a limitation; it's the invitation. There is nothing in this tool you can't reach.
 - It's tested by `session-test.js`, a headless driver that walks the whole flow — sort, connect, climb, map, classify, the five Deepen stages, three exports — and fails on any JS error. Run it before you push and you'll know quickly whether you broke something else.
 - And you're not the first to mod it. Keep reading.
@@ -81,7 +81,7 @@ Everything else — copy, color, gates, stages, screens, the whole feel — is i
   4. Connect two named Evidence cards into a **Pattern** — the Pattern tool is in the dock from the start.
   5. Climb: Evidence → Pattern → Theme (name and describe as you go — feel the locks bite).
   6. **Map the Problem Situation** → take the classify beat → walk the five Deepen stages (linger on Stage 4's inner circle and Stage 5's paradox — that's the destination).
-  7. **Produce the deck & site.** Unzip it. Open `slides.html`. That's what a pod carries into Meet the Pods.
+  7. **Export your working folder** (Share / Export) and read the Git handoff sheet — that zip, committed to a shared repo plus a statement submitted in OLOS, is the real deliverable. (Optional: *Produce the deck & site* and open `slides.html` for the showcase.)
   8. **Share / Export → Start over** — clean slate.
   Keep a note of every moment that made you squint. That list is your first build agenda.
 - [ ] **This week: read enough to argue.** The reading path above. You don't need mastery — you need enough to say "Dorst would push back here, and here's why I'd push back on Dorst."
@@ -111,7 +111,7 @@ The pipeline you're building for:
 1. **The field survey** (on the Labs platform) collects raw observations — public, account-free, distributed by the cohort itself.
 2. **Extraction** — participants run an app-provided prompt in *their own* AI to turn raw responses into **source extract** cards, and bring them in (CSV upload or the ✨ Extract flow).
 3. **This tool** — sort → triangulate → map the Problem Situation → find the paradox(es) → discover candidate problem owners.
-4. **The export** — each pod's deck & site zip seeds its GitHub repository: the de-facto **Meet the Pods** deliverable.
+4. **The export** — each member's working-folder zip lands in the triad's GitHub repository; problem statements are submitted, voted, and turned into pods in **OLOS**.
 5. **Frame Sprint and beyond** — framing deliberately does *not* happen here. Pods form around a paradox; projects later form around **one problem owner + one problem frame + 3–5 members**.
 
 Hold onto the one method idea under all of it: **we start with no client and no named problem.** The evidence speaks first. Every gate, nag, and invitation in the tool follows from that inversion — and every mod you make should know whether it's serving it or fighting it.
@@ -168,7 +168,7 @@ Three vocabularies touch this work. Same things, different words — here's the 
 | The paradox (field-intrinsic, cui-bono-verified) | the paradox as obligatory passage point | Dorst step 2 — inverted: discovered from evidence, not diagnosed from a client |
 | Candidate problem owner ("not yet approached") | `problem_owner` actant — "identified, not necessarily converted" | the client Dorst was handed; we have to find ours |
 | Evidence as warrant ("How we know") | seconding / corroboration weight | the ground a claim stands on |
-| Produce the deck & site | *(the de-facto Meet the Pods deliverable — see the sprint brief, Q5)* | — |
+| Export your working folder | *(the sprint deliverable — triad repo + OLOS submission; the deck & site export is an optional showcase)* | — |
 
 House style everywhere: the brand is **The Upskilling Labs** ("The Labs" — never an acronym), and the role is **Poderator** in anything a human reads.
 
