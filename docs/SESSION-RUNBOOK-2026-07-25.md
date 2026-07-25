@@ -57,9 +57,9 @@ The day's arc:
 
 ### C. Submitting in OLOS
 
-9. `/cycles/{id}/propose` → the 6-step wizard. Step 1 opens with **"Link to your
+9. `/cycles/{id}/propose` → one short form. It opens with **"Link to your
    map"** — paste the triad repo URL (or a link straight to your folder in
-   it). Everyone submits their own situation (steps 2–3 are a paste from your workbook); the triad is a consultation
+   it). Everyone submits their own situation (a name + one distilled sentence — the map holds the depth); the triad is a consultation
    structure, not a submission unit.
 10. Your submission (with its map link) appears on the cycle page and in
     the gallery immediately; voting opens when the facilitator says so.
