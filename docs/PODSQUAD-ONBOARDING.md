@@ -18,7 +18,7 @@ The tool they'll use for all of it is open in your browser right now.
 
 Don't mistake "starting place" for "sketch." What's in this repo works (mostly), end to end, today:
 
-- The full arc runs: gather source extracts → sort signal from noise → triangulate up a ladder of Evidence, Patterns, Themes → map a Problem Situation → find the paradox that keeps it stuck → discover who could own breaking it → export your working folder into the triad's shared repo and submit your problem statement in OLOS. (The site + slide deck export remains as an optional showcase.)
+- The full arc runs: gather source extracts → sort signal from noise → triangulate up a ladder of Evidence, Patterns, Themes → map a Problem Situation → find the paradox that keeps it stuck → discover who could own breaking it → export your working folder into the triad's shared repo and submit your problem situation in OLOS. (The site + slide deck export remains as an optional showcase.)
 - It's **one HTML file**. No build, no server, no dependencies. Open `index.html`, and you're holding the entire application — every word of copy, every gate, every screen. The file *is* the spec. That's not a limitation; it's the invitation. There is nothing in this tool you can't reach.
 - It's tested by `session-test.js`, a headless driver that walks the whole flow — sort, connect, climb, map, classify, the five Deepen stages, three exports — and fails on any JS error. Run it before you push and you'll know quickly whether you broke something else.
 - And you're not the first to mod it. Keep reading.
@@ -111,7 +111,7 @@ The pipeline you're building for:
 1. **The field survey** (on the Labs platform) collects raw observations — public, account-free, distributed by the cohort itself.
 2. **Extraction** — participants run an app-provided prompt in *their own* AI to turn raw responses into **source extract** cards, and bring them in (CSV upload or the ✨ Extract flow).
 3. **This tool** — sort → triangulate → map the Problem Situation → find the paradox(es) → discover candidate problem owners.
-4. **The export** — each member's working-folder zip lands in the triad's GitHub repository; problem statements are submitted, voted, and turned into pods in **OLOS**.
+4. **The export** — each member's working-folder zip lands in the triad's GitHub repository; problem situations are submitted, voted, and turned into pods in **OLOS**.
 5. **Frame Sprint and beyond** — framing deliberately does *not* happen here. Pods form around a paradox; projects later form around **one problem owner + one problem frame + 3–5 members**.
 
 Hold onto the one method idea under all of it: **we start with no client and no named problem.** The evidence speaks first. Every gate, nag, and invitation in the tool follows from that inversion — and every mod you make should know whether it's serving it or fighting it.

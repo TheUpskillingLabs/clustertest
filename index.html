@@ -2713,7 +2713,7 @@ git commit -m "Update situation map — [your name]"
 git push</pre>
           </li>
           <li><strong>Git merges</strong> your map with your podmates'. A merge conflict isn't an error — it's a <em>conversation</em>: two of you saw the same thing differently, so talk it out, then commit the resolution.</li>
-          <li><strong>Submit in OLOS</strong>: open your cycle → <strong>Propose</strong>. The wizard asks for your distilled problem statement and a <strong>“Link to your map”</strong> — paste the triad repo's URL. Voting happens on the OLOS ballot; the repo is what voters open.</li>
+          <li><strong>Submit in OLOS</strong>: open your cycle → <strong>Propose</strong>. The wizard asks for your problem situation — the workbook fields, a distilled sentence — and a <strong>“Link to your map”</strong> — paste the triad repo's URL. Voting happens on the OLOS ballot; the repo is what voters open.</li>
         </ol>
         <p class="intro-hint">This manual loop is intentional. It prevents the <strong>Lone Warrior</strong> syndrome — no single person's export overwrites everyone else's work without Git making you negotiate.</p>
         <div class="modal-actions">
@@ -7136,7 +7136,7 @@ ${AI_RULES}
       const v = validateBoard();
       if (typeof workspaceIsComplete === 'function' && workspaceIsComplete()) return {
         state: 'submit',
-        hint: 'Situation complete ✓ — export your working folder, commit it to your triad\'s shared repo, then submit your problem statement in OLOS (it asks for the repo link).',
+        hint: 'Situation complete ✓ — export your working folder, commit it to your triad\'s shared repo, then submit your problem situation in OLOS (it asks for the repo link).',
         primary: { label: 'Export your working folder (.zip)', fn: 'exportWorkingFolder()', enabled: true },
         secondary: [{ label: 'Deepen this Situation →', fn: "goToScreen('workspace')" }, { label: 'Produce the deck & site', fn: 'exportModular()' }]
       };

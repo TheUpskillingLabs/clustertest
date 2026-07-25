@@ -45,7 +45,7 @@ A bottom **action bar** carries you through the whole arc — it always shows ex
    - **Stage 4 — Context & field: map the players.** Inner circle first (the directly implicated — *candidate problem owners come from here*), then the wider field (where themes and status-quo beneficiaries live). Candidate owners are marked "(not yet approached)" until a real conversation has happened.
    - **Stage 5 — Find the paradox(es).** The deadlock the field sustains: *"the situation demands X, but the same conditions that create the need prevent X from working."* Hold multiple candidate paradoxes, link each to who benefits from it persisting and to the evidence behind **both** legs of the contradiction, and pass the sharpness self-check — which is carried honestly into everything you export.
 
-8. **Export your working folder** — the terminal action: commit it to your pod's shared repo, then submit your problem statement in OLOS with the repo link. (The deck & site export remains as an optional showcase — see "What comes out" below.)
+8. **Export your working folder** — the terminal action: commit it to your pod's shared repo, then submit your problem situation in OLOS with the repo link. (The deck & site export remains as an optional showcase — see "What comes out" below.)
 
 ## The method, in brief
 
