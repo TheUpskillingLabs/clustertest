@@ -31,7 +31,7 @@ The project is tested by driving the real app headlessly with Playwright against
 
 | Driver | What it covers |
 |---|---|
-| `session-test.js` | The full arc — Sources → sort all 21 → connect into Evidence → the Seed-Mode ceiling → Unlock → climb to a Theme → Map → Classify → the five Deepen stages → **three exports** — plus loads of boards saved by older builds. Fails on any uncaught exception or console error. |
+| `session-test.js` | The full arc — Sources → CSV import feedback → sort all 21 → connect into Evidence → climb to a Theme → Map → Classify → the five Deepen stages → **three exports** — then the action bar, auto-layout (including on a lattice), the BYO-LLM prompts, adding extracts from the canvas, Start over, phone widths, and boards saved by older builds. Fails on any uncaught exception or console error. |
 | `cursor-test.js` | Canvas cursor states (idle, node, connect handle, space-to-pan). |
 
 If you change app behavior:

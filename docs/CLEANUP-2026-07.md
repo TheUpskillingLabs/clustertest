@@ -11,7 +11,7 @@ arc still runs end to end, exports included. Every cut is either code that
 already couldn't run, a feature that did nothing, or one of several controls
 doing the same job.
 
-`index.html` went from **10,349 to 9,940 lines** — 1,322 lines out, 913 back in. The removals are much bigger than the net figure suggests: the BYO-LLM walkthrough, the auto-layout pass and the workbook's stage nav are all new code added on top.
+`index.html` went from **10,349 to 10,241 lines** — 1,486 lines out, 1,378 back in. The removals are much bigger than the net figure suggests: the BYO-LLM walkthrough, the auto-layout pass, the workbook's stage nav and the import receipts are all new code added on top.
 
 ---
 
@@ -30,6 +30,8 @@ doing the same job.
 | `Make auto-layout hold up on a lattice…` | The first version only behaved on trees |
 | `Give the workbook its screen back…` | 45% of the viewport was chrome; no stage navigation |
 | `Unlock Patterns and Themes from the start` | Seed Mode removed — owner's call, and it contradicts a PRD MUST |
+| `Make CSV import say what it actually did` | Silently dropped rows; a cancelled import left no trace |
+| `Make both ways of adding extracts work from the canvas` | Five bugs between the dock and the board |
 
 ## Removed: code that already couldn't run
 
@@ -241,6 +243,44 @@ Seed board whose owner pressed Unlock.
    three other places, and all three gave the same generic paragraph listing
    every requirement. It now names the one missing thing and offers to take you
    there.
+
+## Fixed: adding extracts once the room is on the canvas
+
+Evidence arrives mid-session — a table finds a dataset, or runs another
+interview. The dock's **＋ Extracts** button was already there, and the chooser
+behind it offered all three ways in. None of it survived contact.
+
+1. **The verification gate opened *behind* the CSV picker that launched it.**
+   Every `.modal-overlay` carries `z-index: 1000`, so when modals stack the
+   winner is whichever sits later in the document — and `#board-csv-modal` is
+   16 lines below `#qa-verify-modal`. Choosing a file appeared to do nothing,
+   and clicking where the gate's confirm button was hit the picker's Cancel.
+   `openModal()` now raises each modal above whatever is already open, and
+   Escape and the Tab trap follow the one on top rather than the first in the
+   document.
+2. **✨ Extract from sources dropped canvas-side extracts into limbo.**
+   `tgxExtractParseAndAdd()` hardcoded `target: 'setup'`, so extracting from
+   the board appended to the pool: nothing on the canvas, no sorting decision,
+   the cursor left short. The cards existed in state and appeared nowhere — and
+   because they were unsorted, the next reload resumed into the sorting queue
+   instead of the board, which reads as the board having been lost. It now
+   routes by the screen you opened it from.
+3. **The Sources "Replace existing pool" radio was live on the canvas.** The
+   extractor read `input[name="csv-mode"]:checked` wherever it ran. A table that
+   had touched that radio an hour earlier, on the Sources screen, would have
+   had `appState.items` replaced and every Evidence card emptied — mid-session,
+   from a button that says "Add". Append/replace is a Sources choice now.
+4. **A board-side import reported only through a toast**, which is the thing the
+   previous commit had just finished fixing everywhere else. All three surfaces
+   — Sources, the board CSV modal, the extractor — now write the same sentence
+   where the import happened, and the toast only fires when no such surface is
+   on screen. New cards land off-screen by design (`placeNodesInFreeSpace()`
+   puts them right of everything else), so the view now pans to them: seeing the
+   cards is the receipt.
+5. **＋ Extracts wore Evidence's glyph.** `hydrateDockGlyphs()` treated any dock
+   button without a `data-tool` as Evidence, so the ＋ was overwritten with the
+   dashed circle. On a phone, where the dock hides its labels, the one way to
+   add data looked like a duplicate of the tool beside it.
 
 ## How to get any of it back
 

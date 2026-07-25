@@ -94,6 +94,73 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('every pre-loaded extract cites its source',
     await page.evaluate(() => appState.items.every(i => /^https?:\/\//.test(i.source_url || ''))));
 
+  // -------------------------------------------------------------- CSV import
+  // An import has to say what it did. A toast is gone in three and a half
+  // seconds, and the old code dropped malformed rows silently — so a file
+  // where a third of the rows were unusable reported plain success.
+  section('CSV import feedback');
+  {
+    const fs = require('fs');
+    const os = require('os');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'csv-'));
+    const write = (name, body) => { const f = path.join(tmp, name); fs.writeFileSync(f, body); return f; };
+    const good = write('good.csv', 'title,summary\nOne,First summary\nTwo,Second summary\n');
+    const partial = write('partial.csv', 'title,summary\nGood,Has a summary\nNo summary,\n,No title\nAlso good,Fine\n');
+    const badHeader = write('bad.csv', 'name,text\nA,B\n');
+
+    const readStatus = () => page.evaluate(() => {
+      const el = document.getElementById('csv-status');
+      if (!el || el.classList.contains('hidden')) return { shown: false };
+      return { shown: true, kind: (el.className.match(/csv-status-(\w+)/) || [])[1], text: el.textContent.trim() };
+    });
+    const upload = async (file, confirm) => {
+      await page.evaluate(() => { appState.items = []; renderConfigItems(); clearCsvStatus('setup'); });
+      await page.setInputFiles('#csv-file-input', file);
+      await sleep(500);
+      const gated = await page.evaluate(() => {
+        const m = document.getElementById('qa-verify-modal');
+        return !!m && !m.classList.contains('hidden');
+      });
+      if (gated) { await page.evaluate(c => (c ? qaConfirmImport() : qaCancelImport()), confirm); await sleep(400); }
+      return { gated, status: await readStatus() };
+    };
+
+    const clean = await upload(good, true);
+    check('a clean import says so, where the import happened',
+      clean.status.shown && clean.status.kind === 'ok' && /2 extracts loaded/.test(clean.status.text),
+      JSON.stringify(clean.status));
+
+    const part = await upload(partial, true);
+    check('rows that could not be used are reported, not dropped in silence',
+      part.status.shown && part.status.kind === 'warn' && /2 extracts loaded/.test(part.status.text)
+      && /2 rows skipped/.test(part.status.text),
+      JSON.stringify(part.status));
+
+    const bad = await upload(badHeader, true);
+    check('a CSV the tool cannot read says why, and what it wanted',
+      bad.status.shown && bad.status.kind === 'error'
+      && /title/.test(bad.status.text) && /summary/.test(bad.status.text),
+      JSON.stringify(bad.status));
+
+    const cancelled = await upload(good, false);
+    check('cancelling the verification gate leaves a trace',
+      cancelled.status.shown && /cancelled/i.test(cancelled.status.text),
+      JSON.stringify(cancelled.status));
+
+    // The message has to outlive a toast — that is the whole point.
+    await sleep(4200);
+    check('the result is still on screen after the toast has gone',
+      (await readStatus()).shown === true);
+
+    fs.rmSync(tmp, { recursive: true, force: true });
+    // Put the sample pool back — the rest of the walk runs on it.
+    await page.evaluate(() => { appState.items = []; renderConfigItems(); clearCsvStatus('setup'); });
+    await page.click('#load-sample-btn');
+    await sleep(400);
+    check('the sample pool reloads cleanly after the CSV checks',
+      await page.evaluate(() => appState.items.length) === poolSize);
+  }
+
   await page.getByRole('button', { name: /Start sorting/ }).click();
   await sleep(500);
 
@@ -712,6 +779,161 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const lat2 = await latticeMetrics();
   check('laying out twice is stable', lat2.positions === lat.positions,
     `${lat.crossings} then ${lat2.crossings} crossings`);
+
+  // ------------------------------------------- Adding extracts from the canvas
+  // Evidence arrives mid-session: a table finds a new dataset, or runs another
+  // interview. Both ways in — a CSV and the ✨ extractor — have to work from
+  // the board itself, not only from the Sources screen the room left an hour
+  // ago. This runs on the latticed board above, which is what that looks like.
+  section('Add extracts from the canvas');
+  {
+    const fs = require('fs');
+    const os = require('os');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'boardcsv-'));
+    const write = (name, body) => { const f = path.join(tmp, name); fs.writeFileSync(f, body); return f; };
+    const good = write('more.csv', 'title,summary\nLate arrival,Found at the second table.\nAnother,Also found late.\n');
+    const partial = write('partial.csv', 'title,summary\nUsable,Has a summary\nNot usable,\n');
+
+    const boardState = () => page.evaluate(() => ({
+      items: appState.items.length,
+      nodes: document.querySelectorAll('.canvas-node').length,
+      unsorted: appState.items.filter(i => !appState.sorting.decisions[i.id]).length,
+      cursorAtEnd: appState.sorting.currentIndex === appState.items.length,
+      csvStatus: (document.getElementById('board-csv-status') || {}).textContent || '',
+      csvKind: ((document.getElementById('board-csv-status') || {}).className || '').match(/csv-status-(\w+)/),
+      xtrStatus: (document.getElementById('xtr-status') || {}).textContent || '',
+      csvOpen: !document.getElementById('board-csv-modal').classList.contains('hidden'),
+    }));
+    const closeOpenModals = () => page.evaluate(() =>
+      document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(m => closeModal(m.id)));
+
+    await closeOpenModals();
+    await page.click('#canvas-dock .dock-tool[onclick="openAddExtractsSheet()"]');
+    await sleep(300);
+    check('the dock opens an add-extracts chooser on the canvas',
+      await page.evaluate(() => !document.getElementById('add-extracts-modal').classList.contains('hidden')));
+    check('it offers all three ways in — CSV, ✨ extractor, by hand',
+      await page.evaluate(() => document.querySelectorAll('#add-extracts-modal .share-row').length) === 3);
+    // On a phone the dock hides its labels, so the glyph is the whole button.
+    // Hydrating tier glyphs used to overwrite the ＋ with Evidence's dashed
+    // circle, leaving the one way to add data looking like a duplicate tool.
+    check('the add-extracts button keeps its own glyph', await page.evaluate(() => {
+      const add = document.querySelector('#canvas-dock .dock-tool[onclick="openAddExtractsSheet()"] .dock-glyph');
+      const ev = document.querySelector('#dock-evidence-btn .dock-glyph');
+      return !!add && !!ev && add.innerHTML.trim() !== ev.innerHTML.trim() && /\+|＋/.test(add.textContent);
+    }));
+
+    await page.click('#add-extracts-modal .share-row >> nth=0');
+    await sleep(300);
+    check('"Upload a CSV" reaches the importer from the board', (await boardState()).csvOpen);
+
+    const before = await boardState();
+    await page.setInputFiles('#board-csv-input', good);
+    await sleep(500);
+    // The gate used to open *behind* the picker that launched it, which left
+    // its confirm button unclickable — the import simply could not be finished.
+    check('the verification gate lands on top of the picker that opened it',
+      await page.evaluate(() => {
+        const b = Array.from(document.querySelectorAll('#qa-verify-modal button'))
+          .find(x => /verified/i.test(x.textContent));
+        if (!b) return false;
+        const r = b.getBoundingClientRect();
+        return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === b;
+      }));
+    await page.click('#qa-verify-modal button.btn-primary');
+    await sleep(600);
+    let s = await boardState();
+    check('a CSV uploaded on the canvas puts real cards on the canvas',
+      s.nodes === before.nodes + 2 && s.items === before.items + 2,
+      JSON.stringify({ before: before.nodes, after: s.nodes }));
+    // Extracts added on the board arrive already sorted. Leaving them unsorted
+    // makes the next reload resume into the sorting queue instead of the board.
+    check('cards added on the canvas do not reopen the sorting queue',
+      s.unsorted === 0 && s.cursorAtEnd, JSON.stringify({ unsorted: s.unsorted }));
+    check('the importer says what it did, and stays up to be read',
+      /2 extracts added to the canvas/.test(s.csvStatus) && s.csvKind[1] === 'ok' && s.csvOpen,
+      JSON.stringify(s.csvStatus));
+    const arrivals = await page.evaluate(() => {
+      const vp = document.getElementById('canvas-viewport').getBoundingClientRect();
+      const ids = appState.items.filter(i => /^(Late arrival|Another)$/.test(i.title)).map(i => i.id);
+      return ids.map(id => {
+        const el = document.querySelector(`.canvas-node[data-node-id="${id}"]`);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { onScreen: r.right > vp.left && r.left < vp.right && r.bottom > vp.top && r.top < vp.bottom };
+      });
+    });
+    check('the view moves to the new cards, which land off-screen otherwise',
+      arrivals.length === 2 && arrivals.every(a => a && a.onScreen), JSON.stringify(arrivals));
+
+    await page.setInputFiles('#board-csv-input', partial);
+    await sleep(500);
+    await page.click('#qa-verify-modal button.btn-primary');
+    await sleep(500);
+    s = await boardState();
+    check('rows it could not use are named on the canvas too',
+      s.csvKind[1] === 'warn' && /1 row skipped/.test(s.csvStatus), JSON.stringify(s.csvStatus));
+
+    // ✨ Extract from sources, from the board.
+    await closeOpenModals();
+    await page.evaluate(() => openAddExtractsSheet());
+    await sleep(250);
+    await page.click('#add-extracts-modal .share-row >> nth=1');
+    await sleep(350);
+    check('the ✨ extractor opens from the canvas, whole',
+      await page.evaluate(() => {
+        const m = document.getElementById('xtr-modal');
+        return !!m && !m.classList.contains('hidden')
+          && ['xtr-source', 'xtr-file', 'xtr-url', 'xtr-prompt', 'xtr-result'].every(id => !!document.getElementById(id));
+      }));
+    const beforeX = await boardState();
+    await page.fill('#xtr-source', 'Notes: the same address is re-keyed into three systems every morning.');
+    await sleep(250);
+    check('the prompt it hands you carries your own source material',
+      await page.evaluate(() => /re-keyed into three systems/.test(document.getElementById('xtr-prompt').value)));
+    await page.fill('#xtr-result', JSON.stringify([
+      { title: 'Triple re-keying', summary: 'The same address is entered three times.', kind: 'observation' },
+      { title: 'Systems do not talk', summary: 'No shared record between them.', kind: 'fact' },
+      { title: 'Dropped, no summary', kind: 'fact' }
+    ]));
+    await page.click('#xtr-modal button.btn-primary');
+    await sleep(350);
+    // Routing this to the pool instead of the board is invisible and total: the
+    // cards exist in state, appear nowhere, and drop the next reload into sort.
+    check('extracting on the canvas targets the canvas, append-only',
+      await page.evaluate(() => pendingCsvImport
+        && pendingCsvImport.target === 'board' && pendingCsvImport.mode === 'append'));
+    await page.click('#qa-verify-modal button.btn-primary');
+    await sleep(600);
+    s = await boardState();
+    check('extracted cards land on the canvas, sorted',
+      s.nodes === beforeX.nodes + 2 && s.unsorted === 0 && s.cursorAtEnd,
+      JSON.stringify({ before: beforeX.nodes, after: s.nodes, unsorted: s.unsorted }));
+    check('the extractor reports what it added and what it dropped',
+      /2 extracts added to the canvas/.test(s.xtrStatus) && /1 entry skipped/.test(s.xtrStatus),
+      JSON.stringify(s.xtrStatus));
+
+    // "Replace existing pool" is a Sources-screen radio. Reading it from the
+    // canvas would swap the whole pool out from under a live board.
+    check('the replace-pool radio can never reach a live board',
+      await page.evaluate(() => {
+        const r = document.querySelector('input[name="csv-mode"][value="replace"]');
+        if (r) r.checked = true;
+        const n0 = appState.items.length;
+        document.getElementById('xtr-result').value =
+          JSON.stringify([{ title: 'Kept', summary: 'The board survives.', kind: 'fact' }]);
+        tgxExtractParseAndAdd();
+        qaConfirmImport();
+        return appState.items.length === n0 + 1;
+      }));
+
+    await closeOpenModals();
+    await sleep(250);
+    check('a reload lands back on the canvas, not on Sources',
+      await page.evaluate(() => pickInitialScreen()) === 'board');
+
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 
   // ----------------------------------------------------------- Start over
   // Start over clears the save and reloads. The unsaved-work guard on

@@ -26,6 +26,8 @@ A bottom **action bar** carries you through the whole arc — it always shows ex
 
 1. **Gather source extracts** (`Sources`) — load the sample, upload a CSV (`title,summary[,source_url]`), ✨ extract cards from an article or dataset with your own AI, or type one by hand. Go wide — include what might contradict you. **You do not name a problem first.** The problem comes into focus later, once the evidence has something to say.
 
+   Evidence keeps arriving after you've started, so all three ways in stay open once you're on the canvas: **＋ Extracts** in the dock offers the same CSV upload, the same ✨ extractor, and a card by hand. Cards added there land in open space beside your map, already sorted, and the view moves to them. Every import says what it did — how many cards, and how many rows it couldn't use — where the import happened, not in a toast that's gone before you've read it.
+
 2. **Sort signal from noise** (`Sort`) — swipe each extract: **noise** (left / ←), **signal** (right / →), or **★ super signal** (up / ↑). Fast binary commitment is the point: where you hesitate is data about a belief you haven't earned.
 
 3. **Triangulate** (`Validate`) — drag a glowing edge dot from one extract onto another (or use the **Link** tool in the dock) and two extracts pointing at the same condition become an **Evidence** card. Name the claim. Once you've kept a critical mass of extracts (~10), the tool *invites* you to name the problem concept taking shape — optional, dismissible, revisable.

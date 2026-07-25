@@ -132,6 +132,7 @@ You'll still be the one standing next to a stuck participant on July 25 — and 
 | Wants the AI to do the thinking | ✨ misunderstanding | "The tool has no AI. That button copies a prompt for *your* model — run it, argue with it, write your own words back. The Blind-spot audit is the tab for when everything feels too tidy." |
 | Lost in the Deepen workbook | Five stages, long scroll | The stage bar at the top of the workbook — it shows which stage they're in, ticks the answered ones, and jumps. The bar at the bottom names whatever is still blocking the export. |
 | Board looks like a hairball | Cards seeded on a spiral, overlapping | **⊞ Auto-layout** in the canvas toolbar. It rebuilds the ladder in tiers and it's undoable — good to reach for right before someone presents their map. |
+| "I've got more data — do I start over?" | Thinks Sources was a one-time screen | No. **＋ Extracts** in the dock, left-hand end: the same CSV upload, the same ✨ extractor, or one card by hand. New cards land beside their map, already sorted, and the view moves to them. Nothing they've built shifts. |
 | Stuck on one card, staring at it | Doesn't know the help is there | Point at the ✨ **AI** button on the card itself. Three prompts for that card, built from what's underneath it. It walks them through copy → paste → bring it back. |
 | "I lost my work??" | localStorage panic | Per-browser, per-device — see Gotchas. Same browser + device = it's there. Different device = it never was; export/import moves work. |
 
