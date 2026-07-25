@@ -442,15 +442,13 @@
     /* The infobar floats over the canvas — zero layout height. Children carry
        pill backgrounds for legibility; the bar itself is click-transparent. */
     .canvas-infobar { position: absolute; top: 8px; left: 12px; right: 12px; z-index: 8;
-      display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+      display: flex; justify-content: flex-end; align-items: flex-start; gap: 12px;
       font-size: var(--text-xs); font-weight: 600; color: var(--cloud); pointer-events: none; }
-    .canvas-infobar .view-tabs, .canvas-infobar .infobar-right { pointer-events: auto; }
+    .canvas-infobar .infobar-right { pointer-events: auto; }
     .canvas-infobar .infobar-right { display: flex; align-items: center; gap: 10px; min-width: 0;
       background: color-mix(in srgb, var(--midnight) 82%, transparent); border-radius: var(--radius-2);
       padding: 4px 10px; backdrop-filter: blur(3px); }
     .canvas-infobar .infobar-right:empty { display: none; }
-    .canvas-infobar .view-tabs { background: color-mix(in srgb, var(--midnight) 82%, transparent);
-      border-radius: var(--radius-2); padding: 3px; backdrop-filter: blur(3px); }
     /* --- Classify-phase guide (the 7 types, one at a time, Dorst order) --- */
     #classify-guide { position: absolute; left: 50%; transform: translateX(-50%); bottom: 16px;
       z-index: 40; width: min(560px, calc(100vw - 32px)); }
@@ -1001,10 +999,6 @@
       .scroll-area                 { padding: 12px; }
       .ai-helper-bar               { padding: 12px 16px; }
       .canvas-infobar              { padding: 8px 12px; font-size: var(--text-xs); gap: 12px; }
-      /* Level tabs scroll sideways on a phone instead of clipping */
-      .canvas-infobar .view-tabs   { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-shrink: 1; min-width: 0; }
-      .canvas-infobar .view-tabs::-webkit-scrollbar { display: none; }
-      .canvas-infobar .view-tab    { white-space: nowrap; flex-shrink: 0; }
       .canvas-infobar #cluster-progress { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
       .item-card                   { padding: 12px; margin-bottom: 8px; }
     }
@@ -1680,15 +1674,6 @@
     /* Player role badge */
     .player-role-badge { font-size: var(--text-2xs); line-height: var(--lead-2xs); font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label); padding: 2px var(--space-2); border-radius: var(--radius-1); background: color-mix(in srgb, var(--type-player) 20%, transparent); color: var(--type-player); margin-top: var(--space-1); display: inline-block; }
 
-    /* View-state tab bar */
-    .view-tabs { display: flex; gap: 2px; }
-    .view-tab { background: none; border: none; color: var(--cloud); opacity: 0.5; font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label); padding: 4px 12px; border-radius: var(--radius-1); cursor: pointer; transition: opacity 0.15s, background 0.15s; }
-    .view-tab:hover { opacity: 0.8; background: rgba(255,255,255,0.08); }
-    .view-tab.is-active { opacity: 1; background: rgba(255,255,255,0.12); }
-
-    /* "Levels" view: nodes outside the active level fade + go non-interactive */
-    .canvas-node.view-dim { opacity: 0.22; pointer-events: none; transform: scale(0.78); transition: opacity 0.3s, transform 0.3s; }
-
     /* Connection handles — one on each side */
     .connect-handle {
       position: absolute;
@@ -1951,7 +1936,7 @@
 
     /* Microlabels: one consistent uppercase tracking */
     .upskill-banner h3, .card-tag, .cluster-actions button, .ws-card-tier, .ws-jump-label,
-    .sort-card-tag, .sort-zone-label, .view-tab,
+    .sort-card-tag, .sort-zone-label,
     .prompt-cta-label, .interview-helper .step-label, .profile-popover .profile-id .label,
     .card-type-group-label { letter-spacing: var(--track-label); }
 
@@ -2038,7 +2023,6 @@
       .zoom-btn { min-width: 44px; height: 44px; }
       .dock-tool { min-width: 44px; min-height: 44px; }
       .search-clear { width: 32px; height: 32px; }
-      .view-tab { padding: 12px; }
       .sorting-undo-link { padding: 12px 16px; }
     }
 
@@ -2059,8 +2043,6 @@
         padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
         animation: sheetUp 0.24s cubic-bezier(0.2, 0.8, 0.25, 1);
       }
-      .view-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-      .view-tabs::-webkit-scrollbar { display: none; }
     }
     @media (prefers-reduced-motion: reduce) { .modal-overlay .modal-content { animation: none; } }
   </style>
@@ -2468,12 +2450,9 @@
         <button type="button" class="bcs-x hidden" onclick="tgxDismissConceptInvite()" aria-label="Dismiss for now">✕</button>
       </div>
       <div class="canvas-viewport" id="canvas-viewport" role="application" aria-label="Web map canvas">
-        <!-- The infobar floats over the canvas (zero layout height): view tabs
-             top-left, progress/warnings top-right — Figma-style, not a bar. -->
+        <!-- The infobar floats over the canvas (zero layout height):
+             progress/warnings top-right — Figma-style, not a bar. -->
         <div class="canvas-infobar">
-          <div class="view-tabs" id="view-tabs">
-            <button class="view-tab is-active" data-view="all" onclick="setCanvasView('all')">All</button>
-          </div>
           <span class="infobar-right">
             <span id="validation-warning" style="color: var(--action-red);"></span>
             <span id="cluster-progress" aria-live="polite"></span>
@@ -3062,7 +3041,7 @@ git push</pre>
         nodes: {},
         view: { zoom: 1, panX: 0, panY: 0 },
         viewInitialized: false,
-        canvasViewState: 'all',
+        canvasViewState: 'all',   // vestigial: the level tabs are gone, nothing reads it
         exportedAt: null,
         currentScreen: 'setup',
         // Classify phase: the 7 evidence types are introduced only AFTER the
@@ -4807,61 +4786,17 @@ git push</pre>
       });
       visibleItems.forEach(item => layer.appendChild(buildSignalNode(item)));
       appState.cards.forEach(c => layer.appendChild(buildCardNode(c)));
-      applyViewState();
-      buildViewTabs();
       applySelectionClasses();
       invalidateSituationIndex();
       if (hasSituations()) refreshSectionGeometry();
     }
 
-    // Distinct tiers currently present, ascending.
-    function existingTiers() {
-      return [...new Set(appState.cards.map(c => c.tier))].sort((a, b) => a - b);
-    }
-    // Resolve the active view to something that still exists, else 'all'.
-    function normalizedView() {
-      const vs = appState.canvasViewState || 'all';
-      if (vs === 'all' || vs === 'signals') return vs;
-      if (vs.startsWith('tier-')) {
-        const t = parseInt(vs.slice(5), 10);
-        if (appState.cards.some(c => c.tier === t)) return vs;
-      }
-      return 'all';
-    }
-    // "Levels" view: All, Signals, then one tab per tier that exists.
-    function buildViewTabs() {
-      const tabs = document.getElementById('view-tabs');
-      if (!tabs) return;
-      const vs = normalizedView();
-      let html = `<button class="view-tab${vs === 'all' ? ' is-active' : ''}" data-view="all" onclick="setCanvasView('all')">All</button>`;
-      html += `<button class="view-tab${vs === 'signals' ? ' is-active' : ''}" data-view="signals" onclick="setCanvasView('signals')">Source Extracts</button>`;
-      existingTiers().forEach(t => {
-        const key = 'tier-' + t;
-        html += `<button class="view-tab${vs === key ? ' is-active' : ''}" data-view="${key}" onclick="setCanvasView('${key}')">${escapeHtml(tierName(t))}</button>`;
-      });
-      tabs.innerHTML = html;
-    }
-
-    function setCanvasView(view) {
-      appState.canvasViewState = view;
-      applyViewState();
-      buildViewTabs();
-      scheduleSave();
-    }
-
-    // Dim every node that isn't part of the active level.
-    function applyViewState() {
-      const vs = normalizedView();
-      const layer = document.getElementById('nodes-layer');
-      if (!layer) return;
-      layer.querySelectorAll('.canvas-node').forEach(el => {
-        const id = el.getAttribute('data-node-id');
-        let active = true;
-        if (vs === 'signals') active = isSignalId(id);
-        else if (vs.startsWith('tier-')) active = nodeTier(id) === parseInt(vs.slice(5), 10);
-        el.classList.toggle('view-dim', !active);
-      });
-    }
+    // The level-tab bar that used to sit top-left is gone. It read as a view
+    // switch and behaved as a lock: selecting a tier faded every other card to
+    // 22%, shrank it, and set pointer-events:none — and the choice persisted, so
+    // one tap left a board that looked broken and stayed broken across reloads.
+    // appState.canvasViewState is kept (defaulted, never read) so boards saved
+    // mid-filter still parse; nothing applies the dim class any more.
 
     // Provenance pill for nodes merged in from a shared working folder.
     function sourceBadgeHtml(obj) {
@@ -6109,7 +6044,7 @@ git push</pre>
         const wl = (left - panX) / zoom, wt = (top - panY) / zoom;
         const wr = (left + width - panX) / zoom, wb = (top + height - panY) / zoom;
         const temp = new Set(marqueeShift ? selectedNodeIds : []);
-        document.querySelectorAll('.canvas-node:not(.view-dim)').forEach(el => {
+        document.querySelectorAll('.canvas-node').forEach(el => {
           const id = el.getAttribute('data-node-id');
           if (!id) return;
           const pos = appState.nodes[id];
@@ -6279,7 +6214,7 @@ git push</pre>
         if (isTyping()) return;
         if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
           e.preventDefault();
-          document.querySelectorAll('.canvas-node:not(.view-dim)').forEach(el => {
+          document.querySelectorAll('.canvas-node').forEach(el => {
             const id = el.getAttribute('data-node-id');
             if (id) selectedNodeIds.add(id);
           });
