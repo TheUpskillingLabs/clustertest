@@ -391,6 +391,40 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const names = await page.evaluate(() => window.__downloads);
   console.log('  downloads: ' + JSON.stringify(names));
 
+  // ------------------------------------------------------- The action bar
+  // It is permanent chrome over the canvas, so it stays small — and minimises
+  // to just the one next action when the canvas matters more.
+  section('Action bar');
+  await page.evaluate(() => goToScreen('board'));
+  await sleep(700);
+  const barH = () => page.evaluate(() => {
+    const e = document.getElementById('tgx-actionbar');
+    return e && !e.classList.contains('hidden') ? Math.round(e.getBoundingClientRect().height) : 0;
+  });
+  const expandedH = await barH();
+  check('the action bar is compact', expandedH > 0 && expandedH <= 80, expandedH + 'px (was ~129px)');
+
+  await page.click('.ab-collapse');
+  await sleep(500);
+  const collapsedH = await barH();
+  check('it minimises to a slim strip', collapsedH > 0 && collapsedH <= 36,
+    `${expandedH}px -> ${collapsedH}px`);
+  check('the one next action survives minimising',
+    await page.evaluate(() => !!document.querySelector('#tgx-actionbar .ab-primary')));
+  check('minimising republishes the clearance toasts key off',
+    await page.evaluate(() => parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ab-h'), 10)) === collapsedH,
+    await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ab-h').trim()));
+
+  await page.reload();
+  await sleep(1200);
+  await page.evaluate(() => goToScreen('board'));
+  await sleep(600);
+  check('the preference survives a reload',
+    await page.evaluate(() => document.getElementById('tgx-actionbar').classList.contains('is-collapsed')));
+  await page.click('.ab-collapse');
+  await sleep(500);
+  check('and it expands again', await barH() === expandedH);
+
   // --------------------------------------------------------- Auto-layout
   // Nodes are seeded on a spiral whose spacing is under half a card's width,
   // so a board of any size starts out overlapping. Auto-layout is the way out.
@@ -698,16 +732,42 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await page.evaluate(() => { openShareSheet(); });
   await sleep(400);
   await page.getByRole('button', { name: /^Start over/ }).first().click();
-  await sleep(400);
-  check('Start over asks before it wipes anything',
-    await page.evaluate(() => [...document.querySelectorAll('#toast-region .toast button')]
-      .some(b => /start over/i.test(b.textContent))));
+  await sleep(500);
 
-  await page.evaluate(() => {
-    const btn = [...document.querySelectorAll('#toast-region .toast button')]
-      .find(b => /start over/i.test(b.textContent));
-    if (btn) btn.click();
+  // Clearing the board is the only irreversible thing in the tool, so it asks
+  // in the middle of the screen — a toast at the bottom lands among the action
+  // bar, the dock and the zoom toolbar, which is where the previous version of
+  // this confirm went to hide.
+  const resetDialog = await page.evaluate(() => {
+    const m = document.getElementById('confirm-reset-modal');
+    if (!m || m.classList.contains('hidden')) return 'dialog did not open';
+    const c = m.querySelector('.modal-content').getBoundingClientRect();
+    const clashes = ['#tgx-actionbar', '#canvas-dock', '.zoom-toolbar']
+      .map(sel => document.querySelector(sel))
+      .filter(el => el && el.getBoundingClientRect().height > 0)
+      .filter(el => {
+        const r = el.getBoundingClientRect();
+        return !(c.bottom <= r.top || c.top >= r.bottom || c.right <= r.left || c.left >= r.right);
+      });
+    return {
+      centredX: Math.abs((c.left + c.right) / 2 - window.innerWidth / 2) < 4,
+      centredY: c.top > 0 && c.bottom < window.innerHeight,
+      clashes: clashes.map(e => e.id || e.className),
+      accent: getComputedStyle(m.querySelector('.modal-content')).borderTopColor,
+      confirm: (m.querySelector('.btn-danger') || {}).textContent,
+      focused: document.activeElement && document.activeElement.textContent
+    };
   });
+  check('Start over asks in a dialog in the middle of the screen',
+    resetDialog !== 'dialog did not open' && resetDialog.centredX && resetDialog.centredY,
+    JSON.stringify(resetDialog));
+  check('the dialog is clear of the bottom chrome it used to hide behind',
+    resetDialog.clashes && resetDialog.clashes.length === 0, JSON.stringify(resetDialog.clashes));
+  check('it is accented in red and the safe choice has focus',
+    resetDialog.accent === 'rgb(238, 28, 37)' && /keep my board/i.test(resetDialog.focused || ''),
+    JSON.stringify({ accent: resetDialog.accent, focused: resetDialog.focused }));
+
+  await page.evaluate(() => confirmStartOver());
   await page.waitForFunction(() => typeof appState !== 'undefined' && document.readyState === 'complete',
     null, { timeout: 15000 });
   await sleep(700);
