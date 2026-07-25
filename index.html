@@ -2669,19 +2669,6 @@ git push</pre>
 
   <!-- UNLOCK THRESHOLD — a visible seam (replaces window.confirm): one-way
        graduation from Seed to the full engine. -->
-  <div id="graduate-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="graduate-title">
-    <div class="modal-content" style="max-width: 500px;">
-      <div class="modal-header"><h3 id="graduate-title">Unlock Patterns &amp; Themes?</h3></div>
-      <div class="modal-body">
-        <p style="margin-bottom:12px;">This unlocks the full engine — evidence typing, the Pattern → Theme ladder, and the GitHub-Pages site export.</p>
-        <p class="field-hint" style="margin-bottom:16px;">It's one-way: you can't return to Seed Mode. Your hunches and evidence come with you unchanged.</p>
-        <div class="modal-actions">
-          <button class="btn btn-outline" onclick="closeModal('graduate-modal')">Not yet</button>
-          <button class="btn btn-primary" onclick="tgxConfirmGraduate()" data-autofocus>Unlock Patterns &amp; Themes</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ADD EXTRACTS CHOOSER — one "add" entry, three methods. -->
   <div id="add-extracts-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="add-extracts-title">
@@ -2943,12 +2930,10 @@ git push</pre>
         // problem situation is mapped. False during the validate phase so the
         // type picker stays hidden; flipped true by enterClassifyPhase().
         classifyPhase: false,
-        // Two-phase routing. Brand-new users start in Seed Mode (Phase 1:
-        // simplified canvas, map a few extracts to a provisional Hunch).
-        // One-way graduation to Pod Mode (Phase 2/3: full engine) — see
-        // isSeedMode()/graduateToPod(). Existing saved boards default to 'pod'
-        // in normalizeState() so nothing they built disappears.
-        mode: 'seed',
+        // Patterns and Themes are available from the first card. The field is
+        // still written so boards saved under the old two-phase routing parse
+        // unchanged; nothing reads it any more.
+        mode: 'pod',
         // The one coach: ON for brand-new boards (dismissible, persists).
         // Existing saved boards keep whatever value they had (or none).
         sorting: { currentIndex: 0, decisions: {} }
@@ -3145,10 +3130,11 @@ git push</pre>
           .filter(id => parsed.cards.some(c => c.id === id));
         if (typeof s.createdAt !== 'string') s.createdAt = new Date().toISOString();
       });
-      // Two-phase routing: existing saved boards default to 'pod' (full engine)
-      // so previously-built deep structure stays visible. Only defaultState()
-      // starts new users in 'seed'.
-      if (parsed.mode !== 'seed' && parsed.mode !== 'pod') parsed.mode = 'pod';
+      // Seed Mode is gone: Patterns and Themes are unlocked from the start. A
+      // board saved mid-Seed comes forward to the full engine, which only ever
+      // adds — every card keeps its tier, its children and its text; the deep
+      // tiers and evidence typing simply become available.
+      parsed.mode = 'pod';
       // Source provenance (merged boards): keep only non-empty strings.
       // v2.1: every item carries source_url (the document it was extracted from)
       // and verified (set true only once the user passes the QA Intercept gate).
@@ -4705,22 +4691,14 @@ git push</pre>
       });
     }
 
-    // Two-phase routing. Seed Mode (Phase 1) is a simplified canvas: advanced
-    // classification and the deep hierarchy locks are hidden, and the single
-    // tier-1 card is a provisional "Hunch". Pod Mode (Phase 2/3) is the full
-    function isSeedMode() { return appState.mode === 'seed'; }
-
     // The evidence type picker is live only in the classify phase, and never in
-    // Seed Mode (provisional work isn't classified).
-    // classifyPhase=true for its canvas beat so its "classify it" step works.
-    function typePickerEnabled() { return appState.classifyPhase === true && !isSeedMode(); }
+    function typePickerEnabled() { return appState.classifyPhase === true; }
 
     // Lock 1: an Evidence card cannot be labelled until it links ≥2 Extracted
     // Signals. (Creation already requires two children via createCardBetween;
     // this gates naming/typing so a single-signal card can't masquerade as
-    // triangulated Evidence.) Off in Seed Mode, where tier-1 is a free Hunch.
+    // triangulated Evidence.)
     function evidenceLabelLocked(card) {
-      if (isSeedMode()) return false;
       return card.tier === 1 && (card.childIds || []).length < 2;
     }
 
@@ -4760,17 +4738,13 @@ git push</pre>
            <span class="card-type-group-label">Field mapping</span>
            <div class="card-type-chips">${fieldChips}</div>
          </div>`;
-      // Seed Mode: tier-1 is a provisional "Hunch" — no evidence typing.
-      const seed = isSeedMode();
       // Lock 1: block labelling Evidence until it links ≥2 Extracted Signals.
       const labelLocked = evidenceLabelLocked(card);
-      const labelText = seed ? 'Hunch' : ct.label;
-      const titlePlaceholder = seed ? 'Name your hunch' : ct.desc;
-      const descPlaceholder = seed
-        ? 'What do these extracts make you suspect?'
-        : 'What does this evidence constitute?';
+      const labelText = ct.label;
+      const titlePlaceholder = ct.desc;
+      const descPlaceholder = 'What does this evidence constitute?';
       // The 7 evidence types are introduced only in the classify phase (after
-      // the situation is mapped), never in Seed Mode, and never while the card
+      // the situation is mapped), and never while the card
       // is still below the 2-signal triangulation threshold (Lock 1). During
       // the validate phase the card is kept simple: no picker, no reclassify link.
       const typePickerHtml = (!typePickerEnabled() || labelLocked)
@@ -4847,7 +4821,6 @@ git push</pre>
     // built from has been named and described — claims rest on examined claims.
     function isNamedAndDescribed(c) { return !!(c && (c.title || '').trim() && (c.description || '').trim()); }
     function hubLocked(card) {
-      if (isSeedMode()) return false; // provisional work is ungated in Seed Mode
       if (!card || card.tier < 2) return false;
       // Lock 3 (Themes) and the same rule for every higher tier: a higher claim
       // can't be named until each child it rests on is named and described.
@@ -5351,20 +5324,17 @@ git push</pre>
     function updateAddButtonVisibility() {
       // The dock is always on the board now: it holds "＋ Extracts" (the one
       // add-data entry) and the Link tool, both needed from the first minute.
-      // Higher-tier tools stay progressive (seed-gated below).
       const dock = document.getElementById('canvas-dock');
       if (dock) dock.classList.remove('hidden');
-      // Seed Mode: only the signal and a single tier-1 ("Hunch") tool. Hide the
-      // Pattern/Theme/Super-theme tools — those belong to Pod Mode.
-      const seed = isSeedMode();
+      // Every tier's tool is in the dock from the start.
       ['tier-2', 'tier-3', 'tier-4'].forEach(tool => {
         const b = document.querySelector(`#canvas-dock .dock-tool[data-tool="${tool}"]`);
-        if (b) b.classList.toggle('hidden', seed);
+        if (b) b.classList.remove('hidden');
       });
       const evLabel = document.querySelector('#dock-evidence-btn .dock-label');
-      if (evLabel) evLabel.textContent = seed ? 'Hunch' : 'Evidence';
+      if (evLabel) evLabel.textContent = 'Evidence';
       const evBtn = document.getElementById('dock-evidence-btn');
-      if (evBtn) evBtn.title = seed ? 'Add a hunch' : 'Add evidence';
+      if (evBtn) evBtn.title = 'Add evidence';
     }
 
     function armTool(tool, btn) {
@@ -5565,12 +5535,6 @@ git push</pre>
 
       // Same tier → create the next tier up. (Two signals → a plain evidence card.)
       if (sT === tT) {
-        // Seed Mode: only signals → a provisional Hunch (tier-1). The deep
-        // ladder (Pattern, Theme, …) belongs to Pod Mode.
-        if (isSeedMode() && sT >= 1) {
-          toast('Graduate to Pod Mode to build Patterns and Themes from your Hunches.');
-          return;
-        }
         // Lock 2: a Pattern can only be formed from established Evidence —
         // both tier-1 cards must be named and described first.
         if (sT === 1) {
@@ -6816,7 +6780,7 @@ ${AI_RULES}
         : (!v.total && framed)
           ? `${framed} situation${framed === 1 ? '' : 's'} mapped`
           : (!v.missing.length && v.total && !v.hasTheme)
-            ? (isSeedMode() ? 'Seed Mode — connect source extracts into evidence, then unlock Patterns & Themes' : 'Climb to a named & described theme before mapping')
+            ? 'Climb to a named & described theme before mapping'
             : `${v.named}/${v.total} cards named & described`;
       el.classList.toggle('meets-target', v.ready);
       el.classList.toggle('below-target', !v.ready);
@@ -6845,17 +6809,14 @@ ${AI_RULES}
         secondary: []
       };
       const sortRemaining = unsorted > 0 ? [{ label: `Sort remaining (${unsorted})`, fn: "goToScreen('sorting')" }] : [];
-      if (isSeedMode()) {
-        const hasEvidence = appState.cards.length > 0;
-        return {
-          state: 'seed',
-          hint: hasEvidence
-            ? '<strong>Seed Mode</strong> holds hunches & evidence. Unlock to build Patterns & Themes on top.'
-            : 'First: connect two source extracts into <strong>Evidence</strong> — drag a glowing dot onto another card.',
-          primary: { label: 'Unlock Patterns & Themes', fn: 'graduateToPod()', enabled: true },
-          secondary: [...sortRemaining, { label: 'Compile concept (.md)', fn: 'compileConcept()' }]
-        };
-      }
+      // Sorted, but nothing built yet. The first move is a connection, and
+      // this bar is the only thing that says so.
+      if (!appState.cards.length) return {
+        state: 'connect',
+        hint: 'First: connect two source extracts into <strong>Evidence</strong> — drag a glowing dot onto another card, or use the Link tool.',
+        primary: { label: 'Map the Problem Situation', fn: 'openCommitModal()', enabled: false },
+        secondary: [...sortRemaining]
+      };
       if (tgxJustMapped && hasSituations()) return {
         state: 'mapped-threshold',
         hint: 'Situation mapped ✓ — next, classify your evidence with Dorst\'s seven types.',
@@ -7595,10 +7556,6 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     // terminal — it feeds back into the loop.
     let classifyStepIndex = 0;
     function enterClassifyPhase() {
-      if (isSeedMode()) {
-        toast('Classification is a Pod Mode step — graduate first to type your evidence.');
-        return;
-      }
       if (!hasSituations()) {
         toast('Map a problem situation first — then you can classify its evidence.');
         return;
@@ -8220,13 +8177,9 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       }
     }
 
-    // ======================== TWO-PHASE MODE (Seed ↔ Pod) ========================
-
-    // Show/hide the mode-specific board controls.
+    // Show/hide the board controls that depend on how far along the board is.
     function renderModeChrome() {
-      const seed = isSeedMode();
       const board = document.getElementById('board-workspace');
-      if (board) board.setAttribute('data-mode', seed ? 'seed' : 'pod');
       if (board) board.setAttribute('data-connect-hints', (appState.connectsMade || 0) < 3 ? 'on' : 'off');
       updateAddButtonVisibility();
       renderTgxActionbar();
@@ -8241,38 +8194,21 @@ Interrogate this map. Work through each point and answer concretely, naming spec
       btn.classList.toggle('hidden', hasConcept || !conceptUnlocked());
     }
 
-    // One-way graduation from Seed Mode (Phase 1) to Pod Mode (Phase 2/3).
-    // The seam is a visible threshold sheet, not a window.confirm.
-    function graduateToPod() {
-      if (!isSeedMode()) { toast('Patterns & Themes are already unlocked.'); return; }
-      openModal('graduate-modal');
-    }
-    function tgxConfirmGraduate() {
-      closeModal('graduate-modal');
-      if (!isSeedMode()) return;
-      appState.mode = 'pod';
-      save();
-      renderModeChrome();
-      renderAllNodes();
-      renderAllEdges();
-      toast('Patterns & Themes unlocked — the full engine is on.');
-    }
-
-    // Seed-mode export: a lightweight Markdown summary of the provisional concept
-    // and the Hunches mapped beneath it.
+    // A lightweight Markdown summary of the provisional concept and the
+    // tier-1 cards mapped beneath it.
     function compileConcept() {
       const title = appState.settings.title || 'Untitled concept';
       let md = `# ${title}\n\n`;
-      md += `*Seed Mode concept — compiled ${new Date().toLocaleString()}*\n\n`;
+      md += `*Working concept — compiled ${new Date().toLocaleString()}*\n\n`;
       if ((appState.settings.concept || '').trim()) {
         md += `## Provisional hunch\n${appState.settings.concept.trim()}\n\n`;
       }
-      const hunches = appState.cards.filter(c => c.tier === 1);
+      const evidence = appState.cards.filter(c => c.tier === 1);
       const linked = new Set();
-      if (hunches.length) {
-        md += `## Hunches\n\n`;
-        hunches.forEach(c => {
-          md += `### ${c.title || 'Unnamed hunch'}\n`;
+      if (evidence.length) {
+        md += `## Evidence\n\n`;
+        evidence.forEach(c => {
+          md += `### ${c.title || 'Unnamed evidence card'}\n`;
           if ((c.description || '').trim()) md += `${c.description.trim()}\n\n`;
           const sigs = signalsUnder(c.id).map(id => appState.items.find(x => x.id === id)).filter(Boolean);
           sigs.forEach(it => {
@@ -8958,7 +8894,6 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     }
 
     function exportModular() {
-      if (isSeedMode()) { toast('The Meet-the-Pods site is a Pod Mode feature — graduate first.'); return; }
       if (!workspaceIsComplete()) {
         // Name the ONE thing that unblocks it, and put the person on the stage
         // that fixes it — the same sentence the Deepen action bar shows.
@@ -9582,18 +9517,17 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     function openShareSheet() {
       const list = document.getElementById('share-sheet-list');
       if (!list) return;
-      const seed = isSeedMode();
       const rows = [];
       const row = (title, sub, fn, danger) =>
         `<button type="button" class="share-row${danger ? ' share-row-danger' : ''}" onclick="closeModal('share-sheet-modal'); ${fn}">
            <span class="share-row-title">${title}</span><span class="share-row-sub">${sub}</span></button>`;
-      if (!seed) rows.push(row('Produce the deck &amp; site (.zip)', 'The Meet-the-Pods deliverable — a GitHub-Pages-ready site + slide deck.', 'exportModular()'));
+      rows.push(row('Produce the deck &amp; site (.zip)', 'The Meet-the-Pods deliverable — a GitHub-Pages-ready site + slide deck.', 'exportModular()'));
       appState.situations.forEach((s, i) => {
         const name = (s.title || '').trim() || `Situation ${i + 1}`;
         rows.push(row(`Export working folder — ${escapeHtml(name)} (.zip)`, 'The situation’s cards, notes, and prompts, ready for an AI or a podmate.', `exportWorkingFolder('${s.id}')`));
       });
       if (!appState.situations.length) rows.push(row('Export the whole canvas (.zip)', 'Everything on the board — the folder podmates merge via Git.', 'exportCanvasZip()'));
-      if (seed) rows.push(row('Compile concept (.md)', 'A lightweight Markdown summary of your hunches and evidence.', 'compileConcept()'));
+      rows.push(row('Compile concept (.md)', 'A lightweight Markdown summary of your concept and the cards under it.', 'compileConcept()'));
       rows.push(row('Open a shared folder', 'Bring in a podmate’s exported folder — merge or replace.', 'openImportModal()'));
       rows.push(row('Start over', 'Clear this board and reload the sample pool. Export first if you want to keep it.', 'startOver()', true));
       list.innerHTML = rows.join('');

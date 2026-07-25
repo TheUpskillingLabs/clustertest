@@ -118,10 +118,30 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(900);
 
   // --------------------------------------------------- Canvas — first Evidence
-  section('Canvas — Seed Mode');
+  section('Canvas');
   check('board is showing',
     await page.evaluate(() => !document.getElementById('board-workspace').classList.contains('hidden')));
-  check('starts in Seed Mode', await page.evaluate(() => isSeedMode()) === true);
+
+  // The whole ladder is available from the first card — no unlock step.
+  check('every tier tool is in the dock from the start',
+    await page.evaluate(() => {
+      const wanted = ['tier-2', 'tier-3', 'tier-4'];
+      return wanted.every(t => {
+        const b = document.querySelector(`#canvas-dock .dock-tool[data-tool="${t}"]`);
+        return b && !b.classList.contains('hidden');
+      });
+    }),
+    await page.evaluate(() => ['tier-2', 'tier-3', 'tier-4'].map(t => {
+      const b = document.querySelector(`#canvas-dock .dock-tool[data-tool="${t}"]`);
+      return t + '=' + (!b ? 'missing' : b.classList.contains('hidden') ? 'hidden' : 'shown');
+    }).join(' ')));
+  check('the evidence tool is called Evidence, not Hunch',
+    await page.evaluate(() => {
+      const l = document.querySelector('#dock-evidence-btn .dock-label');
+      return !!l && l.textContent.trim() === 'Evidence';
+    }));
+  check('an empty board says the first move is a connection',
+    await page.evaluate(() => computeNextAction().state) === 'connect');
 
   // Connect pairs of kept extracts — the move that makes an Evidence card.
   // Four of them, so there is something real to climb with later.
@@ -150,27 +170,30 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('connecting extracts creates Evidence cards', evidenceIds.length === 4,
     'made ' + evidenceIds.length + ' of 4');
 
-  // The Seed-Mode ceiling: hunches don't climb until the room unlocks together.
-  check('Seed Mode refuses to build a Pattern', await page.evaluate(ids => {
-    const before = appState.cards.length;
-    connectNodes(ids[0], ids[1]);
-    return appState.cards.length === before;
-  }, evidenceIds));
+  // No unlock step: two named Evidence cards climb to a Pattern immediately.
+  check('Evidence climbs straight to a Pattern, with no unlock step',
+    await page.evaluate(ids => {
+      const before = appState.cards.length;
+      connectNodes(ids[0], ids[1]);
+      const made = appState.cards[appState.cards.length - 1];
+      const ok = appState.cards.length === before + 1 && made.tier === 2;
+      if (ok) { appState.cards.pop(); delete appState.nodes[made.id]; save(); }  // put it back
+      return ok;
+    }, evidenceIds));
 
-  // ---------------------------------------------------------------- Unlock
-  section('Unlock Patterns & Themes');
-  await page.getByRole('button', { name: /Unlock Patterns & Themes/ }).click();
-  await sleep(400);
-  check('the one-way unlock sheet opens',
-    await page.evaluate(() => !document.getElementById('graduate-modal').classList.contains('hidden')));
-  await page.evaluate(() => tgxConfirmGraduate());
-  await sleep(600);
-  check('board is in Pod Mode', await page.evaluate(() => appState.mode) === 'pod');
-  check('the Pattern tool is now in the dock',
-    await page.evaluate(() => {
-      const t = [...document.querySelectorAll('#canvas-dock .dock-tool')];
-      return t.some(el => /pattern/i.test(el.textContent) && !el.classList.contains('hidden'));
-    }));
+  // The lock that stays: a Pattern needs Evidence that has been examined.
+  check('but only from Evidence that is named and described',
+    await page.evaluate(ids => {
+      const a = findCard(ids[0]);
+      const keptTitle = a.title;
+      a.title = '';                                  // un-examine it
+      const before = appState.cards.length;
+      connectNodes(ids[0], ids[1]);
+      const refused = appState.cards.length === before;
+      a.title = keptTitle;
+      save();
+      return refused;
+    }, evidenceIds));
 
   // ------------------------------------------------------------------ Climb
   // Evidence → Pattern → Theme, through connectNodes so the locks are real.
@@ -677,6 +700,43 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     resumed.cards === 1 && resumed.sits === 1, JSON.stringify(resumed));
   check('it does not resume onto a removed screen', resumed.onADeadScreen === false, JSON.stringify(resumed));
   check('it resumes somewhere real', ['board', 'workspace', 'setup', 'sorting'].includes(resumed.screen), resumed.screen);
+
+  // A board saved mid-Seed, before Patterns and Themes were unlocked from the
+  // start. It must come forward with everything it had and the full ladder now
+  // available — the migration only ever adds.
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem('olos.sensemaking.v2', JSON.stringify({
+      settings: { title: 'A board left in Seed Mode', concept: 'an early hunch' },
+      items: [
+        { id: 'i1', tag: 'signal', title: 'A', summary: 'a' },
+        { id: 'i2', tag: 'signal', title: 'B', summary: 'b' }
+      ],
+      cards: [{ id: 'k1', title: 'A hunch', description: 'named while in Seed', tier: 1, childIds: ['i1', 'i2'], cardType: null, files: [], doc: '' }],
+      situations: [],
+      nodes: { i1: { x: 10, y: 10 }, i2: { x: 90, y: 10 }, k1: { x: 50, y: 130 } },
+      view: { zoom: 1, panX: 0, panY: 0 }, viewInitialized: true, canvasViewState: 'all',
+      mode: 'seed', seedGuide: true,
+      currentScreen: 'board', classifyPhase: false,
+      sorting: { currentIndex: 2, decisions: { i1: 'signal', i2: 'signal' } }
+    }));
+  });
+  await page.reload();
+  await sleep(1400);
+  const fromSeed = await page.evaluate(() => ({
+    mode: appState.mode,
+    cards: appState.cards.length,
+    title: appState.cards[0] && appState.cards[0].title,
+    tier: appState.cards[0] && appState.cards[0].tier,
+    patternToolShown: (() => {
+      const b = document.querySelector('#canvas-dock .dock-tool[data-tool="tier-2"]');
+      return !!b && !b.classList.contains('hidden');
+    })()
+  }));
+  check('a board saved mid-Seed keeps its cards and gains the full ladder',
+    fromSeed.cards === 1 && fromSeed.title === 'A hunch' && fromSeed.tier === 1
+    && fromSeed.mode === 'pod' && fromSeed.patternToolShown === true,
+    JSON.stringify(fromSeed));
 
   // And the v1 → v2 migration, which predates all of this.
   await page.evaluate(() => {
