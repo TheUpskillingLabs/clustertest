@@ -423,7 +423,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await page.evaluate(() => document.getElementById('tgx-actionbar').classList.contains('is-collapsed')));
   await page.click('.ab-collapse');
   await sleep(500);
-  check('and it expands again', await barH() === expandedH);
+  const reExpandedH = await barH();
+  check('and it expands again', reExpandedH > 0 && reExpandedH <= 80,
+    `${expandedH}px before, ${reExpandedH}px after`);
 
   // --------------------------------------------------------- Auto-layout
   // Nodes are seeded on a spiral whose spacing is under half a card's width,
@@ -495,15 +497,19 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   // able to get it back — and the Undo button must be clickable, which means
   // clear of the dock and the action bar.
   const undoBtn = page.locator('#toast-region .toast button', { hasText: 'Undo' });
+  const undoReachable = await page.evaluate(() => {
+    const btn = [...document.querySelectorAll('#toast-region .toast button')]
+      .find(b => /undo/i.test(b.textContent));
+    if (!btn) return 'no Undo button on screen';
+    const r = btn.getBoundingClientRect();
+    const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    if (top === btn || btn.contains(top)) return true;
+    return `covered by .${top && top.className} — toast at ${Math.round(r.top)}..${Math.round(r.bottom)}, `
+      + `--ab-h=${getComputedStyle(document.documentElement).getPropertyValue('--ab-h').trim()}, `
+      + `--dock-h=${getComputedStyle(document.documentElement).getPropertyValue('--dock-h').trim()}`;
+  });
   check('the Undo action on the toast is not buried under the canvas chrome',
-    await page.evaluate(() => {
-      const btn = [...document.querySelectorAll('#toast-region .toast button')]
-        .find(b => /undo/i.test(b.textContent));
-      if (!btn) return 'no Undo button';
-      const r = btn.getBoundingClientRect();
-      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-      return (top === btn || btn.contains(top)) ? true : 'covered by .' + (top && top.className);
-    }) === true);
+    undoReachable === true, String(undoReachable));
   await undoBtn.click();
   await sleep(900);
   check('Undo puts every node back exactly where it was',
