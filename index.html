@@ -538,6 +538,9 @@
     #toast-region {
       position: fixed; left: 50%; transform: translateX(-50%);
       bottom: calc(var(--ab-h, 0px) + 24px + env(safe-area-inset-bottom, 0px));
+    }
+    body.modal-open #toast-region {
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       z-index: 2000; display: flex; flex-direction: column; gap: 8px;
       pointer-events: none;
     }
@@ -1382,6 +1385,12 @@
       font-family: 'Geologica', sans-serif;
     }
     .hub-node .hub-suggest:hover { background: var(--primary-teal); color: var(--midnight); }
+    .hub-node .hub-ai-btn {
+      background: none; border: none; padding: 2px 6px; border-radius: var(--radius-1);
+      color: var(--primary-teal); font-family: inherit; font-size: var(--text-2xs);
+      font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .hub-node .hub-ai-btn:hover { background: rgba(0,148,160,0.14); }
     .hub-node .hub-expand {
       background: transparent; border: 1px solid rgba(255,255,255,0.3);
       color: var(--ghost-white); font-size: var(--text-xs); font-weight: 600;
@@ -1391,6 +1400,44 @@
     .hub-node .hub-expand:hover { background: rgba(255,255,255,0.1); }
 
     /* AI modal mode tabs */
+
+    /* --- BYO-LLM: the prompt is the payload, the steps are the interface --- */
+    .ai-governance {
+      font-size: var(--text-sm); line-height: 1.5; color: var(--midnight); opacity: 0.8;
+      background: var(--cloud); border-left: 3px solid var(--primary-teal);
+      padding: 10px 14px; border-radius: 0 var(--radius-2) var(--radius-2) 0; margin-bottom: 16px;
+    }
+    .ai-blurb { font-size: var(--text-base); line-height: var(--lead-base); margin-bottom: 18px; }
+    .ai-steps { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+    .ai-step { display: flex; gap: 12px; align-items: flex-start; }
+    .ai-step-n {
+      flex: none; width: 24px; height: 24px; border-radius: 50%;
+      background: var(--primary-teal); color: var(--ghost-white);
+      font-size: var(--text-xs); font-weight: 700;
+      display: flex; align-items: center; justify-content: center; margin-top: 2px;
+    }
+    .ai-step-n::before { content: attr(data-n); }
+    .ai-step.is-done .ai-step-n { background: var(--midnight); }
+    .ai-step.is-done .ai-step-n::before { content: '✓'; font-size: var(--text-sm); }
+    .ai-step-body { flex: 1; min-width: 0; }
+    .ai-step-label { display: block; font-weight: 700; font-size: var(--text-base); color: var(--midnight); margin-bottom: 8px; }
+    .ai-step-note { font-size: var(--text-sm); line-height: 1.55; color: var(--midnight); opacity: 0.75; margin: 0; }
+    .ai-step.is-next .ai-step-label { color: var(--primary-teal); }
+    .ai-targets { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ai-target {
+      display: inline-block; padding: 7px 14px; border-radius: var(--radius-2);
+      border: 2px solid var(--cloud); background: var(--ghost-white);
+      color: var(--midnight); font-size: var(--text-sm); font-weight: 600; text-decoration: none;
+    }
+    .ai-target:hover { border-color: var(--primary-teal); color: var(--primary-teal); }
+    .ai-step.is-next .ai-target { border-color: var(--primary-teal); }
+    .ai-prompt-peek { margin-top: 10px; }
+    .ai-prompt-peek > summary {
+      cursor: pointer; font-size: var(--text-sm); color: var(--primary-teal);
+      text-decoration: underline; list-style: none; width: fit-content;
+    }
+    .ai-prompt-peek > summary::-webkit-details-marker { display: none; }
+    .ai-prompt-peek #ai-prompt-text { margin-top: 8px; }
     .ai-mode-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--cloud); padding-bottom: 0; }
     .ai-mode-tab {
       background: transparent;
@@ -2361,7 +2408,7 @@
         <label class="sr-only" for="card-page-desc-input">Card description</label>
         <textarea id="card-page-desc-input" class="ws-text-input" rows="2" placeholder="Describe it in a sentence or two" style="resize:none; font-weight:400; margin-bottom:16px; height:72px; font-family:'Geologica',sans-serif; font-size:var(--text-base); background:var(--ghost-white); padding:12px 16px;"></textarea>
         <details id="card-page-ai" style="margin-bottom:16px; border:2px solid var(--cloud); border-radius:var(--radius-2); background:var(--ghost-white);">
-          <summary style="cursor:pointer; padding:12px 16px; font-weight:700; font-size:var(--text-base); color:var(--midnight); list-style-position:inside;">✨ AI prompts</summary>
+          <summary style="cursor:pointer; padding:12px 16px; font-weight:700; font-size:var(--text-base); color:var(--midnight); list-style-position:inside;">✨ AI prompts <span style="font-weight:400; opacity:0.7;">— think this card through with your own AI</span></summary>
           <div style="padding:0 16px 16px;">
             <div id="card-page-ai-tabs" class="ai-mode-tabs" role="tablist" aria-label="AI prompt mode">
               <button type="button" role="tab" data-mode="throughline" class="ai-mode-tab is-active" aria-selected="true">Through-line</button>
@@ -2369,12 +2416,39 @@
               <button type="button" role="tab" data-mode="stress" class="ai-mode-tab" aria-selected="false">Stress-test</button>
             </div>
             <p id="card-page-ai-blurb" style="font-size: var(--text-sm); color:var(--midnight); opacity:0.75; line-height:1.5; margin:10px 0;"></p>
-            <label class="sr-only" for="card-page-ai-prompt">Generated AI prompt</label>
-            <textarea id="card-page-ai-prompt" readonly style="width:100%; height:min(200px, 30dvh); font-family:monospace; font-size: var(--text-sm); padding:12px; border:2px solid var(--cloud); border-radius:var(--radius-2); background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
-            <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
-              <button type="button" class="btn btn-primary" onclick="copyCardPagePrompt()">Copy this prompt</button>
-              <span style="font-size: var(--text-sm); color:var(--midnight); opacity:0.65;">Paste into Claude, ChatGPT, Gemini, NotebookLM, or Perplexity — rebuilt from the live board every time you open it.</span>
-            </div>
+            <ol class="ai-steps" style="margin-top:12px;">
+              <li class="ai-step" id="card-ai-step-copy">
+                <span class="ai-step-n" aria-hidden="true" data-n="1"></span>
+                <div class="ai-step-body">
+                  <button type="button" class="btn btn-primary" onclick="copyCardPagePrompt()">Copy the prompt</button>
+                  <details class="ai-prompt-peek">
+                    <summary id="card-ai-peek-label">See the prompt text</summary>
+                    <label class="sr-only" for="card-page-ai-prompt">Generated AI prompt</label>
+                    <textarea id="card-page-ai-prompt" readonly style="width:100%; height:min(200px, 30dvh); font-family:monospace; font-size: var(--text-sm); padding:12px; border:2px solid var(--cloud); border-radius:var(--radius-2); background:var(--cloud); color:var(--midnight); resize:vertical; outline:none;"></textarea>
+                  </details>
+                </div>
+              </li>
+              <li class="ai-step" id="card-ai-step-paste">
+                <span class="ai-step-n" aria-hidden="true" data-n="2"></span>
+                <div class="ai-step-body">
+                  <span class="ai-step-label">Open your AI and paste it in</span>
+                  <div class="ai-targets">
+                    <a class="ai-target" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>
+                    <a class="ai-target" href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>
+                    <a class="ai-target" href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a>
+                    <a class="ai-target" href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>
+                    <a class="ai-target" href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>
+                  </div>
+                </div>
+              </li>
+              <li class="ai-step">
+                <span class="ai-step-n" aria-hidden="true" data-n="3"></span>
+                <div class="ai-step-body">
+                  <span class="ai-step-label">Write your own words into the card</span>
+                  <p class="ai-step-note">Argue with the answer first. The prompt is rebuilt from the live board every time you open this, so come back and run it again once the card has changed.</p>
+                </div>
+              </li>
+            </ol>
           </div>
         </details>
         <label class="sr-only" for="card-page-doc">Main document (notes.md)</label>
@@ -2651,20 +2725,50 @@ git push</pre>
         <h3 id="ai-modal-title">✨ AI prompts</h3>
       </div>
       <div class="modal-body">
+        <p class="ai-governance">There is no AI in this tool. It writes a prompt out of what's on your board; you run it in whichever model you use. Nothing leaves your browser.</p>
         <div id="ai-mode-tabs" class="ai-mode-tabs hidden" role="tablist" aria-label="Prompt modes">
           <button type="button" role="tab" data-mode="throughline" class="ai-mode-tab is-active">Through-line</button>
           <button type="button" role="tab" data-mode="name" class="ai-mode-tab">Name &amp; describe</button>
           <button type="button" role="tab" data-mode="stress" class="ai-mode-tab">Stress-test</button>
         </div>
-        <p id="ai-modal-blurb" style="margin-bottom: 12px;">Pick a direction below, then copy the prompt into your LLM. Read the response out loud. If you agree too easily, ask it to argue the opposite. Come back when you have a point of view, not just an answer.</p>
-        <p style="font-size: var(--text-sm); margin-bottom: 16px;">
-          Paste into <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>, <a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a>, <a href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>, or <a href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>. Ask follow-ups. Don't stop at the first response.
-        </p>
-        <label class="sr-only" for="ai-prompt-text">Generated AI prompt</label>
-        <textarea id="ai-prompt-text" readonly></textarea>
+        <p id="ai-modal-blurb" class="ai-blurb"></p>
+
+        <ol class="ai-steps">
+          <li class="ai-step" id="ai-step-copy">
+            <span class="ai-step-n" aria-hidden="true" data-n="1"></span>
+            <div class="ai-step-body">
+              <button class="btn btn-primary" onclick="copyAIPrompt()" data-autofocus>Copy the prompt</button>
+              <details class="ai-prompt-peek">
+                <summary id="ai-prompt-peek-label">See the prompt text</summary>
+                <label class="sr-only" for="ai-prompt-text">Generated AI prompt</label>
+                <textarea id="ai-prompt-text" readonly></textarea>
+              </details>
+            </div>
+          </li>
+          <li class="ai-step" id="ai-step-paste">
+            <span class="ai-step-n" aria-hidden="true" data-n="2"></span>
+            <div class="ai-step-body">
+              <span class="ai-step-label">Open your AI and paste it in</span>
+              <div class="ai-targets">
+                <a class="ai-target" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>
+                <a class="ai-target" href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>
+                <a class="ai-target" href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a>
+                <a class="ai-target" href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM</a>
+                <a class="ai-target" href="https://www.perplexity.ai" target="_blank" rel="noopener">Perplexity</a>
+              </div>
+            </div>
+          </li>
+          <li class="ai-step">
+            <span class="ai-step-n" aria-hidden="true" data-n="3"></span>
+            <div class="ai-step-body">
+              <span class="ai-step-label">Bring it back and argue with it</span>
+              <p class="ai-step-note">Ask follow-ups; don't stop at the first response. If you agree too easily, ask it to argue the opposite. Then write <em>your</em> words back onto the card — not its words.</p>
+            </div>
+          </li>
+        </ol>
+
         <div class="modal-actions">
-          <button class="btn btn-primary" style="flex: 1;" onclick="copyAIPrompt()" data-autofocus>Copy Prompt Text</button>
-          <button class="btn btn-outline" onclick="closeAIPromptModal()">Dismiss</button>
+          <button class="btn btn-outline" onclick="closeAIPromptModal()">Done</button>
         </div>
       </div>
     </div>
@@ -4139,6 +4243,11 @@ git push</pre>
         del.addEventListener('pointerdown', (e) => e.stopPropagation());
         del.addEventListener('click', (e) => { e.stopPropagation(); deleteObj(); });
       }
+      const aiBtn = el.querySelector('.hub-ai-btn');
+      if (aiBtn) {
+        aiBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        aiBtn.addEventListener('click', (e) => { e.stopPropagation(); openHubAIModal(obj.id); });
+      }
       const expandBtn = el.querySelector('.hub-expand');
       if (expandBtn) {
         expandBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -4246,6 +4355,7 @@ git push</pre>
         ${typePickerHtml}
         ${roleHtml}
         <div class="hub-actions">
+          <button type="button" class="hub-ai-btn" title="Think this card through with your own AI">✨ AI</button>
           <button type="button" class="hub-expand" title="Open this card's page">↗ Open</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
@@ -4347,6 +4457,7 @@ git push</pre>
         <p class="hub-lock-note"${locked ? '' : ' hidden'}>Name &amp; describe each ${escapeHtml(childWord)} below before editing this ${escapeHtml(label.toLowerCase())} — a higher claim rests on examined ones.<span class="lock-why">Themes bridge human experience and structural conditions; each rests on examined patterns, traceable down to raw signals. A Theme you "just felt" puts you on <span class="lock-why-syndrome">The Rational High Ground</span> — a conviction with no ladder beneath it. (Dorst, Step 5: Themes)</span></p>
         ${themeQuality}
         <div class="hub-actions">
+          <button type="button" class="hub-ai-btn" title="Think this card through with your own AI">✨ AI</button>
           <button type="button" class="hub-expand" title="Open this card's page">↗ Open</button>
           <button type="button" class="hub-delete">Remove</button>
         </div>
@@ -5519,6 +5630,7 @@ git push</pre>
       lastFocusBeforeModal = document.activeElement;
       const modal = document.getElementById(id);
       modal.classList.remove('hidden');
+      syncModalOpenClass();
       const autoCandidate = modal.querySelector('[data-autofocus]');
       const isUsable = el => el && !el.disabled;
       let target = isUsable(autoCandidate) ? autoCandidate : null;
@@ -5530,12 +5642,20 @@ git push</pre>
     }
     function closeModal(id) {
       document.getElementById(id).classList.add('hidden');
+      syncModalOpenClass();
       if (id === 'card-page-modal') currentCardPageId = null; // stop node→modal mirroring
       if (lastFocusBeforeModal && typeof lastFocusBeforeModal.focus === 'function') {
         lastFocusBeforeModal.focus();
       }
     }
     function closeAIPromptModal() { closeModal('ai-modal'); }
+    // Toasts sit above the action bar, which puts them on top of an open
+    // modal's buttons. While a modal is up the action bar is behind it anyway,
+    // so the toast goes back to the floor.
+    function syncModalOpenClass() {
+      const anyOpen = !!document.querySelector('.modal-overlay:not(.hidden)');
+      document.body.classList.toggle('modal-open', anyOpen);
+    }
 
 
     // Trap Tab within an open modal, and close on Escape.
@@ -5842,8 +5962,18 @@ ${AI_RULES}
       document.querySelectorAll('#ai-mode-tabs .ai-mode-tab').forEach(btn => {
         btn.classList.toggle('is-active', btn.getAttribute('data-mode') === mode);
       });
-      ta.focus();
-      ta.setSelectionRange(0, 0);
+      // A different prompt is a fresh 1-2-3.
+      aiSetStep(1);
+      aiUpdatePeekLabel();
+    }
+    function aiUpdatePeekLabel() {
+      const ta = document.getElementById('ai-prompt-text');
+      const label = document.getElementById('ai-prompt-peek-label');
+      if (!ta || !label) return;
+      const words = (ta.value.trim().match(/\S+/g) || []).length;
+      label.textContent = `See the prompt text (${words.toLocaleString()} words)`;
+      const peek = ta.closest('details');
+      if (peek) peek.open = false;
     }
 
     // Back-compat shim — the old name is still wired to the hub buttons.
@@ -6109,6 +6239,8 @@ ${AI_RULES}
         });
       }
       ta.value = buildPoolPrompt(currentPoolMode);
+      aiSetStep(1);
+      aiUpdatePeekLabel();
       openModal('ai-modal');
     }
 
@@ -6146,6 +6278,8 @@ ${AI_RULES}
         });
       }
       ta.value = buildSituationPrompt(currentAIMode, sit);
+      aiSetStep(1);
+      aiUpdatePeekLabel();
       openModal('ai-modal');
     }
 
@@ -6170,7 +6304,26 @@ ${AI_RULES}
     async function copyAIPrompt() {
       const t = document.getElementById('ai-prompt-text');
       const ok = await clipboardCopy(t.value);
-      toast(ok ? 'Copied.' : 'Copy failed — select and copy manually.');
+      if (!ok) {
+        // Make the fallback actionable rather than an instruction to nowhere.
+        const peek = document.querySelector('.ai-prompt-peek');
+        if (peek) peek.open = true;
+        t.focus(); t.select();
+        toast('Copy failed — the prompt is selected, press Ctrl/Cmd+C.', { duration: 6000 });
+        return;
+      }
+      aiSetStep(2);
+      toast('Prompt copied — paste it into your AI.');
+    }
+    // Walk the 1-2-3 in the AI modal: tick what's done, point at what's next.
+    function aiSetStep(n) {
+      const copy = document.getElementById('ai-step-copy');
+      const paste = document.getElementById('ai-step-paste');
+      if (!copy || !paste) return;
+      copy.classList.toggle('is-done', n >= 2);
+      paste.classList.toggle('is-next', n >= 2);
+      const btn = copy.querySelector('.btn');
+      if (btn) btn.textContent = n >= 2 ? 'Copy it again' : 'Copy the prompt';
     }
     async function copyGitCommands() {
       // The <pre> is the single source of truth for the three-line sequence.
@@ -8751,12 +8904,39 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         btn.setAttribute('aria-selected', on ? 'true' : 'false');
       });
       refreshCardPageAIPrompt();
+      cardAiSetStep(1);
+      const ta = document.getElementById('card-page-ai-prompt');
+      const label = document.getElementById('card-ai-peek-label');
+      if (ta && label) {
+        const words = (ta.value.trim().match(/\S+/g) || []).length;
+        label.textContent = `See the prompt text (${words.toLocaleString()} words)`;
+        const peek = ta.closest('details');
+        if (peek) peek.open = false;
+      }
     }
     async function copyCardPagePrompt() {
       refreshCardPageAIPrompt(); // never copy a stale prompt
       const ta = document.getElementById('card-page-ai-prompt');
       const ok = await clipboardCopy(ta ? ta.value : '');
-      toast(ok ? 'Copied.' : 'Copy failed — select the text and copy manually.');
+      if (!ok) {
+        const peek = ta && ta.closest('details');
+        if (peek) peek.open = true;
+        if (ta) { ta.focus(); ta.select(); }
+        toast('Copy failed — the prompt is selected, press Ctrl/Cmd+C.', { duration: 6000 });
+        return;
+      }
+      cardAiSetStep(2);
+      toast('Prompt copied — paste it into your AI.');
+    }
+    // Same 1-2-3 as the AI-prompts modal, on the card page.
+    function cardAiSetStep(n) {
+      const copy = document.getElementById('card-ai-step-copy');
+      const paste = document.getElementById('card-ai-step-paste');
+      if (!copy || !paste) return;
+      copy.classList.toggle('is-done', n >= 2);
+      paste.classList.toggle('is-next', n >= 2);
+      const btn = copy.querySelector('.btn');
+      if (btn) btn.textContent = n >= 2 ? 'Copy it again' : 'Copy the prompt';
     }
     (() => {
       const tabs = document.getElementById('card-page-ai-tabs');

@@ -299,6 +299,101 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const names = await page.evaluate(() => window.__downloads);
   console.log('  downloads: ' + JSON.stringify(names));
 
+  // ------------------------------------------------------------- BYO-LLM
+  // The prompts are the only analytical help the tool offers — it has no AI of
+  // its own — so an entry point that can't be found is the feature not existing.
+  section('BYO-LLM prompts');
+
+  await page.evaluate(() => goToScreen('board'));
+  await sleep(700);
+  check('the board header carries an AI-prompts button',
+    await page.evaluate(() => {
+      const b = document.querySelector('.btn-ai-prompt');
+      return !!b && b.getBoundingClientRect().width > 0;
+    }));
+  check('every card on the canvas carries its own ✨ AI button',
+    await page.evaluate(() => {
+      const cards = document.querySelectorAll('.hub-node');
+      const btns = document.querySelectorAll('.hub-node .hub-ai-btn');
+      return cards.length > 0 && btns.length === cards.length;
+    }),
+    await page.evaluate(() => `${document.querySelectorAll('.hub-node .hub-ai-btn').length} buttons / ${document.querySelectorAll('.hub-node').length} cards`));
+  check('the situation box carries AI prompts and the blind-spot audit',
+    await page.evaluate(() => !!document.querySelector('.section-ai') && !!document.querySelector('.section-blindspot')));
+
+  // One click from the canvas should land on a loaded prompt, not a collapsed
+  // disclosure with no clue what's inside. Auto-placed cards overlap at the
+  // default zoom, so click one that is actually on top rather than forcing it.
+  const hittable = await page.evaluate(() => {
+    const btns = [...document.querySelectorAll('.hub-node .hub-ai-btn')];
+    return btns.findIndex(b => {
+      const r = b.getBoundingClientRect();
+      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return top === b || b.contains(top);
+    });
+  });
+  check('at least one card\'s ✨ button is unobstructed at default zoom', hittable >= 0, 'index ' + hittable);
+  await page.locator('.hub-node .hub-ai-btn').nth(Math.max(hittable, 0)).click();
+  await sleep(700);
+  const cardAI = await page.evaluate(() => ({
+    pageOpen: !document.getElementById('card-page-modal').classList.contains('hidden'),
+    sectionOpen: document.getElementById('card-page-ai').open,
+    promptChars: document.getElementById('card-page-ai-prompt').value.length,
+    peekClosed: !document.getElementById('card-page-ai-prompt').closest('details').open,
+    targets: document.querySelectorAll('#card-ai-step-paste .ai-target').length
+  }));
+  check('one click from a card opens its prompts, already loaded',
+    cardAI.pageOpen && cardAI.sectionOpen && cardAI.promptChars > 500, JSON.stringify(cardAI));
+  check('the prompt text stays folded away behind a labelled peek', cardAI.peekClosed);
+  check('the card panel names where to paste it', cardAI.targets === 5, String(cardAI.targets));
+  await page.evaluate(() => closeModal('card-page-modal'));
+  await sleep(300);
+
+  // The modal must lead with the next step, and the copy must actually reach
+  // the clipboard — a prompt that silently fails to copy is the worst outcome.
+  await page.evaluate(() => openAIPromptModal());
+  await sleep(600);
+  const before = await page.evaluate(() => ({
+    peekClosed: !document.querySelector('.ai-prompt-peek').open,
+    copyLabel: document.querySelector('#ai-step-copy .btn').textContent.trim(),
+    targets: document.querySelectorAll('#ai-step-paste .ai-target').length
+  }));
+  check('the AI modal opens on step 1 with the prompt text folded away',
+    before.peekClosed && before.copyLabel === 'Copy the prompt', JSON.stringify(before));
+  check('the modal names all five places to paste it', before.targets === 5);
+
+  // A toast fired while a modal is open must not land on the modal's buttons.
+  const modalToastClear = await page.evaluate(() => {
+    toast('probe');
+    const t = document.querySelector('#toast-region .toast');
+    const btn = document.querySelector('#ai-step-copy .btn');
+    if (!t || !btn) return 'missing element';
+    const a = t.getBoundingClientRect(), b = btn.getBoundingClientRect();
+    const hit = !(a.bottom < b.top || a.top > b.bottom || a.right < b.left || a.left > b.right);
+    return hit ? `toast covers the copy button` : true;
+  });
+  check('a toast does not cover the modal it fires over', modalToastClear === true, String(modalToastClear));
+  await sleep(400);
+
+  await page.getByRole('button', { name: 'Copy the prompt' }).click();
+  await sleep(600);
+  const after = await page.evaluate(() => ({
+    done: document.getElementById('ai-step-copy').classList.contains('is-done'),
+    next: document.getElementById('ai-step-paste').classList.contains('is-next'),
+    label: document.querySelector('#ai-step-copy .btn').textContent.trim()
+  }));
+  check('copying ticks step 1 and points at step 2',
+    after.done && after.next && after.label === 'Copy it again', JSON.stringify(after));
+
+  // Switching prompt mode must reset the walkthrough rather than leave step 1
+  // ticked for a prompt that was never copied.
+  await page.evaluate(() => switchAIMode('bridge'));
+  await sleep(400);
+  check('switching prompt resets the walkthrough',
+    await page.evaluate(() => !document.getElementById('ai-step-copy').classList.contains('is-done')));
+  await page.evaluate(() => closeAIPromptModal());
+  await sleep(300);
+
   // -------------------------------------------- The additive invariant
   // A board saved by an OLDER build must still open. This is the project's
   // hardest rule and the one with the least margin for error.
