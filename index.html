@@ -911,6 +911,17 @@
       font-size: var(--text-sm); line-height: 1.5; margin-top: 12px;
     }
     .danger-note strong { color: var(--action-red); }
+
+    /* The result of an import, where the import happened. */
+    .csv-status {
+      font-size: var(--text-sm); line-height: 1.5; margin: 10px 0 0;
+      padding: 9px 13px; border-radius: var(--radius-2); border-left: 3px solid;
+    }
+    .csv-status.hidden { display: none; }
+    .csv-status-ok { border-color: var(--primary-teal); background: rgba(0,148,160,0.10); }
+    .csv-status-warn { border-color: #b8860b; background: rgba(184,134,11,0.12); }
+    .csv-status-error { border-color: var(--action-red); background: color-mix(in srgb, var(--action-red) 10%, transparent); }
+    #board-csv-status { color: var(--midnight); }
     /* ── Share sheet / chooser rows (big tappable choice rows, OLOS .choice grammar) ── */
     .share-sheet-list { display: flex; flex-direction: column; gap: 10px; }
     .share-row { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; text-align: left; background: var(--ghost-white); border: 1px solid var(--cloud); border-radius: var(--radius-2); padding: 14px 16px; cursor: pointer; font: inherit; color: var(--midnight); transition: border-color 0.15s, transform 0.15s; }
@@ -2337,6 +2348,7 @@
           <input type="file" id="csv-file-input" accept=".csv,text/csv" class="sr-only" onchange="handleCsvUpload(event)">
           <button type="button" class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">Upload CSV</button>
         </div>
+        <p id="csv-status" class="csv-status hidden" role="status" aria-live="polite"></p>
         <p class="sources-help">✨ Extract turns an article, notes or a transcript into cards using your own AI — nothing leaves your browser. CSV columns: <code>title,summary,source_url</code>.</p>
 
         <details class="sources-more">
@@ -2819,6 +2831,7 @@ git push</pre>
           </div>
         </details>
         <input type="file" id="board-csv-input" accept=".csv,text/csv" class="sr-only" onchange="handleBoardCsvUpload(event)">
+        <p id="board-csv-status" class="csv-status hidden" role="status" aria-live="polite"></p>
         <div class="modal-actions">
           <button class="btn btn-outline" onclick="closeModal('board-csv-modal')">Cancel</button>
           <button class="btn btn-primary" onclick="document.getElementById('board-csv-input').click()" data-autofocus>Choose CSV</button>
@@ -3406,6 +3419,29 @@ git push</pre>
     }
 
     // Parse CSV text into fresh signal items. Returns { items } or { error }.
+    // A toast is gone in three and a half seconds, which is no way to learn
+    // that a third of your rows were dropped. The outcome of an import is
+    // written where the import happened and stays until the next one.
+    // What the file actually produced, in one sentence.
+    function csvOutcomeText(loaded, skipped, mode) {
+      const n = `${loaded} extract${loaded === 1 ? '' : 's'}`;
+      const where = mode === 'replace' ? ' (replaced the pool)' : '';
+      if (!skipped) return `${n} loaded${where}.`;
+      return `${n} loaded${where} — ${skipped} row${skipped === 1 ? '' : 's'} skipped `
+        + `(a row needs both a title and a summary).`;
+    }
+    function setCsvStatus(target, kind, message) {
+      const el = document.getElementById(target === 'board' ? 'board-csv-status' : 'csv-status');
+      if (!el) return;
+      el.className = 'csv-status csv-status-' + kind;
+      el.textContent = message;
+      if (kind === 'error' || kind === 'warn') el.setAttribute('role', 'alert');
+      else el.setAttribute('role', 'status');
+    }
+    function clearCsvStatus(target) {
+      const el = document.getElementById(target === 'board' ? 'board-csv-status' : 'csv-status');
+      if (el) { el.className = 'csv-status hidden'; el.textContent = ''; }
+    }
     function csvRowsToItems(text) {
       let rows;
       try { rows = parseCsv(text); } catch (e) { return { error: 'Could not parse that CSV.' }; }
@@ -3419,18 +3455,26 @@ git push</pre>
         return { error: 'CSV header must include "title" and "summary" columns.' };
       }
       const items = [];
+      let skipped = 0;
       for (let r = 1; r < rows.length; r++) {
         const row = rows[r];
+        // A row of empty cells is trailing whitespace in the file, not a row
+        // the user meant to import — don't report it as dropped.
+        if (!row.some(cell => (cell || '').trim())) continue;
         const t = (row[titleIdx] || '').trim();
         const s = (row[summaryIdx] || '').trim();
-        if (!t || !s) continue;
+        if (!t || !s) { skipped++; continue; }
         let url = urlIdx > -1 ? (row[urlIdx] || '').trim() : '';
         if (!/^https?:\/\//i.test(url)) url = '';
         // verified is set true only after the QA Intercept gate (commitCsvImport).
         items.push({ id: uid('item'), tag: 'Source Extract', title: t, summary: s, source_url: url, verified: false });
       }
-      if (items.length === 0) return { error: 'No valid rows found in CSV.' };
-      return { items };
+      if (items.length === 0) {
+        return { error: skipped
+          ? `No rows could be used — all ${skipped} need both a title and a summary.`
+          : 'No valid rows found in CSV.' };
+      }
+      return { items, skipped };
     }
 
     // --- QA Intercept: every CSV import must pass a verification consent gate
@@ -3442,14 +3486,22 @@ git push</pre>
       const file = evt.target.files && evt.target.files[0];
       evt.target.value = '';
       if (!file) return;
+      clearCsvStatus('setup');
       const reader = new FileReader();
-      reader.onerror = () => toast('Could not read that file.');
+      reader.onerror = () => {
+        setCsvStatus('setup', 'error', `Could not read ${file.name}.`);
+        toast('Could not read that file.');
+      };
       reader.onload = () => {
         const result = csvRowsToItems(String(reader.result || ''));
-        if (result.error) { toast(result.error); return; }
+        if (result.error) {
+          setCsvStatus('setup', 'error', `${file.name}: ${result.error} Expected columns: title, summary, source_url (optional).`);
+          toast(result.error, { duration: 6000 });
+          return;
+        }
         const modeEl = document.querySelector('input[name="csv-mode"]:checked');
         const mode = modeEl ? modeEl.value : 'append';
-        pendingCsvImport = { items: result.items, target: 'setup', mode };
+        pendingCsvImport = { items: result.items, target: 'setup', mode, skipped: result.skipped, name: file.name };
         openQaModal(result.items.length);
       };
       reader.readAsText(file);
@@ -3459,7 +3511,7 @@ git push</pre>
     // user has just confirmed they checked the extracts against their sources.
     function commitCsvImport() {
       if (!pendingCsvImport) return;
-      const { items: newItems, target, mode } = pendingCsvImport;
+      const { items: newItems, target, mode, skipped } = pendingCsvImport;
       newItems.forEach(it => { it.verified = true; });
       if (target === 'setup') {
         if (mode === 'replace') {
@@ -3470,7 +3522,9 @@ git push</pre>
         }
         renderConfigItems();
         scheduleSave();
-        toast(`${newItems.length} extract${newItems.length === 1 ? '' : 's'} loaded (${mode}).`);
+        const text = csvOutcomeText(newItems.length, skipped, mode);
+        setCsvStatus('setup', skipped ? 'warn' : 'ok', text);
+        toast(text, { duration: skipped ? 7000 : 3500 });
       } else {
         appState.items = appState.items.concat(newItems);
         // Mark them sorted as signals and keep the sorting cursor at the end,
@@ -3508,12 +3562,20 @@ git push</pre>
       const file = evt.target.files && evt.target.files[0];
       evt.target.value = '';
       if (!file) return;
+      clearCsvStatus('board');
       const reader = new FileReader();
-      reader.onerror = () => toast('Could not read that file.');
+      reader.onerror = () => {
+        setCsvStatus('board', 'error', `Could not read ${file.name}.`);
+        toast('Could not read that file.');
+      };
       reader.onload = () => {
         const result = csvRowsToItems(String(reader.result || ''));
-        if (result.error) { toast(result.error); return; }
-        pendingCsvImport = { items: result.items, target: 'board', mode: 'append' };
+        if (result.error) {
+          setCsvStatus('board', 'error', `${file.name}: ${result.error} Expected columns: title, summary, source_url (optional).`);
+          toast(result.error, { duration: 6000 });
+          return;
+        }
+        pendingCsvImport = { items: result.items, target: 'board', mode: 'append', skipped: result.skipped, name: file.name };
         openQaModal(result.items.length);
       };
       reader.readAsText(file);
@@ -3530,8 +3592,13 @@ git push</pre>
       commitCsvImport();
     }
     function qaCancelImport() {
+      const target = pendingCsvImport ? pendingCsvImport.target : 'setup';
       pendingCsvImport = null;
       closeModal('qa-verify-modal');
+      // Cancelling used to leave no trace at all, which reads exactly like the
+      // upload having silently failed.
+      setCsvStatus(target, 'warn', 'Import cancelled — nothing was added.');
+      toast('Import cancelled — nothing was added.');
     }
 
     // ── A2: Extract from sources (BYO-LLM) ───────────────────────────────

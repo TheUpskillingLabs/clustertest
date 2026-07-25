@@ -94,6 +94,73 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('every pre-loaded extract cites its source',
     await page.evaluate(() => appState.items.every(i => /^https?:\/\//.test(i.source_url || ''))));
 
+  // -------------------------------------------------------------- CSV import
+  // An import has to say what it did. A toast is gone in three and a half
+  // seconds, and the old code dropped malformed rows silently — so a file
+  // where a third of the rows were unusable reported plain success.
+  section('CSV import feedback');
+  {
+    const fs = require('fs');
+    const os = require('os');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'csv-'));
+    const write = (name, body) => { const f = path.join(tmp, name); fs.writeFileSync(f, body); return f; };
+    const good = write('good.csv', 'title,summary\nOne,First summary\nTwo,Second summary\n');
+    const partial = write('partial.csv', 'title,summary\nGood,Has a summary\nNo summary,\n,No title\nAlso good,Fine\n');
+    const badHeader = write('bad.csv', 'name,text\nA,B\n');
+
+    const readStatus = () => page.evaluate(() => {
+      const el = document.getElementById('csv-status');
+      if (!el || el.classList.contains('hidden')) return { shown: false };
+      return { shown: true, kind: (el.className.match(/csv-status-(\w+)/) || [])[1], text: el.textContent.trim() };
+    });
+    const upload = async (file, confirm) => {
+      await page.evaluate(() => { appState.items = []; renderConfigItems(); clearCsvStatus('setup'); });
+      await page.setInputFiles('#csv-file-input', file);
+      await sleep(500);
+      const gated = await page.evaluate(() => {
+        const m = document.getElementById('qa-verify-modal');
+        return !!m && !m.classList.contains('hidden');
+      });
+      if (gated) { await page.evaluate(c => (c ? qaConfirmImport() : qaCancelImport()), confirm); await sleep(400); }
+      return { gated, status: await readStatus() };
+    };
+
+    const clean = await upload(good, true);
+    check('a clean import says so, where the import happened',
+      clean.status.shown && clean.status.kind === 'ok' && /2 extracts loaded/.test(clean.status.text),
+      JSON.stringify(clean.status));
+
+    const part = await upload(partial, true);
+    check('rows that could not be used are reported, not dropped in silence',
+      part.status.shown && part.status.kind === 'warn' && /2 extracts loaded/.test(part.status.text)
+      && /2 rows skipped/.test(part.status.text),
+      JSON.stringify(part.status));
+
+    const bad = await upload(badHeader, true);
+    check('a CSV the tool cannot read says why, and what it wanted',
+      bad.status.shown && bad.status.kind === 'error'
+      && /title/.test(bad.status.text) && /summary/.test(bad.status.text),
+      JSON.stringify(bad.status));
+
+    const cancelled = await upload(good, false);
+    check('cancelling the verification gate leaves a trace',
+      cancelled.status.shown && /cancelled/i.test(cancelled.status.text),
+      JSON.stringify(cancelled.status));
+
+    // The message has to outlive a toast — that is the whole point.
+    await sleep(4200);
+    check('the result is still on screen after the toast has gone',
+      (await readStatus()).shown === true);
+
+    fs.rmSync(tmp, { recursive: true, force: true });
+    // Put the sample pool back — the rest of the walk runs on it.
+    await page.evaluate(() => { appState.items = []; renderConfigItems(); clearCsvStatus('setup'); });
+    await page.click('#load-sample-btn');
+    await sleep(400);
+    check('the sample pool reloads cleanly after the CSV checks',
+      await page.evaluate(() => appState.items.length) === poolSize);
+  }
+
   await page.getByRole('button', { name: /Start sorting/ }).click();
   await sleep(500);
 
