@@ -536,7 +536,8 @@
 
     /* --- TOAST --- */
     #toast-region {
-      position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+      position: fixed; left: 50%; transform: translateX(-50%);
+      bottom: calc(var(--ab-h, 0px) + 24px + env(safe-area-inset-bottom, 0px));
       z-index: 2000; display: flex; flex-direction: column; gap: 8px;
       pointer-events: none;
     }
@@ -1643,7 +1644,7 @@
     .sort-card-number { position: absolute; bottom: 16px; right: 20px; font-size: var(--text-2xs); color: var(--cloud); opacity: 0.6; }
     /* The hint floats INSIDE the arena (costs zero layout height) and fades
        once the gesture is learned — the card band gets the reclaimed ~56px. */
-    .sorting-hint { position: absolute; left: 0; right: 0; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 0; pointer-events: none; text-align: center; font-size: var(--text-xs); color: var(--cloud); opacity: 0.3; letter-spacing: 0.15em; transition: opacity 0.6s ease; }
+    .sorting-hint { position: absolute; left: 0; right: 0; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 0; pointer-events: none; text-align: center; font-size: var(--text-xs); color: var(--cloud); opacity: 0.3; letter-spacing: 0.15em; transition: opacity 0.6s ease; }
     .sorting-hint.faded { opacity: 0; }
     .sorting-complete { text-align: center; width: 100%; max-width: 420px; padding: 20px 24px; }
     .sorting-complete h3 { font-size: var(--text-xl); color: var(--ghost-white); margin-bottom: 12px; }
@@ -1825,7 +1826,7 @@
       /* Sorting */
       .sorting-top { padding: 8px 12px 0; }
       .sort-card { padding: 20px 20px 28px; }
-      .sorting-hint { bottom: max(8px, env(safe-area-inset-bottom)); }
+      .sorting-hint { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
       .sorting-complete { padding: 16px; }
       /* Modals */
       .modal-overlay { padding: 12px; padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)); }
@@ -1837,7 +1838,7 @@
       .cardpage-label.mt { margin-top: 12px; }
       /* Board chrome */
       .toast { padding: 12px 16px; }
-      #toast-region { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+      #toast-region { bottom: calc(var(--ab-h, 0px) + 16px + env(safe-area-inset-bottom, 0px)); }
       .zoom-toolbar { right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 3px; }
       .canvas-infobar { padding: 8px 12px; }
     }
@@ -8235,7 +8236,16 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
     function exportModular() {
       if (isSeedMode()) { toast('The Meet-the-Pods site is a Pod Mode feature — graduate first.'); return; }
-      if (!workspaceIsComplete()) { toast('Map and complete your Problem Situation first — a title, the open condition, the paradox, a pressure-test, and at least one named & described theme. The deck and site are built from it.', { duration: 7000 }); return; }
+      if (!workspaceIsComplete()) {
+        // Name the ONE thing that unblocks it, and put the person on the stage
+        // that fixes it — the same sentence the Deepen action bar shows.
+        const missing = tgxFirstMissingField();
+        toast(missing ? `The deck needs ${missing}.` : 'Complete the five Deepen stages first — the deck and site are built from them.',
+          { actionLabel: hasSituations() ? 'Go there' : null,
+            duration: 7000,
+            onAction: hasSituations() ? () => goToScreen('workspace') : null });
+        return;
+      }
       const boardTitle = (appState.settings.title || '').trim();
       if (!boardTitle || boardTitle === 'Signal Pool' || boardTitle === 'Untitled' || boardTitle === 'Upskilling Labs: Signal Pool') {
         toast('Name your web map first (the title field at the top-left of the board) — it becomes your Pod\'s name on the site and deck.', { duration: 6000 }); return;

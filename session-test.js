@@ -253,6 +253,26 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     }),
     await page.evaluate(() => document.getElementById('submit-status-hint') && document.getElementById('submit-status-hint').textContent));
 
+  // ------------------------------------------------- The export gate speaks
+  // A blocked export must name the stage that unblocks it from every entry
+  // point, not just from the Deepen action bar.
+  section('The export gate names what is missing');
+  const gateMsg = await page.evaluate(() => {
+    const sit = appState.situations[0];
+    const kept = sit.paradox;
+    sit.paradox = '';                       // re-block it
+    document.querySelectorAll('#toast-region .toast').forEach(t => t.remove());
+    exportModular();
+    const t = document.querySelector('#toast-region .toast');
+    const text = t ? t.textContent : '(no toast)';
+    sit.paradox = kept;                     // put it back
+    recomputeSubmitButton();
+    return text;
+  });
+  check('a blocked deck export names the missing stage', /paradox/i.test(gateMsg) && /Stage/i.test(gateMsg), gateMsg);
+  await sleep(300);
+  await page.evaluate(() => document.querySelectorAll('#toast-region .toast').forEach(t => t.remove()));
+
   // ---------------------------------------------------------------- Exports
   // Three times, because that is what the room does.
   section('Export — three times');
