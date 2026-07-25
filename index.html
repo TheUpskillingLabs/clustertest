@@ -2022,12 +2022,12 @@
        concept, sources) sharing one typographic system. Dark surface, a
        single centred measure, generous vertical rhythm.
        ==================================================================== */
-    #intro-screen, #concept-screen, #setup-screen {
+    #concept-screen, #setup-screen {
       position: fixed; inset: 0; padding: 0; background: var(--midnight); color: var(--ghost-white);
       display: flex; flex-direction: column; overflow: hidden;
     }
     /* Subtle, calm radial wash so panels don't read as flat black. */
-    #intro-screen::before, #concept-screen::before {
+    #concept-screen::before {
       content: ""; position: absolute; inset: 0; pointer-events: none;
       background:
         radial-gradient(120% 90% at 50% -10%, color-mix(in srgb, var(--primary-teal) 12%, transparent), transparent 60%),
