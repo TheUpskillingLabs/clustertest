@@ -82,8 +82,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   await page.click('#load-sample-btn');
   await sleep(400);
-  check('sample pool loads 21 source extracts',
-    await page.evaluate(() => appState.items.length) === 21);
+  const poolSize = await page.evaluate(() => DEFAULT_ITEMS.length);
+  check(`sample pool loads ${poolSize} source extracts`,
+    await page.evaluate(() => appState.items.length) === poolSize);
+  check('every pre-loaded extract cites its source',
+    await page.evaluate(() => appState.items.every(i => /^https?:\/\//.test(i.source_url || ''))));
 
   await page.getByRole('button', { name: /Start sorting/ }).click();
   await sleep(500);
@@ -106,13 +109,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   });
   check('the sort gesture legend is not covered by a toast', legendClear === true, String(legendClear));
 
-  for (let i = 0; i < 21; i++) {
+  for (let i = 0; i < poolSize; i++) {
     await page.keyboard.press(i % 5 === 0 ? 'ArrowUp' : 'ArrowRight');
     await sleep(90);
   }
   await sleep(400);
-  check('all 21 extracts got a decision',
-    await page.evaluate(() => Object.keys(appState.sorting.decisions).length) === 21);
+  check(`all ${poolSize} extracts got a decision`,
+    await page.evaluate(() => Object.keys(appState.sorting.decisions).length) === poolSize);
 
   await page.getByRole('button', { name: /Continue to Canvas/ }).click();
   await sleep(900);

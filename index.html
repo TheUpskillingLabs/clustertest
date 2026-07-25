@@ -1689,6 +1689,9 @@
     .sort-card-title { font-size: var(--text-xl); font-weight: 700; color: var(--midnight); margin: 0 0 16px 0; line-height: var(--lead-xl); }
     .sort-card-desc { font-size: var(--text-base); color: var(--midnight); opacity: 0.7; line-height: var(--lead-base); margin: 0; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; }
     .sort-card-number { position: absolute; bottom: 16px; right: 20px; font-size: var(--text-2xs); color: var(--cloud); opacity: 0.6; }
+    /* Citation row on the sort card — same provenance link the canvas nodes carry. */
+    .sort-card-source { display: inline-block; margin-top: 14px; font-size: var(--text-xs); font-weight: 600; color: var(--primary-teal); text-decoration: none; letter-spacing: var(--track-label); }
+    .sort-card-source:hover { text-decoration: underline; }
     /* The hint floats INSIDE the arena (costs zero layout height) and fades
        once the gesture is learned — the card band gets the reclaimed ~56px. */
     .sorting-hint { position: absolute; left: 0; right: 0; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 0; pointer-events: none; text-align: center; font-size: var(--text-xs); color: var(--cloud); opacity: 0.3; letter-spacing: 0.15em; transition: opacity 0.6s ease; }
@@ -2202,7 +2205,7 @@
         <label id="pool-label">Source-extract pool — <span id="config-pool-count">0</span> source extracts</label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
         <div class="sources-actions">
-          <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()">Load 21 Civics &amp; Elections source extracts</button>
+          <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()">Load 48 Civics &amp; Elections source extracts</button>
           <button type="button" class="btn btn-primary" onclick="tgxExtractOpen()">✨ Extract from sources →</button>
           <input type="file" id="csv-file-input" accept=".csv,text/csv" class="sr-only" onchange="handleCsvUpload(event)">
           <button type="button" class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">Upload CSV</button>
@@ -2277,6 +2280,7 @@
         <span class="sort-card-tag" id="sort-card-tag">Source Extract</span>
         <h3 class="sort-card-title" id="sort-card-title"></h3>
         <p class="sort-card-desc" id="sort-card-desc"></p>
+        <a class="sort-card-source hidden" id="sort-card-source" target="_blank" rel="noopener noreferrer"></a>
         <span class="sort-card-number" id="sort-card-number"></span>
       </div>
       <div class="sorting-complete hidden" id="sorting-complete">
@@ -2798,28 +2802,61 @@ git push</pre>
     const MIN_ZOOM = 0.05, MAX_ZOOM = 2.5;
     const activeCanvasTouches = new Map(); // non-mouse pointers tracked for pinch
     let pinchActive = false;
+    // Pre-loaded pool: extract cards distilled from the Civics & Elections
+    // field survey on OLOS. Every card cites the response it was extracted
+    // from — srcRef(n) points at the response's anchor on the results page,
+    // which is what the card's third row ("↗ Field survey #n") opens.
+    const SURVEY_RESULTS_URL = 'https://theupskillinglabs.org/survey/civics/results';
+    const srcRef = n => ({ source_url: `${SURVEY_RESULTS_URL}#r-${n}`, source_label: `Field survey #${n}` });
     const DEFAULT_ITEMS = [
-        { id: "item_01", tag: "Source Extract", title: "Restructuring the Political System", summary: "A high-level desire to shift the fundamental political structure of the United States to model other international systems." },
-        { id: "item_02", tag: "Source Extract", title: "Media Misinformation", summary: "Broad concerns regarding how misleading media and digital influencing are negatively impacting civic engagement." },
-        { id: "item_03", tag: "Source Extract", title: "Campaign Finance & District Competitiveness", summary: "Observations that financial influence and gerrymandering have reduced the competitiveness of congressional districts." },
-        { id: "item_04", tag: "Source Extract", title: "Ranked Choice Voting Education", summary: "The implementation of ranked choice voting lacks sufficient public education to help voters understand its systemic benefits and how it changes voting behaviors." },
-        { id: "item_05", tag: "Source Extract", title: "Targeting Legislative Influence", summary: "It is currently too labor-intensive and expensive to identify the most effective individuals or groups to lobby specific legislators on specific issues at the right time." },
-        { id: "item_06", tag: "Source Extract", title: "Local Candidate Information Gaps", summary: "Voters lack easily accessible, actionable information about local county-level candidates, often relying heavily on name recognition from campaign signs." },
-        { id: "item_07", tag: "Source Extract", title: "Public Engagement on Government AI", summary: "Citizens lack the tools and platforms to provide feedback on or inform how government agencies and companies deploy artificial intelligence in their communities." },
-        { id: "item_08", tag: "Source Extract", title: "Recycling Contamination & Civic Decay", summary: "Improper recycling in public spaces leads to systemic waste and creates a visible, self-perpetuating belief that responsible civic behavior doesn't matter." },
-        { id: "item_09", tag: "Source Extract", title: "Campaign Finance", summary: "Reform efforts consistently hit roadblocks like the Citizens United decision." },
-        { id: "item_10", tag: "Source Extract", title: "Civic Distrust & Disinformation", summary: "A toxic combination of distrust in voting, a lack of civics literacy, and internet-era disinformation is allowing political entities to manipulate voters' worst instincts." },
-        { id: "item_11", tag: "Source Extract", title: "Logistical & Educational Barriers to Voting", summary: "Voting is burdened by physical hurdles (childcare, time off work) and a lack of plain-language education on how local elections directly impact citizens' daily lives." },
-        { id: "item_12", tag: "Source Extract", title: "The Death of Political Compromise", summary: "The electorate and activists are failing to recognize that compromise is a fundamental component of democracy, negatively impacting civic engagement." },
-        { id: "item_13", tag: "Source Extract", title: "Civics Talent Pipeline Shortage", summary: "There is a noticeable shortage of talent to fill junior roles within the civics and elections workforce." },
-        { id: "item_14", tag: "Source Extract", title: "False Transparency in Government", summary: "Government agencies and schools exhibit a disconnect with their constituencies, presenting a 'false flag' of transparency that leaves communities feeling ignored without understanding how aggregate sentiment is utilized." },
-        { id: "item_15", tag: "Source Extract", title: "AI Bot Interference in Constituent Engagement", summary: "Artificial intelligence is being used to flood communication channels, rendering actual, organic constituent engagement ineffective." },
-        { id: "item_16", tag: "Source Extract", title: "Hopelessness & Lack of Election Information", summary: "Voters feel hopeless and lack basic awareness of when local elections occur, relying on passive information like mailers or word of mouth." },
-        { id: "item_17", tag: "Source Extract", title: "Structural Election Imbalances", summary: "The current electoral system features gerrymandering, dominant two-party privileges, and districts so large that politicians effectively choose their voters." },
-        { id: "item_18", tag: "Source Extract", title: "Political Bubbles & NIMBYism", summary: "Citizens are highly polarized and isolated in social bubbles, proposing solutions or pushing back on reforms without understanding the broader impacts, trade-offs, or equity implications beyond their circles." },
-        { id: "item_19", tag: "Source Extract", title: "Volunteer Burnout & Knowledge Transfer", summary: "Local volunteer roles, such as PTA leadership, fall on a few individuals. There is a need for tools to reduce the operational burden and retain institutional knowledge as volunteer leadership turns over." },
-        { id: "item_20", tag: "Source Extract", title: "Aging Civic Leadership", summary: "Local civic organizations are heavily reliant on aging populations for leadership and membership, struggling to recruit younger generations who face competing career and family priorities." },
-        { id: "item_21", tag: "Source Extract", title: "Uncontested Local Candidate Transparency", summary: "It is incredibly difficult to research the records of local election candidates, especially those running uncontested or without a communications budget, leaving voters feeling uninformed." }
+        { id: "item_01", tag: "Source Extract", title: "Restructuring the Political System", summary: "A high-level desire to shift the fundamental political structure of the United States to model other international systems.", ...srcRef(1) },
+        { id: "item_02", tag: "Source Extract", title: "Media Misinformation", summary: "Broad concerns regarding how misleading media and digital influencing are negatively impacting civic engagement.", ...srcRef(3) },
+        { id: "item_03", tag: "Source Extract", title: "Campaign Finance & District Competitiveness", summary: "Observations that financial influence and gerrymandering have reduced the competitiveness of congressional districts.", ...srcRef(4) },
+        { id: "item_04", tag: "Source Extract", title: "Ranked Choice Voting Education", summary: "The implementation of ranked choice voting lacks sufficient public education to help voters understand its systemic benefits and how it changes voting behaviors.", ...srcRef(5) },
+        { id: "item_05", tag: "Source Extract", title: "Targeting Legislative Influence", summary: "It is currently too labor-intensive and expensive to identify the most effective individuals or groups to lobby specific legislators on specific issues at the right time.", ...srcRef(6) },
+        { id: "item_06", tag: "Source Extract", title: "Local Candidate Information Gaps", summary: "Voters lack easily accessible, actionable information about local county-level candidates, often relying heavily on name recognition from campaign signs.", ...srcRef(7) },
+        { id: "item_07", tag: "Source Extract", title: "Public Engagement on Government AI", summary: "Citizens lack the tools and platforms to provide feedback on or inform how government agencies and companies deploy artificial intelligence in their communities.", ...srcRef(8) },
+        { id: "item_08", tag: "Source Extract", title: "Recycling Contamination & Civic Decay", summary: "Improper recycling in public spaces leads to systemic waste and creates a visible, self-perpetuating belief that responsible civic behavior doesn't matter.", ...srcRef(9) },
+        { id: "item_09", tag: "Source Extract", title: "Campaign Finance", summary: "Reform efforts consistently hit roadblocks like the Citizens United decision.", ...srcRef(10) },
+        { id: "item_10", tag: "Source Extract", title: "Civic Distrust & Disinformation", summary: "A toxic combination of distrust in voting, a lack of civics literacy, and internet-era disinformation is allowing political entities to manipulate voters' worst instincts.", ...srcRef(11) },
+        { id: "item_11", tag: "Source Extract", title: "Logistical & Educational Barriers to Voting", summary: "Voting is burdened by physical hurdles (childcare, time off work) and a lack of plain-language education on how local elections directly impact citizens' daily lives.", ...srcRef(12) },
+        { id: "item_12", tag: "Source Extract", title: "The Death of Political Compromise", summary: "The electorate and activists are failing to recognize that compromise is a fundamental component of democracy, negatively impacting civic engagement.", ...srcRef(13) },
+        { id: "item_13", tag: "Source Extract", title: "Civics Talent Pipeline Shortage", summary: "There is a noticeable shortage of talent to fill junior roles within the civics and elections workforce.", ...srcRef(14) },
+        { id: "item_14", tag: "Source Extract", title: "False Transparency in Government", summary: "Government agencies and schools exhibit a disconnect with their constituencies, presenting a 'false flag' of transparency that leaves communities feeling ignored without understanding how aggregate sentiment is utilized.", ...srcRef(15) },
+        { id: "item_15", tag: "Source Extract", title: "AI Bot Interference in Constituent Engagement", summary: "Artificial intelligence is being used to flood communication channels, rendering actual, organic constituent engagement ineffective.", ...srcRef(16) },
+        { id: "item_16", tag: "Source Extract", title: "Hopelessness & Lack of Election Information", summary: "Voters feel hopeless and lack basic awareness of when local elections occur, relying on passive information like mailers or word of mouth.", ...srcRef(17) },
+        { id: "item_17", tag: "Source Extract", title: "Structural Election Imbalances", summary: "The current electoral system features gerrymandering, dominant two-party privileges, and districts so large that politicians effectively choose their voters.", ...srcRef(18) },
+        { id: "item_18", tag: "Source Extract", title: "Political Bubbles & NIMBYism", summary: "Citizens are highly polarized and isolated in social bubbles, proposing solutions or pushing back on reforms without understanding the broader impacts, trade-offs, or equity implications beyond their circles.", ...srcRef(19) },
+        { id: "item_19", tag: "Source Extract", title: "Volunteer Burnout & Knowledge Transfer", summary: "Local volunteer roles, such as PTA leadership, fall on a few individuals. There is a need for tools to reduce the operational burden and retain institutional knowledge as volunteer leadership turns over.", ...srcRef(19) },
+        { id: "item_20", tag: "Source Extract", title: "Aging Civic Leadership", summary: "Local civic organizations are heavily reliant on aging populations for leadership and membership, struggling to recruit younger generations who face competing career and family priorities.", ...srcRef(20) },
+        { id: "item_21", tag: "Source Extract", title: "Uncontested Local Candidate Transparency", summary: "It is incredibly difficult to research the records of local election candidates, especially those running uncontested or without a communications budget, leaving voters feeling uninformed.", ...srcRef(21) },
+        { id: "item_22", tag: "Source Extract", title: "Unexplained Ballot Roles", summary: "Even where ranked-choice mechanics were well taught, voters lack a plain-language breakdown of what each office on the ballot actually does, leaving first-time voters guessing at the roles they're electing.", ...srcRef(22) },
+        { id: "item_23", tag: "Source Extract", title: "Performative Bipartisanship", summary: "Statements, town halls, and pledges perform collaboration without doing it; missing is a structured, sprint-like way for people who are supposed to disagree to define a shared problem and build something together.", ...srcRef(23) },
+        { id: "item_24", tag: "Source Extract", title: "Loneliness as a Civic Problem", summary: "The social scaffolding that once created accountability in how people form relationships has dissolved with nothing replacing it — an isolation epidemic treated as a private matter rather than missing civic infrastructure.", ...srcRef(24) },
+        { id: "item_25", tag: "Source Extract", title: "Outdated Small-Organization Elections", summary: "Unions, HOAs, and nonprofit boards run consequential elections on paper ballots and opaque spreadsheets; available tools serve incumbent leadership rather than transparent, verifiable results for members.", ...srcRef(25) },
+        { id: "item_26", tag: "Source Extract", title: "Eroded Respect for Disagreement", summary: "People can no longer agree to disagree — basic respect for others and their opinions is missing from civic life, and active listening is rare.", ...srcRef(26) },
+        { id: "item_27", tag: "Source Extract", title: "Misunderstood Pace of Government", summary: "Constituents misjudge who holds which powers and how fast government was designed to move, so legitimate slowness reads as failure — and stretched congressional staff can't give every issue the weight visitors expect.", ...srcRef(27) },
+        { id: "item_28", tag: "Source Extract", title: "Cross-Jurisdiction Election Distrust", summary: "Election officials struggle to cut through fragmented information channels, and even people who trust their own town's elections increasingly distrust elections run by other cities and states.", ...srcRef(28) },
+        { id: "item_29", tag: "Source Extract", title: "No Playbook for Good Citizenship", summary: "There is no clear guide to the daily, weekly, and monthly steps of being an informed, participating citizen — the information is scattered everywhere, and the whole project feels overwhelming.", ...srcRef(29) },
+        { id: "item_30", tag: "Source Extract", title: "Broad Civic Disengagement", summary: "Many people are not engaged in local or national politics, don't know who the candidates are or what they stand for, and don't vote — despite candidate forums and get-out-the-vote efforts.", ...srcRef(30) },
+        { id: "item_31", tag: "Source Extract", title: "Missing Dialogue Across Difference", summary: "People who hold differing views about a topic rarely talk with each other; new civic-engagement software is being tried, with only some success.", ...srcRef(31) },
+        { id: "item_32", tag: "Source Extract", title: "Untapped Personal Megaphones", summary: "People forget how influential they can be with the biggest megaphone in history in the palm of their hand — but no one has cracked engagement at scale without it devolving into a rage machine.", ...srcRef(32) },
+        { id: "item_33", tag: "Source Extract", title: "Low-Information Voting & Gerrymandering", summary: "Many voters don't research candidates before an election, while nationwide gerrymandering and proposed federal voting restrictions make the underlying playing field less fair.", ...srcRef(33) },
+        { id: "item_34", tag: "Source Extract", title: "Ranked-Choice Confusion Persists", summary: "Voters remain confused about how ranked choice voting works and still lack clear, unbiased information about the candidates themselves.", ...srcRef(34) },
+        { id: "item_35", tag: "Source Extract", title: "Anemic, Uneven Participation", summary: "Civic participation is thin, and only some voices get heard and lifted.", ...srcRef(35) },
+        { id: "item_36", tag: "Source Extract", title: "Constituent Mail Black Hole", summary: "Letters and emails to representatives feel like talking into a void — heartfelt messages come back as generic, strategist-polished boilerplate.", ...srcRef(36) },
+        { id: "item_37", tag: "Source Extract", title: "Entertainment Crowds Out Civic Attention", summary: "Citizens are too busy consuming entertainment to pay attention to neighborhood issues, kids' activities, or their government; outreach across multiple mediums still meets 'I don't have time'.", ...srcRef(37) },
+        { id: "item_38", tag: "Source Extract", title: "Complacency & Candidate Deterrence", summary: "The average citizen doesn't feel they can make a difference, and good people stay away from political office because media can form any narrative it wants about them.", ...srcRef(38) },
+        { id: "item_39", tag: "Source Extract", title: "Calls for Stricter Ballot ID", summary: "A demand that in-person voting require Real ID and that mail-in ballots require verified identification — described by the submitter as widely supported yet repeatedly rejected.", ...srcRef(39) },
+        { id: "item_40", tag: "Source Extract", title: "Women Still Under-Represented", summary: "Women remain under-represented in political leadership, even as women run for the highest offices.", ...srcRef(40) },
+        { id: "item_41", tag: "Source Extract", title: "Student Technology Access Gap", summary: "Students lack access to equipment for training, and school technology funding isn't keeping up; grassroots fundraisers and lobbying for federal funding only go so far.", ...srcRef(41) },
+        { id: "item_42", tag: "Source Extract", title: "Mid-Decade Redistricting Shifts", summary: "California, Missouri, North Carolina, and Texas will use different congressional maps in 2026 than in 2024 due to voluntary mid-decade redistricting — unusual, and worth watching for how it shifts competitive-district counts.", ...srcRef(42) },
+        { id: "item_43", tag: "Source Extract", title: "Accountability for Public Lies", summary: "Telling the truth — and holding liars accountable and responsible — is named as the missing piece of civic life.", ...srcRef(43) },
+        { id: "item_44", tag: "Source Extract", title: "Cross-Agency Coordination Failure", summary: "Constituent problems take years to solve because coordinating local, federal, and neighboring-state agencies, private entities, and residents is nearly impossible — stakeholders claim jurisdiction for credit and duck it for problem-solving, at great cost to unpaid commissioners.", ...srcRef(44) },
+        { id: "item_45", tag: "Source Extract", title: "Sidewalks vs. Micromobility", summary: "DC sidewalks are increasingly dangerous for elderly, young, and disabled pedestrians as motorized bikes and scooters — often ridden illegally — collide with the city's walkability promise; other cities' regulations may hold lessons.", ...srcRef(45) },
+        { id: "item_46", tag: "Source Extract", title: "Representatives Without Accountability", summary: "Representatives don't seem to answer to the people, and replacing them changes little — new reps inherit the same voting patterns, with the two-party system and polarization at the crux.", ...srcRef(46) },
+        { id: "item_47", tag: "Source Extract", title: "Last-Mile Resource Disconnect", summary: "Programs, grants, and services exist on paper, but communities often don't know about them or can't navigate them — the gap is grassroots outreach, trusted local partners, and hands-on navigation support, not new programs.", ...srcRef(47) },
+        { id: "item_48", tag: "Source Extract", title: "Campus–Neighborhood Disconnection", summary: "There is no single, easy channel for a university community and its neighbors to trade information and opportunities — student jobs, local events, programs, and campus resources live in scattered slices.", ...srcRef(48) }
     ];
 
     function uid(prefix) {
@@ -3099,6 +3136,7 @@ git push</pre>
       // Pre-existing items were never QA-gated → default verified=false.
       parsed.items.forEach(it => {
         if (typeof it.source_url !== 'string') it.source_url = '';
+        if (typeof it.source_label !== 'string') delete it.source_label;
         if (typeof it.verified !== 'boolean') it.verified = false;
       });
       parsed.items.forEach(it => { if (typeof it.source !== 'string' || !it.source) delete it.source; });
@@ -3167,14 +3205,17 @@ git push</pre>
       const listDiv = document.getElementById('config-item-list');
       listDiv.innerHTML = appState.items.map(item => `
         <div class="config-item-row" role="listitem">
-          <div><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.summary)}</p></div>
+          <div><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.summary)}</p>${sourceUrlHtml(item)}</div>
           <button class="config-item-del" aria-label="Remove ${escapeHtml(item.title)}" onclick="removeConfigItem('${item.id}')">✕</button>
         </div>
       `).join('');
       const countEl = document.getElementById('config-pool-count');
       if (countEl) countEl.textContent = appState.items.length;
       const sampleBtn = document.getElementById('load-sample-btn');
-      if (sampleBtn) sampleBtn.disabled = DEFAULT_ITEMS.every(d => appState.items.some(i => i.id === d.id));
+      if (sampleBtn) {
+        sampleBtn.textContent = `Load ${DEFAULT_ITEMS.length} Civics & Elections source extracts`;
+        sampleBtn.disabled = DEFAULT_ITEMS.every(d => appState.items.some(i => i.id === d.id));
+      }
       const setupPrompt = document.getElementById('csv-prompt-text-setup');
       if (setupPrompt && !setupPrompt.value) setupPrompt.value = CSV_TRANSFORM_PROMPT;
     }
@@ -4378,10 +4419,16 @@ git push</pre>
     }
 
     // Clickable provenance: the source document an extract was parsed from.
+    // The citation row reads "↗ <source_label>" when the extract names its
+    // source (the pre-loaded survey cards do), plain "↗ source" otherwise.
+    function sourceCitationLabel(item) {
+      const label = (item && typeof item.source_label === 'string') ? item.source_label.trim() : '';
+      return label || 'source';
+    }
     function sourceUrlHtml(item) {
       const url = (item && typeof item.source_url === 'string') ? item.source_url.trim() : '';
       if (!/^https?:\/\//i.test(url)) return '';
-      return `<a class="node-source-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Open source: ${escapeHtml(url)}">↗ source</a>`;
+      return `<a class="node-source-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Open source: ${escapeHtml(url)}">↗ ${escapeHtml(sourceCitationLabel(item))}</a>`;
     }
 
     function buildSignalNode(item) {
@@ -9334,6 +9381,23 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       document.getElementById('sort-card-title').textContent = item.title;
       document.getElementById('sort-card-desc').textContent = item.summary;
       document.getElementById('sort-card-number').textContent = `${idx + 1} / ${total}`;
+
+      // Citation row: link back to the source this extract came from without
+      // letting the click start a swipe (property handlers stay idempotent
+      // across re-renders).
+      const srcEl = document.getElementById('sort-card-source');
+      const srcUrl = (typeof item.source_url === 'string') ? item.source_url.trim() : '';
+      if (/^https?:\/\//i.test(srcUrl)) {
+        srcEl.href = srcUrl;
+        srcEl.textContent = '↗ ' + sourceCitationLabel(item);
+        srcEl.title = 'Open source: ' + srcUrl;
+        srcEl.classList.remove('hidden');
+        srcEl.onpointerdown = (e) => e.stopPropagation();
+        srcEl.onclick = (e) => e.stopPropagation();
+      } else {
+        srcEl.classList.add('hidden');
+        srcEl.removeAttribute('href');
+      }
 
       card.className = 'sort-card';
       card.style.transform = '';
