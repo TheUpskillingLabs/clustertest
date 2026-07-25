@@ -38,7 +38,7 @@ A bottom **action bar** carries you through the whole arc — it always shows ex
 
 6. **Classify the evidence** (`Classify`) — Dorst's seven evidence types (history, counterfactual, problem, boundary, flux, player, value), introduced one at a time in Dorst's order. See where your coverage is thin.
 
-7. **Deepen** (`Deepen`) — a five-stage workbook that converges on the point of the whole exercise:
+7. **Deepen** (`Deepen`) — a five-stage workbook that converges on the point of the whole exercise. A sticky stage bar tracks which stage you're in, ticks the ones you've answered, and jumps to any of them:
    - **Stage 1** Solidify the situation · **Stage 2** Evidence landscape & research agenda · **Stage 3** Research access
    - **Stage 4 — Context & field: map the players.** Inner circle first (the directly implicated — *candidate problem owners come from here*), then the wider field (where themes and status-quo beneficiaries live). Candidate owners are marked "(not yet approached)" until a real conversation has happened.
    - **Stage 5 — Find the paradox(es).** The deadlock the field sustains: *"the situation demands X, but the same conditions that create the need prevent X from working."* Hold multiple candidate paradoxes, link each to who benefits from it persisting and to the evidence behind **both** legs of the contradiction, and pass the sharpness self-check — which is carried honestly into everything you export.

@@ -155,6 +155,19 @@ The spiral seeding is untouched — it is fine for the first few cards and
 auto-layout is the way out once it isn't. Running it automatically the first
 time a board crosses some node count is the other obvious follow-up.
 
+## Added: the workbook stage nav, and its screen back
+
+The five Deepen stages are a ~4,000px scroll, and 45% of a 1366×768 laptop
+viewport was header, step rail and footer — the first question sat at y=494.
+The header's standing explanation of the five stages went the same way as the
+coach and "Why this step?"; the header is now one row and the footer one row.
+In their place a **sticky stage nav**: five chips, current one highlighted on
+scroll, ticks on answered stages, one click to any of them. Permanently
+occupied chrome went *down* (95px → 79px) while gaining the navigation.
+
+  laptop  342px (45%) → 184px (24%),  first field y=494 → y=366
+  phone   411px (49%) → 185px (22%),  first field y=594 → y=372
+
 ## Fixed: four real bugs
 
 1. **The toast covered what it interrupted.** `#toast-region` was pinned to the
@@ -167,11 +180,13 @@ time a board crosses some node count is the other obvious follow-up.
    and once they cleared the action bar they landed on the modals' own buttons.
    A `modal-open` class on `body` drops them back to the floor while a modal is
    up.
-3. **Actionable toasts were unreachable on the board.** The canvas dock floats
-   above the action bar, so once toasts cleared the action bar they landed on
-   the dock — Undo, Delete-underpopulated and the Unframe confirm all had
-   buttons that could not be pressed. `tgxPublishAbHeight()` now publishes
-   `--dock-h` alongside `--ab-h`, and toasts clear both.
+3. **Toasts slid under whichever bar was on screen.** On the board the canvas
+   dock floats above the action bar, so a toast clearing only the action bar
+   landed on the dock — Undo, Delete-underpopulated and the Unframe confirm all
+   had buttons that could not be pressed. On the workbook, its sticky footer
+   sits inside a scroller with 32px of bottom padding, so it rests above the
+   window's edge and its own height undercounts the clearance. Every bar now
+   publishes the measured gap from the window bottom rather than its height.
 4. **The export gate wouldn't say what was wrong.** Producing the deck is gated
    on the five Deepen stages. From `#produce-deck-btn` the block is explained
    ("Missing: the paradox — Stage 5"), but `exportModular()` is reachable from
