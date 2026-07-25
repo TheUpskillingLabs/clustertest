@@ -51,7 +51,7 @@ Verified against code, not docs.
 | Triangulator canvas | **Built (standalone)** | `triangles/index.html`. `localStorage`, own tier vocabulary, single-user. **This PRD, Areas 1 & 4.** |
 | Export → GitHub-Pages site | **Built (emitter)** | `buildModularExportFiles()` / `exportModular()` emit `index.html` + `assets/` + `data/project.jsonld` + `content/*.md`. README: "ready to host on GitHub Pages." |
 | Repo provisioning (OLOS side) | **Not built** | `lib/integrations/` is **only** `luma.ts`. `pods.github_repo_url` is a hand-typed string. **This PRD, Area 3.** |
-| "Meet the Pods" slides | **Concept only** | The phrase and workflow are baked into the tool's intro deck; **no slide artifact is generated.** **This PRD, Area 3.** |
+| "Meet the Pods" slides | **Built** | `slides.html` ships in the deck & site zip. (The intro deck that used to teach the workflow has been removed.) |
 | Pod formation | **Built (mis-seeded)** | `voting/finalize`, `pods` — but seeded by free-text `problem_statement_id`, not a paradox/cluster. No `clusters` table. **This PRD, Area 4.** |
 | Project / problem-owner layer | **Partial** | Project schema nests; `actants`/`problem_owner` and the proposal gate are doc-only. **This PRD, Area 4.** |
 | Ortelius graph / AI reads | **Gated** | Signed edges, actants, OPP, semantic search — blocked by governance #11. Out of scope. |
@@ -74,11 +74,13 @@ Verified against code, not docs.
 
 ## 5. Area 1 — On-ramp & scaffolding
 
-**Problem.** The tool is deep. A first-timer today lands in the full seven-step machine. The method should be the ceiling, not the floor. The tool *already has the raw materials* — a `mode: 'seed'` (index.html:3072), a one-way `graduateToPod()` (2567/3070/8250), a sandboxed tutorial, per-screen tours — but they aren't composed into a single, obviously-simple front door.
+**Problem.** The tool is deep. A first-timer today lands in the full seven-step machine. The method should be the ceiling, not the floor. *(Updated July 2026: the sandboxed tutorial and the per-screen spotlight tours no longer exist — both were dormant and were deleted in the pre-sprint cleanup. The intro deck and corner coach went with them. The action bar is now the whole on-ramp.)*
 
 **Requirements.**
 
-- **1.1 (MUST) Seed Mode is the front door.** First run enters `mode: 'seed'` as a **linear, guided wizard**, not the free canvas. The spine: *name a hunch → pull in a few extracts → sort them → connect two into your first Evidence card → name the claim.* One decision per screen. The free-form canvas (`goToScreen('board')`) is reached only *after* the wizard, or via an explicit "go to full canvas" escape.
+- **1.1 (MUST) Seed Mode is the front door.** ~~First run enters `mode: 'seed'` as a **linear, guided wizard**, not the free canvas.~~ **Reversed, July 2026 — owner's call for the Sensemaking Sprint.** Seed Mode has been removed: Patterns and Themes are unlocked from the first card, and there is no graduation step. The reasoning is that this requirement was written for a first-timer meeting the tool *alone*; in a facilitated room the poderator introduces the ladder, and a one-way gate in the middle of the thing being taught is a wall rather than a scaffold.
+
+  **This is a live disagreement with the PRD, not an oversight.** If the tool is ever shipped for unaccompanied first-timers again, the progressive on-ramp this requirement asks for needs rebuilding — and the ceiling-not-floor principle in §2 still argues for it. The old implementation is at `git show be5a1cc^:index.html`.
 - **1.2 (MUST) A worked example precedes a blank canvas.** Before a member's first real board, offer the sandboxed worked example (the existing *neighborhood food access* tutorial). It is fully dismissible and never touches saved state. Returning members skip it by default (respect the expertise-reversal effect).
 - **1.3 (MUST) Progressive reveal of tiers and types.** Signals and one Evidence tier are visible from the start. Pattern/Theme/Super-theme tiers surface only as the member reaches them (connecting two of a tier reveals the next — already the mechanic; make the *unreached* tiers visually quiet, not absent-and-confusing). The **seven evidence types stay hidden until after the situation is mapped** (`enterClassifyPhase` / `classifyPhase`, already gated) — keep that.
 - **1.4 (SHOULD) Loop, not pipeline, is legible.** The step indicator (Concept → Sources → Sort → Validate → Map → Classify → Deepen) already says "this is a loop." Make "revisit any step" a first-class, obvious affordance, not fine print.
@@ -87,7 +89,7 @@ Verified against code, not docs.
 
 **Acceptance criteria.**
 - A first-time member can go from landing to a named first Evidence card **without ever seeing the seven evidence types or tiers above Evidence.**
-- Seed Mode is completable in < 5 minutes on the sample pool.
+- ~~Seed Mode is completable in < 5 minutes on the sample pool.~~ (Void — see 1.1.)
 - Exiting the worked example leaves saved state byte-identical.
 
 ---
@@ -176,7 +178,7 @@ pod_seed (extends the existing schema.org JSON-LD, additively)
 - **4.2 (MUST) Field-actor ledger for owner discovery.** Add `actants (id, cycle_id, kind, role, name, stake, value)` and a `solution_proposal_actants` join. `role ∈ {inner_circle, wider_field, problem_owner}` (matches the tool's Player roles). This is the structured home for `is_candidate_owner` that §7 references.
 - **4.3 (MUST) The proposal gate.** A `solution_proposal` requires **≥ 1 actant of role `problem_owner`** — one `count(*) ≥ 1` guard before the UPSERT. "You can't propose an intervention until you can say who it's for."
 - **4.4 (MUST) Resolve the 12-vs-3–5 config.** It's config, not contradiction. Set `pod_min` deliberately per cycle (today's seeded default is 5, unenforced); set `project_max` to **5** (today 7) to honor "no more than five." One Pod (~12) incubates 2–3 Projects (3–5 each).
-- **4.5 (SHOULD) The tool's "submit for voting" becomes real.** Today `confirmSubmit` (index.html:2726) / the `submit-for-voting` control just stamps a timestamp and navigates (`graduateToPod`). In the integrated path it hands the situation/cluster to the OLOS ballot. Standalone, keep the current behavior (the Git-merge workflow) as the offline mode.
+- **4.5 (SHOULD) Submitting a situation to the ballot.** The tool used to carry a `submit-for-voting` control that only stamped a timestamp and navigated to a read-only artifact screen; it was removed in the July 2026 cleanup because it did nothing and competed with the real terminal action. If the integrated path needs to hand a situation/cluster to the OLOS ballot, it should be built against the ballot, not restored as a stub. Standalone, the Git-merge workflow is the offline mode.
 
 **Acceptance criteria.**
 - A cluster that clears the vote threshold + pod floor becomes a pod carrying its evidence.
@@ -223,7 +225,7 @@ Critical-path, gate-free first. **[T]** = standalone tool (`triangles`); **[O]**
 | 0 | Survey **share mechanics** + `/s/[slug]` | O | S | free |
 | 1 | `sources` + `extracts` tables + upload + **BYO-prompt** endpoints | O | M | free |
 | 2 | Extract-pool API as the tool's CSV contract (Seam 1) | O | S | free |
-| 3 | **On-ramp:** Seed Mode wizard + worked-example gating (Area 1) | T | M | free |
+| 3 | ~~**On-ramp:** Seed Mode wizard + worked-example gating (Area 1)~~ — see 1.1 | T | M | free |
 | 4 | **Extraction UX:** copy-prompt / paste-and-parse in the tool (Area 2) | T | M | free |
 | 5 | Reskin tool to OLOS light tokens + self-host type; iframe/host it | T | S–M | free |
 | 6 | Verbatim state storage `sensemaking_sessions` (Seam 2) | O | S | free |
@@ -250,7 +252,7 @@ Items 0–10 are gate-free (10 gates on publication consent). Only #11 is blocke
 ## 13. Success metrics
 
 - **Funnel:** survey responses (and share-driven reach), extracts produced/day, canvases reaching a named Theme, situations mapped, pods seeded from clusters, projects with a named owner.
-- **First-run:** % of first-timers who complete Seed Mode; time-to-first-Evidence-card.
+- **First-run:** time-to-first-Evidence-card. (The Seed Mode completion metric is void — see 1.1.)
 - **Integrity:** % of pods born from a triangulated cluster (target 100%); % of published repos with only consented evidence (must be 100%).
 
 ---
@@ -259,15 +261,14 @@ Items 0–10 are gate-free (10 gates on publication consent). Only #11 is blocke
 
 Key functions/state in `triangles/index.html`:
 
-- **Screens / navigation:** `goToScreen(name)` — `intro | concept | setup | sorting | board | workspace | artifact`; step indicator via `renderStepIndicator`.
-- **Modes:** `appState.mode` incl. `'seed'` (3072); `graduateToPod()` (2567/3070/8250).
+- **Screens / navigation:** `goToScreen(name)` — `concept | setup | sorting | board | workspace`; step indicator via `renderStepIndicator`. (`intro` and `artifact` were removed July 2026; `normalizeState()` redirects boards saved on either.)
+- **Modes:** removed July 2026. `appState.mode` is still written as `'pod'` so older saved boards parse, but nothing reads it; `isSeedMode()` and `graduateToPod()` are gone.
 - **Data model:** `appState.cards[]` (unified tiered: `tier`, `childIds`), `appState.situations[]`, `appState.nodes`; persistence key `olos.sensemaking.v2`.
 - **Intake:** `parseCsv()` (3384); columns `title,summary,source_url`; sample loader `load-sample-btn`.
 - **Canvas:** `connectNodes(a,b)` (5197), `createCardBetween()` (4975).
 - **Classify:** `enterClassifyPhase()` / `appState.classifyPhase` — the seven evidence types, staged.
 - **Situation:** `frame`, `paradox`, stakeholder map, voices-needed, status-quo-beneficiaries.
 - **Export:** `buildModularExportFiles()` / `exportModular()` (8829) → `index.html`, `assets/style.css`, `assets/viewer.js`, `data/project.jsonld`, `data/extracts.csv`, `data/site-data.js`, `content/situation.md`, `content/themes.md`. Plus the Git-handoff modal.
-- **Submit:** `confirmSubmit()` (2726), `submit-for-voting` control.
 - **AI assist:** every ✨ button builds an XML-tagged prompt → clipboard (BYO-LLM). No in-app model.
 
 **Glossary (Dorst, as used here):** *Problem Situation* — the open, dynamic condition mapped from the evidence. *Paradox* — the structural deadlock at its core (an obligatory passage point sustaining a regime). *Theme* — a deeper universal bridging human experience and structural condition. *Frame* — "if the situation is approached *as if* X, then Y." *Field vs. Context* — the wider network of actors/values vs. the immediate players. *Problem owner* — the actor who could own the situation or adopt a resolution (here: **discovered**, not assumed).

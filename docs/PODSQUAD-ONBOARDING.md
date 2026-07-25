@@ -6,7 +6,7 @@
 
 ## Three weeks from now
 
-Picture July 25. Dozens of your neighbors — organizers, poll workers, librarians, people who filled out a field survey because something in their civic life feels stuck — are about to spend a day turning a pile of raw evidence into shared maps. Their first Evidence card. The moment the whole room unlocks Patterns & Themes together. The first time someone looks at their own ladder and says *"oh — that's what's actually going on."*
+Picture July 25. Dozens of your neighbors — organizers, poll workers, librarians, people who filled out a field survey because something in their civic life feels stuck — are about to spend a day turning a pile of raw evidence into shared maps. Their first Evidence card. The first Pattern that two of those cards turn out to share. The first time someone looks at their own ladder and says *"oh — that's what's actually going on."*
 
 The tool they'll use for all of it is open in your browser right now.
 
@@ -20,7 +20,7 @@ Don't mistake "starting place" for "sketch." What's in this repo works (mostly),
 
 - The full arc runs: gather source extracts → sort signal from noise → triangulate up a ladder of Evidence, Patterns, Themes → map a Problem Situation → find the paradox that keeps it stuck → discover who could own breaking it → export a ready-to-host site and slide deck that seeds a pod's repository for Meet the Pods.
 - It's **one HTML file**. No build, no server, no dependencies. Open `index.html`, and you're holding the entire application — every word of copy, every gate, every screen. The file *is* the spec. That's not a limitation; it's the invitation. There is nothing in this tool you can't reach.
-- It's tested by a battery of headless-browser drivers that walk the whole flow and demand zero errors — so when you change something, you can know quickly whether you broke something else.
+- It's tested by `session-test.js`, a headless driver that walks the whole flow — sort, connect, climb, map, classify, the five Deepen stages, three exports — and fails on any JS error. Run it before you push and you'll know quickly whether you broke something else.
 - And you're not the first to mod it. Keep reading.
 
 ## The framework is already modded — so you have permission to test your own mods too
@@ -37,13 +37,14 @@ Now here's the thing that makes this repo different from a book club: **this app
 | The paradox is diagnosed from the client's stuckness | The paradox is **discovered in the evidence** and verified by *cui bono* — who benefits from it persisting | Is the sharpness self-check honest enough? Too preachy? Does it need teeth or a lighter touch? |
 | The problem owner is the client — given, day one | The owner is an **output**: discovered in the Context ring, marked "(not yet approached)" until someone's actually talked to them | How should a pod track approach attempts? Is "not yet approached" the right social pressure? |
 | Framing is the point | Framing is **deliberately deferred** — pods form around a paradox; frames come at the Frame Sprint | Is the boundary drawn in the right place? What framing "leakage" should the tool allow? |
-| The expert designer drives | A bottom action bar + a corner coach drive, so a first-timer needs no expert | Every word of that coach is yours to rewrite. You know how DC actually talks. |
+| The expert designer drives | A bottom action bar drives: one next action, and when it's locked, the reason | Every word of that bar is yours to rewrite. You know how DC actually talks. |
 
 The rule of the game — the only rule of taste we ask you to honor: **mods are argued from the method or from the field, never from preference alone.** "I'd prefer blue" is a preference. "Three people at kickoff couldn't find the connect dots, here's what they said" is the field. "Dorst defers framing because premature frames blind you, and this button invites framing too early" is the method. Both of those win arguments. Preference just starts them.
 
 **Your reading path** (a week of commutes, not a semester):
 1. The [README's method section](../README.md#the-method-in-brief) — ten minutes, the whole shape.
 2. [The PRD](PRD-triangulator-finalization.md) — where the tool is headed and why; skim §2 Principles and §10 Design decisions.
+2b. [The cleanup record](CLEANUP-2026-07.md) — what was cut before the sprint and how to get it back. Two of those cuts (a worked example, discoverable keyboard shortcuts) are open build agendas with the old code still in `git`.
 3. Kees Dorst, *Frame Innovation: Create New Thinking by Design* (MIT Press, 2015) — chapters 1–5 are the engine. Read it like a co-author, pencil out.
 
 > **🤖 Ask your AI:** *"Give me a working crash course on Kees Dorst's Frame Innovation method — the nine steps, the role of the paradox, and the difference between a theme and a frame. Then explain what would have to change if there were no client and no agreed problem at the start — just a pile of field evidence. Quiz me until I can explain it to a friend."*
@@ -54,7 +55,7 @@ The rule of the game — the only rule of taste we ask you to honor: **mods are 
 
 Here's the vision, concretely. Not "feedback welcome." Not "we'll take it under advisement." This:
 
-**By this Friday, there's a version of this tool with your name on it, live on the internet, doing something main doesn't do.** Your fork, your experiment, your hunch about what the room needs — clickable by anyone you send the link to. Next to it, four or five siblings: your squadmates' versions, each betting on something different. One of you rewrote the coach in plain DC. One of you made sorting feel like a game. One of you tore a gate out entirely to see what happens without it. One of you added a stage we never thought of.
+**By this Friday, there's a version of this tool with your name on it, live on the internet, doing something main doesn't do.** Your fork, your experiment, your hunch about what the room needs — clickable by anyone you send the link to. Next to it, four or five siblings: your squadmates' versions, each betting on something different. One of you rewrote the action bar in plain DC. One of you made sorting feel like a game. One of you tore a gate out entirely to see what happens without it. One of you added a stage we never thought of.
 
 Then — week two — you play each other's builds. The way pods will play the tool. And the best ideas stop being opinions, because you've *used* them: "yours made me want to keep sorting; mine made me stop." That's **feature harvest**: the keepers get PR'd into main, one by one, argued from the method or the field. The best idea in the room wins on contact with reality — not in a meeting, not by seniority, not by whoever talks longest.
 
@@ -74,20 +75,20 @@ Everything else — copy, color, gates, stages, screens, the whole feel — is i
 ## Your first week
 
 - [ ] **Today: feel the clay.** Run the loop once, end to end (15 minutes, sample data, disposable):
-  1. Open [the live tool](https://theupskillinglabs.github.io/triangles/). Skim the intro deck.
+  1. Open [the live tool](https://theupskillinglabs.github.io/triangles/). It opens straight onto Sources.
   2. Sources → *Load 21 Civics & Elections source extracts* → **Start sorting →**. Sort all 21, fast — notice what hesitation feels like.
   3. On the canvas, drag a glowing edge dot onto another card → your first Evidence card. Name it. Do it twice more (or try the **Link** tool in the dock).
-  4. **Unlock Patterns & Themes** when the bar offers it. Read the sheet — note it's one-way.
+  4. Connect two named Evidence cards into a **Pattern** — the Pattern tool is in the dock from the start.
   5. Climb: Evidence → Pattern → Theme (name and describe as you go — feel the locks bite).
   6. **Map the Problem Situation** → take the classify beat → walk the five Deepen stages (linger on Stage 4's inner circle and Stage 5's paradox — that's the destination).
   7. **Produce the deck & site.** Unzip it. Open `slides.html`. That's what a pod carries into Meet the Pods.
-  8. Sources → *Start over (reset)* — clean slate.
+  8. **Share / Export → Start over** — clean slate.
   Keep a note of every moment that made you squint. That list is your first build agenda.
 - [ ] **This week: read enough to argue.** The reading path above. You don't need mastery — you need enough to say "Dorst would push back here, and here's why I'd push back on Dorst."
 - [ ] **Then: make one mod.** Branch (`podsquad/<yourname>-<experiment>`) or fork — your call:
   - **Fork** (recommended for wild experiments): your fork gets its **own live GitHub Pages URL**. On your fork: Settings → Pages → "Deploy from a branch" → `main` / root → Save. Minutes later your version is live at `<you>.github.io/triangles/`.
   - **Branch** (fine for shared work): push `podsquad/<yourname>-<experiment>` to this repo.
-  - Then open `index.html` — the whole app is in there — and change *one thing* from your squint list. A word of coach copy counts. A hint counts. A gate's threshold counts. A whole new workbook stage counts. Small is a superpower here: small ships Friday.
+  - Then open `index.html` — the whole app is in there — and change *one thing* from your squint list. A word of action-bar copy counts. A hint counts. A gate's threshold counts. A whole new workbook stage counts. Small is a superpower here: small ships Friday.
 - [ ] **Share your URL** in the squad channel. Say what you were betting on. Try whatever anyone else posts.
 
 > **🤖 Ask your AI (building edition):**
@@ -117,7 +118,7 @@ Hold onto the one method idea under all of it: **we start with no client and no 
 
 ## Facilitation moves, by stage
 
-You'll still be the one standing next to a stuck participant on July 25 — and by then, you'll be facilitating a tool you helped build. The bar at the bottom of their screen always shows the next move; the corner coach explains why. When someone stalls, look at their bar *with* them. You carry the why behind the why.
+You'll still be the one standing next to a stuck participant on July 25 — and by then, you'll be facilitating a tool you helped build. The bar at the bottom of their screen always shows the next move. It no longer explains *why* — that part is yours now, said out loud. When someone stalls, look at their bar *with* them. You carry the why behind the why.
 
 | They're… | What's happening | Your move |
 |---|---|---|
@@ -126,10 +127,12 @@ You'll still be the one standing next to a stuck participant on July 25 — and 
 | Asking "what's the problem we're solving?" | Wants the concept first | The inversion, said plainly: "We don't know yet — that's the point. The evidence speaks before anyone names the problem. The tool will invite you to name it once you've kept enough." |
 | Can't find how to connect cards | Missed the affordance | Point at the glowing dots (visible for their first 3 connections), or the **Link** tool: click one card, then the other. |
 | Hit a locked card, annoyed | The gates working as designed | "Every lock is one of Dorst's five syndromes headed off. This one stops you claiming what you haven't examined. Name the cards under it first." |
-| Asking whether to Unlock | One-way anxiety | "Your hunches and evidence come with you unchanged. For the sprint, we do it together as a room." |
 | Wrote a "paradox" that's a complaint | Sharpness problem | Run the self-check with them: does the fix undo itself ("X requires not-X")? Who *benefits* from it persisting? A paradox nobody profits from is usually a misreading. |
 | Marked a candidate owner confidently | Overclaiming | "It says '(not yet approached)' until someone actually talks to them. An owner is a hypothesis until then — who's making the call?" |
 | Wants the AI to do the thinking | ✨ misunderstanding | "The tool has no AI. That button copies a prompt for *your* model — run it, argue with it, write your own words back. The Blind-spot audit is the tab for when everything feels too tidy." |
+| Lost in the Deepen workbook | Five stages, long scroll | The stage bar at the top of the workbook — it shows which stage they're in, ticks the answered ones, and jumps. The bar at the bottom names whatever is still blocking the export. |
+| Board looks like a hairball | Cards seeded on a spiral, overlapping | **⊞ Auto-layout** in the canvas toolbar. It rebuilds the ladder in tiers and it's undoable — good to reach for right before someone presents their map. |
+| Stuck on one card, staring at it | Doesn't know the help is there | Point at the ✨ **AI** button on the card itself. Three prompts for that card, built from what's underneath it. It walks them through copy → paste → bring it back. |
 | "I lost my work??" | localStorage panic | Per-browser, per-device — see Gotchas. Same browser + device = it's there. Different device = it never was; export/import moves work. |
 
 And now the builder's corollary: every row you add to this table from the field is either a facilitation note *or a bug in the design*. When it's the design — change the design.
@@ -159,7 +162,6 @@ Three vocabularies touch this work. Same things, different words — here's the 
 |---|---|---|
 | Source Extract (tier 0) | extract / Extracted Signal | — (raw archaeology material) |
 | Evidence → Pattern → Theme | the same ladder, tiers 1–3 | Archaeology climbing toward Themes |
-| Seed Mode → Unlock (Pod Mode) | *(no equivalent — tool-only concept)* | scaffold-up-from-dead-simple |
 | Map the Problem Situation | `problem_situation` (the frame artifact) | the open, complex, networked condition |
 | The seven evidence types | same (history, counterfactual, problem, boundary, flux, player, value) | Dorst's evidence lenses |
 | The five syndromes (the locks) | *(not named in platform docs)* | Dorst: Lone Warrior, Freeze the World, Self-Made Box, Rational High Ground, Identification |
@@ -183,7 +185,7 @@ A good field report: *what they were trying to do → what actually happened →
 ## Gotchas (read twice — then teach them)
 
 1. **Boards live in the browser, per device.** Nothing syncs by itself. Library laptop ≠ home laptop. The bridge is always export → repo → import. Say it out loud at the start of every session.
-2. **Unlock is one-way.** Seed Mode can't be re-entered on that board (the work survives untouched; only the simpler view is gone).
+2. **The ladder is open from the start.** Patterns and Themes need no unlocking — but a card stays locked for naming until the cards beneath it are named and described.
 3. **Private/incognito windows** can wipe localStorage on close. Facilitate — and prototype — in normal windows.
 4. **The deck export has gates:** Pod Mode + a completed workbook + a real project title. The bar's hint names exactly what's missing — read it to them.
 5. **Offline is fine.** After first load, no network needed. Venue wifi is a non-event.
