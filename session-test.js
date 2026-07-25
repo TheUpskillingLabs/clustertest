@@ -1150,6 +1150,41 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     && fromSeed.mode === 'pod' && fromSeed.patternToolShown === true,
     JSON.stringify(fromSeed));
 
+  // A board saved with a level tab selected. The tabs are gone, but the state
+  // they wrote persists — and what they did to a board was fade every other
+  // card to 22%, shrink it and set pointer-events:none. Loading one of these
+  // has to give the board back whole and clickable, not frozen.
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem('olos.sensemaking.v2', JSON.stringify({
+      settings: { title: 'A board left on the Pattern tab', concept: '' },
+      items: [
+        { id: 'i1', tag: 'signal', title: 'A', summary: 'a' },
+        { id: 'i2', tag: 'signal', title: 'B', summary: 'b' }
+      ],
+      cards: [{ id: 'k1', title: 'Ev', description: 'd', tier: 1, childIds: ['i1', 'i2'], cardType: null, files: [], doc: '' }],
+      situations: [],
+      nodes: { i1: { x: 10, y: 10 }, i2: { x: 190, y: 10 }, k1: { x: 90, y: 230 } },
+      view: { zoom: 1, panX: 0, panY: 0 }, viewInitialized: true,
+      canvasViewState: 'tier-2',
+      currentScreen: 'board', classifyPhase: false, mode: 'pod',
+      sorting: { currentIndex: 2, decisions: { i1: 'signal', i2: 'signal' } }
+    }));
+  });
+  await page.reload();
+  await sleep(1400);
+  const unfiltered = await page.evaluate(() => ({
+    tabBar: !!document.getElementById('view-tabs') || document.querySelectorAll('.view-tab').length > 0,
+    total: document.querySelectorAll('.canvas-node').length,
+    dimmed: document.querySelectorAll('.canvas-node.view-dim').length,
+    frozen: Array.from(document.querySelectorAll('.canvas-node'))
+      .filter(n => getComputedStyle(n).pointerEvents === 'none').length
+  }));
+  check('the level-tab bar is gone', unfiltered.tabBar === false);
+  check('a board saved on a level tab comes back whole and clickable',
+    unfiltered.total === 3 && unfiltered.dimmed === 0 && unfiltered.frozen === 0,
+    JSON.stringify(unfiltered));
+
   // And the v1 → v2 migration, which predates all of this.
   await page.evaluate(() => {
     localStorage.clear();

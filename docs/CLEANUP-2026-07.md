@@ -11,7 +11,7 @@ arc still runs end to end, exports included. Every cut is either code that
 already couldn't run, a feature that did nothing, or one of several controls
 doing the same job.
 
-`index.html` went from **10,349 to 10,241 lines** — 1,486 lines out, 1,378 back in. The removals are much bigger than the net figure suggests: the BYO-LLM walkthrough, the auto-layout pass, the workbook's stage nav and the import receipts are all new code added on top.
+`index.html` went from **10,349 to 10,181 lines** — 1,564 lines out, 1,396 back in. The removals are much bigger than the net figure suggests: the BYO-LLM walkthrough, the auto-layout pass, the workbook's stage nav and the import receipts are all new code added on top.
 
 ---
 
@@ -33,6 +33,7 @@ doing the same job.
 | `Make CSV import say what it actually did` | Silently dropped rows; a cancelled import left no trace |
 | `Make both ways of adding extracts work from the canvas` | Five bugs between the dock and the board |
 | `Check what the export actually contains` | The driver only counted files; now it opens the site and the deck |
+| `Remove the canvas level tabs` | A view switch that behaved as a lock, and persisted |
 
 ## Removed: code that already couldn't run
 
@@ -308,6 +309,40 @@ that edits `content/*.md` in its repo still sees the edit without regenerating.
 
 `session-test.js` now writes the export folder to disk and opens both pages from
 `file://`, asserting they render and that the console is clean.
+
+## Removed: the canvas level tabs (owner's call, from the field)
+
+`ALL · SOURCE EXTRACTS · EVIDENCE · PATTERN · THEME …` — the small bar that
+floated top-left over the canvas, one tab per tier that existed. Reported as
+"not working for people and bugging out", and reproducing it shows why.
+
+It reads as a view switch. It behaves as a lock. Selecting a tier ran
+`applyViewState()`, which put `.view-dim` on every node outside that tier:
+
+```css
+.canvas-node.view-dim { opacity: 0.22; pointer-events: none; transform: scale(0.78); }
+```
+
+On an eleven-card board, one tap left **ten cards faded to 22%, shrunk to 78%,
+and completely non-interactive** — not draggable, not linkable, not openable.
+And `setCanvasView()` called `scheduleSave()`, so the choice persisted: the
+board came back frozen after a reload, with the only way out a word in a corner
+that a participant had no reason to connect to what had happened to their map.
+
+Nothing about it was recoverable by the gestures people actually try — panning,
+zooming, clicking a card, reloading. At a table on a Saturday morning that is a
+lost map.
+
+Removed: the markup, `existingTiers()`, `normalizedView()`, `buildViewTabs()`,
+`setCanvasView()`, `applyViewState()`, both calls in `renderAllNodes()`, the
+`.view-tab*` and `.canvas-node.view-dim` CSS with their phone media rules, and
+the two marquee hit-tests that excluded `.view-dim` (they now select every card,
+which is what a marquee should always have done).
+
+`appState.canvasViewState` stays in `defaultState()` and `normalizeState()` so
+boards saved mid-filter still parse — nothing reads it, and nothing applies the
+dim class any more. `session-test.js` loads exactly such a board and asserts it
+comes back whole and clickable.
 
 ## How to get any of it back
 
