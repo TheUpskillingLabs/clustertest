@@ -44,6 +44,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const browser = await chromium.launch();
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
+  // The stylesheet @imports Geologica from Google Fonts. Let the driver be
+  // hermetic: it should test the app, not the network. (Worth knowing that a
+  // *hanging* font request — as opposed to a failing one — blocks the page from
+  // finishing load, because the @import is render-blocking.)
+  await context.route('**fonts.googleapis.com**', r => r.abort());
+
   const page = await context.newPage();
   watchForErrors(page);
 
@@ -666,6 +672,58 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const lat2 = await latticeMetrics();
   check('laying out twice is stable', lat2.positions === lat.positions,
     `${lat.crossings} then ${lat2.crossings} crossings`);
+
+  // ----------------------------------------------------------- Start over
+  // Start over clears the save and reloads. The unsaved-work guard on
+  // beforeunload fires on that reload and asks "leave site?" — and cancelling
+  // it (the natural answer, having just confirmed) left the board on screen
+  // with its save already deleted, which read as the button doing nothing.
+  section('Start over');
+
+  // The guard itself must still be there for accidental navigation.
+  check('leaving with unsaved work is still guarded',
+    await page.evaluate(() => {
+      const e = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(e);
+      return e.defaultPrevented;
+    }));
+
+  // Any beforeunload prompt during this is the bug: it means the user gets
+  // asked whether to leave, having just confirmed that they want to.
+  const prompts = [];
+  const onDialog = async d => { prompts.push(d.type() + ' — ' + d.message()); await d.accept(); };
+  page.on('dialog', onDialog);
+
+  await page.evaluate(() => document.querySelectorAll('#toast-region .toast').forEach(t => t.remove()));
+  await page.evaluate(() => { openShareSheet(); });
+  await sleep(400);
+  await page.getByRole('button', { name: /^Start over/ }).first().click();
+  await sleep(400);
+  check('Start over asks before it wipes anything',
+    await page.evaluate(() => [...document.querySelectorAll('#toast-region .toast button')]
+      .some(b => /start over/i.test(b.textContent))));
+
+  await page.evaluate(() => {
+    const btn = [...document.querySelectorAll('#toast-region .toast button')]
+      .find(b => /start over/i.test(b.textContent));
+    if (btn) btn.click();
+  });
+  await page.waitForFunction(() => typeof appState !== 'undefined' && document.readyState === 'complete',
+    null, { timeout: 15000 });
+  await sleep(700);
+  page.off('dialog', onDialog);
+
+  const afterReset = await page.evaluate(() => ({
+    items: appState.items.length,
+    cards: appState.cards.length,
+    screen: appState.currentScreen,
+    onSources: !document.getElementById('setup-screen').classList.contains('hidden')
+  }));
+  check('confirming Start over actually clears the board',
+    afterReset.items === 0 && afterReset.cards === 0 && afterReset.onSources,
+    JSON.stringify(afterReset));
+  check('and it does not stop to ask whether to leave the page',
+    prompts.length === 0, prompts.join(' | '));
 
   // -------------------------------------------- The additive invariant
   // A board saved by an OLDER build must still open. This is the project's

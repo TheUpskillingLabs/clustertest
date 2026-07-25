@@ -9565,13 +9565,23 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       });
     }
 
+    // Set just before a reload we asked for, so the unsaved-work guard on
+    // beforeunload doesn't interrogate the user about a navigation they just
+    // confirmed. Without it, Start over cleared the save, then the browser
+    // asked "Reload site?" — and cancelling that (the natural answer, having
+    // just confirmed) left the board on screen with its save already gone.
+    let reloadIsIntentional = false;
     function startOver() {
       // Undoable-by-hesitation rather than a modal: the same toast-confirm
       // pattern the unframe action uses, so a mis-tap costs nothing.
       toast('Clear this board and start over? This cannot be undone.', {
         actionLabel: 'Start over',
         duration: 8000,
-        onAction: () => { clearSavedState(); location.reload(); }
+        onAction: () => {
+          reloadIsIntentional = true;
+          clearSavedState();
+          location.reload();
+        }
       });
     }
 
@@ -9593,7 +9603,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       if (!appState.situations.length) rows.push(row('Export the whole canvas (.zip)', 'Everything on the board — the folder podmates merge via Git.', 'exportCanvasZip()'));
       rows.push(row('Compile concept (.md)', 'A lightweight Markdown summary of your concept and the cards under it.', 'compileConcept()'));
       rows.push(row('Open a shared folder', 'Bring in a podmate’s exported folder — merge or replace.', 'openImportModal()'));
-      rows.push(row('Start over', 'Clear this board and reload the sample pool. Export first if you want to keep it.', 'startOver()', true));
+      rows.push(row('Start over', 'Clear this board and begin again from Sources. Export first if you want to keep it.', 'startOver()', true));
       list.innerHTML = rows.join('');
       openModal('share-sheet-modal');
     }
@@ -9944,6 +9954,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
     // Warn before unload if there's in-progress, unsubmitted work.
     window.addEventListener('beforeunload', (e) => {
+      if (reloadIsIntentional) return;
       const onActiveScreen = appState.currentScreen === 'board' || appState.currentScreen === 'workspace' || appState.currentScreen === 'sorting';
       if (onActiveScreen && (appState.cards.length > 0 || Object.keys(appState.sorting.decisions).length > 0)) {
         e.preventDefault();
