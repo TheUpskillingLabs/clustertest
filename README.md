@@ -15,7 +15,7 @@ Created for **The Upskilling Labs** by **Levy Strategic Design**. Open source un
 There is no build step, no server, no install, and no account.
 
 1. Open **`index.html`** in any modern browser (double-click works — it runs from `file://`), or use the live URL above.
-2. On the Sources screen, click **Load 48 Civics & Elections source extracts** — real material from a field survey; every card cites the survey response it came from.
+2. On the Sources screen, bring your own material with **✨ Extract from your sources** — or click **Deal a shared hand** for 32 of the 48 Civics & Elections survey extracts (each board is dealt a different hand, in a different order; "Load all 48" is under *Other ways to add extracts*). Every shared card cites the survey response it came from.
 3. Follow the bar at the bottom of the screen. It always shows your one next move.
 
 Everything auto-saves to your browser's `localStorage`. The app works fully offline after first load. **Nothing you enter ever leaves your browser.**
@@ -24,7 +24,7 @@ Everything auto-saves to your browser's `localStorage`. The app works fully offl
 
 A bottom **action bar** carries you through the whole arc — it always shows exactly one primary action for wherever you are, and if that action is locked, it names the one thing that unblocks it. That bar is the whole guidance system: the tool used to also carry an intro deck, a corner coach and a "Why this step?" panel, all explaining the same thing in parallel. They were removed for the facilitated sessions, where a poderator carries the why out loud.
 
-1. **Gather source extracts** (`Sources`) — load the sample, upload a CSV (`title,summary[,source_url]`), ✨ extract cards from an article or dataset with your own AI, or type one by hand. Go wide — include what might contradict you. **You do not name a problem first.** The problem comes into focus later, once the evidence has something to say.
+1. **Gather source extracts** (`Sources`) — ✨ extract cards from your own articles, notes, or datasets with your own AI, upload a CSV (`title,summary[,source_url]`), type one by hand, or deal a shared hand from the sample deck (a different 32 of 48 per board — identical pools were producing identical maps). You can also drop a `.txt`, `.md`, or `.csv` file straight onto the canvas at any point. Go wide — include what might contradict you. **You do not name a problem first.** The problem comes into focus later, once the evidence has something to say.
 
    Evidence keeps arriving after you've started, so all three ways in stay open once you're on the canvas: **＋ Extracts** in the dock offers the same CSV upload, the same ✨ extractor, and a card by hand. Cards added there land in open space beside your map, already sorted, and the view moves to them. Every import says what it did — how many cards, and how many rows it couldn't use — where the import happened, not in a toast that's gone before you've read it.
 

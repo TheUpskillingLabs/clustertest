@@ -7,7 +7,11 @@ against the digest produced by `scripts/digest-boards.mjs`.
 
 Usage: paste the prompt below, then paste the full contents of `digest.md`
 underneath it. Read the output *before* announcing groups — you are the
-editor, not the model.
+editor, not the model. The digest now ends with a **Convergence watch**
+section (shared theme vocabulary, board pairs with heavy prose overlap,
+identical card names, boards holding only the shared deck) — read it
+first; it names exactly the shared ground the triads should be de-aligned
+on.
 
 ---
 
