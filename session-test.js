@@ -717,6 +717,30 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }));
   check('one click from a card opens its prompts, already loaded',
     cardAI.pageOpen && cardAI.sectionOpen && cardAI.promptChars > 500, JSON.stringify(cardAI));
+
+  // Per-board prompt variation: same board = same prompt, different seed =
+  // materially different prompt — and the fixed integrity rules survive it.
+  const variation = await page.evaluate(() => {
+    const a = buildPoolPrompt('landscape');
+    const saved = appState.settings.seed;
+    const others = [7, 131, 4099].map(d => {
+      appState.settings.seed = (saved + d) >>> 0;
+      return buildPoolPrompt('landscape');
+    });
+    appState.settings.seed = saved;
+    const c = buildPoolPrompt('landscape');
+    return {
+      differs: others.some(b => b !== a),
+      stable: a === c,
+      integrity: others.concat([a]).every(p => p.includes('Do NOT propose solutions')
+        && p.includes('most predictable reading')),
+      personaNamed: /sensemaking partner/.test(a)
+    };
+  });
+  check('prompts differ across board seeds', variation.differs, JSON.stringify(variation));
+  check('prompts are stable for one board\'s seed', variation.stable);
+  check('the integrity rules survive persona and twist rotation', variation.integrity);
+  check('the rotated persona still carries the thinking-partner contract', variation.personaNamed);
   check('the prompt text stays folded away behind a labelled peek', cardAI.peekClosed);
   check('the card panel names where to paste it', cardAI.targets === 5, String(cardAI.targets));
   await page.evaluate(() => closeModal('card-page-modal'));

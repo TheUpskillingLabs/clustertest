@@ -2548,6 +2548,7 @@
               <button type="button" role="tab" data-mode="stress" class="ai-mode-tab" aria-selected="false">Stress-test</button>
             </div>
             <p id="card-page-ai-blurb" style="font-size: var(--text-sm); color:var(--midnight); opacity:0.75; line-height:1.5; margin:10px 0;"></p>
+            <p id="card-page-ai-persona" style="font-size: var(--text-xs); color:var(--midnight); opacity:0.65; margin:0 0 6px;"></p>
             <ol class="ai-steps" style="margin-top:12px;">
               <li class="ai-step" id="card-ai-step-copy">
                 <span class="ai-step-n" aria-hidden="true" data-n="1"></span>
@@ -2864,7 +2865,7 @@ git push</pre>
         <h3 id="ai-modal-title">✨ AI prompts</h3>
       </div>
       <div class="modal-body">
-        <p class="ai-governance">There is no AI in this tool. It writes a prompt out of what's on your board; you run it in whichever model you use. Nothing leaves your browser.</p>
+        <p class="ai-governance">There is no AI in this tool. It writes a prompt out of what's on your board; you run it in whichever model you use. Nothing leaves your browser. <span id="ai-persona-note"></span></p>
         <div id="ai-mode-tabs" class="ai-mode-tabs hidden" role="tablist" aria-label="Prompt modes">
           <button type="button" role="tab" data-mode="throughline" class="ai-mode-tab is-active">Through-line</button>
           <button type="button" role="tab" data-mode="name" class="ai-mode-tab">Name &amp; describe</button>
@@ -6647,7 +6648,77 @@ Rules:
 
 [PASTE YOUR DATA HERE]`;
 
-    const AI_ROLE = `You are an expert critical theorist, design researcher, and qualitative sensemaking partner grounded in Kees Dorst's Frame Creation methodology. You are a thinking partner — you do not write the user's synthesis for them. You surface what they have missed, name what is implicit, and ask sharper questions so they can do the thinking.`;
+    // One shared persona meant one shared diction: forty participants ran
+    // byte-identical prompts and got back the same structural, mechanism-
+    // oriented voice. Each board now draws its thinking partner from a
+    // disciplinary pool — the contract is fixed (partner, not ghostwriter),
+    // the standpoint rotates, and every persona names its own bias so the
+    // participant knows which way their partner leans.
+    const AI_CONTRACT = `You are a qualitative sensemaking partner grounded in Kees Dorst's Frame Creation methodology. You are a thinking partner — you do not write the user's synthesis for them. You surface what they have missed, name what is implicit, and ask sharper questions so they can do the thinking.`;
+    const AI_PERSONAS = [
+      { key: 'ethnographer', label: 'The Ethnographer', text: `${AI_CONTRACT} You read evidence as an ethnographer: you look for practices, workarounds, rituals, and what people do rather than what they say. Your bias: you over-read culture and lived routine — say so when a reading is really structural or economic.` },
+      { key: 'economist', label: 'The Institutional Economist', text: `${AI_CONTRACT} You read evidence as an institutional economist: you look for incentives, transaction costs, principal-agent gaps, and who bears which risk. Your bias: you over-read incentives — say so when a reading isn't economic.` },
+      { key: 'historian', label: 'The Historian', text: `${AI_CONTRACT} You read evidence as a historian: you ask how it got this way, what was tried and abandoned, and which present arrangement is a fossil of an old fight. Your bias: you over-read path dependence — say so when something really is new.` },
+      { key: 'organizer', label: 'The Community Organizer', text: `${AI_CONTRACT} You read evidence as a community organizer: you look for power, relationships, who is organized and who is atomized, and what people could win together. Your bias: you over-read power and conflict — say so when a reading is really about capacity or information.` },
+      { key: 'systems', label: 'The Systems Engineer', text: `${AI_CONTRACT} You read evidence as an operations and systems engineer: you look for flows, queues, bottlenecks, feedback loops, and where variance gets amplified. Your bias: you over-read mechanism and under-read meaning — say so when the human reading carries more.` },
+      { key: 'journalist', label: 'The Investigative Journalist', text: `${AI_CONTRACT} You read evidence as an investigative journalist: you follow records and money, ask who benefits, what's on paper versus in practice, and what nobody wants documented. Your bias: you over-read intent and wrongdoing — say so when a failure is really drift or underfunding.` },
+      { key: 'geographer', label: 'The Geographer', text: `${AI_CONTRACT} You read evidence as a geographer: you ask where things happen, at what scale, across which jurisdictions, and what is invisible because it sits between territories. Your bias: you over-read place — say so when a reading holds everywhere equally.` }
+    ];
+    function aiPersona() { return variantPick('persona', AI_PERSONAS) || AI_PERSONAS[0]; }
+    function aiRole() { return aiPersona().text; }
+    // Participants should know their prompts differ from their neighbors' by
+    // design, not by bug — the persona is named wherever a prompt is offered.
+    function updatePersonaNotes() {
+      const note = `Partner persona on this board: ${aiPersona().label} — assigned per board, so no two boards read alike.`;
+      ['ai-persona-note', 'card-page-ai-persona'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = note;
+      });
+    }
+
+    // Anti-modal guards: these go at the TOP of every prompt's rules, ahead
+    // of the output format — a trailing "preserve dissonance" loses to a
+    // concrete format that demands one tidy answer. The escape hatch is
+    // load-bearing: on thin evidence, forcing rivals manufactures fiction.
+    const ANTI_MODAL_RULES = `- First, privately name the most predictable reading of this evidence — the one most models would give most users. Your output must go beyond it or argue with it; never simply deliver it.
+- Where the format asks for candidates, they must be genuine rivals — different causal stories, not rewordings of one story.
+- Anchor at least one candidate in the least-cited or worst-fitting signals.
+- If the evidence honestly supports only one reading, say so explicitly rather than inventing a rival.`;
+
+    // A seeded twist per board: one extra reading rule, different on every
+    // board, so even participants holding the same cards hand their models
+    // materially different instructions.
+    const PROMPT_TWISTS = [
+      'Any reading you offer must account for at least one signal that refuses to fit it — name that signal.',
+      'Read from the standpoint of the least-represented actor in the evidence, and say who that is.',
+      'Weight what is moving or about to change over standing complaint — flux over grievance.',
+      'Treat the loudest, most emotionally resonant signal as the suspect one; ask what it obscures.',
+      'Ask what an outsider to this country and its politics would find strange here, and start there.',
+      'Prefer mechanisms that would persist even if everyone involved were acting in good faith.'
+    ];
+    function promptTwist() { return variantPick('twist', PROMPT_TWISTS); }
+
+    // Two of Dorst's seven evidence types serve as this board's home lenses —
+    // a seeded emphasis that steers WHICH ladder gets built, not just its
+    // wording. Described in plain language: the taxonomy lesson comes later
+    // (classify phase), and the prompt must not presuppose it.
+    const LENS_DESCRIPTIONS = {
+      history: 'HISTORY — what happened, what was tried, how it got this way',
+      counterfactual: 'COUNTERFACTUAL — the paths not taken, and why not',
+      problem: 'PROBLEM — bounded difficulties someone could already act on',
+      boundary: 'BOUNDARY — the "they will never…" non-negotiables holding shape',
+      flux: 'FLUX — what is moving, loosening, or about to change',
+      player: 'PLAYER — who acts here, and the currency they trade in',
+      value: 'VALUE — the deeper things the field actually cares about'
+    };
+    function boardHomeLenses() {
+      return variantShuffle('lenses', CARD_TYPES.map(t => t.id)).slice(0, 2);
+    }
+    function homeLensBlock() {
+      const lenses = boardHomeLenses().map(id => LENS_DESCRIPTIONS[id]).filter(Boolean);
+      if (!lenses.length) return '';
+      return `\nThis board's home lenses (a deliberate emphasis, different on every board):\n- ${lenses.join('\n- ')}\nWhen readings tie, prefer the one these lenses surface, and always include at least one candidate visible only through them.\n`;
+    }
 
     const AI_RULES = `- Do NOT propose solutions, interventions, products, or features.
 - Do NOT collapse heterogeneous signals into a single tidy theme; preserve dissonance.
@@ -6660,26 +6731,30 @@ Rules:
     const HUB_PROMPT_MODES = {
       throughline: {
         label: 'Through-line',
-        blurb: 'Find the mechanism connecting everything — not a category label, a causal force. Copy the prompt, argue with the response, come back with a point of view.',
-        task: 'Help the user find the THROUGH-LINE of this {tierLabel} — the deep mechanism or shared condition that genuinely connects everything underneath, beyond any surface topic. A through-line is not a category label; it is the underlying mechanism, power structure, missing affordance, or human experience that the constituent elements triangulate toward.',
+        blurb: 'Find the rival mechanisms that could connect everything — not a category label, causal forces. Copy the prompt, argue with the response, come back with a point of view.',
+        task: 'Help the user find the THROUGH-LINE of this {tierLabel} — the deep mechanism or shared condition that genuinely connects everything underneath, beyond any surface topic. A through-line is not a category label; it is the underlying mechanism, power structure, missing affordance, or human experience that the constituent elements triangulate toward. The user commits to one — your job is to give them real rivals to choose between, not to pre-commit for them.',
         thinking: [
           'Read each signal. Note the specific actor, action, and barrier.',
           'Group the signals by *mechanism*, not by topic.',
-          'Find the single mechanism most signals share. If the contents do not share one cleanly, surface the 2 most plausible.',
-          'Test the through-line: would removing it from the world resolve most of these signals? If not, it is not the through-line.'
+          'Name (privately) the reading most people would produce from these signals — then set it aside.',
+          'Find the TWO strongest rival mechanisms — genuinely different causal stories, not rewordings. If the signals cleanly support only one, say so and show why.',
+          'Test each: would removing it from the world resolve most of these signals? If not, it is not a through-line.'
         ],
-        output: `## Through-line candidate
-1–2 sentences. Mechanism-level. Specific.
+        output: `## The predictable reading (named, then set aside)
+1 sentence — the through-line most analyses would produce here. Marked expected; do not simply deliver it below.
 
-## Why this fits
-3–5 bullets — which signals point at this and HOW.
+## Rival through-lines (2)
+For each:
+**Mechanism:** 1–2 sentences. Mechanism-level. Specific.
+**Signals that support it:** 2–4 by name.
+**Signals that resist it:** 1–2 by name.
 
-## What does not fit
-1–3 bullets — signals that don't cleanly fit, with a guess why they're here.
+## What would decide between them
+1–2 sentences — the observation or question that would settle it.
 
 ## Sharpening question
-One question I must answer before locking this in.`,
-        modeRule: 'Resist topical names. If the candidate sounds like a category, return to step 3.'
+One question I must answer before locking one in.`,
+        modeRule: 'Resist topical names. If a candidate sounds like a category, dig for its mechanism. Present the rivals even-handedly — the user decides.'
       },
       name: {
         label: 'Name & describe',
@@ -6707,7 +6782,7 @@ One question I must answer before locking this in.`,
 
 ## Locking-in question
 The one question to answer before committing to a name.`,
-        modeRule: '≤ 6 words per name; reject anything that sounds like a domain label.'
+        modeRule: '≤ 6 words per name; reject anything that sounds like a domain label. At least one candidate must borrow its vocabulary from OUTSIDE this pool\'s domain; reject any name that appears verbatim in the signals.'
       },
       stress: {
         label: 'Stress-test',
@@ -6750,7 +6825,7 @@ A single question the user must be able to answer to defend the current framing 
       // signals → evidence → patterns → themes beneath this card.
       const contents = formatTreeOutline(hubId, 0) || '(none yet)';
       return `<role>
-${AI_ROLE}
+${aiRole()}
 </role>
 
 <context>
@@ -6759,6 +6834,7 @@ spaces through a ladder of cards: evidence → patterns → themes → super-the
 They are working on one ${label} in their web map.
 
 ${tierFraming(tier, hubId)}
+${homeLensBlock()}
 </context>
 
 <cluster>
@@ -6782,8 +6858,10 @@ ${m.output}
 </output_format>
 
 <rules>
+${ANTI_MODAL_RULES}
 ${AI_RULES}
 - ${m.modeRule}
+- ${promptTwist()}
 </rules>`;
     }
 
@@ -6803,6 +6881,7 @@ ${AI_RULES}
     }
 
     function switchAIMode(mode) {
+      updatePersonaNotes();
       if (!currentAIHubId && !currentPoolMode && !currentSituationId) return;
       currentAIMode = mode;
       const ta = document.getElementById('ai-prompt-text');
@@ -6997,7 +7076,10 @@ Numbered. ≤ 30 words each. Force the user to look across, not within.`;
 3. THE OVERLOOKED — Is there a signal in the noise pile that would complicate or strengthen a candidate pattern? Name it specifically.
 
 4. TRIANGULATION QUESTIONS — Ask 2 sharp questions that force the user to defend their sorting and begin grouping. These should be mechanism-level, not topic-level.`;
-          output = `## What your sorting reveals
+          output = `## The expected reading
+1 sentence — the one pattern most analyses of this pool would produce. Marked expected — treat with suspicion. The candidate patterns below must not restate it.
+
+## What your sorting reveals
 2–3 sentences. What does your emphasis on the super signals tell us about your instincts? What might you be avoiding in the noise?
 
 ## Candidate patterns
@@ -7026,6 +7108,9 @@ Numbered. ≤ 30 words each. Force a defense.`;
           output = `## Before you read further
 Pause. Write down 2 patterns you EXPECT to find. Naming your assumptions makes it harder for them to hide.
 
+## The expected reading
+1 sentence — the one pattern most analyses of this pool would produce. Marked expected — treat with suspicion. The candidate patterns below must not restate it.
+
 ## Landscape
 2–4 sentences naming the loudest signals and major terrain.
 
@@ -7048,7 +7133,7 @@ Numbered. ≤ 30 words each. Force a defense.`;
       }
 
       return `<role>
-${AI_ROLE}
+${aiRole()}
 </role>
 
 <context>
@@ -7058,6 +7143,7 @@ In Dorst's Frame Creation model, the next step is triangulation: grouping signal
 to reveal named patterns (specific conditions no single signal names directly),
 then grouping patterns to reveal themes (deeper universals that bridge human
 experience and structural/systemic factors).
+${homeLensBlock()}
 </context>
 
 ${signals}
@@ -7071,12 +7157,15 @@ ${output}
 </output_format>
 
 <rules>
+${ANTI_MODAL_RULES}
 ${AI_RULES}
 - ${modeRule}
+- ${promptTwist()}
 </rules>`;
     }
 
     function openAIPromptModal(mode) {
+      updatePersonaNotes();
       currentAIHubId = null;
       currentSituationId = null;
       currentPoolMode = mode || 'landscape';
@@ -7113,6 +7202,7 @@ ${AI_RULES}
     // Situation-lens prompts for one section box: tabs come from
     // SITUATION_PROMPT_KINDS; tab switches route through switchAIMode.
     function openSituationAIModal(sitId, kind) {
+      updatePersonaNotes();
       const sit = findSituation(sitId);
       if (!sit) return;
       currentAIHubId = null;
@@ -7642,7 +7732,7 @@ ${held}
       }
 
       return `<role>
-${AI_ROLE}
+${aiRole()}
 </role>
 
 <context>
@@ -7672,8 +7762,10 @@ ${k.output}
 </output_format>
 
 <rules>
+${ANTI_MODAL_RULES}
 ${AI_RULES}
 - ${k.modeRule}
+- ${promptTwist()}
 </rules>`;
     }
 
@@ -7720,10 +7812,16 @@ ${AI_RULES}
 
       const concept = (appState.settings.concept || '').trim() || '(no starting concept recorded)';
 
+      const critic = variantPick('critic', [
+        "a funder's program officer who has read forty of these this cycle and can no longer tell them apart",
+        'a city auditor who trusts records over narratives',
+        'a newsroom standards editor who strikes every claim that cannot name its source',
+        'a methods professor who fails theses for confusing the popular reading with the grounded one'
+      ]);
       return `<role>
-You are a hostile institutional reviewer — a senior critic who has sat through hundreds of problem-framing presentations and watched every one of Kees Dorst's five syndromes sink a project: the Lone Warrior (framing in isolation), Freeze the World (treating a moving situation as fixed), the Self-Made Box (repeating untested assumptions), the Rational High Ground (defending claims that were never grounded), and Identification (mistaking one's own slice of the field for the whole).
+You are a hostile institutional reviewer — ${critic} — a senior critic who has sat through hundreds of problem-framing presentations and watched every one of Kees Dorst's five syndromes sink a project: the Lone Warrior (framing in isolation), Freeze the World (treating a moving situation as fixed), the Self-Made Box (repeating untested assumptions), the Rational High Ground (defending claims that were never grounded), and Identification (mistaking one's own slice of the field for the whole).
 
-You are not here to encourage. You are here to find what this team cannot see about their own map. Be specific, be skeptical, and assume the most flattering reading is the wrong one.
+You are not here to encourage. You are here to find what this team cannot see about their own map. Be specific, be skeptical, and assume the most flattering reading is the wrong one. If this map reads like every other map from the same field survey, say exactly that, and name what is missing that would make it this team's own.
 </role>
 
 <what_you_are_auditing>
@@ -8854,7 +8952,7 @@ deeper. The job at this stage is to investigate the field, not to solve anything
 
 ## Role
 
-${AI_ROLE}
+${aiRole()}
 
 ## Rules
 
@@ -8893,7 +8991,7 @@ Open \`state.json\` in the Triangulator to load the full board — all nodes, ed
         ? (c.cardType === 'player' ? 'player (a stakeholder understood by their practices, interests, values, and frames)' : 'value (a deep, universal value observed in the field)')
         : tierName(c.tier).toLowerCase() + ' (a deeper condition beneath the patterns)';
       return `<role>
-${AI_ROLE}
+${aiRole()}
 </role>
 
 <context>
@@ -9903,6 +10001,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       if (blurb && m) blurb.textContent = m.blurb;
     }
     function setCardPageAIMode(mode) {
+      updatePersonaNotes();
       cardPageAIMode = HUB_PROMPT_MODES[mode] ? mode : 'throughline';
       document.querySelectorAll('#card-page-ai-tabs .ai-mode-tab').forEach(btn => {
         const on = btn.getAttribute('data-mode') === cardPageAIMode;
