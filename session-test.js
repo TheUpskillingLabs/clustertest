@@ -479,6 +479,31 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const names = await page.evaluate(() => window.__downloads);
   console.log('  downloads: ' + JSON.stringify(names));
 
+  // The distilled sentence is the one artifact OLOS voters read first; the
+  // export must carry the audit prompt, and the audit must ban the stock
+  // formats without ever writing the sentence itself.
+  {
+    const wf = await page.evaluate(() => {
+      const files = buildExportFiles(appState.situations[0].id);
+      const distill = files.find(f => /(^|\/)distill\.md$/.test(f.path));
+      return {
+        hasDistill: !!distill,
+        bansHmw: !!distill && distill.content.includes('How might we'),
+        forbidsWriting: !!distill && /may NOT write/i.test(distill.content),
+        hasDraftSlot: !!distill && distill.content.includes('draft_sentence')
+      };
+    });
+    check('the working folder carries distill.md', wf.hasDistill, JSON.stringify(wf));
+    check('the distill audit names the stock formats and forbids ghostwriting',
+      wf.bansHmw && wf.forbidsWriting && wf.hasDraftSlot, JSON.stringify(wf));
+    const paradoxPlaceholder = await page.evaluate(() => {
+      const ta = document.querySelector('textarea[id^="sit-paradox-"]');
+      return ta ? ta.placeholder : '(no paradox field rendered)';
+    });
+    check('the paradox field asks for the user\'s own words, not a fill-in template',
+      !/___/.test(paradoxPlaceholder), paradoxPlaceholder);
+  }
+
   // ------------------------------------------- What is actually in the export
   // "A file was produced" is not the deliverable. The deliverable is a landing
   // page and a presentation that open by double-click — no server, no network —

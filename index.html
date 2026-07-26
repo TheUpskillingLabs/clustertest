@@ -2702,7 +2702,7 @@ git commit -m "Update situation map — [your name]"
 git push</pre>
           </li>
           <li><strong>Git merges</strong> your map with your podmates'. A merge conflict isn't an error — it's a <em>conversation</em>: two of you saw the same thing differently, so talk it out, then commit the resolution.</li>
-          <li><strong>Submit in OLOS</strong>: open your cycle → <strong>Propose</strong>. The form is one short page: paste the triad repo's URL as <strong>“Link to your map”</strong>, name the situation, and distill it to one sentence. Voting happens on the OLOS ballot; the repo is what voters open.</li>
+          <li><strong>Submit in OLOS</strong>: open your cycle → <strong>Propose</strong>. The form is one short page: paste the triad repo's URL as <strong>“Link to your map”</strong>, name the situation, and distill it to one sentence — <strong>in your own words, plain speech</strong>. If it starts “How might we”, or it could sit on a neighbor's map unchanged, it isn't yours yet. Read it aloud first. Your export includes <code>distill.md</code> — a prompt that makes your AI <em>audit</em> your draft sentence instead of writing it. Voting happens on the OLOS ballot; the repo is what voters open.</li>
         </ol>
         <p class="intro-hint">This manual loop is intentional. It prevents the <strong>Lone Warrior</strong> syndrome — no single person's export overwrites everyone else's work without Git making you negotiate.</p>
         <div class="modal-actions">
@@ -3442,7 +3442,7 @@ git push</pre>
       const listDiv = document.getElementById('config-item-list');
       listDiv.innerHTML = appState.items.map(item => `
         <div class="config-item-row" role="listitem">
-          <div><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.summary)}</p>${sourceUrlHtml(item)}</div>
+          <div><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.summary)}</p>${item.quote ? `<p style="font-style:italic; opacity:0.75;">“${escapeHtml(item.quote)}”</p>` : ''}${sourceUrlHtml(item)}</div>
           <button class="config-item-del" aria-label="Remove ${escapeHtml(item.title)}" onclick="removeConfigItem('${item.id}')">✕</button>
         </div>
       `).join('') || `
@@ -3838,17 +3838,23 @@ git push</pre>
       };
       reader.readAsText(file);
     }
+    // Deliberately wider than a friction hunt: a pool that only admits
+    // breakage can only ladder up to breakage. Anomalies, assets, and
+    // verbatim voices are where one participant's material stops sounding
+    // like everyone else's.
     function tgxExtractBuildPrompt(source) {
-      return 'You are helping build a Frame Creation evidence pool. Read the SOURCE material below and pull out the discrete, atomic observations, facts, and insights it contains.\n\n'
+      return 'You are helping build a Frame Creation evidence pool. Read the SOURCE material below and pull out the discrete, atomic observations, facts, insights, anomalies, and assets it contains.\n\n'
         + 'Rules:\n'
         + '- One card per distinct idea. Split compound points apart.\n'
-        + '- Each card must describe something OBSERVED in the field — a pattern of behaviour, a dynamic, or a verifiable fact — not an opinion, a solution, or a value judgment.\n'
+        + '- Each card must describe something OBSERVED in the field — a pattern of behaviour, a dynamic, a verifiable fact, something that deviates from the expected story, or something that demonstrably works — not your own opinion, solution, or value judgment. (An attributed opinion FROM the source is field data — carry it as a quote.)\n'
         + '- "title": 8 words or fewer, specific.\n'
-        + '- "summary": 1–2 sentences, concrete, able to stand on its own.\n'
-        + '- "kind": exactly one of "observation" (a pattern of action/behaviour), "fact" (a verifiable datum), or "insight" (a non-obvious connection or implication).\n'
-        + '- Discard filler, rhetoric, and anything not grounded in the source.\n\n'
+        + '- "summary": 1–2 sentences, concrete, able to stand on its own. Keep the source\'s own idiom where it is distinctive — do not normalize its voice into report-speak.\n'
+        + '- "kind": exactly one of "observation" (a pattern of action/behaviour), "fact" (a verifiable datum), "insight" (a non-obvious connection or implication), "anomaly" (deviates from the story the source expects), "asset" (something working that the field leans on), or "quote" (a verbatim, attributed voice).\n'
+        + '- Optional "quote": when the source says it memorably, add the exact words (25 words or fewer) to any card.\n'
+        + '- If the source contains an anomaly or a counter-signal, extract at least one.\n'
+        + '- Discard filler and rhetoric not grounded in the source.\n\n'
         + 'Return ONLY a JSON array — no prose, no markdown fences — in exactly this shape:\n'
-        + '[ { "title": "…", "summary": "…", "kind": "observation" } ]\n\n'
+        + '[ { "title": "…", "summary": "…", "kind": "observation", "quote": "…" } ]\n\n'
         + '<source>\n'
         + (source || '(paste your source material above, then copy this prompt again)')
         + '\n</source>';
@@ -3877,7 +3883,7 @@ git push</pre>
       let arr;
       try { arr = JSON.parse(t); } catch (e) { return { error: 'That doesn\'t look like valid JSON. Re-run the copied prompt and paste the whole result.' }; }
       if (!Array.isArray(arr)) return { error: 'Expected a JSON array of extracts.' };
-      const kindTag = { observation: 'Observation', fact: 'Fact', insight: 'Insight' };
+      const kindTag = { observation: 'Observation', fact: 'Fact', insight: 'Insight', anomaly: 'Anomaly', asset: 'Asset', quote: 'Quote' };
       const urlEl = document.getElementById('xtr-url');
       let url = urlEl ? urlEl.value.trim() : '';
       if (!/^https?:\/\//i.test(url)) url = '';
@@ -3889,7 +3895,10 @@ git push</pre>
         const summary = String(e.summary || '').trim();
         if (!title || !summary) { skipped++; return; }
         const kind = String(e.kind || '').trim().toLowerCase();
-        items.push({ id: uid('item'), tag: kindTag[kind] || 'Extract', title: title, summary: summary, source_url: url, verified: false });
+        const it = { id: uid('item'), tag: kindTag[kind] || 'Extract', title: title, summary: summary, source_url: url, verified: false };
+        const quote = String(e.quote || '').trim();
+        if (quote) it.quote = quote;
+        items.push(it);
       });
       if (!items.length) return { error: 'No valid extracts found — each needs a "title" and a "summary".' };
       return { items: items, skipped: skipped };
@@ -5299,7 +5308,7 @@ git push</pre>
       const sigCount = signalsUnder(card.id).length;
       let themeQuality = '';
       if (card.tier === 3) {
-        themeQuality = `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`;
+        themeQuality = `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience? If it's the pairing everyone lands on, hunt for a second bridge.<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`;
       } else if (card.tier === 4) {
         themeQuality = `<div class="quality-check"><em>Convergence test:</em> Does this sit at the intersection of all your patterns — not just summarize them?<br><em>Situation test:</em> Could "if this situation is approached as if it is [this]…" open new possibilities?</div>`;
       } else if (card.tier >= 5) {
@@ -6626,7 +6635,7 @@ git push</pre>
         return 'This is a Pattern — a specific, named condition that two or more evidence cards point toward together. Focus on the shared mechanism behind the evidence: who is affected, in what context, and what makes the friction recur.';
       }
       if (t === 3) {
-        return 'This is a Theme — a deeper universal that two or more patterns triangulate toward. A good theme bridges the human (cultural) domain and the technical or economic realm. Focus on the condition or force hidden beneath the surface of everyday professional life.';
+        return 'This is a Theme — a deeper universal that two or more patterns triangulate toward. A good theme bridges the human (cultural) domain and the technical or economic realm — and many pairings qualify: if the candidate is the pairing most readers of this evidence would land on, hunt for a second bridge before keeping the first. Focus on the condition or force hidden beneath the surface of everyday professional life.';
       }
       if (t === 4) {
         return 'This is a Super-theme — a convergence where multiple patterns meet at a deeper level. Focus on what all constituent patterns share that none names on its own. A good super-theme is close to frame-ready: test it with "If this situation is approached as if it is [this super-theme], then ___" — does the sentence open new possibilities?';
@@ -6640,8 +6649,8 @@ Convert the data below into a CSV with exactly three columns:
   title,summary,source_url
 
 Rules:
-• title — 5–8 words naming the core friction (what is broken or stuck)
-• summary — 1–3 sentences describing the situation factually: who is affected, what breaks down, why it matters. No proposed solutions.
+• title — 5–8 words naming what the extract attests: a friction, an asset, an anomaly, or a contested claim
+• summary — 1–3 sentences describing the situation factually: who is involved, what happens, why it matters. Keep the source's own idiom where it is distinctive. No proposed solutions.
 • source_url — the URL of the document, page, or transcript this extract came from (must start with http:// or https://). Leave blank if there is no source URL.
 • One row per distinct source extract. Merge near-duplicates.
 • Return ONLY valid CSV, starting with the header row. No explanation, no code fences. Wrap values containing commas in double quotes.
@@ -6697,6 +6706,23 @@ Rules:
       'Prefer mechanisms that would persist even if everyone involved were acting in good faith.'
     ];
     function promptTwist() { return variantPick('twist', PROMPT_TWISTS); }
+
+    // The hand-entry placeholder used to teach one question — "What's the
+    // friction?" — so every pool admitted only breakage. Boards now open on
+    // different questions; friction is one of them, not the frame.
+    const INTAKE_PLACEHOLDERS = [
+      'What did you actually see or hear? Keep it concrete.',
+      "What's the friction? Who feels it?",
+      "What surprised you — what doesn't fit the story you expected?",
+      "What's quietly working here that nobody names?"
+    ];
+    function rotateIntakePlaceholders() {
+      const text = variantPick('intake', INTAKE_PLACEHOLDERS);
+      ['new-item-summary', 'add-signal-summary'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.placeholder = text;
+      });
+    }
 
     // Two of Dorst's seven evidence types serve as this board's home lenses —
     // a seeded emphasis that steers WHICH ladder gets built, not just its
@@ -6957,7 +6983,7 @@ ${AI_RULES}
       const signalItems = appState.items.filter(i => decisions[i.id] === 'signal' || (!decisions[i.id] && !hasSorted));
       const noiseItems = appState.items.filter(i => decisions[i.id] === 'noise');
       const unsortedItems = hasSorted ? appState.items.filter(i => !decisions[i.id]) : [];
-      const formatList = (items) => items.map(i => `  - "${i.title}": ${i.summary}`).join('\n') || '  (none)';
+      const formatList = (items) => items.map(i => `  - "${i.title}": ${i.summary}${i.quote ? ` — "${i.quote}"` : ''}`).join('\n') || '  (none)';
       return { hasSorted, superItems, signalItems, noiseItems, unsortedItems, formatList };
     }
 
@@ -7493,7 +7519,7 @@ ${AI_RULES}
         ],
         output: `## Candidate paradoxes (2–3)
 For each:
-**The paradox:** "The situation demands [X], but the same conditions that create the need prevent [X] from working, because [mechanism]."
+**The paradox:** stated in ≤ 2 plain sentences, phrased the way someone inside this field would say it. Do NOT use a fill-in-the-blank template. It must still be self-undoing — the shape test stays; the sentence is the user's own.
 **Evidence — the demand:** cards/extracts by name.
 **Evidence — the prevention:** cards/extracts by name.
 **Who benefits from it persisting:** actors and mechanisms (often wider-field).
@@ -7505,7 +7531,7 @@ Which single paradox should the pod form around, and what evidence would change 
 
 ## What's ungrounded
 Any leg you could NOT evidence from the trail — named as a research task.`,
-        modeRule: 'A paradox must be self-undoing (X requires not-X) and must name who benefits from its persistence. Do NOT accept "this is complicated" or a mere trade-off. Do NOT propose solutions or frames.'
+        modeRule: 'A paradox must be self-undoing (X requires not-X) and must name who benefits from its persistence. Do NOT accept "this is complicated" or a mere trade-off. Do NOT propose solutions or frames. If a paradox could be pasted into any report from this field unchanged, sharpen it until it couldn\'t.'
       },
       frame: {
         label: 'Frame',
@@ -7637,6 +7663,36 @@ For each gap identified above, one concrete research task:
 ## Access needs
 What the research demands that the user doesn't currently have access to: specific people, roles, or communities who could ground-truth claims; datasets or documents behind institutional walls; populations a survey would need to reach; adjacent domains that hold relevant knowledge. For each, suggest a realistic path to access — a warm introduction, a cold outreach email, a public records request, a community forum, an academic database, a professional association. Be concrete: "talk to someone" is not a path; "post in [specific subreddit/forum] asking for [specific role]" is.`,
         modeRule: 'Audit what exists — do not invent evidence or soften absences. Every research task must name a question, a method, a tool, and what the answer would change.'
+      },
+
+      // The submitted sentence was the one untemplated step in the whole
+      // arc — participants pasted their board into a model and asked it to
+      // write the sentence, and every model reached for the same design-
+      // thinking stock phrasing. This prompt inverts that: the model audits
+      // the user's draft and is forbidden from writing it.
+      distill: {
+        label: 'Distill',
+        blurb: 'OLOS asks for one distilled sentence, in your words. This prompt has your AI audit your draft — it is forbidden from writing the sentence for you.',
+        task: `The user must distill this problem situation into ONE sentence, in their own words, to submit alongside their map. You may NOT write, rewrite, complete, or exemplify that sentence — not even "for instance". Your whole job is to audit the draft at the bottom of this prompt and interrogate it until it could only have come from this user's map.`,
+        thinking: [
+          'Read the situation, the paradox, and the starred extracts first; only then read the draft.',
+          'Check the draft names a concrete actor and carries the paradox\'s mechanism — not a generic ill.',
+          'Check at least one word or image in it comes from the user\'s own extracts. Quote that word back; if there is none, say so.',
+          'Check for stock openers and formats: "How might we", "In a world where", a fill-in-the-blank cadence, report-speak. Flag them — the sentence should sound like the user, not like a workshop.',
+          'Run the neighbor test: could this sentence sit unchanged on another participant\'s map from the same survey? If yes, name exactly what is missing that would make it this map\'s own.'
+        ],
+        output: `## Verdict on the draft
+2–3 sentences. Does it carry a concrete actor, this map's mechanism, and the user's own words? Quote the strongest word in it and the weakest.
+
+## Stock-format flags
+Any "How might we", template cadence, or report-speak — quoted, with why it costs them distinctiveness. If clean, say so.
+
+## The neighbor test
+Could this sentence sit on a neighbor's map unchanged? If yes: the one thing from THIS map's evidence that, worked in, would make it unmistakably theirs.
+
+## Three questions
+Three interview questions that push the user toward their own diction — each answerable from their map, none answerable with yes/no.`,
+        modeRule: 'Never draft, rewrite, or complete the sentence — not even as an example. If the draft slot is empty, say so and stop; do not produce a sentence to fill it.'
       }
     };
 
@@ -7729,6 +7785,15 @@ ${held ? `
 ${held}
 </candidate_paradoxes_already_held>
 ` : ''}`;
+      }
+      // The distill audit needs the user's draft — the slot is explicit so
+      // the model refuses to run without one instead of inventing a sentence.
+      if (kind === 'distill') {
+        extraBlocks = `
+<draft_sentence>
+[TYPE OR PASTE YOUR ONE-SENTENCE DRAFT HERE — the audit does not run without it]
+</draft_sentence>
+`;
       }
 
       return `<role>
@@ -8385,7 +8450,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <label for="sit-title-${n}">Name the situation</label>
           <input type="text" id="sit-title-${n}" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('${s.id}', 'title', this.value); recomputeSubmitButton();">
           <label for="sit-desc-${n}" style="margin-top:12px;">Describe it</label>
-          <textarea id="sit-desc-${n}" placeholder="This is an open condition, not a bounded problem, because ___" oninput="updateSituationField('${s.id}', 'description', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.description || '')}</textarea>
+          <textarea id="sit-desc-${n}" placeholder="What is going on here, in your own words? (You'll argue why it's open, not bounded, in the next field.)" oninput="updateSituationField('${s.id}', 'description', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.description || '')}</textarea>
           <label for="sit-open-${n}" style="margin-top:12px;">Why this is open, not bounded</label>
           <p class="field-hint">A bounded problem has a known solution path. An open situation doesn't — it's complex, networked, and dynamic. What makes this one open?</p>
           <textarea id="sit-open-${n}" placeholder="What makes this open: the network of actors, the moving parts, the absence of a known path…" oninput="updateSituationField('${s.id}', 'openness', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.openness || '')}</textarea>
@@ -8433,8 +8498,8 @@ Interrogate this map. Work through each point and answer concretely, naming spec
         <section class="workspace-section" data-stage="5" data-stage-short="Paradox">
           <div class="ws-stage-label">Stage 5 — Find the paradox(es)</div>
           <label for="sit-paradox-${n}">Name the deadlock the field sustains</label>
-          <p class="field-hint">Everything you mapped — the themes, the context, the field — was in service of this. With no client to vouch for the pain, our paradox must live in the field itself: 'The situation demands X, but the same conditions that create the need also prevent X from working.' It's not 'this is complicated' — it's the self-undoing structural tension the pod forms around. Name it, and name who keeps it alive.</p>
-          <textarea id="sit-paradox-${n}" placeholder="The situation demands ___, but the same conditions that create the need also prevent ___ from working." oninput="updateSituationField('${s.id}', 'paradox', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.paradox || '')}</textarea>
+          <p class="field-hint">Everything you mapped — the themes, the context, the field — was in service of this. With no client to vouch for the pain, the paradox must live in the field itself: the conditions that create the need are the same conditions that prevent it being met. It's not 'this is complicated' — it's the self-undoing deadlock the pod forms around. Name it in your own words, the way someone inside the field would say it, and name who keeps it alive. From another field entirely: <em>${escapeHtml(variantPick('paradox-example', PARADOX_EXAMPLES))}</em></p>
+          <textarea id="sit-paradox-${n}" placeholder="Name the deadlock in your own words — plain speech, no template. Who needs what, and what stops exactly that from working?" oninput="updateSituationField('${s.id}', 'paradox', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.paradox || '')}</textarea>
           ${tgxSharpnessHtml(s)}
           <label for="sit-status-${n}" style="margin-top:12px;">Who benefits from the status quo?</label>
           <p class="field-hint">If this situation persists indefinitely, who wins? Follow the incentives — name actors and mechanisms. A paradox nobody profits from is usually a misreading; the beneficiaries often sit in the wider field you just mapped.</p>
@@ -8608,7 +8673,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
         const grounded = p.evidenceIds.length > 0;
         return '<div class="owner-row paradox-row">'
           + '<div class="paradox-row-top">'
-          + '<textarea class="paradox-text" placeholder="The field demands ___, but the same conditions that create the need prevent ___ from working." oninput="tgxParadoxUpdate(\'' + s.id + '\',\'' + p.id + '\',\'text\',this.value)">' + escapeHtml(p.text || '') + '</textarea>'
+          + '<textarea class="paradox-text" placeholder="Another candidate deadlock, in your own words — who needs what, and what stops exactly that?" oninput="tgxParadoxUpdate(\'' + s.id + '\',\'' + p.id + '\',\'text\',this.value)">' + escapeHtml(p.text || '') + '</textarea>'
           + '<button type="button" class="owner-del" title="Remove" onclick="tgxParadoxRemove(\'' + s.id + '\',\'' + p.id + '\')">✕</button>'
           + '</div>'
           + '<div class="paradox-row-meta">'
@@ -8671,9 +8736,19 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     // export — the deck audience sees what the pod claims (the only honesty
     // gate available without a client or an in-app judge).
     const SHARPNESS_ITEMS = [
-      ['selfUndoing', 'It names a contradiction where the fix undoes itself — X requires not-X'],
+      ['selfUndoing', 'It names a contradiction where the fix undoes itself — it survives being rewritten as "the situation demands X, but the conditions creating the need prevent X". (That rewrite is a test, not your sentence.)'],
       ['beneficiaryNamed', 'It names who is invested in it persisting'],
       ['legsEvidenced', 'Both legs of the contradiction are evidenced (linked cards / extracts)']
+    ];
+    // Worked paradox examples from OTHER fields — one per board, seeded. An
+    // example from the board's own domain gets copied with the blanks
+    // re-filled; an example from elsewhere teaches the shape and nothing else.
+    const PARADOX_EXAMPLES = [
+      'Housing: the neighborhoods where new homes are most needed are the ones where existing residents have the most to lose from them — the need creates the resistance that blocks it.',
+      'ER triage: the patients who most need unhurried attention arrive at exactly the moments the system can least give it — urgency manufactures the conditions that undo care.',
+      'Open source: the projects everyone depends on are maintained by the fewest people, because ubiquity convinces each user that someone else is tending them.',
+      'Local news: the stories a town most needs are the costliest to report, and the towns that most need them are the least able to pay for the reporting.',
+      'Antibiotics: the more reliably a drug works, the more it gets used, and the more it gets used, the sooner it stops working.'
     ];
     function tgxSharpnessEnsure(s) { if (!s.sharpness || typeof s.sharpness !== 'object') s.sharpness = {}; return s.sharpness; }
     function tgxSharpnessUpdate(sitId, key, val) {
@@ -8976,6 +9051,10 @@ Read \`problem-situation.md\` first — it has the situation description, the pa
 ### Using this with an AI
 Upload this whole folder to Claude, ChatGPT, or NotebookLM. Start with: _"Read the README, then act as my Frame Creation thinking partner. Read problem-situation.md and the cards. Help me find what's missing and what's assumed — don't propose solutions."_ The \`gap-analysis.md\` file is a ready-to-paste prompt that produces a structured evidence audit.
 
+## Before you submit
+
+The one sentence you submit must be yours — written in your own words, not a model's. Do not ask an AI to write it; the stock result ("How might we…") sounds like everyone else's. Draft it yourself, read it aloud, then paste \`distill.md\` into your AI to have your draft **audited** — it checks for a concrete actor, your map's own mechanism, and your own diction, and it is forbidden from writing the sentence for you.
+
 ### Loading the canvas
 Open \`state.json\` in the Triangulator to load the full board — all nodes, edges, positions, and the problem situation box.
 `;
@@ -9032,6 +9111,7 @@ ${AI_RULES}
       if (sit) {
         // Ready-to-run evidence audit — paste straight into an AI tool.
         add('gap-analysis.md', buildSituationPrompt('gap-analysis', sit));
+        add('distill.md', buildSituationPrompt('distill', sit));
         if ((sit.researchAgenda || '').trim()) {
           add('research-agenda.md', '# Research agenda — known gaps and next investigations\n\n' + sit.researchAgenda.trim());
         }
@@ -9882,7 +9962,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 *The universal beneath the patterns. What force or condition is hidden under the surface of everyday life here?*
 
 ## Bridge test
-*Does this name BOTH a structural condition AND a human experience? A theme that lives on only one side is just a restated pattern.*
+*Does this name BOTH a structural condition AND a human experience? A theme that lives on only one side is just a restated pattern. Many pairings qualify — if yours is the pairing everyone lands on, hunt for a second bridge before keeping the first.*
 
 ## Depth test
 *Is this hidden beneath the everyday framing? Does it explain things you didn't build it from?*
@@ -10473,6 +10553,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
       setBoardTitleDisplay();
       tgxCanvasDropInit();
+      rotateIntakePlaceholders();
       if (!onboarding && target !== 'sorting') ensureCanvasInitialized();
       goToScreen(target);
 
