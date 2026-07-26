@@ -88,11 +88,32 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   await page.click('#load-sample-btn');
   await sleep(400);
-  const poolSize = await page.evaluate(() => DEFAULT_ITEMS.length);
-  check(`sample pool loads ${poolSize} source extracts`,
+  const poolSize = await page.evaluate(() => SAMPLE_HAND_SIZE);
+  check(`the shared deal puts a ${poolSize}-card hand in the pool`,
     await page.evaluate(() => appState.items.length) === poolSize);
   check('every pre-loaded extract cites its source',
     await page.evaluate(() => appState.items.every(i => /^https?:\/\//.test(i.source_url || ''))));
+  check('the deal is deterministic for this board\'s seed',
+    await page.evaluate(() => {
+      const first = appState.items.map(i => i.id).join(',');
+      appState.items = [];
+      loadSampleSignals();
+      return appState.items.map(i => i.id).join(',') === first;
+    }));
+  check('a different seed deals a different hand',
+    await page.evaluate(() => {
+      const first = appState.items.map(i => i.id).join(',');
+      const saved = appState.settings.seed;
+      appState.settings.seed = (saved + 1) >>> 0;
+      appState.items = [];
+      loadSampleSignals();
+      const second = appState.items.map(i => i.id).join(',');
+      appState.settings.seed = saved;
+      appState.items = [];
+      loadSampleSignals();
+      renderConfigItems();
+      return first !== second;
+    }));
 
   // -------------------------------------------------------------- CSV import
   // An import has to say what it did. A toast is gone in three and a half
@@ -886,7 +907,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       return !!add && !!ev && add.innerHTML.trim() !== ev.innerHTML.trim() && /\+|＋/.test(add.textContent);
     }));
 
-    await page.click('#add-extracts-modal .share-row >> nth=0');
+    await page.click('#add-extracts-modal .share-row >> nth=1');
     await sleep(300);
     check('"Upload a CSV" reaches the importer from the board', (await boardState()).csvOpen);
 
@@ -941,7 +962,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await closeOpenModals();
     await page.evaluate(() => openAddExtractsSheet());
     await sleep(250);
-    await page.click('#add-extracts-modal .share-row >> nth=1');
+    await page.click('#add-extracts-modal .share-row >> nth=0');
     await sleep(350);
     check('the ✨ extractor opens from the canvas, whole',
       await page.evaluate(() => {
@@ -1112,6 +1133,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     resumed.cards === 1 && resumed.sits === 1, JSON.stringify(resumed));
   check('it does not resume onto a removed screen', resumed.onADeadScreen === false, JSON.stringify(resumed));
   check('it resumes somewhere real', ['board', 'workspace', 'setup', 'sorting'].includes(resumed.screen), resumed.screen);
+  check('a pre-seed board is dealt a variation seed on load',
+    await page.evaluate(() => typeof appState.settings.seed === 'number' && isFinite(appState.settings.seed)));
 
   // A board saved mid-Seed, before Patterns and Themes were unlocked from the
   // start. It must come forward with everything it had and the full ladder now

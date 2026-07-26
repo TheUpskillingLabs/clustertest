@@ -186,6 +186,8 @@
     .config-input:focus { border-color: var(--primary-teal); }
 
     .item-builder-list { background: var(--midnight); border: 2px solid rgba(255,255,255,0.1); border-radius: var(--radius-2); padding: 12px; max-height: 220px; overflow-y: auto; margin-bottom: 16px; }
+    .pool-empty-state { color: var(--cloud); opacity: 0.8; font-size: var(--text-sm); line-height: var(--lead-sm); padding: 20px 16px; text-align: center; }
+    .pool-empty-state strong { color: var(--primary-teal); }
     .config-item-row { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: var(--radius-2); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; }
     .config-item-row h4 { font-size: var(--text-sm); color: var(--ghost-white); margin-bottom: 4px; }
     .config-item-row p { font-size: var(--text-xs); color: var(--cloud); opacity: 0.7; line-height: var(--lead-xs); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
@@ -1023,6 +1025,7 @@
     @media (max-width: 1024px) {
     }
 
+    .canvas-viewport.is-file-drop { outline: 3px dashed var(--primary-teal); outline-offset: -3px; }
     .canvas-viewport {
       position: relative;
       flex: 1;
@@ -1244,6 +1247,9 @@
     .dock-tool:hover { background: var(--cloud); }
     .dock-tool:focus-visible { outline: 3px solid var(--primary-teal); outline-offset: -3px; }
     .dock-tool.is-armed { background: var(--primary-teal); color: var(--ghost-white); }
+    /* Bringing in more sources is a peer of Link/Evidence, not an afterthought. */
+    .dock-tool-add .dock-glyph { color: var(--primary-teal); font-weight: 700; }
+    .dock-tool-add { border: 1px dashed rgba(0,148,160,0.55); border-radius: var(--radius-1); }
     .dock-glyph { font-size: var(--text-base); line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
     .dock-glyph svg { width: 16px; height: 16px; display: block; }
     .dock-tool[data-tool="signal"] .dock-glyph { color: var(--primary-teal); }
@@ -1833,6 +1839,8 @@
     /* Clickable provenance link on extract nodes. */
     .node-source-link { display: inline-block; margin-top: 4px; font-size: var(--text-2xs); font-weight: 600; color: var(--primary-teal); text-decoration: none; letter-spacing: var(--track-label); }
     .node-source-link:hover { text-decoration: underline; }
+    .node-source-note { color: inherit; opacity: 0.55; cursor: default; }
+    .node-source-note:hover { text-decoration: none; }
 
     .quality-check { font-size: var(--text-2xs); color: rgba(255,255,255,0.55); line-height: var(--lead-2xs); padding: 6px 8px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); }
     .quality-check em { color: rgba(255,255,255,0.75); font-style: normal; font-weight: 600; }
@@ -2313,31 +2321,32 @@
       <header class="sources-head">
         <p class="deck-eyebrow">Start here <span class="deck-kicker">· your source extracts</span></p>
         <h1 class="deck-title sources-title">Load the raw material.</h1>
-        <p class="deck-lede sources-lede">Field notes, interviews, articles, statistics, anecdotes — the raw material you'll sift for signal. Go wide; include what might contradict you. The problem comes into focus later.</p>
+        <p class="deck-lede sources-lede">Your field notes, interviews, articles, survey responses — the material only you gathered. Go wide; include what might contradict you. The shared survey deck is common ground: a map built only from it will look like everyone else's.</p>
       </header>
 
       <div class="config-field">
         <label for="config-title">Name your web map</label>
-        <input type="text" id="config-title" class="config-input" value="Civics &amp; Elections: Signal Pool">
+        <input type="text" id="config-title" class="config-input" value="" placeholder="Your name — the digest and your podmates find you by it">
       </div>
 
       <div class="config-field">
-        <label id="pool-label">Source-extract pool — <span id="config-pool-count">0</span> source extracts</label>
+        <label id="pool-label">Source-extract pool — <span id="config-pool-count">0 source extracts</span></label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
         <div class="sources-actions">
-          <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()">Load 48 Civics &amp; Elections source extracts</button>
-          <button type="button" class="btn btn-primary" onclick="tgxExtractOpen()">✨ Extract from sources →</button>
+          <button type="button" class="btn btn-primary" onclick="tgxExtractOpen()">✨ Extract from your sources →</button>
           <input type="file" id="csv-file-input" accept=".csv,text/csv" class="sr-only" onchange="handleCsvUpload(event)">
           <button type="button" class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">Upload CSV</button>
+          <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="sampleButtonClick()">Deal a shared hand — 32 of the 48 survey extracts</button>
         </div>
         <p id="csv-status" class="csv-status hidden" role="status" aria-live="polite"></p>
-        <p class="sources-help">✨ Extract turns an article, notes or a transcript into cards using your own AI — nothing leaves your browser. CSV columns: <code>title,summary,source_url</code>.</p>
+        <p class="sources-help">✨ Extract turns an article, notes or a transcript into cards using your own AI — nothing leaves your browser. CSV columns: <code>title,summary,source_url</code>. The shared hand deals each board a different 32 — your neighbor's differs.</p>
 
         <details class="sources-more">
           <summary>Other ways to add extracts</summary>
           <div class="sources-more-body">
             <div class="sources-more-row">
               <button type="button" class="btn btn-outline" onclick="downloadCsvTemplate()">Download CSV template</button>
+              <button type="button" class="btn btn-outline" onclick="loadSampleSignals(true)">Load all 48 shared extracts instead</button>
               <fieldset class="csv-mode-fieldset">
                 <legend class="sr-only">CSV merge mode</legend>
                 <label><input type="radio" name="csv-mode" value="append" checked> Append to pool</label>
@@ -2359,7 +2368,7 @@
               <input type="text" id="new-item-title" class="config-input" placeholder="Observation title..." style="flex:1;">
               <label class="sr-only" for="new-item-summary">New observation description</label>
               <input type="text" id="new-item-summary" class="config-input" placeholder="What's the friction? Who feels it?..." style="flex:2;">
-              <button class="btn btn-primary" onclick="addConfigItem()">Add one by hand</button>
+              <button class="btn btn-outline" onclick="addConfigItem()">Add one by hand</button>
             </div>
           </div>
         </details>
@@ -2480,7 +2489,7 @@
           <button type="button" class="zoom-btn" id="panel-toggle-btn" onclick="toggleHeaderCollapse()" aria-label="Hide / show header" title="Hide / show header">↕</button>
         </div>
         <div id="canvas-dock" class="canvas-dock hidden" role="toolbar" aria-label="Add to canvas">
-          <button type="button" class="dock-tool" title="Add source extracts — CSV, AI extraction, or one by hand" onclick="openAddExtractsSheet()"><span class="dock-glyph" aria-hidden="true">＋</span><span class="dock-label">Extracts</span></button>
+          <button type="button" class="dock-tool dock-tool-add" title="Add source extracts — ✨ AI extraction, CSV, or one by hand. You can also drop a .txt, .md or .csv file onto the canvas." onclick="openAddExtractsSheet()"><span class="dock-glyph" aria-hidden="true">＋</span><span class="dock-label">Extracts</span></button>
           <button type="button" class="dock-tool" data-tool="signal" aria-pressed="false" title="Add a signal" onclick="dockToolClick(this)"><span class="dock-glyph" aria-hidden="true">●</span><span class="dock-label">Signal</span></button>
           <button type="button" class="dock-tool" data-tool="link" aria-pressed="false" title="Link two cards — click one, then the other" onclick="dockToolClick(this)"><span class="dock-glyph" aria-hidden="true">⤳</span><span class="dock-label">Link</span></button>
           <div class="dock-flyout-anchor">
@@ -2744,7 +2753,7 @@ git push</pre>
         <h3 id="confirm-reset-title"><span class="danger-glyph" aria-hidden="true">!</span> Clear this board?</h3>
       </div>
       <div class="modal-body">
-        <p id="confirm-reset-body">Everything on the canvas goes — every extract, card, situation and note. The sample pool reloads and you start from nothing.</p>
+        <p id="confirm-reset-body">Everything on the canvas goes — every extract, card, situation and note. You start from an empty pool.</p>
         <p class="danger-note"><strong>This cannot be undone.</strong> If you might want this work, close this and export it first.</p>
         <div class="modal-actions">
           <button type="button" class="btn btn-outline" onclick="closeModal('confirm-reset-modal')" data-autofocus>Keep my board</button>
@@ -2759,14 +2768,15 @@ git push</pre>
     <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header"><h3 id="add-extracts-title">Add source extracts</h3></div>
       <div class="modal-body">
+        <p style="font-size: var(--text-sm); color: var(--midnight); opacity: 0.75; margin-bottom: 12px;">Evidence keeps arriving after you've started — new cards land in open space beside your map, already sorted.</p>
         <div class="share-sheet-list">
+          <button type="button" class="share-row" data-autofocus onclick="closeModal('add-extracts-modal'); tgxExtractOpen()">
+            <span class="share-row-title">✨ Extract from your sources</span>
+            <span class="share-row-sub">Turn an article, notes, or a transcript into extract cards with your own AI. You can also drop a .txt or .md file straight onto the canvas.</span>
+          </button>
           <button type="button" class="share-row" onclick="closeModal('add-extracts-modal'); openBoardCsvModal()">
             <span class="share-row-title">Upload a CSV</span>
-            <span class="share-row-sub">Bring a spreadsheet of extracts onto the board — template included.</span>
-          </button>
-          <button type="button" class="share-row" onclick="closeModal('add-extracts-modal'); tgxExtractOpen()">
-            <span class="share-row-title">✨ Extract from sources</span>
-            <span class="share-row-sub">Turn an article, notes, or a dataset into extract cards with your own AI.</span>
+            <span class="share-row-sub">Bring a spreadsheet of extracts onto the board — template included. Or drop the .csv file onto the canvas.</span>
           </button>
           <button type="button" class="share-row" onclick="closeModal('add-extracts-modal'); pendingAddWorldPos = null; openModal('add-signal-modal')">
             <span class="share-row-title">Type one manually</span>
@@ -2983,9 +2993,104 @@ git push</pre>
         { id: "item_48", tag: "Source Extract", title: "Campus–Neighborhood Disconnection", summary: "There is no single, easy channel for a university community and its neighbors to trade information and opportunities — student jobs, local events, programs, and campus resources live in scattered slices.", ...srcRef(48) }
     ];
 
+    // A shared-deck card keeps its survey citation through merges, CSV
+    // round-trips and re-imports — the URL is the durable provenance.
+    function isSharedDeckItem(it) {
+      return !!(it && typeof it.source_url === 'string' && it.source_url.indexOf(SURVEY_RESULTS_URL) === 0);
+    }
+
+    // The deck is not topically flat: roughly a third of it attests one
+    // proposition (citizens can't see / can't be heard / don't trust).
+    // Loaded whole, the densest ladder is the same ladder on every board in
+    // the room — that is exactly what happened at the July 25 sprint. Dealing
+    // a stratified hand caps how much of any one strand a board starts with,
+    // so the deck's center of gravity lands differently for each participant.
+    const SAMPLE_HAND_SIZE = 32;
+    const SAMPLE_STRANDS = {
+      item_01: 'structure-rules', item_02: 'info-access', item_03: 'structure-rules',
+      item_04: 'info-access', item_05: 'systems', item_06: 'info-access',
+      item_07: 'systems', item_08: 'outlier', item_09: 'structure-rules',
+      item_10: 'info-access', item_11: 'info-access', item_12: 'discourse',
+      item_13: 'capacity', item_14: 'systems', item_15: 'systems',
+      item_16: 'info-access', item_17: 'structure-rules', item_18: 'discourse',
+      item_19: 'capacity', item_20: 'capacity', item_21: 'info-access',
+      item_22: 'info-access', item_23: 'discourse', item_24: 'outlier',
+      item_25: 'systems', item_26: 'discourse', item_27: 'systems',
+      item_28: 'systems', item_29: 'info-access', item_30: 'info-access',
+      item_31: 'discourse', item_32: 'discourse', item_33: 'info-access',
+      item_34: 'info-access', item_35: 'info-access', item_36: 'discourse',
+      item_37: 'info-access', item_38: 'info-access', item_39: 'structure-rules',
+      item_40: 'capacity', item_41: 'capacity', item_42: 'structure-rules',
+      item_43: 'outlier', item_44: 'systems', item_45: 'outlier',
+      item_46: 'structure-rules', item_47: 'info-access', item_48: 'outlier'
+    };
+    function dealSampleHand() {
+      const byStrand = {};
+      DEFAULT_ITEMS.forEach(d => {
+        const s = SAMPLE_STRANDS[d.id] || 'other';
+        (byStrand[s] = byStrand[s] || []).push(d);
+      });
+      const strands = variantShuffle('deck-strands', Object.keys(byStrand));
+      strands.forEach(s => { byStrand[s] = variantShuffle('deck-' + s, byStrand[s]); });
+      // Round-robin across strands: the dominant strand can put at most
+      // ceil(32/strands)+1-ish cards in a hand instead of all of its 16.
+      const hand = [];
+      for (let round = 0; hand.length < SAMPLE_HAND_SIZE; round++) {
+        let drew = false;
+        for (const s of strands) {
+          if (hand.length >= SAMPLE_HAND_SIZE) break;
+          const pool = byStrand[s];
+          if (round < pool.length) { hand.push(pool[round]); drew = true; }
+        }
+        if (!drew) break;
+      }
+      return variantShuffle('deck-order', hand);
+    }
+
     function uid(prefix) {
       if (window.crypto && crypto.randomUUID) return prefix + '_' + crypto.randomUUID();
       return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    }
+
+    // --- Per-board variation ---
+    // Every board carries one seed (settings.seed). Everything that should
+    // differ between two participants' boards — the dealt hand, the AI
+    // persona, the prompt twist, the worked examples — derives from it
+    // through a named channel, so a board's variation is stable across
+    // reloads and rides along in its exports, while no two boards in a
+    // room read the same. Forty people mapping the same deck with the same
+    // prompts converged on one problem statement; the seed is the lever
+    // that breaks the symmetry without touching anyone's evidence.
+    function fnv1a(str) {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+      return h >>> 0;
+    }
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function newBoardSeed() { return (Math.random() * 0x100000000) >>> 0; }
+    function variantRng(channel) {
+      const s = (appState && appState.settings && typeof appState.settings.seed === 'number')
+        ? (appState.settings.seed >>> 0) : 0;
+      return mulberry32((s ^ fnv1a(String(channel))) >>> 0);
+    }
+    function variantPick(channel, arr) {
+      if (!arr || !arr.length) return undefined;
+      return arr[Math.floor(variantRng(channel)() * arr.length)];
+    }
+    function variantShuffle(channel, arr) {
+      const a = arr.slice(), r = variantRng(channel);
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(r() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
     }
 
     // --- Card type constants ---
@@ -3028,7 +3133,7 @@ git push</pre>
 
     function defaultState() {
       return {
-        settings: { title: '', concept: '' },
+        settings: { title: '', concept: '', seed: newBoardSeed() },
         items: [],
         // Unified tiered cards. tier 1 = evidence (childIds = signal ids, has
         // cardType ∈ 7 types); tier 2 = pattern; 3 = theme; 4 = super-theme;
@@ -3209,6 +3314,9 @@ git push</pre>
       });
       if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
       if (typeof parsed.settings.concept !== 'string') parsed.settings.concept = '';
+      // Boards saved before per-board variation existed get a seed on first
+      // load (persisted by the next save); additive, nothing else changes.
+      if (typeof parsed.settings.seed !== 'number' || !isFinite(parsed.settings.seed)) parsed.settings.seed = newBoardSeed();
       parsed.classifyPhase = parsed.classifyPhase === true;
       // --- Migrate singular situation + committedCardIds → situations[] ---
       const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization',
@@ -3247,6 +3355,7 @@ git push</pre>
         s.memberCardIds = (Array.isArray(s.memberCardIds) ? s.memberCardIds : [])
           .filter(id => parsed.cards.some(c => c.id === id));
         if (typeof s.createdAt !== 'string') s.createdAt = new Date().toISOString();
+        if (typeof s.source !== 'string' || !s.source) delete s.source;
       });
       // Seed Mode is gone: Patterns and Themes are unlocked from the start. A
       // board saved mid-Seed comes forward to the full engine, which only ever
@@ -3256,11 +3365,15 @@ git push</pre>
       // Source provenance (merged boards): keep only non-empty strings.
       // v2.1: every item carries source_url (the document it was extracted from)
       // and verified (set true only once the user passes the QA Intercept gate).
-      // Pre-existing items were never QA-gated → default verified=false.
+      // v2.2: verified is kept only when true. The QA gate flips every import
+      // to true before it reaches the pool, so a stored false could only be
+      // the old backfill — which painted the shared deck and hand-typed notes
+      // red as "unverified" after one reload while QA-checked imports rendered
+      // clean: a provenance signal pointing the wrong way.
       parsed.items.forEach(it => {
         if (typeof it.source_url !== 'string') it.source_url = '';
         if (typeof it.source_label !== 'string') delete it.source_label;
-        if (typeof it.verified !== 'boolean') it.verified = false;
+        if (it.verified !== true) delete it.verified;
       });
       parsed.items.forEach(it => { if (typeof it.source !== 'string' || !it.source) delete it.source; });
       parsed.cards.forEach(c => { if (typeof c.source !== 'string' || !c.source) delete c.source; });
@@ -3331,16 +3444,36 @@ git push</pre>
           <div><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.summary)}</p>${sourceUrlHtml(item)}</div>
           <button class="config-item-del" aria-label="Remove ${escapeHtml(item.title)}" onclick="removeConfigItem('${item.id}')">✕</button>
         </div>
-      `).join('');
+      `).join('') || `
+        <div class="pool-empty-state">Your pool is empty. Start with your own material — <strong>✨ Extract</strong> turns an article, your notes, or your survey harvest into cards. Deal the shared hand to fill gaps later.</div>`;
+      const shared = appState.items.filter(isSharedDeckItem).length;
+      const own = appState.items.length - shared;
       const countEl = document.getElementById('config-pool-count');
-      if (countEl) countEl.textContent = appState.items.length;
+      if (countEl) countEl.textContent = appState.items.length
+        ? `${appState.items.length} source extracts — ${own} of yours · ${shared} shared`
+        : '0 source extracts';
       const sampleBtn = document.getElementById('load-sample-btn');
       if (sampleBtn) {
-        sampleBtn.textContent = `Load ${DEFAULT_ITEMS.length} Civics & Elections source extracts`;
-        sampleBtn.disabled = DEFAULT_ITEMS.every(d => appState.items.some(i => i.id === d.id));
+        const held = DEFAULT_ITEMS.filter(d => appState.items.some(i => i.id === d.id)).length;
+        sampleBtn.textContent = held === 0
+          ? `Deal a shared hand — ${SAMPLE_HAND_SIZE} of the ${DEFAULT_ITEMS.length} survey extracts`
+          : `Add the ${DEFAULT_ITEMS.length - held} shared extracts you weren't dealt`;
+        sampleBtn.disabled = held === DEFAULT_ITEMS.length;
+        if (sampleBtn.disabled) sampleBtn.textContent = 'The whole shared deck is in your pool';
       }
       const setupPrompt = document.getElementById('csv-prompt-text-setup');
       if (setupPrompt && !setupPrompt.value) setupPrompt.value = CSV_TRANSFORM_PROMPT;
+    }
+
+    // Your own material sorts first: extracts added before sorting has begun
+    // go to the head of the queue, ahead of any shared-deck cards, so the
+    // freshest attention lands on the material only this board holds. Once
+    // sorting is underway the cursor owns the order — append instead.
+    function addItemsToPool(items) {
+      const untouched = !Object.keys(appState.sorting.decisions || {}).length
+        && !(appState.sorting.currentIndex > 0);
+      if (untouched) appState.items.unshift(...items);
+      else appState.items.push(...items);
     }
 
     function addConfigItem() {
@@ -3353,7 +3486,7 @@ git push</pre>
         (t ? sEl : tEl).focus();
         return;
       }
-      appState.items.push({ id: uid('item'), tag: 'Source Extract', title: t, summary: s });
+      addItemsToPool([{ id: uid('item'), tag: 'Source Extract', title: t, summary: s }]);
       tEl.value = '';
       sEl.value = '';
       renderConfigItems();
@@ -3362,13 +3495,28 @@ git push</pre>
       tEl.focus();
     }
 
-    function loadSampleSignals() {
-      const newItems = DEFAULT_ITEMS.filter(d => !appState.items.some(i => i.id === d.id));
-      if (!newItems.length) { toast('Sample signals already loaded.'); return; }
+    // Deal by default; `all` loads the whole deck. Both draw in a per-board
+    // seeded order so no two participants meet the same cards in the same
+    // sequence — the fixed insertion order was anchoring every sort the
+    // same way (same first impressions, same fatigue tail).
+    function loadSampleSignals(all) {
+      const src = all ? variantShuffle('deck-order', DEFAULT_ITEMS) : dealSampleHand();
+      const newItems = src.filter(d => !appState.items.some(i => i.id === d.id));
+      if (!newItems.length) { toast('The whole shared deck is already in your pool.'); return; }
       appState.items.push(...newItems.map(i => ({ ...i })));
       renderConfigItems();
       scheduleSave();
-      toast(`${newItems.length} sample source extracts loaded.`);
+      const held = DEFAULT_ITEMS.filter(d => appState.items.some(i => i.id === d.id)).length;
+      if (!all && held < DEFAULT_ITEMS.length) {
+        toast(`Dealt ${newItems.length} of ${DEFAULT_ITEMS.length} — your neighbor's hand differs.`);
+      } else {
+        toast(`${newItems.length} shared source extracts added.`);
+      }
+    }
+    // One button, three states: deal a hand → add the rest → all in.
+    function sampleButtonClick() {
+      const held = DEFAULT_ITEMS.filter(d => appState.items.some(i => i.id === d.id)).length;
+      loadSampleSignals(held > 0);
     }
 
     // --- CSV bulk upload ---
@@ -3519,7 +3667,7 @@ git push</pre>
           appState.items = newItems;
           appState.cards.forEach(c => { if (c.tier === 1) c.childIds = []; });
         } else {
-          appState.items = appState.items.concat(newItems);
+          addItemsToPool(newItems);
         }
         renderConfigItems();
         text = csvOutcomeText(newItems.length, skipped, mode, { noun });
@@ -3585,6 +3733,55 @@ git push</pre>
         openQaModal(result.items.length);
       };
       reader.readAsText(file);
+    }
+
+    // Drop a file anywhere on the canvas to bring sources in mid-flow:
+    // .csv routes into the board CSV import (same QA gate), .txt/.md opens
+    // ✨ Extract with the text preloaded. Guarded to OS file drags — card
+    // drags never carry Files, so canvas interactions are untouched.
+    function tgxCanvasDropInit() {
+      const viewport = document.getElementById('canvas-viewport');
+      if (!viewport) return;
+      const hasFiles = e => !!(e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf('Files') !== -1);
+      viewport.addEventListener('dragover', e => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        viewport.classList.add('is-file-drop');
+      });
+      viewport.addEventListener('dragleave', e => {
+        if (e.target === viewport) viewport.classList.remove('is-file-drop');
+      });
+      viewport.addEventListener('drop', e => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        viewport.classList.remove('is-file-drop');
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+        const name = (file.name || '').toLowerCase();
+        const reader = new FileReader();
+        reader.onerror = () => toast('Could not read that file.');
+        if (name.endsWith('.csv')) {
+          reader.onload = () => {
+            const result = csvRowsToItems(String(reader.result || ''));
+            if (result.error) { toast(`${file.name}: ${result.error}`, { duration: 6000 }); return; }
+            pendingCsvImport = { items: result.items, target: 'board', surface: 'board', mode: 'append', skipped: result.skipped, name: file.name };
+            openQaModal(result.items.length);
+          };
+          reader.readAsText(file);
+        } else if (name.endsWith('.txt') || name.endsWith('.md') || (file.type || '').indexOf('text/') === 0) {
+          reader.onload = () => {
+            tgxExtractOpen();
+            const ta = document.getElementById('xtr-source');
+            const text = String(reader.result || '');
+            if (ta) ta.value = ta.value.trim() ? (ta.value.trim() + '\n\n' + text) : text;
+            tgxExtractRefreshPrompt();
+            toast('Added "' + file.name + '" — copy the prompt into your own AI.');
+          };
+          reader.readAsText(file);
+        } else {
+          toast('Drop a .csv, .txt or .md file — or use ＋ Extracts in the dock.');
+        }
+      });
     }
 
     // --- QA Intercept modal: data-verification consent before extracts land ---
@@ -4816,14 +5013,27 @@ git push</pre>
 
     // Clickable provenance: the source document an extract was parsed from.
     // The citation row reads "↗ <source_label>" when the extract names its
-    // source (the pre-loaded survey cards do), plain "↗ source" otherwise.
+    // source (the shared survey cards do). A participant's own extract used
+    // to fall back to an anonymous "↗ source" — leaving the shared deck the
+    // only branded material on the board. Now their own URLs read as their
+    // hostname, so a board's provenance mix is visible at a glance.
     function sourceCitationLabel(item) {
       const label = (item && typeof item.source_label === 'string') ? item.source_label.trim() : '';
-      return label || 'source';
+      if (label) return label;
+      const url = (item && typeof item.source_url === 'string') ? item.source_url.trim() : '';
+      try {
+        const host = new URL(url).hostname.replace(/^www\./, '');
+        if (host) return host;
+      } catch (e) { /* not a parseable URL — generic label below */ }
+      return 'source';
     }
     function sourceUrlHtml(item) {
       const url = (item && typeof item.source_url === 'string') ? item.source_url.trim() : '';
-      if (!/^https?:\/\//i.test(url)) return '';
+      if (!/^https?:\/\//i.test(url)) {
+        // Un-linked material is the participant's own harvest — name it so,
+        // instead of leaving it the anonymous case next to branded survey cards.
+        return `<span class="node-source-link node-source-note">✎ field note</span>`;
+      }
       return `<a class="node-source-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Open source: ${escapeHtml(url)}">↗ ${escapeHtml(sourceCitationLabel(item))}</a>`;
     }
 
@@ -7047,20 +7257,27 @@ ${AI_RULES}
         primary: { label: 'Load your sources →', fn: 'goToSources()', enabled: true },
         secondary: []
       };
+      // Bringing in more material is a first-class move at every stage, not a
+      // Sources-screen-only act — the dock's ＋ Extracts sheet is one click
+      // from here throughout. When the pool is all shared deck, say so once:
+      // a board with no material of its own maps like every other board.
+      const addExtracts = { label: '＋ Add extracts', fn: 'openAddExtractsSheet()' };
+      const allShared = appState.items.length > 0 && appState.items.every(isSharedDeckItem);
       if (unsorted > 0 && !appState.cards.length) return {
         state: 'sort',
         hint: 'Sort fast — signal or noise. Where you hesitate is data.',
         primary: { label: `Sort your extracts (${unsorted} left) →`, fn: "goToScreen('sorting')", enabled: true },
-        secondary: []
+        secondary: [addExtracts]
       };
       const sortRemaining = unsorted > 0 ? [{ label: `Sort remaining (${unsorted})`, fn: "goToScreen('sorting')" }] : [];
       // Sorted, but nothing built yet. The first move is a connection, and
       // this bar is the only thing that says so.
       if (!appState.cards.length) return {
         state: 'connect',
-        hint: 'First: connect two source extracts into <strong>Evidence</strong> — drag a glowing dot onto another card, or use the Link tool.',
+        hint: 'First: connect two source extracts into <strong>Evidence</strong> — drag a glowing dot onto another card, or use the Link tool.'
+          + (allShared ? ' Your pool is all shared deck so far — your own extracts are what make this map yours (＋ Add extracts).' : ''),
         primary: { label: 'Map the Problem Situation', fn: 'openCommitModal()', enabled: false },
-        secondary: [...sortRemaining]
+        secondary: [...sortRemaining, addExtracts]
       };
       if (tgxJustMapped && hasSituations()) return {
         state: 'mapped-threshold',
@@ -7085,13 +7302,13 @@ ${AI_RULES}
         state: 'deepen',
         hint: 'Work the situation: evidence landscape, the field, and the paradox at the core.',
         primary: { label: 'Deepen this Situation →', fn: "goToScreen('workspace')", enabled: true },
-        secondary: [{ label: 'Classify evidence types', fn: 'enterClassifyPhase()' }, ...sortRemaining]
+        secondary: [{ label: 'Classify evidence types', fn: 'enterClassifyPhase()' }, ...sortRemaining, addExtracts]
       };
       return {
         state: 'map-notready',
         hint: v.warnings[0] || 'Name and describe every card, and climb to a named theme.',
         primary: { label: 'Map the Problem Situation', fn: 'openCommitModal()', enabled: false },
-        secondary: [...sortRemaining]
+        secondary: [...sortRemaining, addExtracts]
       };
     }
     function tgxClassifyFromBar() { tgxJustMapped = false; enterClassifyPhase(); }
@@ -7354,7 +7571,11 @@ What the research demands that the user doesn't currently have access to: specif
     function buildSituationPrompt(kind, sit) {
       const s = sit || appState.situations[appState.situations.length - 1]
         || { title: '', description: '', frame: '', stakeholderMap: '' };
-      const title = s.title || appState.settings.title || 'this problem situation';
+      // Only a title the participant wrote for THIS situation goes into the
+      // prompt. The board title used to leak in here, and its shipped default
+      // ("Civics & Elections: Signal Pool") told every model the domain and
+      // register before the participant had named anything.
+      const title = s.title || 'this problem situation';
       const evidence = situationEvidenceText(sit);
       const k = SITUATION_PROMPT_KINDS[kind];
       if (!k) return '';
@@ -8056,6 +8277,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <div class="ws-card-titlerow">
             <span class="ws-card-tier" style="background:var(--tier-4);color:var(--ghost-white);">Problem Situation${many ? ' ' + n : ''}</span>
             ${many && (s.title || '').trim() ? `<h3 style="margin:0;">${escapeHtml(s.title)}</h3>` : ''}
+            ${s.source ? `<span class="ws-card-tier" title="Merged from a podmate's board — consult it, but submit your own situation">merged from ${escapeHtml(s.source)}</span>` : ''}
           </div>
           <p class="field-hint">An open, complex, networked condition synthesized from what you mapped. This is not a problem to solve yet — it's a situation to map and understand.</p>
         </header>
@@ -8545,7 +8767,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
             return sub ? head + '\n' + sub : head;
           }).join('\n') || '(no cards yet)';
         return `# ${s.title || 'Untitled Problem Situation'}
-
+${s.source ? `\n> ⚠ Merged from **${s.source}**'s board during peer consult — it is their statement, kept here for context. Submit your own.\n` : ''}
 > A problem situation mapped using Kees Dorst's Frame Creation method.
 > Built from ${cards.length} card${cards.length === 1 ? '' : 's'} covering ${sigSet.size} signal${sigSet.size === 1 ? '' : 's'} across the evidence ladder.
 > Exported ${appState.exportedAt || new Date().toISOString()}.
@@ -9413,7 +9635,11 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
           ...s,
           id: uid('sit'),
           memberCardIds: s.memberCardIds.map(id => idMap.get(id)).filter(Boolean),
-          box: s.box ? { x: s.box.x + dx, y: s.box.y + dy, w: s.box.w, h: s.box.h } : null
+          box: s.box ? { x: s.box.x + dx, y: s.box.y + dy, w: s.box.w, h: s.box.h } : null,
+          // Items and cards already carry the source-board tag; situations
+          // arriving untagged meant a whole triad exported the same three
+          // statements as their own after peer-consult merges.
+          source: src
         });
       });
       invalidateSituationIndex();
@@ -9829,7 +10055,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
     function startSorting() {
       if (!appState.items.length) {
-        toast('Load some signals first.');
+        toast('Add source extracts first — your own via ✨ Extract, or deal the shared hand.');
         return;
       }
       if (!appState.settings.title) {
@@ -9842,7 +10068,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
     function skipSortingToBoard() {
       if (!appState.items.length) {
-        toast('Load some signals first.');
+        toast('Add source extracts first — your own via ✨ Extract, or deal the shared hand.');
         return;
       }
       appState.items.forEach(item => {
@@ -9884,8 +10110,13 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         const signalCount = Object.values(appState.sorting.decisions).filter(d => d === 'signal').length;
         const superCount = Object.values(appState.sorting.decisions).filter(d => d === 'super').length;
         const noiseCount = Object.values(appState.sorting.decisions).filter(d => d === 'noise').length;
+        const keptOwn = appState.items.filter(it => {
+          const d = appState.sorting.decisions[it.id];
+          return (d === 'signal' || d === 'super') && !isSharedDeckItem(it);
+        }).length;
+        const keptTotal = signalCount + superCount;
         document.getElementById('sorting-summary').textContent =
-          `You kept ${signalCount + superCount} signals (${superCount} super). You set aside ${noiseCount} as noise.`;
+          `You kept ${keptTotal} signals (${superCount} super) — ${keptOwn} of them yours, ${keptTotal - keptOwn} from the shared deck. You set aside ${noiseCount} as noise.`;
         counter.textContent = `${total} of ${total}`;
         progressFill.style.width = '100%';
         return;
@@ -10142,6 +10373,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
       if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
       setBoardTitleDisplay();
+      tgxCanvasDropInit();
       if (!onboarding && target !== 'sorting') ensureCanvasInitialized();
       goToScreen(target);
 
@@ -10155,7 +10387,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
             onAction: () => {
               clearSavedState();
               appState = defaultState();
-              if (titleEl) titleEl.value = 'Upskilling Labs: Signal Pool';
+              if (titleEl) titleEl.value = '';
               renderConfigItems();
               goToScreen('setup');
               toast('Cleared.');
