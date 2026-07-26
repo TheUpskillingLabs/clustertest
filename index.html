@@ -945,6 +945,21 @@
     .webmap-panel { display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; background: var(--cloud); padding-top: env(safe-area-inset-top, 0px); }
     .webmap-header { gap: 12px; padding: 0 max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px)); height: 60px; overflow: visible; }
     .webmap-header h2 { font-size: var(--text-base); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    /* The board title is the live field, not a label of one: the export asks
+       for a real name here, so the name has to be editable where it's shown. */
+    .webmap-title { display: flex; align-items: center; min-width: 0; }
+    .webmap-title-input {
+      font: inherit; color: inherit; letter-spacing: inherit;
+      background: transparent; border: 1px solid transparent; border-radius: var(--radius-1);
+      padding: 3px 6px; margin-left: -6px; min-width: 0; max-width: 100%;
+      text-overflow: ellipsis; cursor: text;
+    }
+    .webmap-title-input:hover { border-color: var(--cloud); background: rgba(0,0,0,0.02); }
+    .webmap-title-input:focus { outline: none; border-color: var(--primary-teal); background: var(--ghost-white); }
+    .webmap-title-input::placeholder { color: var(--text-muted, #6b7378); opacity: 0.6; font-style: italic; }
+    /* Where the export gate sends you — one pulse, so "name it here" lands. */
+    @keyframes webmap-title-ping { 0%, 100% { box-shadow: 0 0 0 0 rgba(0,148,160,0); } 35% { box-shadow: 0 0 0 4px rgba(0,148,160,0.35); } }
+    .webmap-title-input.ping { animation: webmap-title-ping 1.1s ease-in-out 2; border-color: var(--primary-teal); }
     .webmap-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0; }
     .webmap-search { min-width: 180px; max-width: 260px; }
     .webmap-search .search-input { padding: 8px 12px; padding-right: 32px; }
@@ -2418,7 +2433,13 @@
     <main class="panel-center webmap-panel">
       <div class="step-indicator-mount"></div>
       <div class="panel-header webmap-header">
-        <h2 id="board-title-display">Your Web Map <span id="save-status" aria-live="polite"></span></h2>
+        <h2 id="board-title-display" class="webmap-title">
+          <label class="sr-only" for="board-title-input">Name your web map</label>
+          <input type="text" id="board-title-input" class="webmap-title-input" maxlength="80"
+                 placeholder="Name your web map" title="Rename your web map — it becomes your Pod's name on the site and deck"
+                 oninput="updateBoardTitle(this.value)">
+          <span id="save-status" aria-live="polite"></span>
+        </h2>
         <div class="webmap-header-actions" id="webmap-header-actions">
           <div class="search-wrap webmap-search" id="search-wrap">
             <label class="sr-only" for="search-input">Search source extracts</label>
@@ -3025,6 +3046,23 @@ git push</pre>
       { id: 'wider-field',   label: 'Wider-field',   desc: 'Not yet involved but with potential influence' },
       { id: 'owner-client',  label: 'Owner/Client',  desc: 'Could own this problem situation or buy its resolution' }
     ];
+
+    // --- Board title -------------------------------------------------------
+    // The name the app hands out before the user has picked one. It matches the
+    // value on #config-title so the two can't drift.
+    const DEFAULT_BOARD_TITLE = 'Civics & Elections: Signal Pool';
+    // Names the app supplied, not names anyone chose. Fine to work under, but
+    // the site/deck export asks for a real one — it becomes the Pod's name.
+    // ONE list, so a default can never again be a name the export rejects
+    // with no way to change it.
+    const PLACEHOLDER_TITLES = [
+      DEFAULT_BOARD_TITLE, 'Signal Pool', 'Upskilling Labs: Signal Pool',
+      'Web Map', 'Your Web Map', 'Untitled'
+    ].map(t => t.toLowerCase());
+    function titleIsPlaceholder(t) {
+      const v = (t || '').trim().toLowerCase();
+      return !v || PLACEHOLDER_TITLES.includes(v);
+    }
 
     function defaultState() {
       return {
@@ -3765,7 +3803,7 @@ git push</pre>
     }
 
     function launchWorkspace() {
-      appState.settings.title = document.getElementById('config-title').value || 'Web Map';
+      appState.settings.title = document.getElementById('config-title').value || DEFAULT_BOARD_TITLE;
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
@@ -3775,8 +3813,39 @@ git push</pre>
     }
 
     function setBoardTitleDisplay() {
-      const display = document.getElementById('board-title-display');
-      if (display && display.firstChild) display.firstChild.textContent = (appState.settings.title || 'Your Web Map') + ' ';
+      const input = document.getElementById('board-title-input');
+      if (!input) return;
+      const title = appState.settings.title || '';
+      if (document.activeElement !== input) input.value = title;
+      // Size to the name so the field reads as a heading, not an empty box.
+      input.size = Math.max(14, Math.min(46, (title || input.placeholder).length + 1));
+    }
+
+    // Renaming from the board is the only place a rename is asked for (the
+    // site/deck export gate), so it writes straight through to state.
+    function updateBoardTitle(value) {
+      appState.settings.title = value;
+      const configEl = document.getElementById('config-title');
+      if (configEl) configEl.value = value;   // keep Sources from clobbering it on the way back
+      const input = document.getElementById('board-title-input');
+      if (input) {
+        input.classList.remove('ping');
+        input.size = Math.max(14, Math.min(46, (value || input.placeholder).length + 1));
+      }
+      scheduleSave();
+    }
+
+    // The export gate's "Name it" action: put the caret in the field it names.
+    function focusBoardTitle() {
+      if (appState.currentScreen !== 'board') goToScreen('board');
+      const input = document.getElementById('board-title-input');
+      if (!input) return;
+      // The field lives in the header — un-collapse it, or "Name it" goes nowhere.
+      document.getElementById('board-workspace').classList.remove('header-collapsed');
+      localStorage.setItem('olos.headerCollapsed', '');
+      input.classList.add('ping');
+      input.focus();
+      input.select();
     }
 
     let canvasInitialized = false;
@@ -3798,6 +3867,11 @@ git push</pre>
       document.getElementById('workspace-screen').classList.toggle('hidden', name !== 'workspace');
       if (name === 'concept') {
         renderConceptScreen();
+      } else if (name === 'setup') {
+        // Sources owns the same title field. Re-sync it, or Continue would
+        // write a stale value back over a rename made on the board.
+        const titleEl = document.getElementById('config-title');
+        if (titleEl && (appState.settings.title || '').trim()) titleEl.value = appState.settings.title;
       } else if (name === 'sorting') {
         renderSortingScreen();
       } else if (name === 'board') {
@@ -9180,9 +9254,12 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
             onAction: hasSituations() ? () => goToScreen('workspace') : null });
         return;
       }
-      const boardTitle = (appState.settings.title || '').trim();
-      if (!boardTitle || boardTitle === 'Signal Pool' || boardTitle === 'Untitled' || boardTitle === 'Upskilling Labs: Signal Pool') {
-        toast('Name your web map first (the title field at the top-left of the board) — it becomes your Pod\'s name on the site and deck.', { duration: 6000 }); return;
+      if (titleIsPlaceholder(appState.settings.title)) {
+        // Name the one thing that unblocks it AND go there — the gate used to
+        // point at a title field the board didn't have.
+        toast('Name your web map first — it becomes your Pod\'s name on the site and deck.',
+          { actionLabel: 'Name it', duration: 8000, onAction: focusBoardTitle });
+        return;
       }
       appState.exportedAt = new Date().toISOString();
       const blob = buildZip(buildModularExportFiles());
@@ -9348,7 +9425,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       invalidateSituationIndex();
       clearTimeout(saveTimer); save();
       closeModal('import-modal');
-      if (!appState.settings.title) appState.settings.title = 'Signal Pool';
+      if (!appState.settings.title) appState.settings.title = DEFAULT_BOARD_TITLE;
       setBoardTitleDisplay();
       ensureCanvasInitialized();
       goToScreen('board');
@@ -9834,7 +9911,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       }
       if (!appState.settings.title) {
         const titleEl = document.getElementById('config-title');
-        appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
+        appState.settings.title = (titleEl && titleEl.value) || DEFAULT_BOARD_TITLE;
       }
       setBoardTitleDisplay();
       goToScreen('sorting');
@@ -9853,7 +9930,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       appState.sorting.currentIndex = appState.items.length;
       if (!appState.settings.title) {
         const titleEl = document.getElementById('config-title');
-        appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
+        appState.settings.title = (titleEl && titleEl.value) || DEFAULT_BOARD_TITLE;
       }
       setBoardTitleDisplay();
       ensureCanvasInitialized();
@@ -10009,7 +10086,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
     function finishSorting() {
       if (!appState.settings.title) {
         const titleEl = document.getElementById('config-title');
-        appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
+        appState.settings.title = (titleEl && titleEl.value) || DEFAULT_BOARD_TITLE;
       }
       setBoardTitleDisplay();
       ensureCanvasInitialized();
@@ -10140,7 +10217,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       const raw = localStorage.getItem(STORAGE_KEY);
       const onboarding = (target === 'concept' || target === 'setup');
 
-      if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
+      if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || DEFAULT_BOARD_TITLE;
       setBoardTitleDisplay();
       if (!onboarding && target !== 'sorting') ensureCanvasInitialized();
       goToScreen(target);
@@ -10155,7 +10232,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
             onAction: () => {
               clearSavedState();
               appState = defaultState();
-              if (titleEl) titleEl.value = 'Upskilling Labs: Signal Pool';
+              if (titleEl) titleEl.value = DEFAULT_BOARD_TITLE;
               renderConfigItems();
               goToScreen('setup');
               toast('Cleared.');

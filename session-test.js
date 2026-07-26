@@ -432,12 +432,63 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(300);
   await page.evaluate(() => document.querySelectorAll('#toast-region .toast').forEach(t => t.remove()));
 
+  // ------------------------------------------------- Naming the web map
+  // The deck export refuses a name the app itself handed out, and used to send
+  // you to "the title field at the top-left of the board" — a field the board
+  // did not have. A board carrying the default name is the ordinary case, so
+  // that was a dead end you could only leave by guessing at the Sources step.
+  // The gate stays; what it asks for has to be doable where it asks.
+  section('Naming the web map');
+  check('every name the app hands out is one the export asks you to replace',
+    await page.evaluate(() => titleIsPlaceholder(DEFAULT_BOARD_TITLE) && titleIsPlaceholder('Upskilling Labs: Signal Pool')));
+
+  await page.evaluate(() => {
+    window.__downloads = [];
+    appState.settings.title = 'Upskilling Labs: Signal Pool';   // a board fresh off "Start over"
+    setBoardTitleDisplay();
+    save();
+  });
+  await page.evaluate(() => exportModular());
+  await sleep(400);
+  const nameGate = await page.evaluate(() => {
+    const t = document.querySelector('#toast-region .toast');
+    return { text: t ? t.textContent : '(no toast)', action: !!(t && t.querySelector('button')), downloads: window.__downloads.length };
+  });
+  check('a placeholder-named board is refused the deck export', nameGate.downloads === 0);
+  check('and is told to name the web map', /name your web map/i.test(nameGate.text), nameGate.text);
+  check('the refusal carries the way out, not just the complaint', nameGate.action === true);
+
+  await page.evaluate(() => [...document.querySelectorAll('#toast-region .toast button')]
+    .filter(b => /name it/i.test(b.textContent))[0].click());
+  await sleep(300);
+  check('the way out puts the caret in a real field on the board',
+    await page.evaluate(() => document.activeElement && document.activeElement.id === 'board-title-input'));
+
+  await page.keyboard.press('Control+A');
+  await page.keyboard.type('Pod 3 — Money in Campaigns');
+  await sleep(500);
+  const renamed = await page.evaluate(() => ({
+    state: appState.settings.title,
+    saved: JSON.parse(localStorage.getItem('olos.sensemaking.v2')).settings.title,
+    sources: document.getElementById('config-title').value
+  }));
+  check('typing there renames the board and saves it', renamed.state === 'Pod 3 — Money in Campaigns' && renamed.saved === renamed.state,
+    JSON.stringify(renamed));
+  check('and Sources holds the same name, so going back cannot undo it', renamed.sources === renamed.state, renamed.sources);
+
+  await page.evaluate(() => exportModular());
+  await sleep(1500);
+  await page.evaluate(() => document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(m => m.classList.add('hidden')));
+  check('a named board exports', await page.evaluate(() => window.__downloads.length) === 1);
+
   // ---------------------------------------------------------------- Exports
   // Three times, because that is what the room does.
   section('Export — three times');
   await page.evaluate(() => {
     // A real title is a gate on the deck export; give it one.
+    window.__downloads = [];
     appState.settings.title = 'Civics & Elections — DC Founding Lab';
+    setBoardTitleDisplay();
     save();
   });
   for (let i = 1; i <= 3; i++) {
