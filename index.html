@@ -8813,11 +8813,20 @@ ${AI_RULES}
       return new Blob([...chunks, ...central, new Uint8Array(eocd.buffer)], { type: 'application/zip' });
     }
 
-    // ============ MODULAR EXPORT: GitHub-Pages-ready minisite ============
-    // Produces a deployable static site (index.html at the zip root) with a
-    // clean separation of concerns: machine-readable /data, human-readable
-    // /content, and presentation in /assets. The page hydrates via fetch() when
-    // served and falls back to a /data/site-data.js shim on file://.
+    // ==================== DECK & SITE: two files ====================
+    // Two documents, each complete on its own: index.html and slides.html.
+    //
+    // This used to ship a ten-file folder — a shell page, a stylesheet, a
+    // client-side renderer, and the same content serialised three times (as
+    // JSON-LD, as CSV/Markdown, and again as a window.SITE_DATA shim so it
+    // worked on file://). 122 KB, and the file a beginner opened first was nine
+    // lines of <script src>.
+    //
+    // These are the first two files most of this cohort will edit. So the app
+    // renders the HTML here, where the content is already live objects, and
+    // ships the finished page: real headings, real paragraphs, and an inline
+    // <style> whose colour variables are on line one. Read it, change it, see
+    // it change. The machine-readable trail lives in the working-folder export.
 
     // Every positioned node (surviving signals + cards) as plain objects.
     function modularNodes() {
@@ -8852,49 +8861,6 @@ ${AI_RULES}
       return out;
     }
 
-    function buildProjectJsonld() {
-      const nodes = modularNodes();
-      const ids = new Set(nodes.map(n => n.id));
-      const typeToken = (t) => 'tg:' + String(t || '').replace(/[^A-Za-z]/g, ''); // "Source Extract" -> tg:SourceExtract
-      const doc = {
-        '@context': {
-          '@vocab': 'https://schema.org/',
-          tg: 'https://theupskillinglabs.github.io/triangles/ns#',
-          tier: 'tg:tier', x: 'tg:x', y: 'tg:y', w: 'tg:w', h: 'tg:h',
-          verified: 'tg:verified', locked: 'tg:locked', strong: 'tg:strong',
-          source_url: 'tg:sourceUrl', children: { '@id': 'tg:hasChild', '@type': '@id' }
-        },
-        title: appState.settings.title || 'Untitled',
-        concept: appState.settings.concept || '',
-        generatedAt: new Date().toISOString(),
-        // Proper RDF @type (a tg: term), drop the redundant plain `id` (keep `@id`),
-        // and close the graph — children only reference nodes present in @graph.
-        // `type` is kept for the bundled viewer.js, which reads it.
-        '@graph': nodes.map(n => {
-          const { id, children, ...rest } = n;
-          return Object.assign(
-            { '@id': id, '@type': typeToken(n.type) },
-            rest,
-            { children: (children || []).filter(k => ids.has(k)) }
-          );
-        })
-      };
-      return JSON.stringify(doc, null, 2);
-    }
-
-    function buildExtractsCsv() {
-      // Ships exactly the source-extract nodes that appear on the published map
-      // (non-noise, positioned) so the site's extract list and its web map can
-      // never disagree. `verified` reflects the QA-Intercept status truthfully.
-      const rows = [['title', 'summary', 'source_url', 'verified']];
-      appState.items.forEach(it => {
-        if (!appState.nodes[it.id]) return; // not on the map
-        if (appState.sorting.decisions[it.id] === 'noise') return; // discarded
-        rows.push([it.title || '', it.summary || '', it.source_url || '', it.verified === true ? 'true' : 'false']);
-      });
-      return rows.map(r => r.map(csvEscape).join(',')).join('\n') + '\n';
-    }
-
     function buildThemesMd() {
       const upper = appState.cards.filter(c => c.tier >= 2 && (c.title || '').trim() && (c.description || '').trim()).sort((a, b) => b.tier - a.tier);
       let md = '# Themes & Patterns\n\n';
@@ -8908,35 +8874,12 @@ ${AI_RULES}
       return md;
     }
 
-    function buildSiteReadme() {
-      return `# ${appState.settings.title || 'Sensemaking site'}
-
-A static, read-only presentation of a Frame Creation web map, exported from The
-Labs Sensemaking Engine. It is self-contained and ready to host on GitHub Pages.
-
-## Layout
-- \`index.html\` — the presentation shell (hydrates from the files below)
-- \`assets/\` — \`style.css\` and \`viewer.js\` (renders the report + spatial map)
-- \`data/\` — \`project.jsonld\` (semantic graph + coordinates), \`extracts.csv\`
-  (validated extracted signals), and \`site-data.js\` (a fallback so the page also
-  renders when opened directly via \`file://\`)
-- \`content/\` — \`situation.md\` and \`themes.md\` (the human-readable narrative)
-
-## Publish on GitHub Pages
-1. Commit this folder to a repository (root or a \`/docs\` folder, or a \`gh-pages\` branch).
-2. In the repo: **Settings → Pages**, pick the branch (and \`/docs\` if you used it).
-3. Visit \`https://<user>.github.io/<repo>/\` — the report and web map render there.
-
-Opening \`index.html\` by double-click works too (via \`data/site-data.js\`), but for
-full fidelity serve it over HTTP — locally that's \`python3 -m http.server\`.
-`;
-    }
-
-    // --- Static assets (no backticks or \${} inside these payloads) ---
+    // The whole stylesheet, inlined into the exported page. Custom properties
+    // first, deliberately: changing --teal is the smallest possible edit that
+    // visibly changes the page, which makes it the right first thing to try.
     const SITE_STYLE_CSS = `:root{--teal:#0094a0;--red:#ee1c25;--ink:#101820;--bg:#ffffff;--cloud:#e6e6e6;--muted:#5b6470}
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#f7f8fa;line-height:1.55}
 #report{max-width:920px;margin:0 auto;padding:32px 20px 80px}
-.loading{color:var(--muted)}
 .site-head h1{font-size:2rem;margin:0 0 8px}
 .site-head .concept{font-size:1.1rem;color:var(--muted);margin:0 0 8px}
 section{background:#fff;border:1px solid var(--cloud);border-radius:12px;padding:20px 24px;margin:20px 0;box-shadow:0 1px 3px rgba(16,24,32,.06)}
@@ -8950,100 +8893,104 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 .extracts a{color:var(--teal)}
 @media print{body{background:#fff}section{box-shadow:none;border:none}}`;
 
-    const SITE_VIEWER_JS = `(function(){
-  function byId(id){return document.getElementById(id);}
-  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  function tierColor(t){var m={0:'#8a93a3',1:'#8a93a3',2:'#ee1c25',3:'#f4b400',4:'#8a4fff',5:'#6231cf',6:'#4b2fa0'};return m[t]||'#3a2580';}
-  function parseCsvRows(text){
-    var rows=[],row=[],field='',i=0,q=false,ch;
-    for(i=0;i<text.length;i++){ch=text[i];
-      if(q){ if(ch==='"'){ if(text[i+1]==='"'){field+='"';i++;} else {q=false;} } else {field+=ch;} }
-      else { if(ch==='"'){q=true;} else if(ch===','){row.push(field);field='';}
-        else if(ch==='\\n'||ch==='\\r'){ if(ch==='\\r'&&text[i+1]==='\\n')i++; if(field!==''||row.length){row.push(field);rows.push(row);row=[];field='';} }
-        else {field+=ch;} } }
-    if(field!==''||row.length){row.push(field);rows.push(row);}
-    return rows;
-  }
-  function mdToHtml(md){
-    var lines=String(md||'').split(/\\r?\\n/),out=[],inList=false;
-    function closeList(){ if(inList){out.push('</ul>');inList=false;} }
-    for(var i=0;i<lines.length;i++){var ln=lines[i];
-      if(/^### /.test(ln)){closeList();out.push('<h3>'+esc(ln.slice(4))+'</h3>');}
-      else if(/^## /.test(ln)){closeList();out.push('<h2>'+esc(ln.slice(3))+'</h2>');}
-      else if(/^# /.test(ln)){closeList();out.push('<h1>'+esc(ln.slice(2))+'</h1>');}
-      else if(/^\\s*[-•] /.test(ln)){ if(!inList){out.push('<ul>');inList=true;} out.push('<li>'+esc(ln.replace(/^\\s*[-•] /,''))+'</li>');}
-      else if(/^\\s*>/.test(ln)){closeList();out.push('<blockquote>'+esc(ln.replace(/^\\s*>\\s?/,''))+'</blockquote>');}
-      else if(ln.trim()===''){closeList();}
-      else {closeList();out.push('<p>'+esc(ln)+'</p>');} }
-    closeList();
-    return out.join('\\n');
-  }
-  function renderMap(graph){
-    if(!graph||!graph.length) return '<p>No nodes to display.</p>';
-    var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9,byIdMap={},i;
-    for(i=0;i<graph.length;i++){var n=graph[i];byIdMap[n['@id']||n.id]=n;
-      minX=Math.min(minX,n.x);minY=Math.min(minY,n.y);maxX=Math.max(maxX,n.x+n.w);maxY=Math.max(maxY,n.y+n.h);}
-    var pad=60,vb=(minX-pad)+' '+(minY-pad)+' '+((maxX-minX)+2*pad)+' '+((maxY-minY)+2*pad);
-    var edges='',rects='';
-    for(i=0;i<graph.length;i++){var p=graph[i],kids=p.children||[];
-      for(var j=0;j<kids.length;j++){var c=byIdMap[kids[j]];if(!c)continue;
-        edges+='<line x1="'+(p.x+p.w/2)+'" y1="'+(p.y+p.h/2)+'" x2="'+(c.x+c.w/2)+'" y2="'+(c.y+c.h/2)+'" stroke="#b8c0cc" stroke-width="2"/>';}}
-    for(i=0;i<graph.length;i++){var nn=graph[i],col=tierColor(nn.tier);
-      rects+='<g><rect x="'+nn.x+'" y="'+nn.y+'" width="'+nn.w+'" height="'+nn.h+'" rx="10" fill="#ffffff" stroke="'+col+'" stroke-width="3"/>'
-        +'<text x="'+(nn.x+12)+'" y="'+(nn.y+24)+'" font-size="13" font-weight="700" fill="'+col+'">'+esc(nn.type)+'</text>'
-        +'<text x="'+(nn.x+12)+'" y="'+(nn.y+46)+'" font-size="14" fill="#101820">'+esc((nn.title||'').slice(0,42))+'</text></g>';}
-    return '<svg class="map" viewBox="'+vb+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Spatial web map">'+edges+rects+'</svg>';
-  }
-  function render(data){
-    var p=data.project||{},graph=p['@graph']||[],html='';
-    html+='<header class="site-head"><h1>'+esc(p.title||'Untitled')+'</h1>';
-    if(p.concept)html+='<p class="concept">'+esc(p.concept)+'</p>';
-    html+='</header>';
-    html+='<section class="map-wrap"><h2>Web map</h2>'+renderMap(graph)+'</section>';
-    var content=data.content||{};
-    html+='<section class="narrative"><h2>Themes</h2>'+mdToHtml(content.themes)+'</section>';
-    html+='<section class="narrative"><h2>Problem situation</h2>'+mdToHtml(content.situation)+'</section>';
-    var rows=parseCsvRows(data.extractsCsv||'');
-    if(rows.length>1){html+='<section class="extracts"><h2>Source extracts</h2><ul>';
-      for(var i=1;i<rows.length;i++){var r=rows[i],t=r[0]||'',s=r[1]||'',u=r[2]||'';
-        html+='<li><strong>'+esc(t)+'</strong> — '+esc(s)+(/^https?:\\/\\//.test(u)?' <a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">source ↗</a>':'')+'</li>';}
-      html+='</ul></section>';}
-    byId('report').innerHTML=html;
-  }
-  function fetchText(url){return fetch(url).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.text();});}
-  function hydrate(){
-    return Promise.all([fetchText('./data/project.jsonld'),fetchText('./data/extracts.csv'),
-      fetchText('./content/situation.md'),fetchText('./content/themes.md')]).then(function(res){
-      return {project:JSON.parse(res[0]),extractsCsv:res[1],content:{situation:res[2],themes:res[3]}};});
-  }
-  // Served, the fetch path wins: a pod that edits content/*.md in its repo sees
-  // the edit without regenerating the shim. Opened by double-click, fetch on
-  // file:// is blocked by the browser — so don't try, and don't spend four red
-  // console errors proving it. The shim is always shipped.
-  if(location.protocol==='file:'&&window.SITE_DATA){render(window.SITE_DATA);return;}
-  hydrate().then(render).catch(function(){
-    if(window.SITE_DATA){render(window.SITE_DATA);}
-    else{byId('report').innerHTML='<p>Could not load site data. Serve this folder over HTTP (e.g. python3 -m http.server).</p>';}
-  });
-})();`;
+    // Markdown → HTML, run here at export time rather than shipped as a parser
+    // the page has to run. Handles what buildThemesMd() and exportSituationDoc()
+    // actually emit: headings, bullets, blockquotes, paragraphs.
+    //
+    // Headings shift down one level. Both documents open with their own `# `,
+    // and the page already has an <h1> — the board's name. Shifting keeps one
+    // <h1> per page and the nesting honest, which is worth getting right in a
+    // file people are about to read as an example of HTML.
+    function siteMdToHtml(md) {
+      const lines = String(md || '').split(/\r?\n/);
+      const out = [];
+      let inList = false;
+      const closeList = () => { if (inList) { out.push('</ul>'); inList = false; } };
+      lines.forEach(ln => {
+        if (/^### /.test(ln)) { closeList(); out.push('<h4>' + escapeHtml(ln.slice(4)) + '</h4>'); }
+        else if (/^## /.test(ln)) { closeList(); out.push('<h3>' + escapeHtml(ln.slice(3)) + '</h3>'); }
+        else if (/^# /.test(ln)) { closeList(); out.push('<h2>' + escapeHtml(ln.slice(2)) + '</h2>'); }
+        else if (/^\s*[-•] /.test(ln)) {
+          if (!inList) { out.push('<ul>'); inList = true; }
+          out.push('<li>' + escapeHtml(ln.replace(/^\s*[-•] /, '')) + '</li>');
+        }
+        else if (/^\s*>/.test(ln)) { closeList(); out.push('<blockquote>' + escapeHtml(ln.replace(/^\s*>\s?/, '')) + '</blockquote>'); }
+        else if (ln.trim() === '') { closeList(); }
+        else { closeList(); out.push('<p>' + escapeHtml(ln) + '</p>'); }
+      });
+      closeList();
+      return out.join('\n');
+    }
 
+    const SITE_TIER_COLORS = { 0: '#8a93a3', 1: '#8a93a3', 2: '#ee1c25', 3: '#f4b400', 4: '#8a4fff', 5: '#6231cf', 6: '#4b2fa0' };
+
+    // The board, as one inline <svg>. Drawn from the same node geometry the
+    // canvas uses, so the exported map is the map they arranged.
+    function siteMapSvg(nodes) {
+      if (!nodes || !nodes.length) return '<p>No cards on the map yet.</p>';
+      const byId = {};
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      nodes.forEach(n => {
+        byId[n.id] = n;
+        minX = Math.min(minX, n.x); minY = Math.min(minY, n.y);
+        maxX = Math.max(maxX, n.x + n.w); maxY = Math.max(maxY, n.y + n.h);
+      });
+      const pad = 60;
+      const viewBox = [minX - pad, minY - pad, (maxX - minX) + 2 * pad, (maxY - minY) + 2 * pad].join(' ');
+      const parts = [];
+      nodes.forEach(p => {
+        (p.children || []).forEach(kid => {
+          const c = byId[kid];
+          if (!c) return;
+          parts.push(`<line x1="${p.x + p.w / 2}" y1="${p.y + p.h / 2}" x2="${c.x + c.w / 2}" y2="${c.y + c.h / 2}" stroke="#b8c0cc" stroke-width="2"/>`);
+        });
+      });
+      nodes.forEach(n => {
+        const col = SITE_TIER_COLORS[n.tier] || '#3a2580';
+        parts.push(
+          `<g><rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="10" fill="#ffffff" stroke="${col}" stroke-width="3"/>`
+          + `<text x="${n.x + 12}" y="${n.y + 24}" font-size="13" font-weight="700" fill="${col}">${escapeHtml(n.type)}</text>`
+          + `<text x="${n.x + 12}" y="${n.y + 46}" font-size="14" fill="#101820">${escapeHtml((n.title || '').slice(0, 42))}</text></g>`
+        );
+      });
+      return `<svg class="map" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Spatial web map">\n`
+        + parts.join('\n') + '\n</svg>';
+    }
+
+    // The extracts that made it onto the published map — non-noise, positioned —
+    // so the list and the map can never disagree.
+    function siteExtractsHtml() {
+      const rows = appState.items.filter(it =>
+        appState.nodes[it.id] && appState.sorting.decisions[it.id] !== 'noise');
+      if (!rows.length) return '';
+      const li = rows.map(it => {
+        const url = (it.source_url || '').trim();
+        const link = /^https?:\/\//i.test(url)
+          ? ` <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">source ↗</a>` : '';
+        return `<li><strong>${escapeHtml(it.title || '')}</strong> — ${escapeHtml(it.summary || '')}${link}</li>`;
+      }).join('\n');
+      return `<section class="extracts">\n<h2>Source extracts</h2>\n<ul>\n${li}\n</ul>\n</section>`;
+    }
+
+    // One finished page. No stylesheet to link, no data to fetch, no script to
+    // run — the narrative is up top where it can be edited, the generated SVG
+    // is last so it isn't the first thing anyone scrolls past.
     function buildSiteIndexHtml(title) {
+      const concept = (appState.settings.concept || '').trim();
+      const extracts = siteExtractsHtml();
       return '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         + '<title>' + escapeHtml(title) + '</title>\n'
-        + '<link rel="stylesheet" href="./assets/style.css">\n</head>\n<body>\n'
-        + '<main id="report"><p class="loading">Loading…</p></main>\n'
-        + '<script src="./data/site-data.js"><\/script>\n'
-        + '<script src="./assets/viewer.js"><\/script>\n</body>\n</html>\n';
-    }
-
-    function buildSiteDataJs(projectJson, extractsCsv, situationMd, themesMd) {
-      const data = {
-        project: JSON.parse(projectJson),
-        extractsCsv: extractsCsv,
-        content: { situation: situationMd, themes: themesMd }
-      };
-      return 'window.SITE_DATA = ' + JSON.stringify(data) + ';\n';
+        + '<style>\n' + SITE_STYLE_CSS + '\n</style>\n</head>\n<body>\n'
+        + '<main id="report">\n'
+        + '<header class="site-head">\n<h1>' + escapeHtml(title) + '</h1>\n'
+        + (concept ? '<p class="concept">' + escapeHtml(concept) + '</p>\n' : '')
+        + '</header>\n\n'
+        + '<section class="narrative">\n' + siteMdToHtml(buildThemesMd()) + '\n</section>\n\n'
+        + '<section class="narrative">\n' + siteMdToHtml(exportSituationDoc()) + '\n</section>\n\n'
+        + (extracts ? extracts + '\n\n' : '')
+        + '<section class="map-wrap">\n<h2>Web map</h2>\n' + siteMapSvg(modularNodes()) + '\n</section>\n'
+        + '</main>\n</body>\n</html>\n';
     }
 
     // ── A3: "Meet the Pods" slide deck ───────────────────────────────────
@@ -9088,7 +9035,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         let wb = '<p>No client handed us this problem — the evidence did. This paradox was read off <strong>' + warr.extracts + ' source extract' + (warr.extracts === 1 ? '' : 's') + '</strong>'
           + (warr.themes.length ? ' across <strong>' + warr.themes.length + ' named theme' + (warr.themes.length === 1 ? '' : 's') + '</strong>' : '') + '.</p>';
         warr.samples.forEach(x => { wb += '<p class="muted">“' + esc(x.title) + '”' + (x.summary ? ' — ' + esc(x.summary) : '') + '</p>'; });
-        wb += '<p class="muted tiny">Full trail: data/extracts.csv in our pod repo.</p>';
+        wb += '<p class="muted tiny">Full trail: the working folder in our pod repo.</p>';
         slides.push({ kind: 'warrant', eyebrow: 'How we know', title: 'The evidence is the warrant', body: wb });
       }
       // No "Frame" slide: per the method, framing happens AFTER Meet the Pods
@@ -9148,25 +9095,27 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         + '<\/script>\n</body></html>';
     }
 
+    // The two files, by name. Kept as a list so the driver can assert the whole
+    // set — "exactly these two, nothing else" is the property that matters.
     function buildModularExportFiles() {
       const title = appState.settings.title || 'Untitled';
-      const projectJson = buildProjectJsonld();
-      const extractsCsv = buildExtractsCsv();
-      const situationMd = exportSituationDoc();
-      const themesMd = buildThemesMd();
       const sitForSlides = appState.situations.find(s => (s.title || '').trim()) || appState.situations[0] || {};
       return [
         { path: 'index.html', content: buildSiteIndexHtml(title) },
-        { path: 'slides.html', content: tgxBuildSlidesHtml(sitForSlides, appState.cards) },
-        { path: 'README.md', content: buildSiteReadme() },
-        { path: 'assets/style.css', content: SITE_STYLE_CSS },
-        { path: 'assets/viewer.js', content: SITE_VIEWER_JS },
-        { path: 'data/project.jsonld', content: projectJson },
-        { path: 'data/extracts.csv', content: extractsCsv },
-        { path: 'data/site-data.js', content: buildSiteDataJs(projectJson, extractsCsv, situationMd, themesMd) },
-        { path: 'content/situation.md', content: situationMd },
-        { path: 'content/themes.md', content: themesMd }
+        { path: 'slides.html', content: tgxBuildSlidesHtml(sitForSlides, appState.cards) }
       ];
+    }
+
+    // No zip: these are meant to be opened in an editor, and unzipping is the
+    // first thing in the way of that.
+    function downloadTextFile(name, text, mime) {
+      const blob = new Blob([text], { type: (mime || 'text/html') + ';charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     function exportModular() {
@@ -9185,15 +9134,12 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         toast('Name your web map first (the title field at the top-left of the board) — it becomes your Pod\'s name on the site and deck.', { duration: 6000 }); return;
       }
       appState.exportedAt = new Date().toISOString();
-      const blob = buildZip(buildModularExportFiles());
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = folderSlug(appState.settings.title || (appState.situations[0] && appState.situations[0].title)) + '-site.zip';
-      a.click();
-      URL.revokeObjectURL(url);
+      buildModularExportFiles().forEach(f => downloadTextFile(f.path, f.content));
       scheduleSave();
-      openModal('git-handoff-modal');
+      // NOT the git-handoff sheet — that one is about the working folder and its
+      // state.json. These two are for opening in an editor.
+      toast('Downloaded index.html and slides.html — open either one in your editor.',
+        { duration: 7000 });
     }
 
     function exportWorkingFolder(sitId) {
@@ -9812,7 +9758,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       // The no-gate fallback: offered until at least one situation is exportable.
       const exportable = appState.situations.some(s => (s.title || '').trim() && (s.description || '').trim());
       if (!exportable) rows.push(row('Export the whole canvas (.zip)', 'Everything on the board, no gate — the folder podmates merge via Git.', 'exportCanvasZip()'));
-      rows.push(row('Produce the deck &amp; site (.zip)', 'Optional showcase — a GitHub-Pages-ready site + slide deck. Not needed for the OLOS submission.', 'exportModular()'));
+      rows.push(row('Produce the deck &amp; site', 'Two files — <code>index.html</code> and <code>slides.html</code>. Each opens on its own, and each is yours to edit. Not needed for the OLOS submission.', 'exportModular()'));
       rows.push(row('Compile concept (.md)', 'A lightweight Markdown summary of your concept and the cards under it.', 'compileConcept()'));
       rows.push(row('Open a shared folder', 'Bring in a podmate’s exported folder — merge or replace.', 'openImportModal()'));
       rows.push(row('Start over', 'Clear this board and begin again from Sources. Export first if you want to keep it.', 'startOver()', true));

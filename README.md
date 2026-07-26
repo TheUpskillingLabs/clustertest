@@ -45,7 +45,7 @@ A bottom **action bar** carries you through the whole arc — it always shows ex
    - **Stage 4 — Context & field: map the players.** Inner circle first (the directly implicated — *candidate problem owners come from here*), then the wider field (where themes and status-quo beneficiaries live). Candidate owners are marked "(not yet approached)" until a real conversation has happened.
    - **Stage 5 — Find the paradox(es).** The deadlock the field sustains: *"the situation demands X, but the same conditions that create the need prevent X from working."* Hold multiple candidate paradoxes, link each to who benefits from it persisting and to the evidence behind **both** legs of the contradiction, and pass the sharpness self-check — which is carried honestly into everything you export.
 
-8. **Export your working folder** — the terminal action: commit it to your pod's shared repo, then submit your problem statement in OLOS with the repo link. (The deck & site export remains as an optional showcase — see "What comes out" below.)
+8. **Export your working folder** — the terminal action: commit it to your pod's shared repo, then submit your problem statement in OLOS with the repo link. (**Produce the deck & site** is the optional showcase: two self-contained files, `index.html` and `slides.html`, made to be opened in an editor and changed — see "What comes out" below.)
 
 ## The method, in brief
 
@@ -62,7 +62,7 @@ Three exports, all reachable from the **Share / Export** sheet (and offered by t
 
 | Export | When | Contents |
 |---|---|---|
-| **Meet-the-Pods site & deck** (`.zip`, optional showcase) | Workspace complete, real title | 10 files: a GitHub-Pages-ready `index.html` (web map + themes + situation + extracts), `slides.html` (the Meet-the-Pods deck), `README.md`, `assets/` (viewer + styles), `data/project.jsonld` (semantic graph), `data/extracts.csv`, `data/site-data.js` (offline fallback), `content/situation.md`, `content/themes.md` |
+| **Meet-the-Pods site & deck** (optional showcase) | Workspace complete, real title | **Two files, no zip.** `index.html` — your themes, your problem situation, your extracts and your web map as one finished page, with its stylesheet inline and its colour variables on line one. `slides.html` — the Meet-the-Pods deck. Neither needs the other, a server, or the network; both open by double-click. They are also the first two files most of a cohort will edit, so they are written to be read: real headings, real paragraphs, no data to fetch and no renderer to run. |
 | **Working folder** (`.zip`) | Any mapped situation | `problem-situation.md`, `gap-analysis.md`, per-card folders (`card.json`, `notes.md`, `deepen.md`, `evidence.md`, attached sources), and **`state.json`** — a full re-importable board snapshot |
 | **Concept summary** (`.md`) | Any time | Your provisional concept + your Evidence cards with their supporting extracts |
 

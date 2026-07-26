@@ -81,7 +81,7 @@ Everything else — copy, color, gates, stages, screens, the whole feel — is i
   4. Connect two named Evidence cards into a **Pattern** — the Pattern tool is in the dock from the start.
   5. Climb: Evidence → Pattern → Theme (name and describe as you go — feel the locks bite).
   6. **Map the Problem Situation** → take the classify beat → walk the five Deepen stages (linger on Stage 4's inner circle and Stage 5's paradox — that's the destination).
-  7. **Export your working folder** (Share / Export) and read the Git handoff sheet — that zip, committed to a shared repo plus a statement submitted in OLOS, is the real deliverable. (Optional: *Produce the deck & site* and open `slides.html` for the showcase.)
+  7. **Export your working folder** (Share / Export) and read the Git handoff sheet — that zip, committed to a shared repo plus a statement submitted in OLOS, is the real deliverable. (Optional: *Produce the deck & site*. Two files land in Downloads — `index.html` and `slides.html`. Open both, then open `index.html` in an editor: inline stylesheet at the top, your own words below it. That is the vibecoding starting line.)
   8. **Share / Export → Start over** — clean slate.
   Keep a note of every moment that made you squint. That list is your first build agenda.
 - [ ] **This week: read enough to argue.** The reading path above. You don't need mastery — you need enough to say "Dorst would push back here, and here's why I'd push back on Dorst."

@@ -49,9 +49,9 @@ Verified against code, not docs.
 | Field survey (instrument + intake) | **Built** | OLOS `00053_field_survey_intake.sql`, `app/(survey)/survey/[slug]/survey-flow.tsx`, `POST /api/surveys/[slug]/responses`. Missing: **share mechanics**, `/s/[slug]` short link, moderation UI. |
 | Extraction / upload → extracts | **Not built** | No `extracts`/`sources` tables, no upload endpoint, no prompt-builder. Gate-free. **This PRD, Area 2.** |
 | Triangulator canvas | **Built (standalone)** | `triangles/index.html`. `localStorage`, own tier vocabulary, single-user. **This PRD, Areas 1 & 4.** |
-| Export → GitHub-Pages site | **Built (emitter)** | `buildModularExportFiles()` / `exportModular()` emit `index.html` + `assets/` + `data/project.jsonld` + `content/*.md`. README: "ready to host on GitHub Pages." |
+| Export → landing page | **Built (emitter)** | `buildModularExportFiles()` / `exportModular()` emit two self-contained files, `index.html` + `slides.html`, rendered at export time. Hostable anywhere, but built first to be *edited* — see 7a. |
 | Repo provisioning (OLOS side) | **Not built** | `lib/integrations/` is **only** `luma.ts`. `pods.github_repo_url` is a hand-typed string. **This PRD, Area 3.** |
-| "Meet the Pods" slides | **Built** | `slides.html` ships in the deck & site zip. (The intro deck that used to teach the workflow has been removed.) |
+| "Meet the Pods" slides | **Built** | `slides.html` — one of the two files the deck & site export produces. (The intro deck that used to teach the workflow has been removed.) |
 | Pod formation | **Built (mis-seeded)** | `voting/finalize`, `pods` — but seeded by free-text `problem_statement_id`, not a paradox/cluster. No `clusters` table. **This PRD, Area 4.** |
 | Project / problem-owner layer | **Partial** | Project schema nests; `actants`/`problem_owner` and the proposal gate are doc-only. **This PRD, Area 4.** |
 | Ortelius graph / AI reads | **Gated** | Signed edges, actants, OPP, semantic search — blocked by governance #11. Out of scope. |
@@ -127,7 +127,31 @@ Verified against code, not docs.
 
 **Problem.** The owner's headline ask: the Triangulator should emit a file a pod uses to seed its **Pod GitHub repo** with a **landing page** and initial **"Meet the Pods" slides**. Good news: the tool already thinks this way. Its intro deck teaches the exact workflow — *export a `.zip`, unzip into the Pod's shared repo, commit; Git merges everyone's maps; **Meet the Pods** — your Themes are what you present to the community.* And `buildModularExportFiles()` already emits a self-rendering GitHub-Pages site. So the **landing site is ~70% done.** Two gaps: (a) the part that makes the file *pod-forming* can't be produced by a single-user tool, and (b) there is **no slide artifact** and **no auto-provisioning** on the OLOS side.
 
-**7a. The export contract (`project.jsonld`) — finalize it.**
+**7a. ~~The export contract (`project.jsonld`) — finalize it.~~ — REVERSED, July 2026**
+
+> **Reversed by the owner.** The deck & site export is now **two self-contained files**
+> — `index.html` and `slides.html`. `project.jsonld`, `extracts.csv`, `site-data.js`,
+> `assets/`, `content/*.md` and the site README are gone; the page is rendered at export
+> time rather than hydrated in the browser.
+>
+> **Why.** These two files are the cohort's **first vibecoding exercise**. The owner's
+> note: *"far too complex… meant to be an entry level set of two files for them to begin
+> practicing vibecoding. So adding separate css files and markdowns etc etc is
+> complicating it."* Ten files, three serialisations of the same content, and an
+> `index.html` that was nine lines of `<script src>` is a static-site framework, not a
+> starting line.
+>
+> **What this section still has right.** A machine-readable seed contract is the correct
+> shape for OLOS ingest, and the split between "what the tool can honestly emit" and
+> "what OLOS assembles" below still holds. It just does not belong in the *showcase*
+> export. The **working folder** export already carries `state.json` — a complete,
+> re-importable board — and is the natural home for a seed contract when OLOS needs one.
+>
+> **To restore the emitter:** `git show <sha>^:index.html` and lift `buildProjectJsonld()`,
+> `buildExtractsCsv()`, `SITE_VIEWER_JS` and `buildSiteDataJs()`. The removal record in
+> `docs/CLEANUP-2026-07.md` names the commit.
+
+The original requirement, preserved:
 
 Make `project.jsonld` the **canonical seed contract**: the machine-readable source of truth, with `situation.md` / `themes.md` as the human body. Split fields by who can honestly produce them:
 
@@ -145,8 +169,8 @@ pod_seed (extends the existing schema.org JSON-LD, additively)
 
 **7b. "Meet the Pods" slides — new artifact.**
 
-- **3.1 (MUST) Generate a slide deck** from the same situation fields — one slide each for: the paradox, the frame ("if the situation is seen *as if* X…"), the top 2–3 themes, the stakeholder/field map, and a "join this pod" closer. Smallest build: a `slides.html` template (self-rendering, like the existing viewer) **or** Marp-from-`situation.md`. Ships inside the export folder alongside `index.html`.
-- **3.2 (SHOULD) The landing page** stays the existing self-rendering site (`index.html` + `viewer.js` + `site-data.js`), reskinned to OLOS tokens.
+- **3.1 (MUST) Generate a slide deck** from the same situation fields — one slide each for: the paradox, the frame ("if the situation is seen *as if* X…"), the top 2–3 themes, the stakeholder/field map, and a "join this pod" closer. **Built** as `slides.html`, self-contained, shipped alongside `index.html`.
+- **3.2 (SHOULD)** ~~The landing page stays the existing self-rendering site (`index.html` + `viewer.js` + `site-data.js`)~~ — **superseded with 7a.** The landing page is now a single finished `index.html`: inline stylesheet, narrative as real HTML, web map as inline SVG, no script. Reskinning to OLOS tokens is now a one-file edit to `SITE_STYLE_CSS`.
 
 **7c. Provisioning (OLOS seam) — new.**
 

@@ -11,7 +11,7 @@ arc still runs end to end, exports included. Every cut is either code that
 already couldn't run, a feature that did nothing, or one of several controls
 doing the same job.
 
-`index.html` went from **10,349 to 10,181 lines** — 1,564 lines out, 1,396 back in. The removals are much bigger than the net figure suggests: the BYO-LLM walkthrough, the auto-layout pass, the workbook's stage nav and the import receipts are all new code added on top.
+`index.html` went from **10,349 to 10,127 lines** — 1,744 lines out, 1,522 back in. The removals are much bigger than the net figure suggests: the BYO-LLM walkthrough, the auto-layout pass, the workbook's stage nav and the import receipts are all new code added on top.
 
 ---
 
@@ -34,6 +34,7 @@ doing the same job.
 | `Make both ways of adding extracts work from the canvas` | Five bugs between the dock and the board |
 | `Check what the export actually contains` | The driver only counted files; now it opens the site and the deck |
 | `Remove the canvas level tabs` | A view switch that behaved as a lock, and persisted |
+| `Make the deck & site export two files` | Ten files became two, rendered at export time |
 
 ## Removed: code that already couldn't run
 
@@ -343,6 +344,60 @@ which is what a marquee should always have done).
 boards saved mid-filter still parse — nothing reads it, and nothing applies the
 dim class any more. `session-test.js` loads exactly such a board and asserts it
 comes back whole and clickable.
+
+## Removed: eight of the ten files in the deck & site export
+
+The export shipped a folder:
+
+```
+index.html          417 B    a shell that rendered nothing on its own
+slides.html       7,256 B    the deck (already self-contained)
+README.md         1,101 B    how to host the folder on GitHub Pages
+assets/style.css  1,182 B
+assets/viewer.js  5,295 B    a CSV parser + a Markdown parser + fetch/hydrate logic
+data/project.jsonld  33 KB   the graph, as JSON-LD
+data/extracts.csv    13 KB   the extracts, again
+data/site-data.js    50 KB   all of the above, again, as a file:// fallback
+content/situation.md  6 KB
+content/themes.md     5 KB
+```
+
+The owner's note: *"far too complex. This is meant to be an entry level set of two files
+for them to begin practicing vibecoding. So adding separate css files and markdowns etc
+etc is complicating it."*
+
+All of it followed from one decision: **ship data plus a client-side renderer.** The same
+content was therefore serialised three times, and the file a beginner opened first was
+nine lines of `<script src>`.
+
+Inverted. The app holds the content as live objects at export time, so it renders the
+HTML *there* and ships the finished page. **Two files now — `index.html` and
+`slides.html`, no zip.** `index.html` is 279 lines: `<!doctype html>`, an inline
+`<style>` whose colour variables are on line one, the themes and the problem situation as
+real headings and paragraphs, the extracts as a `<ul>`, and the web map as inline SVG at
+the bottom where the generated markup isn't the first thing anyone scrolls past. No
+`<script>`, no `<link>`, no `src=`, no `fetch`.
+
+Removed: `SITE_VIEWER_JS` (76 lines of stringified renderer), `buildProjectJsonld()`,
+`buildExtractsCsv()`, `buildSiteDataJs()`, `buildSiteReadme()`. Added in their place, as
+real app code rather than a shipped string: `siteMdToHtml()`, `siteMapSvg()`,
+`siteExtractsHtml()`. `SITE_STYLE_CSS` survives, inlined into the page.
+
+Two smaller consequences, both corrections:
+
+- **The export stopped opening the Git handoff sheet.** That modal says *"This .zip is
+  your working folder — your whole board as data (`state.json`)"*, which describes the
+  *other* export and was already wrong here. It now shows a toast naming the two files.
+- **Headings shift down one level.** Both Markdown documents open with their own `# `, so
+  the page used to carry three `<h1>`s and a doubled heading under each section label.
+  One `<h1>` now — the board's name. Worth getting right in a file people are about to
+  read as an example of HTML.
+
+**Nothing was lost.** The machine-readable trail is the **working folder** export, which
+still ships `state.json`, `problem-situation.md`, `gap-analysis.md` and a folder per card,
+and is untouched. `docs/PRD-triangulator-finalization.md` §7a — which made
+`project.jsonld` "the canonical seed contract" — is struck through with the reasoning on
+both sides, the same treatment requirement 1.1 already carries.
 
 ## How to get any of it back
 

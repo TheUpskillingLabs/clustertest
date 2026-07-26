@@ -440,85 +440,103 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     appState.settings.title = 'Civics & Elections — DC Founding Lab';
     save();
   });
+  // Two files per run now — index.html and slides.html, no zip to unpack.
   for (let i = 1; i <= 3; i++) {
     await page.evaluate(() => exportModular());
     await sleep(1600);
     await page.evaluate(() => document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(m => m.classList.add('hidden')));
     await sleep(250);
     const n = await page.evaluate(() => window.__downloads.length);
-    check('deck & site export #' + i + ' produced a file', n === i, 'downloads so far: ' + n);
+    check('deck & site export #' + i + ' produced both files', n === i * 2, 'downloads so far: ' + n);
   }
+  check('the two files are named the way a web project names them',
+    await page.evaluate(() => window.__downloads.slice(0, 2).join(',')) === 'index.html,slides.html',
+    await page.evaluate(() => JSON.stringify(window.__downloads.slice(0, 2))));
 
   await page.evaluate(() => exportWorkingFolder(appState.situations[0].id));
   await sleep(1500);
   await page.evaluate(() => document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(m => m.classList.add('hidden')));
   check('working-folder export produced a file',
-    await page.evaluate(() => window.__downloads.length) === 4);
+    await page.evaluate(() => window.__downloads.length) === 7);
 
   const names = await page.evaluate(() => window.__downloads);
   console.log('  downloads: ' + JSON.stringify(names));
 
   // ------------------------------------------- What is actually in the export
-  // "A file was produced" is not the deliverable. The deliverable is a landing
-  // page and a presentation that open by double-click — no server, no network —
-  // because that is how they get looked at: from a USB stick, in a library.
+  // "A file was produced" is not the deliverable. These are the first two files
+  // most of this cohort will edit, so the bar is: exactly two, each complete on
+  // its own, and readable — no linked stylesheet, no fetched data, no renderer
+  // to run before there is anything on the page.
   {
     const fs = require('fs');
     const os = require('os');
     const files = await page.evaluate(() => buildModularExportFiles());
     const byPath = Object.fromEntries(files.map(f => [f.path, f.content]));
-    const want = ['index.html', 'slides.html', 'README.md', 'assets/style.css', 'assets/viewer.js',
-      'data/project.jsonld', 'data/extracts.csv', 'data/site-data.js',
-      'content/situation.md', 'content/themes.md'];
-    check('the export carries the whole site folder',
-      want.every(f => byPath[f] && byPath[f].length),
-      JSON.stringify(want.filter(f => !byPath[f])));
 
+    check('the export is exactly two files, nothing else',
+      files.length === 2 && !!byPath['index.html'] && !!byPath['slides.html'],
+      JSON.stringify(files.map(f => f.path)));
+
+    const site = byPath['index.html'] || '';
     check('index.html is the landing page, titled with the board',
-      /<!doctype html>/i.test(byPath['index.html'])
-      && /id="report"/.test(byPath['index.html'])
-      && /Civics &amp; Elections/.test(byPath['index.html']));
+      /<!doctype html>/i.test(site) && /Civics &amp; Elections/.test(site));
+    // The whole point of the rewrite: nothing to resolve, nothing to run.
+    check('index.html needs no other file to render',
+      !/<script/i.test(site) && !/\bsrc=/i.test(site)
+      && !/<link\b/i.test(site) && !/fetch\(/.test(site),
+      JSON.stringify({
+        script: /<script/i.test(site), src: /\bsrc=/i.test(site),
+        link: /<link\b/i.test(site), fetch: /fetch\(/.test(site)
+      }));
+    check('index.html carries its own stylesheet, variables first',
+      /<style>\s*:root\{--teal:/.test(site));
+    check('index.html holds the narrative as real HTML, not data',
+      /<h2>Themes &amp; Patterns<\/h2>/.test(site)
+      && /<h2>Ballot access erodes/.test(site) && !/window\.SITE_DATA/.test(site));
+    // One <h1> per page, and headings that nest — this file is about to be read
+    // as an example of HTML, so it should be a correct one.
+    check('index.html has exactly one <h1>, and it is the board',
+      (site.match(/<h1>/g) || []).length === 1 && /<h1>Civics &amp; Elections/.test(site),
+      (site.match(/<h1>/g) || []).length + ' h1s');
+    check('the web map ships as inline SVG, after the narrative',
+      /<svg class="map"/.test(site)
+      && site.indexOf('<svg class="map"') > site.indexOf('Ballot access erodes'),
+      (site.match(/<rect /g) || []).length + ' nodes drawn');
+
     check('slides.html is a self-contained presentation of the situation',
       /class="slide/.test(byPath['slides.html'])
       && /<style>/.test(byPath['slides.html']) && /<script>/.test(byPath['slides.html'])
       && /Ballot access erodes/.test(byPath['slides.html']),
       (byPath['slides.html'].match(/class="slide[ "]/g) || []).length + ' slides');
-    check('nothing in the export reaches for the network',
-      !want.some(f => /https?:\/\/(cdn|unpkg|jsdelivr|fonts\.googleapis|ajax\.google)/i.test(byPath[f])));
+    check('neither file reaches for the network',
+      !files.some(f => /https?:\/\/(cdn|unpkg|jsdelivr|fonts\.googleapis|ajax\.google)/i.test(f.content)));
 
-    // Write the folder out and open it the way a participant will: by
-    // double-clicking index.html off a stick, with no server anywhere.
-    const site = fs.mkdtempSync(path.join(os.tmpdir(), 'tgx-site-'));
-    files.forEach(f => {
-      const dest = path.join(site, f.path);
-      fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.writeFileSync(dest, f.content);
-    });
-    for (const [name, min] of [['index.html', 'text'], ['slides.html', 'slides']]) {
+    // Write them out and open them the way a participant will: by
+    // double-clicking, off a stick, with no server anywhere.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tgx-site-'));
+    files.forEach(f => fs.writeFileSync(path.join(dir, f.path), f.content));
+    for (const [name, kind] of [['index.html', 'page'], ['slides.html', 'deck']]) {
       const p = await browser.newPage();
       const pageErrs = [];
       p.on('pageerror', e => pageErrs.push(String(e.message)));
       p.on('console', m => { if (m.type() === 'error') pageErrs.push(m.text()); });
-      await p.goto('file://' + path.join(site, name));
-      await sleep(1200);
+      await p.goto('file://' + path.join(dir, name));
+      await sleep(900);
       const seen = await p.evaluate(() => ({
         len: (document.body.innerText || '').trim().length,
-        loading: !!document.querySelector('.loading'),
         mapNodes: document.querySelectorAll('svg.map rect').length,
         headings: document.querySelectorAll('h1, h2, .slide h1, .slide h2').length,
       }));
-      // The site hydrates a whole report; the deck shows one slide at a time,
-      // so its visible text is short by design — count its slides instead.
-      const rendered = min === 'text'
-        ? (!seen.loading && seen.len > 500 && seen.mapNodes > 0)
+      // The page renders a whole report; the deck shows one slide at a time, so
+      // its visible text is short by design — count its slides instead.
+      const rendered = kind === 'page'
+        ? (seen.len > 500 && seen.mapNodes > 0)
         : seen.headings >= 4;
       check(`${name} opens from file:// and renders`, rendered, JSON.stringify(seen));
-      // Falling back after four failed fetches works, but it fills the console
-      // with red for anyone who looks — on file:// there is nothing to fetch.
       check(`${name} opens without console errors`, pageErrs.length === 0, JSON.stringify(pageErrs));
       await p.close();
     }
-    fs.rmSync(site, { recursive: true, force: true });
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 
   // ------------------------------------------------------- The action bar
