@@ -126,6 +126,24 @@ const clip = (s, n = 280) => {
   return t.length > n ? t.slice(0, n - 1) + "…" : t;
 };
 
+// Mirrors SURVEY_RESULTS_URL in index.html — the durable provenance of the
+// shared deck. A board whose extracts all carry it brought nothing of its own.
+const SHARED_DECK_URL = "https://theupskillinglabs.org/survey/civics/results";
+const isSharedDeckItem = (it) =>
+  typeof it?.source_url === "string" && it.source_url.startsWith(SHARED_DECK_URL);
+
+const STOPWORDS = new Set(
+  ("a an and are as at be but by for from has have how in into is it its of on or " +
+    "that the their there this to was were what when who will with we our you your " +
+    "not no more most people civic civics").split(" ")
+);
+const contentWords = (s) =>
+  (s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOPWORDS.has(w));
+
 function digestBoard(wrapper, fallbackName) {
   if (!wrapper || wrapper.app !== "triangulator" || !wrapper.state) {
     throw new Error("not a triangulator export (missing app/state)");
@@ -146,8 +164,9 @@ function digestBoard(wrapper, fallbackName) {
     (it) => decisions[it.id] && decisions[it.id] !== "noise"
   );
   const starred = items.filter((it) => decisions[it.id] === "super");
+  const shared = items.filter(isSharedDeckItem).length;
   lines.push(
-    `- Extracts: ${items.length} total, ${kept.length} kept as signal (${starred.length} starred)`
+    `- Extracts: ${items.length} total (${items.length - shared} own · ${shared} shared deck), ${kept.length} kept as signal (${starred.length} starred)`
   );
 
   for (const sit of situations) {
@@ -207,6 +226,101 @@ function digestBoard(wrapper, fallbackName) {
     if (starred.length > 8) lines.push(`- …and ${starred.length - 8} more`);
   }
 
+  // Feature bag for the convergence watch: what this board names things,
+  // and what its situation prose sounds like.
+  const themeTitles = upper.map((c) => (c.title || "").trim()).filter(Boolean);
+  const prose = situations
+    .map((sit) =>
+      [sit.title, sit.description, sit.paradox, ...SIT_FIELDS.map(([k]) => sit[k])]
+        .filter((v) => typeof v === "string")
+        .join(" ")
+    )
+    .join(" ");
+  const features = {
+    title,
+    extracts: items.length,
+    own: items.length - shared,
+    themeTitles,
+    themeWords: themeTitles.flatMap(contentWords),
+    proseWords: contentWords(prose),
+  };
+
+  return { md: lines.join("\n"), features };
+}
+
+// The whole failure mode this tool exists to catch, made visible: which
+// words every board's themes share, which pairs of boards read as one
+// board, which card names are literally identical, and who never brought
+// material of their own. Feed it to the anti-matchmaking prompt — heavy
+// overlap is exactly what triads should be de-aligned on — and read it to
+// the room when the map space is collapsing.
+function convergenceWatch(feats) {
+  if (feats.length < 2) return "";
+  const lines = ["## Convergence watch", ""];
+
+  const wordBoards = new Map();
+  for (const f of feats) {
+    for (const w of new Set(f.themeWords)) {
+      if (!wordBoards.has(w)) wordBoards.set(w, []);
+      wordBoards.get(w).push(f.title);
+    }
+  }
+  const common = [...wordBoards.entries()]
+    .filter(([, bs]) => bs.length >= 3)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 15);
+  if (common.length) {
+    lines.push("Theme vocabulary shared by 3+ boards:");
+    for (const [w, bs] of common) lines.push(`- "${w}" — ${bs.length} boards`);
+  } else {
+    lines.push("No theme-name word appears on 3 or more boards. Good spread.");
+  }
+
+  const pairs = [];
+  for (let i = 0; i < feats.length; i++) {
+    for (let j = i + 1; j < feats.length; j++) {
+      const A = new Set(feats[i].proseWords);
+      const B = new Set(feats[j].proseWords);
+      if (A.size < 8 || B.size < 8) continue; // too thin to judge
+      let inter = 0;
+      for (const w of A) if (B.has(w)) inter++;
+      const jac = inter / (A.size + B.size - inter);
+      if (jac >= 0.4) {
+        const sharedWords = [...A].filter((w) => B.has(w)).slice(0, 10);
+        pairs.push(
+          `- ${feats[i].title} × ${feats[j].title} — ${Math.round(jac * 100)}% shared vocabulary (${sharedWords.join(", ")})`
+        );
+      }
+    }
+  }
+  if (pairs.length) {
+    lines.push("", "Board pairs whose situation prose overlaps heavily (≥ 40%):", ...pairs);
+  }
+
+  const nameOwners = new Map();
+  for (const f of feats) {
+    for (const t of f.themeTitles) {
+      const k = t.toLowerCase();
+      if (!nameOwners.has(k)) nameOwners.set(k, new Set());
+      nameOwners.get(k).add(f.title);
+    }
+  }
+  const dupes = [...nameOwners.entries()].filter(([, bs]) => bs.size > 1);
+  if (dupes.length) {
+    lines.push("", "Identical card names on different boards:");
+    for (const [t, bs] of dupes) lines.push(`- "${t}" — ${[...bs].join(", ")}`);
+  }
+
+  const allShared = feats
+    .filter((f) => f.extracts > 0 && f.own === 0)
+    .map((f) => f.title);
+  if (allShared.length) {
+    lines.push(
+      "",
+      `Boards holding only the shared deck (no material of their own): ${allShared.join(", ")}`
+    );
+  }
+
   return lines.join("\n");
 }
 
@@ -219,6 +333,7 @@ if (!inputDir) {
 }
 
 const sections = [];
+const allFeatures = [];
 const skipped = [];
 for (const name of readdirSync(inputDir).sort()) {
   const p = join(inputDir, name);
@@ -237,7 +352,9 @@ for (const name of readdirSync(inputDir).sort()) {
       skipped.push(`${name}: no state.json found`);
       continue;
     }
-    sections.push(digestBoard(wrapper, fallbackName));
+    const { md, features } = digestBoard(wrapper, fallbackName);
+    sections.push(md);
+    allFeatures.push(features);
   } catch (err) {
     skipped.push(`${name}: ${err.message}`);
   }
@@ -255,9 +372,15 @@ const header = [
   "",
   `${sections.length} board(s). Paste this whole file into your LLM together`,
   "with docs/ANTI-MATCHMAKING-PROMPT.md to form minimally aligned triads.",
+  "The Convergence watch at the end names the overlaps the triads should",
+  "be de-aligned on — read it before announcing groups.",
   "",
 ].join("\n");
-writeFileSync(out, header + "\n" + sections.join("\n\n---\n\n") + "\n");
+const watch = convergenceWatch(allFeatures);
+writeFileSync(
+  out,
+  header + "\n" + sections.join("\n\n---\n\n") + (watch ? "\n\n---\n\n" + watch : "") + "\n"
+);
 
 console.log(`Wrote ${out} (${sections.length} boards)`);
 for (const s of skipped) console.warn(`  skipped ${s}`);

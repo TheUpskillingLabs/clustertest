@@ -76,7 +76,7 @@ Everything else — copy, color, gates, stages, screens, the whole feel — is i
 
 - [ ] **Today: feel the clay.** Run the loop once, end to end (15 minutes, sample data, disposable):
   1. Open [the live tool](https://theupskillinglabs.github.io/triangles/). It opens straight onto Sources.
-  2. Sources → *Load 48 Civics & Elections source extracts* → **Start sorting →**. Sort all 48, fast — notice what hesitation feels like.
+  2. Sources → *Deal a shared hand — 32 of the 48 survey extracts* → **Start sorting →**. Sort your hand, fast — notice what hesitation feels like. (Each board is dealt a different 32, in a different order — that's deliberate: identical pools were producing identical maps. *Load all 48* lives under "Other ways to add extracts".)
   3. On the canvas, drag a glowing edge dot onto another card → your first Evidence card. Name it. Do it twice more (or try the **Link** tool in the dock).
   4. Connect two named Evidence cards into a **Pattern** — the Pattern tool is in the dock from the start.
   5. Climb: Evidence → Pattern → Theme (name and describe as you go — feel the locks bite).

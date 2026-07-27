@@ -31,7 +31,7 @@ The project is tested by driving the real app headlessly with Playwright against
 
 | Driver | What it covers |
 |---|---|
-| `session-test.js` | The full arc — Sources → CSV import feedback → sort all 21 → connect into Evidence → climb to a Theme → Map → Classify → the five Deepen stages → **three exports** — then the action bar, auto-layout (including on a lattice), the BYO-LLM prompts, adding extracts from the canvas, Start over, phone widths, and boards saved by older builds. Fails on any uncaught exception or console error. |
+| `session-test.js` | The full arc — Sources → CSV import feedback → sort the dealt hand → connect into Evidence → climb to a Theme → Map → Classify → the five Deepen stages → **three exports** — then the action bar, auto-layout (including on a lattice), the BYO-LLM prompts (including per-board seed variation: deals and prompts differ across seeds, stay stable within one), adding extracts from the canvas, the distill audit in the export, Start over, phone widths, and boards saved by older builds. Fails on any uncaught exception or console error. |
 | `cursor-test.js` | Canvas cursor states (idle, node, connect handle, space-to-pan). |
 
 If you change app behavior:

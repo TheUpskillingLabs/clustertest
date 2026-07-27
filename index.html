@@ -186,6 +186,8 @@
     .config-input:focus { border-color: var(--primary-teal); }
 
     .item-builder-list { background: var(--midnight); border: 2px solid rgba(255,255,255,0.1); border-radius: var(--radius-2); padding: 12px; max-height: 220px; overflow-y: auto; margin-bottom: 16px; }
+    .pool-empty-state { color: var(--cloud); opacity: 0.8; font-size: var(--text-sm); line-height: var(--lead-sm); padding: 20px 16px; text-align: center; }
+    .pool-empty-state strong { color: var(--primary-teal); }
     .config-item-row { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: var(--radius-2); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; }
     .config-item-row h4 { font-size: var(--text-sm); color: var(--ghost-white); margin-bottom: 4px; }
     .config-item-row p { font-size: var(--text-xs); color: var(--cloud); opacity: 0.7; line-height: var(--lead-xs); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
@@ -1023,6 +1025,7 @@
     @media (max-width: 1024px) {
     }
 
+    .canvas-viewport.is-file-drop { outline: 3px dashed var(--primary-teal); outline-offset: -3px; }
     .canvas-viewport {
       position: relative;
       flex: 1;
@@ -1244,6 +1247,9 @@
     .dock-tool:hover { background: var(--cloud); }
     .dock-tool:focus-visible { outline: 3px solid var(--primary-teal); outline-offset: -3px; }
     .dock-tool.is-armed { background: var(--primary-teal); color: var(--ghost-white); }
+    /* Bringing in more sources is a peer of Link/Evidence, not an afterthought. */
+    .dock-tool-add .dock-glyph { color: var(--primary-teal); font-weight: 700; }
+    .dock-tool-add { border: 1px dashed rgba(0,148,160,0.55); border-radius: var(--radius-1); }
     .dock-glyph { font-size: var(--text-base); line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
     .dock-glyph svg { width: 16px; height: 16px; display: block; }
     .dock-tool[data-tool="signal"] .dock-glyph { color: var(--primary-teal); }
@@ -1833,6 +1839,8 @@
     /* Clickable provenance link on extract nodes. */
     .node-source-link { display: inline-block; margin-top: 4px; font-size: var(--text-2xs); font-weight: 600; color: var(--primary-teal); text-decoration: none; letter-spacing: var(--track-label); }
     .node-source-link:hover { text-decoration: underline; }
+    .node-source-note { color: inherit; opacity: 0.55; cursor: default; }
+    .node-source-note:hover { text-decoration: none; }
 
     .quality-check { font-size: var(--text-2xs); color: rgba(255,255,255,0.55); line-height: var(--lead-2xs); padding: 6px 8px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); }
     .quality-check em { color: rgba(255,255,255,0.75); font-style: normal; font-weight: 600; }
@@ -2313,31 +2321,32 @@
       <header class="sources-head">
         <p class="deck-eyebrow">Start here <span class="deck-kicker">· your source extracts</span></p>
         <h1 class="deck-title sources-title">Load the raw material.</h1>
-        <p class="deck-lede sources-lede">Field notes, interviews, articles, statistics, anecdotes — the raw material you'll sift for signal. Go wide; include what might contradict you. The problem comes into focus later.</p>
+        <p class="deck-lede sources-lede">Your field notes, interviews, articles, survey responses — the material only you gathered. Go wide; include what might contradict you. The shared survey deck is common ground: a map built only from it will look like everyone else's.</p>
       </header>
 
       <div class="config-field">
         <label for="config-title">Name your web map</label>
-        <input type="text" id="config-title" class="config-input" value="Civics &amp; Elections: Signal Pool">
+        <input type="text" id="config-title" class="config-input" value="" placeholder="Your name — the digest and your podmates find you by it">
       </div>
 
       <div class="config-field">
-        <label id="pool-label">Source-extract pool — <span id="config-pool-count">0</span> source extracts</label>
+        <label id="pool-label">Source-extract pool — <span id="config-pool-count">0 source extracts</span></label>
         <div id="config-item-list" class="item-builder-list" role="list" aria-labelledby="pool-label"></div>
         <div class="sources-actions">
-          <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="loadSampleSignals()">Load 48 Civics &amp; Elections source extracts</button>
-          <button type="button" class="btn btn-primary" onclick="tgxExtractOpen()">✨ Extract from sources →</button>
+          <button type="button" class="btn btn-primary" onclick="tgxExtractOpen()">✨ Extract from your sources →</button>
           <input type="file" id="csv-file-input" accept=".csv,text/csv" class="sr-only" onchange="handleCsvUpload(event)">
           <button type="button" class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">Upload CSV</button>
+          <button type="button" class="btn btn-outline" id="load-sample-btn" onclick="sampleButtonClick()">Deal a shared hand — 32 of the 48 survey extracts</button>
         </div>
         <p id="csv-status" class="csv-status hidden" role="status" aria-live="polite"></p>
-        <p class="sources-help">✨ Extract turns an article, notes or a transcript into cards using your own AI — nothing leaves your browser. CSV columns: <code>title,summary,source_url</code>.</p>
+        <p class="sources-help">✨ Extract turns an article, notes or a transcript into cards using your own AI — nothing leaves your browser. CSV columns: <code>title,summary,source_url</code>. The shared hand deals each board a different 32 — your neighbor's differs.</p>
 
         <details class="sources-more">
           <summary>Other ways to add extracts</summary>
           <div class="sources-more-body">
             <div class="sources-more-row">
               <button type="button" class="btn btn-outline" onclick="downloadCsvTemplate()">Download CSV template</button>
+              <button type="button" class="btn btn-outline" onclick="loadSampleSignals(true)">Load all 48 shared extracts instead</button>
               <fieldset class="csv-mode-fieldset">
                 <legend class="sr-only">CSV merge mode</legend>
                 <label><input type="radio" name="csv-mode" value="append" checked> Append to pool</label>
@@ -2359,7 +2368,7 @@
               <input type="text" id="new-item-title" class="config-input" placeholder="Observation title..." style="flex:1;">
               <label class="sr-only" for="new-item-summary">New observation description</label>
               <input type="text" id="new-item-summary" class="config-input" placeholder="What's the friction? Who feels it?..." style="flex:2;">
-              <button class="btn btn-primary" onclick="addConfigItem()">Add one by hand</button>
+              <button class="btn btn-outline" onclick="addConfigItem()">Add one by hand</button>
             </div>
           </div>
         </details>
@@ -2480,7 +2489,7 @@
           <button type="button" class="zoom-btn" id="panel-toggle-btn" onclick="toggleHeaderCollapse()" aria-label="Hide / show header" title="Hide / show header">↕</button>
         </div>
         <div id="canvas-dock" class="canvas-dock hidden" role="toolbar" aria-label="Add to canvas">
-          <button type="button" class="dock-tool" title="Add source extracts — CSV, AI extraction, or one by hand" onclick="openAddExtractsSheet()"><span class="dock-glyph" aria-hidden="true">＋</span><span class="dock-label">Extracts</span></button>
+          <button type="button" class="dock-tool dock-tool-add" title="Add source extracts — ✨ AI extraction, CSV, or one by hand. You can also drop a .txt, .md or .csv file onto the canvas." onclick="openAddExtractsSheet()"><span class="dock-glyph" aria-hidden="true">＋</span><span class="dock-label">Extracts</span></button>
           <button type="button" class="dock-tool" data-tool="signal" aria-pressed="false" title="Add a signal" onclick="dockToolClick(this)"><span class="dock-glyph" aria-hidden="true">●</span><span class="dock-label">Signal</span></button>
           <button type="button" class="dock-tool" data-tool="link" aria-pressed="false" title="Link two cards — click one, then the other" onclick="dockToolClick(this)"><span class="dock-glyph" aria-hidden="true">⤳</span><span class="dock-label">Link</span></button>
           <div class="dock-flyout-anchor">
@@ -2539,6 +2548,7 @@
               <button type="button" role="tab" data-mode="stress" class="ai-mode-tab" aria-selected="false">Stress-test</button>
             </div>
             <p id="card-page-ai-blurb" style="font-size: var(--text-sm); color:var(--midnight); opacity:0.75; line-height:1.5; margin:10px 0;"></p>
+            <p id="card-page-ai-persona" style="font-size: var(--text-xs); color:var(--midnight); opacity:0.65; margin:0 0 6px;"></p>
             <ol class="ai-steps" style="margin-top:12px;">
               <li class="ai-step" id="card-ai-step-copy">
                 <span class="ai-step-n" aria-hidden="true" data-n="1"></span>
@@ -2692,7 +2702,7 @@ git commit -m "Update situation map — [your name]"
 git push</pre>
           </li>
           <li><strong>Git merges</strong> your map with your podmates'. A merge conflict isn't an error — it's a <em>conversation</em>: two of you saw the same thing differently, so talk it out, then commit the resolution.</li>
-          <li><strong>Submit in OLOS</strong>: open your cycle → <strong>Propose</strong>. The form is one short page: paste the triad repo's URL as <strong>“Link to your map”</strong>, name the situation, and distill it to one sentence. Voting happens on the OLOS ballot; the repo is what voters open.</li>
+          <li><strong>Submit in OLOS</strong>: open your cycle → <strong>Propose</strong>. The form is one short page: paste the triad repo's URL as <strong>“Link to your map”</strong>, name the situation, and distill it to one sentence — <strong>in your own words, plain speech</strong>. If it starts “How might we”, or it could sit on a neighbor's map unchanged, it isn't yours yet. Read it aloud first. Your export includes <code>distill.md</code> — a prompt that makes your AI <em>audit</em> your draft sentence instead of writing it. Voting happens on the OLOS ballot; the repo is what voters open.</li>
         </ol>
         <p class="intro-hint">This manual loop is intentional. It prevents the <strong>Lone Warrior</strong> syndrome — no single person's export overwrites everyone else's work without Git making you negotiate.</p>
         <div class="modal-actions">
@@ -2744,7 +2754,7 @@ git push</pre>
         <h3 id="confirm-reset-title"><span class="danger-glyph" aria-hidden="true">!</span> Clear this board?</h3>
       </div>
       <div class="modal-body">
-        <p id="confirm-reset-body">Everything on the canvas goes — every extract, card, situation and note. The sample pool reloads and you start from nothing.</p>
+        <p id="confirm-reset-body">Everything on the canvas goes — every extract, card, situation and note. You start from an empty pool.</p>
         <p class="danger-note"><strong>This cannot be undone.</strong> If you might want this work, close this and export it first.</p>
         <div class="modal-actions">
           <button type="button" class="btn btn-outline" onclick="closeModal('confirm-reset-modal')" data-autofocus>Keep my board</button>
@@ -2759,14 +2769,15 @@ git push</pre>
     <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header"><h3 id="add-extracts-title">Add source extracts</h3></div>
       <div class="modal-body">
+        <p style="font-size: var(--text-sm); color: var(--midnight); opacity: 0.75; margin-bottom: 12px;">Evidence keeps arriving after you've started — new cards land in open space beside your map, already sorted.</p>
         <div class="share-sheet-list">
+          <button type="button" class="share-row" data-autofocus onclick="closeModal('add-extracts-modal'); tgxExtractOpen()">
+            <span class="share-row-title">✨ Extract from your sources</span>
+            <span class="share-row-sub">Turn an article, notes, or a transcript into extract cards with your own AI. You can also drop a .txt or .md file straight onto the canvas.</span>
+          </button>
           <button type="button" class="share-row" onclick="closeModal('add-extracts-modal'); openBoardCsvModal()">
             <span class="share-row-title">Upload a CSV</span>
-            <span class="share-row-sub">Bring a spreadsheet of extracts onto the board — template included.</span>
-          </button>
-          <button type="button" class="share-row" onclick="closeModal('add-extracts-modal'); tgxExtractOpen()">
-            <span class="share-row-title">✨ Extract from sources</span>
-            <span class="share-row-sub">Turn an article, notes, or a dataset into extract cards with your own AI.</span>
+            <span class="share-row-sub">Bring a spreadsheet of extracts onto the board — template included. Or drop the .csv file onto the canvas.</span>
           </button>
           <button type="button" class="share-row" onclick="closeModal('add-extracts-modal'); pendingAddWorldPos = null; openModal('add-signal-modal')">
             <span class="share-row-title">Type one manually</span>
@@ -2854,7 +2865,7 @@ git push</pre>
         <h3 id="ai-modal-title">✨ AI prompts</h3>
       </div>
       <div class="modal-body">
-        <p class="ai-governance">There is no AI in this tool. It writes a prompt out of what's on your board; you run it in whichever model you use. Nothing leaves your browser.</p>
+        <p class="ai-governance">There is no AI in this tool. It writes a prompt out of what's on your board; you run it in whichever model you use. Nothing leaves your browser. <span id="ai-persona-note"></span></p>
         <div id="ai-mode-tabs" class="ai-mode-tabs hidden" role="tablist" aria-label="Prompt modes">
           <button type="button" role="tab" data-mode="throughline" class="ai-mode-tab is-active">Through-line</button>
           <button type="button" role="tab" data-mode="name" class="ai-mode-tab">Name &amp; describe</button>
@@ -2983,9 +2994,104 @@ git push</pre>
         { id: "item_48", tag: "Source Extract", title: "Campus–Neighborhood Disconnection", summary: "There is no single, easy channel for a university community and its neighbors to trade information and opportunities — student jobs, local events, programs, and campus resources live in scattered slices.", ...srcRef(48) }
     ];
 
+    // A shared-deck card keeps its survey citation through merges, CSV
+    // round-trips and re-imports — the URL is the durable provenance.
+    function isSharedDeckItem(it) {
+      return !!(it && typeof it.source_url === 'string' && it.source_url.indexOf(SURVEY_RESULTS_URL) === 0);
+    }
+
+    // The deck is not topically flat: roughly a third of it attests one
+    // proposition (citizens can't see / can't be heard / don't trust).
+    // Loaded whole, the densest ladder is the same ladder on every board in
+    // the room — that is exactly what happened at the July 25 sprint. Dealing
+    // a stratified hand caps how much of any one strand a board starts with,
+    // so the deck's center of gravity lands differently for each participant.
+    const SAMPLE_HAND_SIZE = 32;
+    const SAMPLE_STRANDS = {
+      item_01: 'structure-rules', item_02: 'info-access', item_03: 'structure-rules',
+      item_04: 'info-access', item_05: 'systems', item_06: 'info-access',
+      item_07: 'systems', item_08: 'outlier', item_09: 'structure-rules',
+      item_10: 'info-access', item_11: 'info-access', item_12: 'discourse',
+      item_13: 'capacity', item_14: 'systems', item_15: 'systems',
+      item_16: 'info-access', item_17: 'structure-rules', item_18: 'discourse',
+      item_19: 'capacity', item_20: 'capacity', item_21: 'info-access',
+      item_22: 'info-access', item_23: 'discourse', item_24: 'outlier',
+      item_25: 'systems', item_26: 'discourse', item_27: 'systems',
+      item_28: 'systems', item_29: 'info-access', item_30: 'info-access',
+      item_31: 'discourse', item_32: 'discourse', item_33: 'info-access',
+      item_34: 'info-access', item_35: 'info-access', item_36: 'discourse',
+      item_37: 'info-access', item_38: 'info-access', item_39: 'structure-rules',
+      item_40: 'capacity', item_41: 'capacity', item_42: 'structure-rules',
+      item_43: 'outlier', item_44: 'systems', item_45: 'outlier',
+      item_46: 'structure-rules', item_47: 'info-access', item_48: 'outlier'
+    };
+    function dealSampleHand() {
+      const byStrand = {};
+      DEFAULT_ITEMS.forEach(d => {
+        const s = SAMPLE_STRANDS[d.id] || 'other';
+        (byStrand[s] = byStrand[s] || []).push(d);
+      });
+      const strands = variantShuffle('deck-strands', Object.keys(byStrand));
+      strands.forEach(s => { byStrand[s] = variantShuffle('deck-' + s, byStrand[s]); });
+      // Round-robin across strands: the dominant strand can put at most
+      // ceil(32/strands)+1-ish cards in a hand instead of all of its 16.
+      const hand = [];
+      for (let round = 0; hand.length < SAMPLE_HAND_SIZE; round++) {
+        let drew = false;
+        for (const s of strands) {
+          if (hand.length >= SAMPLE_HAND_SIZE) break;
+          const pool = byStrand[s];
+          if (round < pool.length) { hand.push(pool[round]); drew = true; }
+        }
+        if (!drew) break;
+      }
+      return variantShuffle('deck-order', hand);
+    }
+
     function uid(prefix) {
       if (window.crypto && crypto.randomUUID) return prefix + '_' + crypto.randomUUID();
       return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    }
+
+    // --- Per-board variation ---
+    // Every board carries one seed (settings.seed). Everything that should
+    // differ between two participants' boards — the dealt hand, the AI
+    // persona, the prompt twist, the worked examples — derives from it
+    // through a named channel, so a board's variation is stable across
+    // reloads and rides along in its exports, while no two boards in a
+    // room read the same. Forty people mapping the same deck with the same
+    // prompts converged on one problem statement; the seed is the lever
+    // that breaks the symmetry without touching anyone's evidence.
+    function fnv1a(str) {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+      return h >>> 0;
+    }
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function newBoardSeed() { return (Math.random() * 0x100000000) >>> 0; }
+    function variantRng(channel) {
+      const s = (appState && appState.settings && typeof appState.settings.seed === 'number')
+        ? (appState.settings.seed >>> 0) : 0;
+      return mulberry32((s ^ fnv1a(String(channel))) >>> 0);
+    }
+    function variantPick(channel, arr) {
+      if (!arr || !arr.length) return undefined;
+      return arr[Math.floor(variantRng(channel)() * arr.length)];
+    }
+    function variantShuffle(channel, arr) {
+      const a = arr.slice(), r = variantRng(channel);
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(r() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
     }
 
     // --- Card type constants ---
@@ -3028,7 +3134,7 @@ git push</pre>
 
     function defaultState() {
       return {
-        settings: { title: '', concept: '' },
+        settings: { title: '', concept: '', seed: newBoardSeed() },
         items: [],
         // Unified tiered cards. tier 1 = evidence (childIds = signal ids, has
         // cardType ∈ 7 types); tier 2 = pattern; 3 = theme; 4 = super-theme;
@@ -3209,6 +3315,9 @@ git push</pre>
       });
       if (!parsed.settings || typeof parsed.settings !== 'object') parsed.settings = { title: '' };
       if (typeof parsed.settings.concept !== 'string') parsed.settings.concept = '';
+      // Boards saved before per-board variation existed get a seed on first
+      // load (persisted by the next save); additive, nothing else changes.
+      if (typeof parsed.settings.seed !== 'number' || !isFinite(parsed.settings.seed)) parsed.settings.seed = newBoardSeed();
       parsed.classifyPhase = parsed.classifyPhase === true;
       // --- Migrate singular situation + committedCardIds → situations[] ---
       const SIT_FIELDS = ['title', 'description', 'frame', 'stakeholderMap', 'problematization',
@@ -3247,6 +3356,7 @@ git push</pre>
         s.memberCardIds = (Array.isArray(s.memberCardIds) ? s.memberCardIds : [])
           .filter(id => parsed.cards.some(c => c.id === id));
         if (typeof s.createdAt !== 'string') s.createdAt = new Date().toISOString();
+        if (typeof s.source !== 'string' || !s.source) delete s.source;
       });
       // Seed Mode is gone: Patterns and Themes are unlocked from the start. A
       // board saved mid-Seed comes forward to the full engine, which only ever
@@ -3256,11 +3366,15 @@ git push</pre>
       // Source provenance (merged boards): keep only non-empty strings.
       // v2.1: every item carries source_url (the document it was extracted from)
       // and verified (set true only once the user passes the QA Intercept gate).
-      // Pre-existing items were never QA-gated → default verified=false.
+      // v2.2: verified is kept only when true. The QA gate flips every import
+      // to true before it reaches the pool, so a stored false could only be
+      // the old backfill — which painted the shared deck and hand-typed notes
+      // red as "unverified" after one reload while QA-checked imports rendered
+      // clean: a provenance signal pointing the wrong way.
       parsed.items.forEach(it => {
         if (typeof it.source_url !== 'string') it.source_url = '';
         if (typeof it.source_label !== 'string') delete it.source_label;
-        if (typeof it.verified !== 'boolean') it.verified = false;
+        if (it.verified !== true) delete it.verified;
       });
       parsed.items.forEach(it => { if (typeof it.source !== 'string' || !it.source) delete it.source; });
       parsed.cards.forEach(c => { if (typeof c.source !== 'string' || !c.source) delete c.source; });
@@ -3328,19 +3442,39 @@ git push</pre>
       const listDiv = document.getElementById('config-item-list');
       listDiv.innerHTML = appState.items.map(item => `
         <div class="config-item-row" role="listitem">
-          <div><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.summary)}</p>${sourceUrlHtml(item)}</div>
+          <div><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.summary)}</p>${item.quote ? `<p style="font-style:italic; opacity:0.75;">“${escapeHtml(item.quote)}”</p>` : ''}${sourceUrlHtml(item)}</div>
           <button class="config-item-del" aria-label="Remove ${escapeHtml(item.title)}" onclick="removeConfigItem('${item.id}')">✕</button>
         </div>
-      `).join('');
+      `).join('') || `
+        <div class="pool-empty-state">Your pool is empty. Start with your own material — <strong>✨ Extract</strong> turns an article, your notes, or your survey harvest into cards. Deal the shared hand to fill gaps later.</div>`;
+      const shared = appState.items.filter(isSharedDeckItem).length;
+      const own = appState.items.length - shared;
       const countEl = document.getElementById('config-pool-count');
-      if (countEl) countEl.textContent = appState.items.length;
+      if (countEl) countEl.textContent = appState.items.length
+        ? `${appState.items.length} source extracts — ${own} of yours · ${shared} shared`
+        : '0 source extracts';
       const sampleBtn = document.getElementById('load-sample-btn');
       if (sampleBtn) {
-        sampleBtn.textContent = `Load ${DEFAULT_ITEMS.length} Civics & Elections source extracts`;
-        sampleBtn.disabled = DEFAULT_ITEMS.every(d => appState.items.some(i => i.id === d.id));
+        const held = DEFAULT_ITEMS.filter(d => appState.items.some(i => i.id === d.id)).length;
+        sampleBtn.textContent = held === 0
+          ? `Deal a shared hand — ${SAMPLE_HAND_SIZE} of the ${DEFAULT_ITEMS.length} survey extracts`
+          : `Add the ${DEFAULT_ITEMS.length - held} shared extracts you weren't dealt`;
+        sampleBtn.disabled = held === DEFAULT_ITEMS.length;
+        if (sampleBtn.disabled) sampleBtn.textContent = 'The whole shared deck is in your pool';
       }
       const setupPrompt = document.getElementById('csv-prompt-text-setup');
       if (setupPrompt && !setupPrompt.value) setupPrompt.value = CSV_TRANSFORM_PROMPT;
+    }
+
+    // Your own material sorts first: extracts added before sorting has begun
+    // go to the head of the queue, ahead of any shared-deck cards, so the
+    // freshest attention lands on the material only this board holds. Once
+    // sorting is underway the cursor owns the order — append instead.
+    function addItemsToPool(items) {
+      const untouched = !Object.keys(appState.sorting.decisions || {}).length
+        && !(appState.sorting.currentIndex > 0);
+      if (untouched) appState.items.unshift(...items);
+      else appState.items.push(...items);
     }
 
     function addConfigItem() {
@@ -3353,7 +3487,7 @@ git push</pre>
         (t ? sEl : tEl).focus();
         return;
       }
-      appState.items.push({ id: uid('item'), tag: 'Source Extract', title: t, summary: s });
+      addItemsToPool([{ id: uid('item'), tag: 'Source Extract', title: t, summary: s }]);
       tEl.value = '';
       sEl.value = '';
       renderConfigItems();
@@ -3362,13 +3496,28 @@ git push</pre>
       tEl.focus();
     }
 
-    function loadSampleSignals() {
-      const newItems = DEFAULT_ITEMS.filter(d => !appState.items.some(i => i.id === d.id));
-      if (!newItems.length) { toast('Sample signals already loaded.'); return; }
+    // Deal by default; `all` loads the whole deck. Both draw in a per-board
+    // seeded order so no two participants meet the same cards in the same
+    // sequence — the fixed insertion order was anchoring every sort the
+    // same way (same first impressions, same fatigue tail).
+    function loadSampleSignals(all) {
+      const src = all ? variantShuffle('deck-order', DEFAULT_ITEMS) : dealSampleHand();
+      const newItems = src.filter(d => !appState.items.some(i => i.id === d.id));
+      if (!newItems.length) { toast('The whole shared deck is already in your pool.'); return; }
       appState.items.push(...newItems.map(i => ({ ...i })));
       renderConfigItems();
       scheduleSave();
-      toast(`${newItems.length} sample source extracts loaded.`);
+      const held = DEFAULT_ITEMS.filter(d => appState.items.some(i => i.id === d.id)).length;
+      if (!all && held < DEFAULT_ITEMS.length) {
+        toast(`Dealt ${newItems.length} of ${DEFAULT_ITEMS.length} — your neighbor's hand differs.`);
+      } else {
+        toast(`${newItems.length} shared source extracts added.`);
+      }
+    }
+    // One button, three states: deal a hand → add the rest → all in.
+    function sampleButtonClick() {
+      const held = DEFAULT_ITEMS.filter(d => appState.items.some(i => i.id === d.id)).length;
+      loadSampleSignals(held > 0);
     }
 
     // --- CSV bulk upload ---
@@ -3519,7 +3668,7 @@ git push</pre>
           appState.items = newItems;
           appState.cards.forEach(c => { if (c.tier === 1) c.childIds = []; });
         } else {
-          appState.items = appState.items.concat(newItems);
+          addItemsToPool(newItems);
         }
         renderConfigItems();
         text = csvOutcomeText(newItems.length, skipped, mode, { noun });
@@ -3587,6 +3736,55 @@ git push</pre>
       reader.readAsText(file);
     }
 
+    // Drop a file anywhere on the canvas to bring sources in mid-flow:
+    // .csv routes into the board CSV import (same QA gate), .txt/.md opens
+    // ✨ Extract with the text preloaded. Guarded to OS file drags — card
+    // drags never carry Files, so canvas interactions are untouched.
+    function tgxCanvasDropInit() {
+      const viewport = document.getElementById('canvas-viewport');
+      if (!viewport) return;
+      const hasFiles = e => !!(e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf('Files') !== -1);
+      viewport.addEventListener('dragover', e => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        viewport.classList.add('is-file-drop');
+      });
+      viewport.addEventListener('dragleave', e => {
+        if (e.target === viewport) viewport.classList.remove('is-file-drop');
+      });
+      viewport.addEventListener('drop', e => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        viewport.classList.remove('is-file-drop');
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+        const name = (file.name || '').toLowerCase();
+        const reader = new FileReader();
+        reader.onerror = () => toast('Could not read that file.');
+        if (name.endsWith('.csv')) {
+          reader.onload = () => {
+            const result = csvRowsToItems(String(reader.result || ''));
+            if (result.error) { toast(`${file.name}: ${result.error}`, { duration: 6000 }); return; }
+            pendingCsvImport = { items: result.items, target: 'board', surface: 'board', mode: 'append', skipped: result.skipped, name: file.name };
+            openQaModal(result.items.length);
+          };
+          reader.readAsText(file);
+        } else if (name.endsWith('.txt') || name.endsWith('.md') || (file.type || '').indexOf('text/') === 0) {
+          reader.onload = () => {
+            tgxExtractOpen();
+            const ta = document.getElementById('xtr-source');
+            const text = String(reader.result || '');
+            if (ta) ta.value = ta.value.trim() ? (ta.value.trim() + '\n\n' + text) : text;
+            tgxExtractRefreshPrompt();
+            toast('Added "' + file.name + '" — copy the prompt into your own AI.');
+          };
+          reader.readAsText(file);
+        } else {
+          toast('Drop a .csv, .txt or .md file — or use ＋ Extracts in the dock.');
+        }
+      });
+    }
+
     // --- QA Intercept modal: data-verification consent before extracts land ---
     function openQaModal(count) {
       const c = document.getElementById('qa-extract-count');
@@ -3640,17 +3838,23 @@ git push</pre>
       };
       reader.readAsText(file);
     }
+    // Deliberately wider than a friction hunt: a pool that only admits
+    // breakage can only ladder up to breakage. Anomalies, assets, and
+    // verbatim voices are where one participant's material stops sounding
+    // like everyone else's.
     function tgxExtractBuildPrompt(source) {
-      return 'You are helping build a Frame Creation evidence pool. Read the SOURCE material below and pull out the discrete, atomic observations, facts, and insights it contains.\n\n'
+      return 'You are helping build a Frame Creation evidence pool. Read the SOURCE material below and pull out the discrete, atomic observations, facts, insights, anomalies, and assets it contains.\n\n'
         + 'Rules:\n'
         + '- One card per distinct idea. Split compound points apart.\n'
-        + '- Each card must describe something OBSERVED in the field — a pattern of behaviour, a dynamic, or a verifiable fact — not an opinion, a solution, or a value judgment.\n'
+        + '- Each card must describe something OBSERVED in the field — a pattern of behaviour, a dynamic, a verifiable fact, something that deviates from the expected story, or something that demonstrably works — not your own opinion, solution, or value judgment. (An attributed opinion FROM the source is field data — carry it as a quote.)\n'
         + '- "title": 8 words or fewer, specific.\n'
-        + '- "summary": 1–2 sentences, concrete, able to stand on its own.\n'
-        + '- "kind": exactly one of "observation" (a pattern of action/behaviour), "fact" (a verifiable datum), or "insight" (a non-obvious connection or implication).\n'
-        + '- Discard filler, rhetoric, and anything not grounded in the source.\n\n'
+        + '- "summary": 1–2 sentences, concrete, able to stand on its own. Keep the source\'s own idiom where it is distinctive — do not normalize its voice into report-speak.\n'
+        + '- "kind": exactly one of "observation" (a pattern of action/behaviour), "fact" (a verifiable datum), "insight" (a non-obvious connection or implication), "anomaly" (deviates from the story the source expects), "asset" (something working that the field leans on), or "quote" (a verbatim, attributed voice).\n'
+        + '- Optional "quote": when the source says it memorably, add the exact words (25 words or fewer) to any card.\n'
+        + '- If the source contains an anomaly or a counter-signal, extract at least one.\n'
+        + '- Discard filler and rhetoric not grounded in the source.\n\n'
         + 'Return ONLY a JSON array — no prose, no markdown fences — in exactly this shape:\n'
-        + '[ { "title": "…", "summary": "…", "kind": "observation" } ]\n\n'
+        + '[ { "title": "…", "summary": "…", "kind": "observation", "quote": "…" } ]\n\n'
         + '<source>\n'
         + (source || '(paste your source material above, then copy this prompt again)')
         + '\n</source>';
@@ -3679,7 +3883,7 @@ git push</pre>
       let arr;
       try { arr = JSON.parse(t); } catch (e) { return { error: 'That doesn\'t look like valid JSON. Re-run the copied prompt and paste the whole result.' }; }
       if (!Array.isArray(arr)) return { error: 'Expected a JSON array of extracts.' };
-      const kindTag = { observation: 'Observation', fact: 'Fact', insight: 'Insight' };
+      const kindTag = { observation: 'Observation', fact: 'Fact', insight: 'Insight', anomaly: 'Anomaly', asset: 'Asset', quote: 'Quote' };
       const urlEl = document.getElementById('xtr-url');
       let url = urlEl ? urlEl.value.trim() : '';
       if (!/^https?:\/\//i.test(url)) url = '';
@@ -3691,7 +3895,10 @@ git push</pre>
         const summary = String(e.summary || '').trim();
         if (!title || !summary) { skipped++; return; }
         const kind = String(e.kind || '').trim().toLowerCase();
-        items.push({ id: uid('item'), tag: kindTag[kind] || 'Extract', title: title, summary: summary, source_url: url, verified: false });
+        const it = { id: uid('item'), tag: kindTag[kind] || 'Extract', title: title, summary: summary, source_url: url, verified: false };
+        const quote = String(e.quote || '').trim();
+        if (quote) it.quote = quote;
+        items.push(it);
       });
       if (!items.length) return { error: 'No valid extracts found — each needs a "title" and a "summary".' };
       return { items: items, skipped: skipped };
@@ -4816,14 +5023,27 @@ git push</pre>
 
     // Clickable provenance: the source document an extract was parsed from.
     // The citation row reads "↗ <source_label>" when the extract names its
-    // source (the pre-loaded survey cards do), plain "↗ source" otherwise.
+    // source (the shared survey cards do). A participant's own extract used
+    // to fall back to an anonymous "↗ source" — leaving the shared deck the
+    // only branded material on the board. Now their own URLs read as their
+    // hostname, so a board's provenance mix is visible at a glance.
     function sourceCitationLabel(item) {
       const label = (item && typeof item.source_label === 'string') ? item.source_label.trim() : '';
-      return label || 'source';
+      if (label) return label;
+      const url = (item && typeof item.source_url === 'string') ? item.source_url.trim() : '';
+      try {
+        const host = new URL(url).hostname.replace(/^www\./, '');
+        if (host) return host;
+      } catch (e) { /* not a parseable URL — generic label below */ }
+      return 'source';
     }
     function sourceUrlHtml(item) {
       const url = (item && typeof item.source_url === 'string') ? item.source_url.trim() : '';
-      if (!/^https?:\/\//i.test(url)) return '';
+      if (!/^https?:\/\//i.test(url)) {
+        // Un-linked material is the participant's own harvest — name it so,
+        // instead of leaving it the anonymous case next to branded survey cards.
+        return `<span class="node-source-link node-source-note">✎ field note</span>`;
+      }
       return `<a class="node-source-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Open source: ${escapeHtml(url)}">↗ ${escapeHtml(sourceCitationLabel(item))}</a>`;
     }
 
@@ -5088,7 +5308,7 @@ git push</pre>
       const sigCount = signalsUnder(card.id).length;
       let themeQuality = '';
       if (card.tier === 3) {
-        themeQuality = `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience?<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`;
+        themeQuality = `<div class="quality-check"><em>Bridge test:</em> Does this describe both a structural condition AND a human experience? If it's the pairing everyone lands on, hunt for a second bridge.<br><em>Depth test:</em> Is this hidden beneath the surface of everyday professional life?</div>`;
       } else if (card.tier === 4) {
         themeQuality = `<div class="quality-check"><em>Convergence test:</em> Does this sit at the intersection of all your patterns — not just summarize them?<br><em>Situation test:</em> Could "if this situation is approached as if it is [this]…" open new possibilities?</div>`;
       } else if (card.tier >= 5) {
@@ -6415,7 +6635,7 @@ git push</pre>
         return 'This is a Pattern — a specific, named condition that two or more evidence cards point toward together. Focus on the shared mechanism behind the evidence: who is affected, in what context, and what makes the friction recur.';
       }
       if (t === 3) {
-        return 'This is a Theme — a deeper universal that two or more patterns triangulate toward. A good theme bridges the human (cultural) domain and the technical or economic realm. Focus on the condition or force hidden beneath the surface of everyday professional life.';
+        return 'This is a Theme — a deeper universal that two or more patterns triangulate toward. A good theme bridges the human (cultural) domain and the technical or economic realm — and many pairings qualify: if the candidate is the pairing most readers of this evidence would land on, hunt for a second bridge before keeping the first. Focus on the condition or force hidden beneath the surface of everyday professional life.';
       }
       if (t === 4) {
         return 'This is a Super-theme — a convergence where multiple patterns meet at a deeper level. Focus on what all constituent patterns share that none names on its own. A good super-theme is close to frame-ready: test it with "If this situation is approached as if it is [this super-theme], then ___" — does the sentence open new possibilities?';
@@ -6429,15 +6649,102 @@ Convert the data below into a CSV with exactly three columns:
   title,summary,source_url
 
 Rules:
-• title — 5–8 words naming the core friction (what is broken or stuck)
-• summary — 1–3 sentences describing the situation factually: who is affected, what breaks down, why it matters. No proposed solutions.
+• title — 5–8 words naming what the extract attests: a friction, an asset, an anomaly, or a contested claim
+• summary — 1–3 sentences describing the situation factually: who is involved, what happens, why it matters. Keep the source's own idiom where it is distinctive. No proposed solutions.
 • source_url — the URL of the document, page, or transcript this extract came from (must start with http:// or https://). Leave blank if there is no source URL.
 • One row per distinct source extract. Merge near-duplicates.
 • Return ONLY valid CSV, starting with the header row. No explanation, no code fences. Wrap values containing commas in double quotes.
 
 [PASTE YOUR DATA HERE]`;
 
-    const AI_ROLE = `You are an expert critical theorist, design researcher, and qualitative sensemaking partner grounded in Kees Dorst's Frame Creation methodology. You are a thinking partner — you do not write the user's synthesis for them. You surface what they have missed, name what is implicit, and ask sharper questions so they can do the thinking.`;
+    // One shared persona meant one shared diction: forty participants ran
+    // byte-identical prompts and got back the same structural, mechanism-
+    // oriented voice. Each board now draws its thinking partner from a
+    // disciplinary pool — the contract is fixed (partner, not ghostwriter),
+    // the standpoint rotates, and every persona names its own bias so the
+    // participant knows which way their partner leans.
+    const AI_CONTRACT = `You are a qualitative sensemaking partner grounded in Kees Dorst's Frame Creation methodology. You are a thinking partner — you do not write the user's synthesis for them. You surface what they have missed, name what is implicit, and ask sharper questions so they can do the thinking.`;
+    const AI_PERSONAS = [
+      { key: 'ethnographer', label: 'The Ethnographer', text: `${AI_CONTRACT} You read evidence as an ethnographer: you look for practices, workarounds, rituals, and what people do rather than what they say. Your bias: you over-read culture and lived routine — say so when a reading is really structural or economic.` },
+      { key: 'economist', label: 'The Institutional Economist', text: `${AI_CONTRACT} You read evidence as an institutional economist: you look for incentives, transaction costs, principal-agent gaps, and who bears which risk. Your bias: you over-read incentives — say so when a reading isn't economic.` },
+      { key: 'historian', label: 'The Historian', text: `${AI_CONTRACT} You read evidence as a historian: you ask how it got this way, what was tried and abandoned, and which present arrangement is a fossil of an old fight. Your bias: you over-read path dependence — say so when something really is new.` },
+      { key: 'organizer', label: 'The Community Organizer', text: `${AI_CONTRACT} You read evidence as a community organizer: you look for power, relationships, who is organized and who is atomized, and what people could win together. Your bias: you over-read power and conflict — say so when a reading is really about capacity or information.` },
+      { key: 'systems', label: 'The Systems Engineer', text: `${AI_CONTRACT} You read evidence as an operations and systems engineer: you look for flows, queues, bottlenecks, feedback loops, and where variance gets amplified. Your bias: you over-read mechanism and under-read meaning — say so when the human reading carries more.` },
+      { key: 'journalist', label: 'The Investigative Journalist', text: `${AI_CONTRACT} You read evidence as an investigative journalist: you follow records and money, ask who benefits, what's on paper versus in practice, and what nobody wants documented. Your bias: you over-read intent and wrongdoing — say so when a failure is really drift or underfunding.` },
+      { key: 'geographer', label: 'The Geographer', text: `${AI_CONTRACT} You read evidence as a geographer: you ask where things happen, at what scale, across which jurisdictions, and what is invisible because it sits between territories. Your bias: you over-read place — say so when a reading holds everywhere equally.` }
+    ];
+    function aiPersona() { return variantPick('persona', AI_PERSONAS) || AI_PERSONAS[0]; }
+    function aiRole() { return aiPersona().text; }
+    // Participants should know their prompts differ from their neighbors' by
+    // design, not by bug — the persona is named wherever a prompt is offered.
+    function updatePersonaNotes() {
+      const note = `Partner persona on this board: ${aiPersona().label} — assigned per board, so no two boards read alike.`;
+      ['ai-persona-note', 'card-page-ai-persona'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = note;
+      });
+    }
+
+    // Anti-modal guards: these go at the TOP of every prompt's rules, ahead
+    // of the output format — a trailing "preserve dissonance" loses to a
+    // concrete format that demands one tidy answer. The escape hatch is
+    // load-bearing: on thin evidence, forcing rivals manufactures fiction.
+    const ANTI_MODAL_RULES = `- First, privately name the most predictable reading of this evidence — the one most models would give most users. Your output must go beyond it or argue with it; never simply deliver it.
+- Where the format asks for candidates, they must be genuine rivals — different causal stories, not rewordings of one story.
+- Anchor at least one candidate in the least-cited or worst-fitting signals.
+- If the evidence honestly supports only one reading, say so explicitly rather than inventing a rival.`;
+
+    // A seeded twist per board: one extra reading rule, different on every
+    // board, so even participants holding the same cards hand their models
+    // materially different instructions.
+    const PROMPT_TWISTS = [
+      'Any reading you offer must account for at least one signal that refuses to fit it — name that signal.',
+      'Read from the standpoint of the least-represented actor in the evidence, and say who that is.',
+      'Weight what is moving or about to change over standing complaint — flux over grievance.',
+      'Treat the loudest, most emotionally resonant signal as the suspect one; ask what it obscures.',
+      'Ask what an outsider to this country and its politics would find strange here, and start there.',
+      'Prefer mechanisms that would persist even if everyone involved were acting in good faith.'
+    ];
+    function promptTwist() { return variantPick('twist', PROMPT_TWISTS); }
+
+    // The hand-entry placeholder used to teach one question — "What's the
+    // friction?" — so every pool admitted only breakage. Boards now open on
+    // different questions; friction is one of them, not the frame.
+    const INTAKE_PLACEHOLDERS = [
+      'What did you actually see or hear? Keep it concrete.',
+      "What's the friction? Who feels it?",
+      "What surprised you — what doesn't fit the story you expected?",
+      "What's quietly working here that nobody names?"
+    ];
+    function rotateIntakePlaceholders() {
+      const text = variantPick('intake', INTAKE_PLACEHOLDERS);
+      ['new-item-summary', 'add-signal-summary'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.placeholder = text;
+      });
+    }
+
+    // Two of Dorst's seven evidence types serve as this board's home lenses —
+    // a seeded emphasis that steers WHICH ladder gets built, not just its
+    // wording. Described in plain language: the taxonomy lesson comes later
+    // (classify phase), and the prompt must not presuppose it.
+    const LENS_DESCRIPTIONS = {
+      history: 'HISTORY — what happened, what was tried, how it got this way',
+      counterfactual: 'COUNTERFACTUAL — the paths not taken, and why not',
+      problem: 'PROBLEM — bounded difficulties someone could already act on',
+      boundary: 'BOUNDARY — the "they will never…" non-negotiables holding shape',
+      flux: 'FLUX — what is moving, loosening, or about to change',
+      player: 'PLAYER — who acts here, and the currency they trade in',
+      value: 'VALUE — the deeper things the field actually cares about'
+    };
+    function boardHomeLenses() {
+      return variantShuffle('lenses', CARD_TYPES.map(t => t.id)).slice(0, 2);
+    }
+    function homeLensBlock() {
+      const lenses = boardHomeLenses().map(id => LENS_DESCRIPTIONS[id]).filter(Boolean);
+      if (!lenses.length) return '';
+      return `\nThis board's home lenses (a deliberate emphasis, different on every board):\n- ${lenses.join('\n- ')}\nWhen readings tie, prefer the one these lenses surface, and always include at least one candidate visible only through them.\n`;
+    }
 
     const AI_RULES = `- Do NOT propose solutions, interventions, products, or features.
 - Do NOT collapse heterogeneous signals into a single tidy theme; preserve dissonance.
@@ -6450,26 +6757,30 @@ Rules:
     const HUB_PROMPT_MODES = {
       throughline: {
         label: 'Through-line',
-        blurb: 'Find the mechanism connecting everything — not a category label, a causal force. Copy the prompt, argue with the response, come back with a point of view.',
-        task: 'Help the user find the THROUGH-LINE of this {tierLabel} — the deep mechanism or shared condition that genuinely connects everything underneath, beyond any surface topic. A through-line is not a category label; it is the underlying mechanism, power structure, missing affordance, or human experience that the constituent elements triangulate toward.',
+        blurb: 'Find the rival mechanisms that could connect everything — not a category label, causal forces. Copy the prompt, argue with the response, come back with a point of view.',
+        task: 'Help the user find the THROUGH-LINE of this {tierLabel} — the deep mechanism or shared condition that genuinely connects everything underneath, beyond any surface topic. A through-line is not a category label; it is the underlying mechanism, power structure, missing affordance, or human experience that the constituent elements triangulate toward. The user commits to one — your job is to give them real rivals to choose between, not to pre-commit for them.',
         thinking: [
           'Read each signal. Note the specific actor, action, and barrier.',
           'Group the signals by *mechanism*, not by topic.',
-          'Find the single mechanism most signals share. If the contents do not share one cleanly, surface the 2 most plausible.',
-          'Test the through-line: would removing it from the world resolve most of these signals? If not, it is not the through-line.'
+          'Name (privately) the reading most people would produce from these signals — then set it aside.',
+          'Find the TWO strongest rival mechanisms — genuinely different causal stories, not rewordings. If the signals cleanly support only one, say so and show why.',
+          'Test each: would removing it from the world resolve most of these signals? If not, it is not a through-line.'
         ],
-        output: `## Through-line candidate
-1–2 sentences. Mechanism-level. Specific.
+        output: `## The predictable reading (named, then set aside)
+1 sentence — the through-line most analyses would produce here. Marked expected; do not simply deliver it below.
 
-## Why this fits
-3–5 bullets — which signals point at this and HOW.
+## Rival through-lines (2)
+For each:
+**Mechanism:** 1–2 sentences. Mechanism-level. Specific.
+**Signals that support it:** 2–4 by name.
+**Signals that resist it:** 1–2 by name.
 
-## What does not fit
-1–3 bullets — signals that don't cleanly fit, with a guess why they're here.
+## What would decide between them
+1–2 sentences — the observation or question that would settle it.
 
 ## Sharpening question
-One question I must answer before locking this in.`,
-        modeRule: 'Resist topical names. If the candidate sounds like a category, return to step 3.'
+One question I must answer before locking one in.`,
+        modeRule: 'Resist topical names. If a candidate sounds like a category, dig for its mechanism. Present the rivals even-handedly — the user decides.'
       },
       name: {
         label: 'Name & describe',
@@ -6497,7 +6808,7 @@ One question I must answer before locking this in.`,
 
 ## Locking-in question
 The one question to answer before committing to a name.`,
-        modeRule: '≤ 6 words per name; reject anything that sounds like a domain label.'
+        modeRule: '≤ 6 words per name; reject anything that sounds like a domain label. At least one candidate must borrow its vocabulary from OUTSIDE this pool\'s domain; reject any name that appears verbatim in the signals.'
       },
       stress: {
         label: 'Stress-test',
@@ -6540,7 +6851,7 @@ A single question the user must be able to answer to defend the current framing 
       // signals → evidence → patterns → themes beneath this card.
       const contents = formatTreeOutline(hubId, 0) || '(none yet)';
       return `<role>
-${AI_ROLE}
+${aiRole()}
 </role>
 
 <context>
@@ -6549,6 +6860,7 @@ spaces through a ladder of cards: evidence → patterns → themes → super-the
 They are working on one ${label} in their web map.
 
 ${tierFraming(tier, hubId)}
+${homeLensBlock()}
 </context>
 
 <cluster>
@@ -6572,8 +6884,10 @@ ${m.output}
 </output_format>
 
 <rules>
+${ANTI_MODAL_RULES}
 ${AI_RULES}
 - ${m.modeRule}
+- ${promptTwist()}
 </rules>`;
     }
 
@@ -6593,6 +6907,7 @@ ${AI_RULES}
     }
 
     function switchAIMode(mode) {
+      updatePersonaNotes();
       if (!currentAIHubId && !currentPoolMode && !currentSituationId) return;
       currentAIMode = mode;
       const ta = document.getElementById('ai-prompt-text');
@@ -6668,7 +6983,7 @@ ${AI_RULES}
       const signalItems = appState.items.filter(i => decisions[i.id] === 'signal' || (!decisions[i.id] && !hasSorted));
       const noiseItems = appState.items.filter(i => decisions[i.id] === 'noise');
       const unsortedItems = hasSorted ? appState.items.filter(i => !decisions[i.id]) : [];
-      const formatList = (items) => items.map(i => `  - "${i.title}": ${i.summary}`).join('\n') || '  (none)';
+      const formatList = (items) => items.map(i => `  - "${i.title}": ${i.summary}${i.quote ? ` — "${i.quote}"` : ''}`).join('\n') || '  (none)';
       return { hasSorted, superItems, signalItems, noiseItems, unsortedItems, formatList };
     }
 
@@ -6787,7 +7102,10 @@ Numbered. ≤ 30 words each. Force the user to look across, not within.`;
 3. THE OVERLOOKED — Is there a signal in the noise pile that would complicate or strengthen a candidate pattern? Name it specifically.
 
 4. TRIANGULATION QUESTIONS — Ask 2 sharp questions that force the user to defend their sorting and begin grouping. These should be mechanism-level, not topic-level.`;
-          output = `## What your sorting reveals
+          output = `## The expected reading
+1 sentence — the one pattern most analyses of this pool would produce. Marked expected — treat with suspicion. The candidate patterns below must not restate it.
+
+## What your sorting reveals
 2–3 sentences. What does your emphasis on the super signals tell us about your instincts? What might you be avoiding in the noise?
 
 ## Candidate patterns
@@ -6816,6 +7134,9 @@ Numbered. ≤ 30 words each. Force a defense.`;
           output = `## Before you read further
 Pause. Write down 2 patterns you EXPECT to find. Naming your assumptions makes it harder for them to hide.
 
+## The expected reading
+1 sentence — the one pattern most analyses of this pool would produce. Marked expected — treat with suspicion. The candidate patterns below must not restate it.
+
 ## Landscape
 2–4 sentences naming the loudest signals and major terrain.
 
@@ -6838,7 +7159,7 @@ Numbered. ≤ 30 words each. Force a defense.`;
       }
 
       return `<role>
-${AI_ROLE}
+${aiRole()}
 </role>
 
 <context>
@@ -6848,6 +7169,7 @@ In Dorst's Frame Creation model, the next step is triangulation: grouping signal
 to reveal named patterns (specific conditions no single signal names directly),
 then grouping patterns to reveal themes (deeper universals that bridge human
 experience and structural/systemic factors).
+${homeLensBlock()}
 </context>
 
 ${signals}
@@ -6861,12 +7183,15 @@ ${output}
 </output_format>
 
 <rules>
+${ANTI_MODAL_RULES}
 ${AI_RULES}
 - ${modeRule}
+- ${promptTwist()}
 </rules>`;
     }
 
     function openAIPromptModal(mode) {
+      updatePersonaNotes();
       currentAIHubId = null;
       currentSituationId = null;
       currentPoolMode = mode || 'landscape';
@@ -6903,6 +7228,7 @@ ${AI_RULES}
     // Situation-lens prompts for one section box: tabs come from
     // SITUATION_PROMPT_KINDS; tab switches route through switchAIMode.
     function openSituationAIModal(sitId, kind) {
+      updatePersonaNotes();
       const sit = findSituation(sitId);
       if (!sit) return;
       currentAIHubId = null;
@@ -7047,20 +7373,27 @@ ${AI_RULES}
         primary: { label: 'Load your sources →', fn: 'goToSources()', enabled: true },
         secondary: []
       };
+      // Bringing in more material is a first-class move at every stage, not a
+      // Sources-screen-only act — the dock's ＋ Extracts sheet is one click
+      // from here throughout. When the pool is all shared deck, say so once:
+      // a board with no material of its own maps like every other board.
+      const addExtracts = { label: '＋ Add extracts', fn: 'openAddExtractsSheet()' };
+      const allShared = appState.items.length > 0 && appState.items.every(isSharedDeckItem);
       if (unsorted > 0 && !appState.cards.length) return {
         state: 'sort',
         hint: 'Sort fast — signal or noise. Where you hesitate is data.',
         primary: { label: `Sort your extracts (${unsorted} left) →`, fn: "goToScreen('sorting')", enabled: true },
-        secondary: []
+        secondary: [addExtracts]
       };
       const sortRemaining = unsorted > 0 ? [{ label: `Sort remaining (${unsorted})`, fn: "goToScreen('sorting')" }] : [];
       // Sorted, but nothing built yet. The first move is a connection, and
       // this bar is the only thing that says so.
       if (!appState.cards.length) return {
         state: 'connect',
-        hint: 'First: connect two source extracts into <strong>Evidence</strong> — drag a glowing dot onto another card, or use the Link tool.',
+        hint: 'First: connect two source extracts into <strong>Evidence</strong> — drag a glowing dot onto another card, or use the Link tool.'
+          + (allShared ? ' Your pool is all shared deck so far — your own extracts are what make this map yours (＋ Add extracts).' : ''),
         primary: { label: 'Map the Problem Situation', fn: 'openCommitModal()', enabled: false },
-        secondary: [...sortRemaining]
+        secondary: [...sortRemaining, addExtracts]
       };
       if (tgxJustMapped && hasSituations()) return {
         state: 'mapped-threshold',
@@ -7085,13 +7418,13 @@ ${AI_RULES}
         state: 'deepen',
         hint: 'Work the situation: evidence landscape, the field, and the paradox at the core.',
         primary: { label: 'Deepen this Situation →', fn: "goToScreen('workspace')", enabled: true },
-        secondary: [{ label: 'Classify evidence types', fn: 'enterClassifyPhase()' }, ...sortRemaining]
+        secondary: [{ label: 'Classify evidence types', fn: 'enterClassifyPhase()' }, ...sortRemaining, addExtracts]
       };
       return {
         state: 'map-notready',
         hint: v.warnings[0] || 'Name and describe every card, and climb to a named theme.',
         primary: { label: 'Map the Problem Situation', fn: 'openCommitModal()', enabled: false },
-        secondary: [...sortRemaining]
+        secondary: [...sortRemaining, addExtracts]
       };
     }
     function tgxClassifyFromBar() { tgxJustMapped = false; enterClassifyPhase(); }
@@ -7186,7 +7519,7 @@ ${AI_RULES}
         ],
         output: `## Candidate paradoxes (2–3)
 For each:
-**The paradox:** "The situation demands [X], but the same conditions that create the need prevent [X] from working, because [mechanism]."
+**The paradox:** stated in ≤ 2 plain sentences, phrased the way someone inside this field would say it. Do NOT use a fill-in-the-blank template. It must still be self-undoing — the shape test stays; the sentence is the user's own.
 **Evidence — the demand:** cards/extracts by name.
 **Evidence — the prevention:** cards/extracts by name.
 **Who benefits from it persisting:** actors and mechanisms (often wider-field).
@@ -7198,7 +7531,7 @@ Which single paradox should the pod form around, and what evidence would change 
 
 ## What's ungrounded
 Any leg you could NOT evidence from the trail — named as a research task.`,
-        modeRule: 'A paradox must be self-undoing (X requires not-X) and must name who benefits from its persistence. Do NOT accept "this is complicated" or a mere trade-off. Do NOT propose solutions or frames.'
+        modeRule: 'A paradox must be self-undoing (X requires not-X) and must name who benefits from its persistence. Do NOT accept "this is complicated" or a mere trade-off. Do NOT propose solutions or frames. If a paradox could be pasted into any report from this field unchanged, sharpen it until it couldn\'t.'
       },
       frame: {
         label: 'Frame',
@@ -7330,6 +7663,36 @@ For each gap identified above, one concrete research task:
 ## Access needs
 What the research demands that the user doesn't currently have access to: specific people, roles, or communities who could ground-truth claims; datasets or documents behind institutional walls; populations a survey would need to reach; adjacent domains that hold relevant knowledge. For each, suggest a realistic path to access — a warm introduction, a cold outreach email, a public records request, a community forum, an academic database, a professional association. Be concrete: "talk to someone" is not a path; "post in [specific subreddit/forum] asking for [specific role]" is.`,
         modeRule: 'Audit what exists — do not invent evidence or soften absences. Every research task must name a question, a method, a tool, and what the answer would change.'
+      },
+
+      // The submitted sentence was the one untemplated step in the whole
+      // arc — participants pasted their board into a model and asked it to
+      // write the sentence, and every model reached for the same design-
+      // thinking stock phrasing. This prompt inverts that: the model audits
+      // the user's draft and is forbidden from writing it.
+      distill: {
+        label: 'Distill',
+        blurb: 'OLOS asks for one distilled sentence, in your words. This prompt has your AI audit your draft — it is forbidden from writing the sentence for you.',
+        task: `The user must distill this problem situation into ONE sentence, in their own words, to submit alongside their map. You may NOT write, rewrite, complete, or exemplify that sentence — not even "for instance". Your whole job is to audit the draft at the bottom of this prompt and interrogate it until it could only have come from this user's map.`,
+        thinking: [
+          'Read the situation, the paradox, and the starred extracts first; only then read the draft.',
+          'Check the draft names a concrete actor and carries the paradox\'s mechanism — not a generic ill.',
+          'Check at least one word or image in it comes from the user\'s own extracts. Quote that word back; if there is none, say so.',
+          'Check for stock openers and formats: "How might we", "In a world where", a fill-in-the-blank cadence, report-speak. Flag them — the sentence should sound like the user, not like a workshop.',
+          'Run the neighbor test: could this sentence sit unchanged on another participant\'s map from the same survey? If yes, name exactly what is missing that would make it this map\'s own.'
+        ],
+        output: `## Verdict on the draft
+2–3 sentences. Does it carry a concrete actor, this map's mechanism, and the user's own words? Quote the strongest word in it and the weakest.
+
+## Stock-format flags
+Any "How might we", template cadence, or report-speak — quoted, with why it costs them distinctiveness. If clean, say so.
+
+## The neighbor test
+Could this sentence sit on a neighbor's map unchanged? If yes: the one thing from THIS map's evidence that, worked in, would make it unmistakably theirs.
+
+## Three questions
+Three interview questions that push the user toward their own diction — each answerable from their map, none answerable with yes/no.`,
+        modeRule: 'Never draft, rewrite, or complete the sentence — not even as an example. If the draft slot is empty, say so and stop; do not produce a sentence to fill it.'
       }
     };
 
@@ -7354,7 +7717,11 @@ What the research demands that the user doesn't currently have access to: specif
     function buildSituationPrompt(kind, sit) {
       const s = sit || appState.situations[appState.situations.length - 1]
         || { title: '', description: '', frame: '', stakeholderMap: '' };
-      const title = s.title || appState.settings.title || 'this problem situation';
+      // Only a title the participant wrote for THIS situation goes into the
+      // prompt. The board title used to leak in here, and its shipped default
+      // ("Civics & Elections: Signal Pool") told every model the domain and
+      // register before the participant had named anything.
+      const title = s.title || 'this problem situation';
       const evidence = situationEvidenceText(sit);
       const k = SITUATION_PROMPT_KINDS[kind];
       if (!k) return '';
@@ -7419,9 +7786,18 @@ ${held}
 </candidate_paradoxes_already_held>
 ` : ''}`;
       }
+      // The distill audit needs the user's draft — the slot is explicit so
+      // the model refuses to run without one instead of inventing a sentence.
+      if (kind === 'distill') {
+        extraBlocks = `
+<draft_sentence>
+[TYPE OR PASTE YOUR ONE-SENTENCE DRAFT HERE — the audit does not run without it]
+</draft_sentence>
+`;
+      }
 
       return `<role>
-${AI_ROLE}
+${aiRole()}
 </role>
 
 <context>
@@ -7451,8 +7827,10 @@ ${k.output}
 </output_format>
 
 <rules>
+${ANTI_MODAL_RULES}
 ${AI_RULES}
 - ${k.modeRule}
+- ${promptTwist()}
 </rules>`;
     }
 
@@ -7499,10 +7877,16 @@ ${AI_RULES}
 
       const concept = (appState.settings.concept || '').trim() || '(no starting concept recorded)';
 
+      const critic = variantPick('critic', [
+        "a funder's program officer who has read forty of these this cycle and can no longer tell them apart",
+        'a city auditor who trusts records over narratives',
+        'a newsroom standards editor who strikes every claim that cannot name its source',
+        'a methods professor who fails theses for confusing the popular reading with the grounded one'
+      ]);
       return `<role>
-You are a hostile institutional reviewer — a senior critic who has sat through hundreds of problem-framing presentations and watched every one of Kees Dorst's five syndromes sink a project: the Lone Warrior (framing in isolation), Freeze the World (treating a moving situation as fixed), the Self-Made Box (repeating untested assumptions), the Rational High Ground (defending claims that were never grounded), and Identification (mistaking one's own slice of the field for the whole).
+You are a hostile institutional reviewer — ${critic} — a senior critic who has sat through hundreds of problem-framing presentations and watched every one of Kees Dorst's five syndromes sink a project: the Lone Warrior (framing in isolation), Freeze the World (treating a moving situation as fixed), the Self-Made Box (repeating untested assumptions), the Rational High Ground (defending claims that were never grounded), and Identification (mistaking one's own slice of the field for the whole).
 
-You are not here to encourage. You are here to find what this team cannot see about their own map. Be specific, be skeptical, and assume the most flattering reading is the wrong one.
+You are not here to encourage. You are here to find what this team cannot see about their own map. Be specific, be skeptical, and assume the most flattering reading is the wrong one. If this map reads like every other map from the same field survey, say exactly that, and name what is missing that would make it this team's own.
 </role>
 
 <what_you_are_auditing>
@@ -8056,6 +8440,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <div class="ws-card-titlerow">
             <span class="ws-card-tier" style="background:var(--tier-4);color:var(--ghost-white);">Problem Situation${many ? ' ' + n : ''}</span>
             ${many && (s.title || '').trim() ? `<h3 style="margin:0;">${escapeHtml(s.title)}</h3>` : ''}
+            ${s.source ? `<span class="ws-card-tier" title="Merged from a podmate's board — consult it, but submit your own situation">merged from ${escapeHtml(s.source)}</span>` : ''}
           </div>
           <p class="field-hint">An open, complex, networked condition synthesized from what you mapped. This is not a problem to solve yet — it's a situation to map and understand.</p>
         </header>
@@ -8065,7 +8450,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
           <label for="sit-title-${n}">Name the situation</label>
           <input type="text" id="sit-title-${n}" class="ws-text-input" placeholder="A short name for this open condition" value="${escapeHtml(s.title || '')}" oninput="updateSituationField('${s.id}', 'title', this.value); recomputeSubmitButton();">
           <label for="sit-desc-${n}" style="margin-top:12px;">Describe it</label>
-          <textarea id="sit-desc-${n}" placeholder="This is an open condition, not a bounded problem, because ___" oninput="updateSituationField('${s.id}', 'description', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.description || '')}</textarea>
+          <textarea id="sit-desc-${n}" placeholder="What is going on here, in your own words? (You'll argue why it's open, not bounded, in the next field.)" oninput="updateSituationField('${s.id}', 'description', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.description || '')}</textarea>
           <label for="sit-open-${n}" style="margin-top:12px;">Why this is open, not bounded</label>
           <p class="field-hint">A bounded problem has a known solution path. An open situation doesn't — it's complex, networked, and dynamic. What makes this one open?</p>
           <textarea id="sit-open-${n}" placeholder="What makes this open: the network of actors, the moving parts, the absence of a known path…" oninput="updateSituationField('${s.id}', 'openness', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.openness || '')}</textarea>
@@ -8113,8 +8498,8 @@ Interrogate this map. Work through each point and answer concretely, naming spec
         <section class="workspace-section" data-stage="5" data-stage-short="Paradox">
           <div class="ws-stage-label">Stage 5 — Find the paradox(es)</div>
           <label for="sit-paradox-${n}">Name the deadlock the field sustains</label>
-          <p class="field-hint">Everything you mapped — the themes, the context, the field — was in service of this. With no client to vouch for the pain, our paradox must live in the field itself: 'The situation demands X, but the same conditions that create the need also prevent X from working.' It's not 'this is complicated' — it's the self-undoing structural tension the pod forms around. Name it, and name who keeps it alive.</p>
-          <textarea id="sit-paradox-${n}" placeholder="The situation demands ___, but the same conditions that create the need also prevent ___ from working." oninput="updateSituationField('${s.id}', 'paradox', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.paradox || '')}</textarea>
+          <p class="field-hint">Everything you mapped — the themes, the context, the field — was in service of this. With no client to vouch for the pain, the paradox must live in the field itself: the conditions that create the need are the same conditions that prevent it being met. It's not 'this is complicated' — it's the self-undoing deadlock the pod forms around. Name it in your own words, the way someone inside the field would say it, and name who keeps it alive. From another field entirely: <em>${escapeHtml(variantPick('paradox-example', PARADOX_EXAMPLES))}</em></p>
+          <textarea id="sit-paradox-${n}" placeholder="Name the deadlock in your own words — plain speech, no template. Who needs what, and what stops exactly that from working?" oninput="updateSituationField('${s.id}', 'paradox', this.value); autoResize(this); recomputeSubmitButton();">${escapeHtml(s.paradox || '')}</textarea>
           ${tgxSharpnessHtml(s)}
           <label for="sit-status-${n}" style="margin-top:12px;">Who benefits from the status quo?</label>
           <p class="field-hint">If this situation persists indefinitely, who wins? Follow the incentives — name actors and mechanisms. A paradox nobody profits from is usually a misreading; the beneficiaries often sit in the wider field you just mapped.</p>
@@ -8288,7 +8673,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
         const grounded = p.evidenceIds.length > 0;
         return '<div class="owner-row paradox-row">'
           + '<div class="paradox-row-top">'
-          + '<textarea class="paradox-text" placeholder="The field demands ___, but the same conditions that create the need prevent ___ from working." oninput="tgxParadoxUpdate(\'' + s.id + '\',\'' + p.id + '\',\'text\',this.value)">' + escapeHtml(p.text || '') + '</textarea>'
+          + '<textarea class="paradox-text" placeholder="Another candidate deadlock, in your own words — who needs what, and what stops exactly that?" oninput="tgxParadoxUpdate(\'' + s.id + '\',\'' + p.id + '\',\'text\',this.value)">' + escapeHtml(p.text || '') + '</textarea>'
           + '<button type="button" class="owner-del" title="Remove" onclick="tgxParadoxRemove(\'' + s.id + '\',\'' + p.id + '\')">✕</button>'
           + '</div>'
           + '<div class="paradox-row-meta">'
@@ -8351,9 +8736,19 @@ Interrogate this map. Work through each point and answer concretely, naming spec
     // export — the deck audience sees what the pod claims (the only honesty
     // gate available without a client or an in-app judge).
     const SHARPNESS_ITEMS = [
-      ['selfUndoing', 'It names a contradiction where the fix undoes itself — X requires not-X'],
+      ['selfUndoing', 'It names a contradiction where the fix undoes itself — it survives being rewritten as "the situation demands X, but the conditions creating the need prevent X". (That rewrite is a test, not your sentence.)'],
       ['beneficiaryNamed', 'It names who is invested in it persisting'],
       ['legsEvidenced', 'Both legs of the contradiction are evidenced (linked cards / extracts)']
+    ];
+    // Worked paradox examples from OTHER fields — one per board, seeded. An
+    // example from the board's own domain gets copied with the blanks
+    // re-filled; an example from elsewhere teaches the shape and nothing else.
+    const PARADOX_EXAMPLES = [
+      'Housing: the neighborhoods where new homes are most needed are the ones where existing residents have the most to lose from them — the need creates the resistance that blocks it.',
+      'ER triage: the patients who most need unhurried attention arrive at exactly the moments the system can least give it — urgency manufactures the conditions that undo care.',
+      'Open source: the projects everyone depends on are maintained by the fewest people, because ubiquity convinces each user that someone else is tending them.',
+      'Local news: the stories a town most needs are the costliest to report, and the towns that most need them are the least able to pay for the reporting.',
+      'Antibiotics: the more reliably a drug works, the more it gets used, and the more it gets used, the sooner it stops working.'
     ];
     function tgxSharpnessEnsure(s) { if (!s.sharpness || typeof s.sharpness !== 'object') s.sharpness = {}; return s.sharpness; }
     function tgxSharpnessUpdate(sitId, key, val) {
@@ -8545,7 +8940,7 @@ Interrogate this map. Work through each point and answer concretely, naming spec
             return sub ? head + '\n' + sub : head;
           }).join('\n') || '(no cards yet)';
         return `# ${s.title || 'Untitled Problem Situation'}
-
+${s.source ? `\n> ⚠ Merged from **${s.source}**'s board during peer consult — it is their statement, kept here for context. Submit your own.\n` : ''}
 > A problem situation mapped using Kees Dorst's Frame Creation method.
 > Built from ${cards.length} card${cards.length === 1 ? '' : 's'} covering ${sigSet.size} signal${sigSet.size === 1 ? '' : 's'} across the evidence ladder.
 > Exported ${appState.exportedAt || new Date().toISOString()}.
@@ -8632,7 +9027,7 @@ deeper. The job at this stage is to investigate the field, not to solve anything
 
 ## Role
 
-${AI_ROLE}
+${aiRole()}
 
 ## Rules
 
@@ -8656,6 +9051,10 @@ Read \`problem-situation.md\` first — it has the situation description, the pa
 ### Using this with an AI
 Upload this whole folder to Claude, ChatGPT, or NotebookLM. Start with: _"Read the README, then act as my Frame Creation thinking partner. Read problem-situation.md and the cards. Help me find what's missing and what's assumed — don't propose solutions."_ The \`gap-analysis.md\` file is a ready-to-paste prompt that produces a structured evidence audit.
 
+## Before you submit
+
+The one sentence you submit must be yours — written in your own words, not a model's. Do not ask an AI to write it; the stock result ("How might we…") sounds like everyone else's. Draft it yourself, read it aloud, then paste \`distill.md\` into your AI to have your draft **audited** — it checks for a concrete actor, your map's own mechanism, and your own diction, and it is forbidden from writing the sentence for you.
+
 ### Loading the canvas
 Open \`state.json\` in the Triangulator to load the full board — all nodes, edges, positions, and the problem situation box.
 `;
@@ -8671,7 +9070,7 @@ Open \`state.json\` in the Triangulator to load the full board — all nodes, ed
         ? (c.cardType === 'player' ? 'player (a stakeholder understood by their practices, interests, values, and frames)' : 'value (a deep, universal value observed in the field)')
         : tierName(c.tier).toLowerCase() + ' (a deeper condition beneath the patterns)';
       return `<role>
-${AI_ROLE}
+${aiRole()}
 </role>
 
 <context>
@@ -8712,6 +9111,7 @@ ${AI_RULES}
       if (sit) {
         // Ready-to-run evidence audit — paste straight into an AI tool.
         add('gap-analysis.md', buildSituationPrompt('gap-analysis', sit));
+        add('distill.md', buildSituationPrompt('distill', sit));
         if ((sit.researchAgenda || '').trim()) {
           add('research-agenda.md', '# Research agenda — known gaps and next investigations\n\n' + sit.researchAgenda.trim());
         }
@@ -9413,7 +9813,11 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
           ...s,
           id: uid('sit'),
           memberCardIds: s.memberCardIds.map(id => idMap.get(id)).filter(Boolean),
-          box: s.box ? { x: s.box.x + dx, y: s.box.y + dy, w: s.box.w, h: s.box.h } : null
+          box: s.box ? { x: s.box.x + dx, y: s.box.y + dy, w: s.box.w, h: s.box.h } : null,
+          // Items and cards already carry the source-board tag; situations
+          // arriving untagged meant a whole triad exported the same three
+          // statements as their own after peer-consult merges.
+          source: src
         });
       });
       invalidateSituationIndex();
@@ -9558,7 +9962,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 *The universal beneath the patterns. What force or condition is hidden under the surface of everyday life here?*
 
 ## Bridge test
-*Does this name BOTH a structural condition AND a human experience? A theme that lives on only one side is just a restated pattern.*
+*Does this name BOTH a structural condition AND a human experience? A theme that lives on only one side is just a restated pattern. Many pairings qualify — if yours is the pairing everyone lands on, hunt for a second bridge before keeping the first.*
 
 ## Depth test
 *Is this hidden beneath the everyday framing? Does it explain things you didn't build it from?*
@@ -9677,6 +10081,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
       if (blurb && m) blurb.textContent = m.blurb;
     }
     function setCardPageAIMode(mode) {
+      updatePersonaNotes();
       cardPageAIMode = HUB_PROMPT_MODES[mode] ? mode : 'throughline';
       document.querySelectorAll('#card-page-ai-tabs .ai-mode-tab').forEach(btn => {
         const on = btn.getAttribute('data-mode') === cardPageAIMode;
@@ -9829,7 +10234,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
     function startSorting() {
       if (!appState.items.length) {
-        toast('Load some signals first.');
+        toast('Add source extracts first — your own via ✨ Extract, or deal the shared hand.');
         return;
       }
       if (!appState.settings.title) {
@@ -9842,7 +10247,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
     function skipSortingToBoard() {
       if (!appState.items.length) {
-        toast('Load some signals first.');
+        toast('Add source extracts first — your own via ✨ Extract, or deal the shared hand.');
         return;
       }
       appState.items.forEach(item => {
@@ -9884,8 +10289,13 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
         const signalCount = Object.values(appState.sorting.decisions).filter(d => d === 'signal').length;
         const superCount = Object.values(appState.sorting.decisions).filter(d => d === 'super').length;
         const noiseCount = Object.values(appState.sorting.decisions).filter(d => d === 'noise').length;
+        const keptOwn = appState.items.filter(it => {
+          const d = appState.sorting.decisions[it.id];
+          return (d === 'signal' || d === 'super') && !isSharedDeckItem(it);
+        }).length;
+        const keptTotal = signalCount + superCount;
         document.getElementById('sorting-summary').textContent =
-          `You kept ${signalCount + superCount} signals (${superCount} super). You set aside ${noiseCount} as noise.`;
+          `You kept ${keptTotal} signals (${superCount} super) — ${keptOwn} of them yours, ${keptTotal - keptOwn} from the shared deck. You set aside ${noiseCount} as noise.`;
         counter.textContent = `${total} of ${total}`;
         progressFill.style.width = '100%';
         return;
@@ -10142,6 +10552,8 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
 
       if (!appState.settings.title) appState.settings.title = (titleEl && titleEl.value) || 'Signal Pool';
       setBoardTitleDisplay();
+      tgxCanvasDropInit();
+      rotateIntakePlaceholders();
       if (!onboarding && target !== 'sorting') ensureCanvasInitialized();
       goToScreen(target);
 
@@ -10155,7 +10567,7 @@ section h2{margin-top:0;font-size:1.3rem;border-bottom:2px solid var(--cloud);pa
             onAction: () => {
               clearSavedState();
               appState = defaultState();
-              if (titleEl) titleEl.value = 'Upskilling Labs: Signal Pool';
+              if (titleEl) titleEl.value = '';
               renderConfigItems();
               goToScreen('setup');
               toast('Cleared.');
